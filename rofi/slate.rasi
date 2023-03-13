@@ -1,0 +1,48 @@
+* {
+  y-offset: -30%;
+  background-color: rgba(34, 34, 34, 0.35);
+  border-color: #2e343f;
+  text-color: #00ff15;
+  spacing: 0;
+  width: 1024px;
+}
+
+inputbar {
+  border: 0 0 0px 0;
+  background-color: rgba(34, 34, 34, 0.7);
+  children: [prompt,entry];
+}
+
+prompt {
+  padding: 16px;
+  border: 0 0px 0 0;
+}
+
+textbox {
+  background-color: #2e343f;
+  border: 0 0 0px 0;
+  border-color: #282C33;
+  padding: 8px 16px;
+}
+
+entry {
+  padding: 16px;
+}
+
+listview {
+  fixed-height: false;
+  cycle: false;
+  margin: 0 0 -1px 0;
+  scrollbar: false;
+}
+
+element {
+  border: 0 0 0px 0;
+  padding: 16px;
+}
+
+element selected {
+  background-color: rgba(48, 119, 15, 0.35);
+}
+
+/* vim:ft=css

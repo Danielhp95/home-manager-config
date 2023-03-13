@@ -1,0 +1,33 @@
+# nvfetcher.toml
+[manix]
+src.git = "https://github.com/mlvzk/manix"
+fetch.github = "mlvzk/manix"
+
+# (Neo)vim
+[neozoom-nvim]
+src.git = "https://github.com/nyngwang/NeoZoom.lua"
+fetch.github = "nyngwang/NeoZoom.lua"
+
+[cmp-path]
+src.git = "https://github.com/hrsh7th/cmp-path"
+fetch.github = "hrsh7th/cmp-path"
+
+[cmp-dap]
+src.git = "https://github.com/rcarriga/cmp-dap"
+fetch.github = "rcarriga/cmp-dap"
+
+[cmp-nixpkgs]
+src.git = "https://github.com/gravndal/cmp-nixpkgs"
+fetch.github = "gravndal/cmp-nixpkgs"
+
+[obsidian-nvim]
+src.git = "https://github.com/epwalsh/obsidian.nvim"
+fetch.github = "epwalsh/obsidian.nvim"
+
+[fm-nvim]
+src.git = "https://github.com/is0n/fm-nvim"
+fetch.github = "is0n/fm-nvim"
+
+[neodev-nvim]
+src.git = "https://github.com/folke/neodev.nvim"
+fetch.github = "folke/neodev.nvim"
