@@ -38,6 +38,7 @@ require('telescope').setup {
     mappings = {
       i = {
         ["<C-u>"] = false,
+        ["<C-q>"] = require("telescope-live-grep-args.actions").quote_prompt(),
         ["<C-j>"] = actions.move_selection_next,
         ["<C-k>"] = actions.move_selection_previous,
         ["<CR>" ] = actions.select_default + actions.center,
@@ -79,8 +80,8 @@ require('telescope').setup {
 }
 --
 --require('telescope').load_extension('gh')
+require("telescope").load_extension("live_grep_args")
 require('telescope').load_extension('dap')
-require('telescope').load_extension('project')
 require('telescope').load_extension('fzf')
 
 
