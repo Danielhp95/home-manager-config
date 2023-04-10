@@ -1,6 +1,10 @@
 { config, pkgs, environment, ... }:
 
 {
+
+  home.username = "daniel";
+  home.homeDirectory = "/home/daniel";
+  home.stateVersion = "22.11";
   imports = [
     ./starship
     ./zsh
@@ -9,6 +13,7 @@
     ./git
     ./nvim/neovim.nix
     ./rofi
+    ./zellij
     #./kitty  # Kitty / alacritty break because of some GLX issues
   ];
 
@@ -25,7 +30,7 @@
     texlive.combined.scheme-full
     pandoc
 
-		feh # image viewer
+    feh # image viewer
     # imv # image viewer BROKEN on Ubuntu 22.04
     ripgrep # better grep
     exa # Better ls
@@ -40,7 +45,10 @@
     spotify
     mpv
     obsidian
-		helvum
+
+    # Audio
+    helvum
+    pamixer
   ];
 
   # Let Home Manager install and manage itself.

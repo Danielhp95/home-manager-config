@@ -10,6 +10,7 @@ with dsl;
 
     # Python
     pkgs.python310Packages.debugpy # TODO: Should this be installed in Python projects instead of system-wide like here?
+    nvim-dap-python
 
     # Lua
     #one-small-step-for-vimkind
@@ -37,5 +38,9 @@ with dsl;
   };
   setup.nvim-dap-virtual-text = callWith { };
 
+  # setup.dap-python = callWith { 'd'; }
+
+  # Add a bit of lua pointing to dap_path like in other plugins
+  # https://github.com/mfussenegger/nvim-dap-python
   lua = builtins.readFile ./dap.lua;
 }

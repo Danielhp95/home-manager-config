@@ -6,11 +6,12 @@
 with dsl; {
   plugins = with pkgs.vimPlugins; [
     # fuzzy finder
-    plenary-nvim                 # Dependency for telescope
-    telescope-nvim               # One and only
+    plenary-nvim                   # Dependency for telescope
+    telescope-nvim                 # One and only
     telescope-fzf-native-nvim
     # sexy dropdown
-    telescope-ui-select-nvim     # It sets vim.ui.select to telescope
+    telescope-ui-select-nvim       # It sets vim.ui.select to telescope
+    telescope-live-grep-args-nvim  # Being able to pass arguments for ripgrep (used by live grep in Telescope)
   ];
   
   lua = ''

@@ -33,7 +33,10 @@ with dsl;
     char_highlight_list = [ "SpecialKey" ];  # Dark color
   };
 
-  vimscript = "colorscheme onedark";
+  vimscript = ''
+    colorscheme onedark
+    autocmd BufNewFile,BufRead *.libsonnet setf jsonnet
+  '';
 
   # use.onedark.load = callWith { };
 
@@ -64,5 +67,6 @@ with dsl;
     tabline = { };
     extensions = [ ];
   };
+  
   # TODO: tabline
 }

@@ -26,6 +26,7 @@
     };
 
     aliases = {
+      adog = "log --all --decorate --oneline --graph";
       a = "add -p";
       co = "checkout";
       cob = "checkout -b";

@@ -3,4 +3,5 @@ final: prev: {
 
   # To have all nice tree-sitter grammars
   nvimbundle = prev.neovimBuilder (import ./nvim/neovim-pkg.nix prev);
+  fcitx-engines = prev.fcitx5;
 }

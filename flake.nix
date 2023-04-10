@@ -46,13 +46,6 @@
           };
           modules = [
             ./home.nix
-            {
-              home = {
-                username = "daniel";
-                homeDirectory = "/home/daniel";
-                stateVersion = "22.11";
-              };
-            }
           ];
         };
       };

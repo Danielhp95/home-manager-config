@@ -1,9 +1,8 @@
-let
-  zellijConf = builtins.readFile ./zellij.conf;
-in
+{pkgs, ...}:
 {
   programs.zellij = {
     enable = true;
-    settings = zellijConf;
+    package = pkgs.zellij.overrideAttrs ( oldAttrs: { version = "0.35.1"; } );
+    # settings = zellijConf;
   };
 }

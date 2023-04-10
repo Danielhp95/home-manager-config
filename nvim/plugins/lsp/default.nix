@@ -11,6 +11,7 @@ with dsl; {
     fidget-nvim           # Gives info about nvim LSP status
     symbols-outline-nvim  # Side menu containing methods, fields, and general outline
 
+    pkgs.nil    # Nix language server
     pkgs.texlab # latex
     pkgs.sumneko-lua-language-server # lua
     pkgs.nodePackages.pyright # Python
@@ -58,9 +59,14 @@ with dsl; {
   };
 
   # Nix
-  use.lspconfig.rnix.setup = callWith {
-    cmd = [ "${pkgs.rnix-lsp}/bin/rnix-lsp" ];
-    capabilities = rawLua "require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())";
+  #use.lspconfig.rnix.setup = callWith {
+  #  cmd = [ "${pkgs.rnix-lsp}/bin/rnix-lsp" ];
+  #  capabilities = rawLua "require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())";
+  #};
+
+  use.lspconfig.nil_ls.setup = callWith {
+    cmd = [ "${pkgs.nil}/bin/nil" ];
+  #  capabilities = rawLua "require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())";
   };
 
   # Latex

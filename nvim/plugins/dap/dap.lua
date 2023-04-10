@@ -20,38 +20,28 @@ dap.configurations.python = {
       return vim.split(args_string, " +")
     end;
   },
+  -- The config below does not work
+  -- It correclty access the run_local command in dart. but it fails in dart_client/util.py:git_repo_root()
   {
+    name = "Dart run_local";
     type = 'python';
     request = 'launch';
     justMyCode = false;
-    name = "Dart local on current yaml";
-    program =  function()
-      local yaml = vim.ui.input('Path to yaml: ')
-      return "run_local " .. yaml
-    end;
-    pythonPath = "dart_local";
-    args = function()
-      local args_string = vim.fn.input('Arguments: ')
-      return vim.split(args_string, " +")
-    end;
+    python = "python";
+    program = "/home/dev/.local/bin/dart";
+    args = {"run_local", "--mode", "both", "/home/dev/sai/apps/spiderman/run_configs/spiderman.jsonnet"};
   },
   {
-    type = "python";
-    request = "launch";
+    name = "Dart run_local 2";
+    type = 'python';
+    request = 'launch';
     justMyCode = false;
-    name = "Find candidate policies";
-    program = "apps/gt/scripts/eval_suite/find_candidate_policies.py";
-    args = function()
-      -- Index 0 indicates current file
-      -- Do something like "run_local $file
-      local args_string = vim.fn.input('Arguments: ', vim.api.nvim_buf_get_name(0))
-      return vim.split(args_string, " +")
-    end;
-    pythonPath = "python";
-  }
+    code = "import dart_client.cli; dart_client.cli.run_local({\"config\": \"/home/dev/sai/apps/spiderman/run_configs/spiderman.jsonnet\", \"mode\": \"both\"})";
+    python = "python";
+  },
 }
 
--- Lua
+-- Lua: Not working
 dap.configurations.lua = {
   {
     type = 'nlua',

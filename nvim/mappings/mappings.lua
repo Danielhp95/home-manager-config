@@ -28,6 +28,14 @@ wk.register({
       c = {"<cmd>Git commit<cr>", "Git [c]ommit"},
       t = {"<cmd>Gitsigns toggle_signs<cr>", "[t]oggle gitsigns"},
       r = {"<cmd>Gread<cr>", "[r]evert to latest git version"},
+      b = {"<cmd>Gitsigns blame_line<cr>", "[b]lame current line"},
+      d = {
+        name = "+[d]iff",
+        t = {"<cmd>DiffviewToggleFiles<cr>", "[t]oggle diff files"},
+        r = {"<cmd>DiffviewRefresh<cr>", "[r]efresh git merge state"},
+        o = {"<cmd>DiffviewOpen<cr>", "[o]pen new tab with diff merger"},
+        c = {"<cmd>DiffviewClose<cr>", "[c]lose diff merger"},
+      },
       -- Do something about blame lines?
       l = {
         name = "+[l]og",
@@ -52,7 +60,7 @@ wk.register({
     t = {
       name = '[t]elescope',
       f = {"<cmd>Telescope find_files<CR>", "Find [f]iles"},
-      g = {"<cmd>Telescope live_grep<CR>", "Live [g]rep"},
+      g = {"<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>", "Live [g]rep"},
       b = {"<cmd>Telescope buffers<CR>", "[b]uffers"},
       h = {"<cmd>Telescope help_tags<CR>", "NVIM [h]elp"},
       k = {"<cmd>Telescope keymaps<CR>", "[k]eymaps"},
@@ -121,7 +129,7 @@ wk.register({
       d = {string.format("<cmd>lua vim.lsp.buf.definition(%s)<CR>", vertical_layout), "Go to [d]efinition"},
       D = {string.format("<cmd>lua vim.lsp.buf.declaration(%s)<CR>", vertical_layout), "Go to [D]eclaration"},
       i = {string.format("<cmd>lua vim.lsp.buf.implementation(%s)<CR>", vertical_layout), "Go to [i]mplementation"},
-      r = {string.format("<cmd>lua require('telescope.builtin').lsp_references(%s)<cr>", vertical_layout), "Show [r]eferences"},
+      r = {string.format("<cmd>Trouble lsp_references<cr>", vertical_layout), "Show [r]eferences"},
       n = {string.format("<cmd>Lspsaga rename<cr>", vertical_layout), "Re[n]ame"},
       f = {string.format("<cmd>lua vim.lsp.buf.format()<cr>", vertical_layout), "[F]ormat file"},
       R = {string.format("<cmd>LspRestart<cr>", vertical_layout), "[R]estart LSP"},
@@ -150,7 +158,8 @@ wk.register({
   ['<leader>'] = {
     b = {
       name = 'De[b]ugger',
-      t = {"<cmd>lua require('dapui').toggle()<cr>", "[t]oggle debugger UI"},
+      t = {"<cmd>lua require('dapui').toggle(2)<cr>", "[t]oggle debugger repl"},
+      T = {"<cmd>lua require('dapui').toggle()<cr>", "[T]oggle all debugger UIs"},
       b = {"<cmd>DapToggleBreakpoint<cr>", "[b]reakpoint toggle current line"},
       B = {"<cmd>lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", "[B]reakpoint with condition"},
       e = {"<cmd>lua require('dapui').eval()<cr>", "[e]valuate expresion"},
