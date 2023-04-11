@@ -2,28 +2,35 @@
 { pkgs, dsl, ... }:
 with dsl; {
   plugins = with pkgs.vimPlugins; [
-    nvim-lspconfig # collection of LSP config files
-    lspsaga-nvim # extra UI for lsp
+    nvim-lspconfig        # collection of LSP config files
+    lspsaga-nvim          # extra UI for lsp
 
-    # Languages
-    vim-nix # nix
     lsp_signature-nvim    # To show method signatures
     fidget-nvim           # Gives info about nvim LSP status
     symbols-outline-nvim  # Side menu containing methods, fields, and general outline
+    lsp-lense             # Adds codelense capabilities
 
+    # Languages
     pkgs.nil    # Nix language server
     pkgs.texlab # latex
     pkgs.sumneko-lua-language-server # lua
     pkgs.nodePackages.pyright # Python
     pkgs.jsonnet-language-server # jsonnet
-
+    neodev-nvim  # (TODO set it up)Lua vim functionality (because setting global vim doesn't work)
     null-ls-nvim # configurable LSP for unsupported languages
-    neodev-nvim  # Lua vim functionality (because setting global vim doesn't work)
   ];
 
   use.neodev.setup = callWith { };  # TODO: get chris' config from Element
 
   use.lspsaga.setup = callWith { };
+  use.lsp-lens.setup = callWith {
+    include_declaration = true;
+    sections = {
+      definition = true;
+      references = true;
+      implementation = true;
+    };
+  };
   use.symbols-outline.setup = callWith { };
 
   lua = ''

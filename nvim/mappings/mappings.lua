@@ -130,9 +130,11 @@ wk.register({
       D = {string.format("<cmd>lua vim.lsp.buf.declaration(%s)<CR>", vertical_layout), "Go to [D]eclaration"},
       i = {string.format("<cmd>lua vim.lsp.buf.implementation(%s)<CR>", vertical_layout), "Go to [i]mplementation"},
       r = {string.format("<cmd>Trouble lsp_references<cr>", vertical_layout), "Show [r]eferences"},
-      n = {string.format("<cmd>Lspsaga rename<cr>", vertical_layout), "Re[n]ame"},
-      f = {string.format("<cmd>lua vim.lsp.buf.format()<cr>", vertical_layout), "[F]ormat file"},
-      R = {string.format("<cmd>LspRestart<cr>", vertical_layout), "[R]estart LSP"},
+      n = {"<cmd>Lspsaga rename<cr>", "Re[n]ame"},
+      f = {"<cmd>lua vim.lsp.buf.format()<cr>", "[F]ormat file"},
+      R = {"<cmd>LspRestart<cr>", "[R]estart LSP"},
+      l = {"<cmd>LspLensToggle<cr>", "[t]oggle codelens"},
+      I = {"<cmd>LspInfo<cr>", "[I]nformation about LSPs"},
     },
   }
 })
