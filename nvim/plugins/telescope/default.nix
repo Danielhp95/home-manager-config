@@ -13,7 +13,7 @@ with dsl; {
     telescope-ui-select-nvim       # It sets vim.ui.select to telescope
     telescope-live-grep-args-nvim  # Being able to pass arguments for ripgrep (used by live grep in Telescope)
   ];
-  
+
   lua = ''
     function Cd(path)
         path = path or '.'
