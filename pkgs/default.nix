@@ -14,5 +14,6 @@ final: prev: rec {
     "obsidian-nvim"
     "fm-nvim"
     "neodev-nvim"
+    "lsp-lense"
   ]);
 }

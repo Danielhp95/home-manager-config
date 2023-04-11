@@ -31,3 +31,7 @@ fetch.github = "is0n/fm-nvim"
 [neodev-nvim]
 src.git = "https://github.com/folke/neodev.nvim"
 fetch.github = "folke/neodev.nvim"
+
+[lsp-lense]
+src.git = "https://github.com/VidocqH/lsp-lens.nvim"
+fetch.github = "VidocqH/lsp-lens.nvim"
