@@ -24,6 +24,7 @@ with dsl; {
 
   use.lspsaga.setup = callWith { };
   use.lsp-lens.setup = callWith {
+    enable = false;
     include_declaration = true;
     sections = {
       definition = true;
