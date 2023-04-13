@@ -40,6 +40,7 @@
     tldr   # succint command explanations
     nvfetcher # To get nvim plugins (could expand to other things)
     acpi  # To meassure laptop battery levels
+    brightnessctl # Control brightness via CLI
 
     # For fun
     spotify
