@@ -9,6 +9,7 @@ with dsl;
     noswapfile = true;
     oscyank_max_length = 100000000;
     timeoutlen = 100;
+    nowrap = true;
   };
   vim.o = {
     grepprg = "rg --vimgrep --no-heading --smart-case";
