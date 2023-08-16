@@ -16,7 +16,7 @@
     ./plugins/dap
     ./plugins/nvim-tree.nix
     ./plugins/fm-nvim.nix
-    ./plugins/telescope-project
+    ./plugins/git
     ./plugins/lsp
     ./plugins/toggleterm.nix
     ./plugins/neozoom.nix
@@ -25,7 +25,6 @@
 
     # ./plugins/playground.nix
     # ./plugins/tmpclone.nix
-    # ./plugins/imagine.nix
   ];
   withPython3 = true;
   withNodeJs = true;
