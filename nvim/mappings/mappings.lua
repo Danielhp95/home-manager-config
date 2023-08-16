@@ -126,7 +126,9 @@ wk.register({
   ['<leader>'] = {
     l = {
       name = '[l]sp',
-      d = {string.format("<cmd>lua vim.lsp.buf.definition(%s)<CR>", vertical_layout), "Go to [d]efinition"},
+      c = {"<cmd>Lspsaga code_action<cr>", "[c]ode actions"},
+      o = {"<cmd>Lspsaga outline<cr>", "[o]utline code structure"},
+      d = {string.format("<cmd>Lspsaga peek_definition<CR>", vertical_layout), "Peek [d]efinition"},
       D = {string.format("<cmd>lua vim.lsp.buf.declaration(%s)<CR>", vertical_layout), "Go to [D]eclaration"},
       i = {string.format("<cmd>lua vim.lsp.buf.implementation(%s)<CR>", vertical_layout), "Go to [i]mplementation"},
       r = {string.format("<cmd>Trouble lsp_references<cr>", vertical_layout), "Show [r]eferences"},
