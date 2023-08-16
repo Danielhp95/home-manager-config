@@ -207,9 +207,15 @@ wk.register({
     ['v'] = {"<cmd>ToggleTerm direction='vertical' size=50<cr>", "[v]ertical terminal"},
     ['h'] = {"<cmd>ToggleTerm direction='horizontal'<cr>", "[h]orizontal terminal"},
     ['t'] = {"<cmd>ToggleTermToggleAll<cr>", "Toggle all [t]erminals"},
+    ['s'] = {"<cmd>ToggleTermSendCurrentLine<cr>", "[s]end cursor line to terminal"},
   }
 })
 
+wk.register({
+    ['<leader><leader>s'] = {"<cmd>'<,'>ToggleTermSendVisualLines<cr>", "[s]end visually selected lines to terminal"}
+  },
+  {mode = 'v'}
+)
 
 -- Development
 wk.register({
