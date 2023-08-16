@@ -42,9 +42,9 @@ cmp.setup({
     sources = {
       -- TODO: ADD THIS
         -- { name = 'nvim_lsp_signature_help' },
-        { name = 'luasnip' },
         { name = 'path', options = { trailing_slash = true }},
         { name = 'nvim_lsp' },
+        { name = 'luasnip' },
         { name = 'nixpkgs'},  -- TODO: Does not work!
         { name = 'buffer',  options = {
             get_bufnrs = function()
