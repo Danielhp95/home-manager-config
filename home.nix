@@ -14,17 +14,20 @@
     ./nvim/neovim.nix
     ./rofi
     ./zellij
-    #./kitty  # Kitty / alacritty break because of some GLX issues
+    ./atuin.nix
+    #./kitty  # Kitty / alacritty break because of some GLX issues  (TODO: use nixGL?)
   ];
 
   programs.direnv.enable = true;
 
   home.packages = with pkgs; [
+    # wezterm
     powerline-fonts
     coreutils
     gzip
     gawk
     gnugrep
+    nixgl.nixGLIntel
 
     # Latex stuff
     texlive.combined.scheme-full
@@ -37,6 +40,7 @@
     bat # Better cat
     ranger # File manager
     bottom # like htop but cooler
+    zenith # Httop with zommable chards
     tldr   # succint command explanations
     nvfetcher # To get nvim plugins (could expand to other things)
     acpi  # To meassure laptop battery levels
@@ -46,7 +50,10 @@
     spotify
     mpv
     obsidian
+    rmview  # Remarkable desktop client
+    remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
 
+    vlc
     # Audio
     helvum
     pamixer
