@@ -7,21 +7,15 @@
     userName = "Daniel Hernandez";
     userEmail = "daniel.hernandez2@sony.com";
 
-    delta = {
-      enable = true;
-      options = {
-        #side-by-side = true; TODO: Test if we want this
-        features = "decorations";
-      };
-    };
+    difftastic.enable = true;
 
     extraConfig = {
       pull.rebase = false;
       pager = {
-        diff = "delta";
-        show = "delta";
-        log = "delta";
-        reflog = "delta";
+        diff = "difftastic";
+        show = "difftastic";
+        log = "difftastic";
+        reflog = "difftastic";
       };
     };
 
@@ -54,9 +48,13 @@
         "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit";
       plog =
         "log --graph --pretty='format:%C(red)%d%C(reset) %C(yellow)%h%C(reset) %ar %C(green)%aN%C(reset) %s'";
+
+      # Short summary of changes from 1 day ago
       tlog =
         "log --stat --since='1 Day Ago' --graph --pretty=oneline --abbrev-commit --date=relative";
-      rank = "shortlog -sn --no-merges";
+
+      # Something like showing desdencindg lists of commit merges
+      rank = "shortlog --summary --numbered --no-merges";
 
       # delete merged branches
       bdm = "!git branch --merged | grep -v '*' | xargs -n 1 git branch -d";
