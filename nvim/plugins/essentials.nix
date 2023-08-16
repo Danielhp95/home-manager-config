@@ -30,6 +30,21 @@ in
 
   setup.Comment = callWith { };
   lua = lib.mkBefore ''
+
+    -- TODO: figure out a better place to put this
+    -- vim.api.nvim_create_autocmd('VimEnter', {
+    --     pattern = '*',
+    --     callback = function()
+    --       -- Open file browser if argument is a folder
+    --       local arg = vim.api.nvim_eval('argv(0)')
+    --       if arg and (vim.fn.isdirectory(arg) ~= 0 or arg == "") then
+    --         vim.defer_fn(function()
+    --           require'telescope.builtin'.find_files()
+    --         end, 10)
+    --       end
+    --     end
+    --   })
+
     -- For developing purposes
     -- Prints table in nice format
     P = function(v)
