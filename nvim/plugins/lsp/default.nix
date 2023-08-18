@@ -22,7 +22,7 @@ with dsl; {
 
   use.neodev.setup = callWith { };  # TODO: get chris' config from Element
 
-  use.lspsaga.setup = callWith { };
+  use.lspsaga.init_lsp_saga = callWith { code_action_prompt.enable =  false; };
   use.lsp-lens.setup = callWith {
     enable = false;
     include_declaration = true;

@@ -34,7 +34,7 @@ with dsl;
   };
 
   vimscript = ''
-    colorscheme onedark
+    colorscheme carbonfox
     autocmd BufNewFile,BufRead *.libsonnet setf jsonnet
   '';
 
