@@ -227,6 +227,6 @@ wk.register({
 -- pandoc
 wk.register({
   ['<leader><leader>p'] = {
-    "<cmd>!pandoc -t beamer ~/configs/dotfiles/nvim/pandoc_header % --from=markdown --pdf-engine=lualatex --output=%:r.pdf<cr>",
+    "<cmd>!pandoc -t beamer ~/configs/nvim/pandoc_header % --from=markdown --pdf-engine=lualatex --output=%:r.pdf<cr>",
     "[p]andoc file into PDF presentation"}
 })
