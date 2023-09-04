@@ -11,9 +11,7 @@
     ./tmux
     ./zathura.nix
     ./git
-    ./nvim/neovim.nix
-    # ./chris_neovim/neovim/neovim.nix
-    ./new_neovim/neovim/neovim.nix
+    ./neovim
     ./rofi
     ./zellij
     ./atuin.nix
