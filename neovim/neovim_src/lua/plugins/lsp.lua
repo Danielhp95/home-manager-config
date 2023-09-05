@@ -4,10 +4,7 @@
 local NixPlugin = require('helper').NixPlugin
 
 -- Useful status updates for LSP
-local fidget = NixPlugin('j-hui/fidget.nvim')
-fidget.lazy = true
-fidget.opts = {}
-fidget.tag = "legacy"  -- TODO: Why legacy?
+local fidget = NixPlugin('j-hui/fidget.nvim', { lazy = true, tag = 'legacy', opts = {} })
 
 -- TODO: figure out what on attach does
 local on_attach = function(client, bufnr)
@@ -25,18 +22,20 @@ end
 
 -- LUA
 -- Additional lua configuration, makes nvim stuff amazing!
-local neodev = NixPlugin('folke/neodev.nvim')
-neodev.lazy = true
-neodev.opts = {
-  library = {
-    enabled = true,
-    runtime = true,
-    types = true,
-    plugins = true,
-  },
-  setup_jsonls = true,
-  lspconfig = true,
-}
+local neodev = NixPlugin('folke/neodev.nvim', {
+  lazy = true,
+  opts =
+  {
+    library = {
+      enabled = true,
+      runtime = true,
+      types = true,
+      plugins = true,
+    },
+    setup_jsonls = true,
+    lspconfig = true,
+  }
+})
 
 -- LSP Configuration & Plugins
 local lspconfig_toplevel = NixPlugin('neovim/nvim-lspconfig')
@@ -45,7 +44,7 @@ lspconfig_toplevel.dependencies = {
   NixPlugin('ray-x/lsp_signature.nvim'),
   NixPlugin('folke/neodev.nvim')
 }
-lspconfig_toplevel.config = function ()
+lspconfig_toplevel.config = function()
   local lspconfig = require('lspconfig')
 
 
@@ -70,7 +69,7 @@ lspconfig_toplevel.config = function ()
   })
   -- lua
   lspconfig.lua_ls.setup({
-    cmd = { "lua-language-server"},
+    cmd = { "lua-language-server" },
     on_attach = on_attach,
     capabilities = capabilities,
     settings = {
@@ -95,7 +94,7 @@ lspconfig_toplevel.config = function ()
   })
   -- NIX
   lspconfig.nil_ls.setup({
-    autostart = true;
+    autostart = true,
     cmd = { "nil" },
     on_attach = on_attach,
     capabilities = capabilities,
@@ -109,7 +108,7 @@ lspconfig_toplevel.config = function ()
   })
   -- BASH
   lspconfig.bashls.setup({
-    cmd = { "bash-language-server", "start"},
+    cmd = { "bash-language-server", "start" },
     on_attach = on_attach,
     capabilities = capabilities,
   })
@@ -132,7 +131,10 @@ lspconfig_toplevel.config = function ()
   })
 end
 
+local LspSaga = NixPlugin("kkharji/lspsaga")
+LspSaga.config = function() require('lspsaga').setup({}) end
 
 return {
-  lspconfig_toplevel
+  lspconfig_toplevel,
+  LspSaga
 }

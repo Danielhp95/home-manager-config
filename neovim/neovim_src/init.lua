@@ -5,7 +5,6 @@ local nixplugdir = confdir .. 'nix-plugins/'
 local lazypath = nixplugdir .. 'lazy.nvim'
 vim.opt.rtp:prepend(lazypath)
 
-
 -- Annoyingly, leader has to be mapped prior to loading lazy
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '

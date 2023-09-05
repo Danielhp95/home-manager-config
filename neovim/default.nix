@@ -61,7 +61,7 @@ let
     "neodev.nvim" = neodev-nvim;  # Lua LSP
     "null-ls.nvim" = null-ls-nvim;  # TODO: this has been discontinued
     "lsp_signature.nvim" = lsp_signature-nvim;  # Show function signature
-    "lspsaga-nvim" = lspsaga-nvim; # extra UI for lsp
+    "lspsaga" = lspsaga-nvim; # extra UI for lsp
 
     ## cmp
     "nvim-cmp" = nvim-cmp;
