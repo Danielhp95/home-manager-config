@@ -36,13 +36,12 @@
     feh # image viewer
     # imv # image viewer BROKEN on Ubuntu 22.04
     ripgrep # better grep
-    exa # Better ls
+    eza # Better ls
     bat # Better cat
     ranger # File manager
     bottom # like htop but cooler
     zenith # Httop with zommable chards
     tldr   # succint command explanations
-    nvfetcher # To get nvim plugins (could expand to other things)
     acpi  # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
 

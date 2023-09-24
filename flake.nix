@@ -14,16 +14,13 @@
     nix2vim.url = "github:gytis-ivaskevicius/nix2vim?rev=f3b56da72278cd720fe7fb4b6d001047b7179669";
     nix2vim.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Should figure out how to set these
-    nvfetcher.url = "github:berberman/nvfetcher";
-    nvfetcher.inputs.nixpkgs.follows = "nixpkgs";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";
 
   };
 
-  outputs = inputs @ { self, nixpkgs, nixgl, nix2vim, stable, nvfetcher, homeManager, haumea}:
+  outputs = inputs @ { self, nixpkgs, nixgl, nix2vim, stable, homeManager, haumea}:
   let
     pkgs = import nixpkgs {
       system = "x86_64-linux";

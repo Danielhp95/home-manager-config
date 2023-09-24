@@ -6,7 +6,7 @@ let
     zstyle ":completion:*:git-checkout:*" sort false
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':completion:*' list-colors ${"\${(s.:.)LS_COLORS}"}
-    zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+    zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
   '';
 in
 {
@@ -16,7 +16,7 @@ in
     # rust alternatives
     fd # find alternative
     bat # cat alternative
-    exa # ls alternative
+    eza # ls alternative
     du-dust # du alternative. Pretty crazy
     most
   ];
@@ -70,11 +70,11 @@ in
       # git
       wow = "git status";
 
-      # exa
-      l = "exa";
-      ls = "exa -lahFg";
-      ll = "exa -lFhg";
-      la = "exa -alFg";
+      # eza
+      l = "eza";
+      ls = "eza -lahFg";
+      ll = "eza -lFhg";
+      la = "eza -alFg";
       # Hack to get colored man pages, for some reason MANPAGER would not work properly if set on envExtra (see above)
       man = "MANPAGER=\"less -R --use-color -Dd+r -Du+b\" man";
 
