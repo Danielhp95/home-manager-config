@@ -18,6 +18,7 @@ local NvimCmp = NixPlugin('hrsh7th/nvim-cmp', {
     NixPlugin('hrsh7th/cmp-nixpkgs'),
     NixPlugin('hrsh7th/cmp-buffer'),
     NixPlugin('hrsh7th/cmp-path'),
+    NixPlugin('GoldsteinE/compe-latex-symbols'),
     -- icons on cmp
     NixPlugin('onsails/lspkind.nvim'),
   }
@@ -43,6 +44,7 @@ NvimCmp.config = function()
       { name = 'nixpkgs' },
       { name = 'nvim_lsp' },
       { name = 'luasnip', max_item_count = 10 },
+      { name = 'latex_symbols'},
       {
         name = 'buffer',
         options = { -- Show suggestions from all buffers
@@ -100,17 +102,26 @@ NvimCmp.config = function()
     -- Deals with how the cpm looks
     formatting = {
       format = function(entry, vim_item)
+        local item = entry:get_completion_item()
+        require 'helper'.P(item)
         if not (vim_item.kind == "Attr") then
           vim_item.kind = require("lspkind").presets.default[vim_item.kind] .. " " .. vim_item.kind
         end
-        vim_item.menu = ({
-          path = "[Path]",
-          buffer = "[Buffer]",
-          nvim_lsp = "[LSP]",
-          luasnip = "[LuaSnip]",
-          nvim_lua = "[Lua]",
-          latex_symbols = "[Latex]",
-        })[entry.source.name]
+        -- Work inprogress: https://www.reddit.com/r/neovim/comments/unlj8d/is_there_any_way_to_show_types_in_nvimcmp/
+        if entry.source.source.client and entry.source.source.client.name == "pyright" and item.kind == 6 and item.documentation then
+          vim_item.menu = item.documentation.value:sub(#item.documentation.value:match("%S+") + 2) -- Remove first word
+        elseif item.detail then
+          vim_item.menu = item.detail
+        else
+          vim_item.menu = ({
+            path = "[Path]",
+            buffer = "[Buffer]",
+            nvim_lsp = "[LSP]",
+            luasnip = "[LuaSnip]",
+            nvim_lua = "[Lua]",
+            latex_symbols = "[Latex]",
+          })[entry.source.name]
+        end
         return vim_item
       end,
     },

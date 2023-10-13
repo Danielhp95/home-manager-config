@@ -71,6 +71,7 @@ let
     "cmp-nixpkgs" = cmp-nixpkgs;
     "cmp-rg" = cmp-rg;
     "cmp_luasnip" = cmp_luasnip;
+    "compe-latex-symbols" = compe-latex-symbols;
     "LuaSnip" = luasnip;
     "cmp-nvim-lsp" = cmp-nvim-lsp;
     "friendly-snippets" = friendly-snippets;
@@ -98,6 +99,8 @@ let
     "vim-oscyank" = vim-oscyank;
     "toggleterm.nvim" = toggleterm-nvim;
     "vim-floaterm" = vim-floaterm;
+    "term-edit.nvim" = term-edit-nvim;
+    "sniprun" = sniprun;
 
     "suda.vim" = suda-vim;
     "vim-togglelist" = vim-togglelist;

@@ -3,19 +3,19 @@
 -- (2) Call lspconfig.config function, which sets all the individual LSPs
 local NixPlugin = require('helper').NixPlugin
 
--- -- TODO: figure out what on attach does
--- local on_attach = function(client, bufnr)
---   -- show signature as you type
---   -- TODO: maybe there is cooler stuff that can be done here! Ask reddit
---
---   -- TODO: I don't think I need this here
---   require('lsp_signature').setup({
---     bind = true, -- TODO: what is this?
---     handler_opts = { border = "rounded" },
---     hi_parameter = "Visual",
---     hint_enable = true,
---   }, bufnr)
--- end
+-- Formmater
+local Conform = {
+  'stevearc/conform.nvim',
+  opts = {
+    formatters_by_ft = {
+      lua = { "stylua" },
+      -- Conform will run multiple formatters sequentially
+      python = { "black", "ruff" },
+      nix = { "nixpkgs-fmt" }
+    },
+  },
+}
+
 
 -- LUA
 -- Additional lua configuration, makes nvim stuff amazing!
@@ -43,34 +43,24 @@ local lspconfig_toplevel = NixPlugin('neovim/nvim-lspconfig', {
     NixPlugin('folke/neodev.nvim')
   },
   config = function()
-    vim.lsp.set_log_level('trace')
     local lspconfig = require('lspconfig')
-
-
-    -- TODO: what even is this :P
-    -- https://github.com/neovim/nvim-lspconfig/wiki/Autocompletion
-    -- https://github.com/hrsh7th/cmp-nvim-lsp/issues/42#issuecomment-1283825572
-    local capabilities = vim.tbl_deep_extend(
-      'force',
-      vim.lsp.protocol.make_client_capabilities(),
-      require('cmp_nvim_lsp').default_capabilities(),
-      -- File watching is disabled by default for neovim.
-      -- See: https://github.com/neovim/neovim/pull/22405
-      { workspace = { didChangeWatchedFiles = { dynamicRegistration = true } } }
-    );
 
     -- PYTHON
     lspconfig.pyright.setup({
       cmd = { "pyright-langserver", "--stdio" },
-      -- on_attach = on_attach,
-      capabilities = capabilities,
-      -- TODO: add ruff as a formatting command like in nil_ls (nix)
+
+      capabilities = vim.tbl_deep_extend(
+        'force',
+        vim.lsp.protocol.make_client_capabilities(),
+        require('cmp_nvim_lsp').default_capabilities(),
+        -- File watching is disabled by default for neovim.
+        -- See: https://github.com/neovim/neovim/pull/22405
+        { workspace = { didChangeWatchedFiles = { dynamicRegistration = false } } } -- keeping it false because it makes CPU spikes
+      )
     })
     -- lua
     lspconfig.lua_ls.setup({
       cmd = { "lua-language-server" },
-      -- on_attach = on_attach,
-      capabilities = capabilities,
       settings = {
         Lua = {
           diagnostics = {
@@ -95,8 +85,6 @@ local lspconfig_toplevel = NixPlugin('neovim/nvim-lspconfig', {
     lspconfig.nil_ls.setup({
       autostart = true,
       cmd = { "nil" },
-      -- on_attach = on_attach,
-      capabilities = capabilities,
       settings = {
         ['nil'] = {
           formatting = {
@@ -108,17 +96,12 @@ local lspconfig_toplevel = NixPlugin('neovim/nvim-lspconfig', {
     -- BASH
     lspconfig.bashls.setup({
       cmd = { "bash-language-server", "start" },
-      -- on_attach = on_attach,
-      capabilities = capabilities,
     })
     -- DOCKER
     lspconfig.docker_compose_language_service.setup({
-      -- on_attach = on_attach,
-      capabilities = capabilities,
     })
     -- YAML
     lspconfig.yamlls.setup({
-      -- on_attach = on_attach,
       settings = {
         redhat = {
           telemetry = {
@@ -126,7 +109,6 @@ local lspconfig_toplevel = NixPlugin('neovim/nvim-lspconfig', {
           },
         },
       },
-      capabilities = capabilities,
     })
     require "lsp_signature".setup({
       bind = true, -- This is mandatory, otherwise border config won't get registered.
@@ -143,5 +125,6 @@ local LspSaga = NixPlugin("kkharji/lspsaga", {
 
 return {
   lspconfig_toplevel,
-  LspSaga
+  LspSaga,
+  Conform
 }

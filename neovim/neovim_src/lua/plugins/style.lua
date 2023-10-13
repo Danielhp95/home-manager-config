@@ -70,5 +70,5 @@ return {
   ColorSchemes,
   LuaLine,
   IndentLines,
-  BufferLine
+  BufferLine,
 }
