@@ -50,5 +50,6 @@ return {
   NixPlugin("windwp/nvim-autopairs", { event = "InsertEnter", opts = {} }),
   NixPlugin("nvim-tree/nvim-tree.lua", { opts = {} }),
   NixPlugin('kylechui/nvim-surround'),
-  "stevearc/profile.nvim"
+  "stevearc/profile.nvim",
+  {"Danielhp95/tmpclone-nvim", opts = {}}
 }

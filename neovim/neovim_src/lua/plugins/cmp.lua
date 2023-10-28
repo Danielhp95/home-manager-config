@@ -103,7 +103,6 @@ NvimCmp.config = function()
     formatting = {
       format = function(entry, vim_item)
         local item = entry:get_completion_item()
-        require 'helper'.P(item)
         if not (vim_item.kind == "Attr") then
           vim_item.kind = require("lspkind").presets.default[vim_item.kind] .. " " .. vim_item.kind
         end

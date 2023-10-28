@@ -19,6 +19,7 @@
   ];
 
   programs.direnv.enable = true;
+  services.flameshot.enable = true;
 
   home.packages = with pkgs; [
     # wezterm
@@ -36,7 +37,6 @@
     feh # image viewer
     # imv # image viewer BROKEN on Ubuntu 22.04
     ripgrep # better grep
-    eza # Better ls
     bat # Better cat
     ranger # File manager
     bottom # like htop but cooler
@@ -56,6 +56,8 @@
     # Audio
     helvum
     pamixer
+
+    chromium
   ];
 
   # Let Home Manager install and manage itself.

@@ -8,7 +8,7 @@ telescope.dependencies = {
   NixPlugin('LinArcX/telescope-changes.nvim'),
   NixPlugin('LukasPietzschmann/telescope-tabs'),
   NixPlugin('nvim-telescope/telescope-cheat.nvim'),
-  NixPlugin('prochri/telescope-all-recent.nvim'),
+  'prochri/telescope-all-recent.nvim',
   NixPlugin('nvim-telescope/telescope-live-grep-args.nvim'),
   NixPlugin('folke/trouble.nvim'),
   NixPlugin('nvim-telescope/telescope-fzf-native.nvim'),
@@ -16,6 +16,7 @@ telescope.dependencies = {
 }
 
 telescope.config = function()
+  -- require'telescope-all-recent'.setup({})
   local actions = require('telescope.actions')
   local action_set = require('telescope.actions.set')
   require('trouble').setup({ auto_preview = true })
@@ -67,6 +68,7 @@ telescope.config = function()
           ['<s-k>'] = function(prompt_bufnr) action_layout.cycle_layout_prev(prompt_bufnr) end,
           ["<c-l>"] = require("trouble.providers.telescope").open_with_trouble,
           ["<c-f>"] = actions.send_to_qflist,
+          ["<tab>"] = actions.toggle_selection,
         },
         n = {
           ["<esc>"] = actions.close,

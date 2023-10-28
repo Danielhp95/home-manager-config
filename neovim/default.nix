@@ -172,6 +172,7 @@ in
       lua-language-server
       nil
       gopls
+      stylua
       nodePackages.bash-language-server
       nodePackages.pyright
       nodePackages.yaml-language-server

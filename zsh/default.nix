@@ -16,11 +16,11 @@ in
     # rust alternatives
     fd # find alternative
     bat # cat alternative
-    eza # ls alternative
     du-dust # du alternative. Pretty crazy
     most
   ];
 
+  programs.eza.enable = true;
   programs.fzf.enable = true;
   programs.zsh = {
     enable = true;
@@ -71,10 +71,7 @@ in
       wow = "git status";
 
       # eza
-      l = "eza";
-      ls = "eza -lahFg";
-      ll = "eza -lFhg";
-      la = "eza -alFg";
+      ls = "eza -lahF --git";
       # Hack to get colored man pages, for some reason MANPAGER would not work properly if set on envExtra (see above)
       man = "MANPAGER=\"less -R --use-color -Dd+r -Du+b\" man";
 

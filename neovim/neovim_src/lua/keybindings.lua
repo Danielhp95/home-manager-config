@@ -153,11 +153,12 @@ wk.register({
   { mode = 'v' }
 )
 
--- FM-nvim
+-- File managers
 wk.register({
   ['<leader>'] = {
     ['-'] = { "<cmd>Ranger %:p:h<cr>", "Ranger open in current dir" },
     ['_'] = { "<cmd>Ranger ~<cr>", "Ranger open in home dir" },
+    ['o'] = { "<cmd>Oil --float<cr>", "Oil file manager in current file's directory" },
   }
 })
 
