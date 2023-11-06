@@ -1,6 +1,7 @@
 local NixPlugin = require('helper').NixPlugin
 
 -- cmp_luasnip will not start without nvim-cmp as a dependency when imported from nix
+
 local CmpLuaSnip = NixPlugin('saadparwaiz1/cmp_luasnip', {
   dependencies = { NixPlugin('hrsh7th/nvim-cmp')
   }
@@ -107,7 +108,7 @@ NvimCmp.config = function()
           vim_item.kind = require("lspkind").presets.default[vim_item.kind] .. " " .. vim_item.kind
         end
         -- Work inprogress: https://www.reddit.com/r/neovim/comments/unlj8d/is_there_any_way_to_show_types_in_nvimcmp/
-        if entry.source.source.client and entry.source.source.client.name == "pyright" and item.kind == 6 and item.documentation then
+        if entry.source.source.client and entry.source.source.client.name == "pyright" and item.detail == "Auto-import" and item.documentation then
           vim_item.menu = item.documentation.value:sub(#item.documentation.value:match("%S+") + 2) -- Remove first word
         elseif item.detail then
           vim_item.menu = item.detail
