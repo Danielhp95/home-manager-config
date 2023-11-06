@@ -19,10 +19,12 @@
   ];
 
   programs.direnv.enable = true;
+  programs.firefox.enable = true;
   services.flameshot.enable = true;
 
   home.packages = with pkgs; [
     # wezterm
+    chromium
     powerline-fonts
     coreutils
     gzip
@@ -57,7 +59,7 @@
     helvum
     pamixer
 
-    chromium
+    element-desktop
   ];
 
   # Let Home Manager install and manage itself.
