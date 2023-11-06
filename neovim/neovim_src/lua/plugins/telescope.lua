@@ -36,6 +36,10 @@ telescope.config = function()
       entry_prefix = "  ",
       prompt_prefix = "   ",
       selection_caret = ">  ",
+      winblend = 0,
+      border = {},
+      borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
+      set_env = { ["COLORTERM"] = "truecolor" }, -- default = nil,
       color_devicons = true,
       path_display = { "absolute" },
       layout_config = {
@@ -67,7 +71,7 @@ telescope.config = function()
           ['<s-j>'] = function(prompt_bufnr) action_layout.cycle_layout_next(prompt_bufnr) end,
           ['<s-k>'] = function(prompt_bufnr) action_layout.cycle_layout_prev(prompt_bufnr) end,
           ["<c-l>"] = require("trouble.providers.telescope").open_with_trouble,
-          ["<c-f>"] = actions.send_to_qflist,
+          ["<c-f>"] = actions.send_to_qflist + actions.open_qflist,
           ["<tab>"] = actions.toggle_selection,
         },
         n = {
@@ -103,17 +107,6 @@ telescope.config = function()
   require('telescope').load_extension("env")
   -- require('telescope').load_extension('dap') -- TODO: fix
   require('telescope').load_extension('fzf')
-
-
-  function File_picker()
-    vim.fn.system('git rev-parse --git-dir > /dev/null 2>&1')
-    local is_git = vim.v.shell_error == 0
-    if is_git then
-      require 'telescope.builtin'.find_files()
-    else
-      vim.cmd 'Files'
-    end
-  end
 end
 return { telescope,
 

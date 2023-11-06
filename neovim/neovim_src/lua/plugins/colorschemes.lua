@@ -21,6 +21,7 @@ return {
       },
       highlights = {
         CmpItemMenu = { bg = '${dark_gray}' },
+        PMenuSel = {bg = '${green}', bold= true},
         CmdLine = {
           bg = '${dark_gray}',
           fg = '${fg}',
@@ -50,6 +51,7 @@ return {
         },
         TelescopePromptCounter = { fg = '${fg}' },
         TelescopePromptNormal = { fg = '${fg}', bg = '${darker_gray}' },
+        TelescopeWindowBorder = { fg = '${green}'},
         TelescopePromptPrefix = {
           fg = '${green}',
           bg = '${darker_gray}',
@@ -57,15 +59,18 @@ return {
         TelescopePromptTitle = {
           fg = '${darker_gray}',
           bg = '${green}',
+          bold = true,
         },
 
         TelescopePreviewTitle = {
           fg = '${darkest_gray}',
           bg = '${green}',
+          bold = true,
         },
         TelescopeResultsTitle = {
           fg = '${darkest_gray}',
           bg = '${darkest_gray}',
+          bold = true,
         },
 
         TelescopeMatching = { fg = '${green}' },

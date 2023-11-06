@@ -173,6 +173,7 @@ in
       nil
       gopls
       stylua
+      yamlfmt
       nodePackages.bash-language-server
       nodePackages.pyright
       nodePackages.yaml-language-server

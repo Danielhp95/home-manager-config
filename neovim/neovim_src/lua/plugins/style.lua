@@ -7,7 +7,7 @@ local ColorSchemes = NixPlugin("navarasu/onedark.nvim", {
 	},
 	config = function()
 		require("onedark").setup({ style = "deep", toggle_style_key = "<C-q>" })
-		vim.api.nvim_command("colorscheme carbonfox")
+		-- vim.api.nvim_command("colorscheme carbonfox")
 	end,
 })
 

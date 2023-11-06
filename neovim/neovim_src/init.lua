@@ -18,9 +18,6 @@ require('lazy').setup('plugins', {
   },
 })
 
--- color
--- vim.cmd 'colorscheme carbonfox'
-
 require 'options'
 require 'aucmds'
 require 'keybindings'
