@@ -58,6 +58,8 @@ local IndentLines = NixPlugin("lukas-reineke/indent-blankline.nvim", {
 		"TheGLander/indent-rainbowline.nvim", -- This plugin is used to make configuratino for indent-blankline.nvim
 	},
 	main = "ibl",
+	show_start=false,
+	show_end=false,
 	opts = {
 		indent = { char = "┊" },
 	},
