@@ -108,6 +108,7 @@ NvimCmp.config = function()
           vim_item.kind = require("lspkind").presets.default[vim_item.kind] .. " " .. vim_item.kind
         end
         -- Work inprogress: https://www.reddit.com/r/neovim/comments/unlj8d/is_there_any_way_to_show_types_in_nvimcmp/
+        -- Unroll Auto-import so that it shows where the import would be coming from
         if entry.source.source.client and entry.source.source.client.name == "pyright" and item.detail == "Auto-import" and item.documentation then
           vim_item.menu = item.documentation.value:sub(#item.documentation.value:match("%S+") + 2) -- Remove first word
         elseif item.detail then
