@@ -10,6 +10,7 @@ wk.register({
   ["<C-Down>"] = { "<cmd>resize +1<cr>", "Continuous window vertical resize" },
   ["<C-Left>"] = { "<cmd>vertical resize +1<cr>", "Continuous window horizontal resize" },
   ["<C-Right>"] = { "<cmd>vertical resize -1<cr>", "Continuous window horizontal resize" },
+  ["yg"] = { "<cmd>let @\" = expand(\"%\")<cr>", "Yank current register path" },
   ['<leader>nw'] = {
     name = '+[n]o',
     w = { "<cmd>set wrap!<cr>", "line [w]rap" },
@@ -71,8 +72,8 @@ wk.register({
       o = { "<cmd>Telescope oldfiles<CR>", "Last [o]pened files" },
       t = { "<cmd>Telescope<CR>", "Default [t]elescope" },
       r = { "<cmd>Telescope resume<CR>", "[r]esume last search" },
-      s = { "<cmd>Telescope lsp_document_symbols<CR>", "Buffer lsp [s]ymbols" },
-      S = { "<cmd>Telescope lsp_dynamic_workspace_symbols<CR>", "Workspace lsp [S]ymbols" },
+      s = { "<cmd>lua require('telescope.builtin').lsp_document_symbols({symbol_width = 50})<CR>", "Buffer lsp [s]ymbols" },
+      S = { "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({symbol_width = 50})<CR>", "Workspace lsp [S]ymbols" },
       d = { "<cmd>lua require'telescope.builtin'.find_files({cwd='~/configs'})<cr>", "Open NIX config [d]irectory" },
       v = { "<cmd>lua require'telescope.builtin'.find_files({cwd='~/Documents/Obsidian Vault/'})<cr>",
         "Open Obsidian [v]ault" },

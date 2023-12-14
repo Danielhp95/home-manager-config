@@ -20,7 +20,9 @@
 
   programs.direnv.enable = true;
   programs.firefox.enable = true;
+  programs.rio.enable = true;
   services.flameshot.enable = true;
+  services.clipmenu.enable = true;
 
   home.packages = with pkgs; [
     # wezterm
@@ -31,6 +33,8 @@
     gawk
     gnugrep
     nixgl.nixGLIntel
+    nvd  # Nix version diff tool
+    nushell
 
     # Latex stuff
     texlive.combined.scheme-full
@@ -42,7 +46,6 @@
     bat # Better cat
     ranger # File manager
     bottom # like htop but cooler
-    zenith # Httop with zommable chards
     tldr   # succint command explanations
     acpi  # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
@@ -60,6 +63,8 @@
     pamixer
 
     element-desktop
+    zoom-us
+
   ];
 
   # Let Home Manager install and manage itself.
