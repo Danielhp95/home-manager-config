@@ -1,5 +1,6 @@
 local NixPlugin = require("helper").NixPlugin
 
+-- TODO: use `gevent=true` to bypass the issue with fetching data forever on `aws s3`` calls
 -- Look into this to have pytest integration https://github.com/mfussenegger/nvim-dap-python
 local Dap = {
   url = 'https://github.com/mfussenegger/nvim-dap',
@@ -25,9 +26,26 @@ local Dap = {
         name = "Launch file",
         -- Options below are for debugpy, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings for supported options
 
+        justMyCode=false,
         program = "${file}", -- This configuration will launch the current file if used.
-        pythonPath = (os.getenv("VIRTUAL_ENV") or '') .. "/bin/python"
+        pythonPath = (os.getenv("VIRTUAL_ENV") or '') .. "/bin/python",
+        gevent=true,
+        subProcess=true
       },
+      {
+        type = "python",
+        request = 'launch',
+        name = "run_local",
+        cwd = vim.loop.cwd(),
+        logToFile = true,
+        program = "/home/dev/venv/bin/dart",
+        args = {
+          "run_local",
+          "-m",
+          "both",
+          "${file}"
+        },
+      }
     }
 
     require('dapui').setup({
@@ -52,7 +70,6 @@ local Dap = {
         }
       },
     })
-    -- TODO: still needs dap.configurations.python?
   end
 }
 

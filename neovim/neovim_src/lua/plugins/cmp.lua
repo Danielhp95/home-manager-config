@@ -112,7 +112,7 @@ NvimCmp.config = function()
         if entry.source.source.client and entry.source.source.client.name == "pyright" and item.detail == "Auto-import" and item.documentation then
           vim_item.menu = item.documentation.value:sub(#item.documentation.value:match("%S+") + 2) -- Remove first word
         -- if this is a constant, show the type. TODO: for some reason this is only showing up when selection is on this entry. Is this because of item.kind?
-        elseif entry.source.source.client and entry.source.source.client.name == "pyright" and item.kind == 21 and item.documentation then
+        elseif entry.source.source.client and entry.source.source.client.name == "pyright" and item.documentation then
           -- The documentation is "name: type", we want to remove "name: " from string
           local variable_type = item.documentation.value:gsub(string.format("```python\n%s: ", item.label), "")
           vim_item.menu = variable_type

@@ -18,6 +18,7 @@ wk.register({
   },
   ["<C-s><C-s>"] = { "<cmd>w<cr>", "[s]ave buffer" },
   ["gf"] = { "<cmd>e <cfile><cr>", "[g]o to [f]ile under cursor even if not existing" },
+  ["<leader>f"] = {"<cmd> NeoZoomToggle<cr>", "[f]ocuses on current window"}
 })
 
 -- Git
@@ -34,7 +35,7 @@ wk.register({
       b = { "<cmd>Gitsigns blame_line<cr>", "[b]lame current line" },
       d = {
         name = "+[d]iff",
-        t = { "<cmd>DiffviewToggleFiles<cr>", "[t]oggle diff files" },
+        d = { "<cmd>DiffviewFileHistory %<cr>", "[d]iff history for current file" },
         r = { "<cmd>DiffviewRefresh<cr>", "[r]efresh git merge state" },
         o = { "<cmd>DiffviewOpen<cr>", "[o]pen new tab with diff merger" },
         c = { "<cmd>DiffviewClose<cr>", "[c]lose diff merger" },
@@ -57,6 +58,13 @@ wk.register({
     }
   }
 })
+wk.register({
+    ['<leader>gd'] = {
+      name = '[g]it diff',
+      d = { ":'<,'>DiffviewFileHistory<cr>", "[d]iff of changes for selected lines" } },
+  },
+  { mode = 'v' }
+)
 
 -- Telescope
 wk.register({

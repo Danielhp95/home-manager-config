@@ -174,6 +174,7 @@ in
       gopls
       stylua
       yamlfmt
+      python310Packages.gevent
       nodePackages.bash-language-server
       nodePackages.pyright
       nodePackages.yaml-language-server

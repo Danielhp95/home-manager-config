@@ -53,7 +53,7 @@
     # For fun
     spotify
     mpv
-    obsidian
+    # obsidian
     rmview  # Remarkable desktop client
     remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
 
