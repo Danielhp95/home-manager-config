@@ -1,5 +1,6 @@
 ---
 # YAML header
+# Useful guide: https://github.com/alexeygumirov/pandoc-beamer-how-to
 author: Daniel Hernandez
 date: \today
 # Theme configuration
@@ -25,7 +26,7 @@ header-includes:
 output:
 # === Generate slides ===
  beamer_presentation:
-   slide_level: 1
+   slide_level: 2
 # === END Generate slides ===
  pdf_document:
    toc: false
