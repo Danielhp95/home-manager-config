@@ -59,7 +59,6 @@ let
     "nvim-lspconfig" = nvim-lspconfig;  # Top level LSP configuration
     "fidget.nvim" = fidget-nvim;  # 
     "neodev.nvim" = neodev-nvim;  # Lua LSP
-    "null-ls.nvim" = null-ls-nvim;  # TODO: this has been discontinued
     "lsp_signature.nvim" = lsp_signature-nvim;  # Show function signature
     "lspsaga" = lspsaga-nvim; # extra UI for lsp
 
@@ -68,7 +67,6 @@ let
     "cmp-cmdline" = cmp-cmdline;
     "cmp-buffer" = cmp-buffer;
     "cmp-path" = cmp-path;
-    "cmp-nixpkgs" = cmp-nixpkgs;
     "cmp-rg" = cmp-rg;
     "cmp_luasnip" = cmp_luasnip;
     "compe-latex-symbols" = compe-latex-symbols;

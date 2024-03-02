@@ -17,7 +17,7 @@ in
     fd # find alternative
     bat # cat alternative
     du-dust # du alternative. Pretty crazy
-    most
+    duf  # like du, but for free space
   ];
 
   programs.eza.enable = true;
@@ -26,7 +26,7 @@ in
     enable = true;
     initExtra = keyBindings + fzf-tab-conf + ''
       # Remaping caps to escape
-      setxkbmap -option caps:escape
+      # setxkbmap -option caps:escape
 
       # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
       autoload -U select-word-style

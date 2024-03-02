@@ -32,9 +32,18 @@
     gzip
     gawk
     gnugrep
-    nixgl.nixGLIntel
     nvd  # Nix version diff tool
     nushell
+
+    # Communication
+    slack
+    telegram-desktop
+    element-desktop
+    zoom-us
+
+    # art
+    ansel
+    davinci-resolve
 
     # Latex stuff
     texlive.combined.scheme-full
@@ -62,9 +71,9 @@
     helvum
     pamixer
 
-    element-desktop
-    zoom-us
-
+    # authenticators
+    awscli2
+    amazon-ecr-credential-helper
   ];
 
   # Let Home Manager install and manage itself.
