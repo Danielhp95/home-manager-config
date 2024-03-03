@@ -37,6 +37,8 @@
     nvd  # Nix version diff tool
     nushell
 
+    fuzzel
+
     # Communication
     slack
     telegram-desktop
@@ -46,6 +48,7 @@
     # art
     ansel
     davinci-resolve
+    steam
 
     # Latex stuff
     texlive.combined.scheme-full
@@ -69,6 +72,7 @@
     remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
 
     vlc
+    lnav
 
     # Audio
     helvum

@@ -5,12 +5,27 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [  ];
+  imports = [ ./tuigreet.nix ];
 
   nix.settings.extra-experimental-features = ["flakes" "nix-command"];
 
   # Enables docker
   virtualisation.docker.enable = true;
+
+  # To get screensharing working (TODO: fix)
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
+  };
+
+  khome.tuigreet = {
+    enable = true;
+    enableWaylandEnvs = true;
+    sessions = {
+      hyprland.enable = true;
+      zsh.enable = true;
+    };
+  };
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -40,8 +55,13 @@
 
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  services.xserver.desktopManager.session = [ {
+    manage = "window";
+    name = "Hyprland";
+    start = "Hyprland";
+  }];
 
+  services.xserver.desktopManager.gnome.enable = true;
 
   environment.pathsToLink = [ "/share/zsh" ];  # Make sure that home-manager installed `zsh` picks up system installed programs
 

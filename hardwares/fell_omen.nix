@@ -14,6 +14,11 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.opengl.extraPackages = with pkgs; [
+    vaapiVdpau
+  ];
+
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/9198a171-af25-4994-adc0-29dfebf18890";
       fsType = "ext4";
@@ -31,7 +36,7 @@
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
-  # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
+  # with expliciv per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
   # networking.interfaces.eno1.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
