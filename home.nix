@@ -15,17 +15,19 @@
     ./rofi
     ./zellij
     ./atuin.nix
+    ./hyprland
+    ./eww
     #./kitty  # Kitty / alacritty break because of some GLX issues  (TODO: use nixGL?)
   ];
 
   programs.direnv.enable = true;
   programs.firefox.enable = true;
-  programs.rio.enable = true;
+  # programs.rio.enable = true;
   services.flameshot.enable = true;
   services.clipmenu.enable = true;
 
   home.packages = with pkgs; [
-    # wezterm
+    wezterm
     chromium
     powerline-fonts
     coreutils
@@ -67,9 +69,11 @@
     remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
 
     vlc
+
     # Audio
     helvum
     pamixer
+    pavucontrol
 
     # authenticators
     awscli2
