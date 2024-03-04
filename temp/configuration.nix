@@ -5,7 +5,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [ ./tuigreet.nix ];
+  imports = [ ../tuigreet.nix ];
 
   nix.settings.extra-experimental-features = ["flakes" "nix-command"];
 
@@ -26,6 +26,10 @@
       zsh.enable = true;
     };
   };
+
+  fonts.packages = with pkgs; [
+    (nerdfonts.override { fonts = [ "FiraCode" "Iosevka" ]; })
+  ];
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;

@@ -82,6 +82,8 @@
     # authenticators
     awscli2
     amazon-ecr-credential-helper
+
+    nvidia-docker
   ];
 
   # Let Home Manager install and manage itself.
