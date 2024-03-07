@@ -9,8 +9,14 @@
 
   nix.settings.extra-experimental-features = ["flakes" "nix-command"];
 
+  services.dbus.packages = [ pkgs.gcr ];
+  programs.dconf.enable = true;
+
   # Enables docker
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    enableNvidia = true;
+  };
 
   # To get screensharing working (TODO: fix)
   xdg.portal = {

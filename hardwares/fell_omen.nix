@@ -9,18 +9,44 @@
     ];
 
   boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "usbhid" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
-  boot.initrd.kernelModules = [ "dm-snapshot" ];
+  boot.initrd.kernelModules = [ "dm-snapshot" "amdgpu"];
   # boot.initrd.luks.devices.root.device = "/dev/disk/by-uuid/dacb058a-cf2e-4646-93a5-c2efe21de50b";
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
-  services.xserver.videoDrivers = [ "nvidia" ];
-  hardware.opengl = {
-    driSupport = true;
-    driSupport32Bit = true;
-    extraPackages = with pkgs; [
-      vaapiVdpau
-    ];
+  services.xserver.videoDrivers = [ "nvidia" "amdgpu"];
+
+  hardware = {
+    opengl = {
+      driSupport = true;
+      driSupport32Bit = true;
+      extraPackages = with pkgs; [
+        vaapiVdpau
+      ];
+    };
+    nvidia = {
+      modesetting.enable = true;
+      powerManagement.finegrained = true;
+      open = false;  # Use close source drivers
+      nvidiaSettings = true;
+      prime = {
+        offload = {
+          enable = true;
+          enableOffloadCmd = true;
+        };
+        # Make sure to use the correct Bus ID values for your system!
+        # This can be retrieved by running: sudo lshw -c display
+        amdgpuBusId = "PCI:06:00:0";
+        nvidiaBusId = "PCI:01:00:0";
+      };
+    };
+
+    bluetooth = {
+      enable = true;
+    };
+
+    # TODO: figure out what this does
+    cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
   };
 
   fileSystems."/" =
@@ -46,5 +72,4 @@
   # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

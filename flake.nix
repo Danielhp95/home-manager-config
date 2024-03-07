@@ -3,19 +3,19 @@
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     hyprland.url = "github:hyprwm/Hyprland?ref=refs/tags/v0.33.0";
     hyprland-plugins.url = "github:hyprwm/hyprland-plugins";
     hyprland-plugins.inputs.hyprland.follows = "hyprland";
-    hy3 = {
-      url = "github:outfoxxed/hy3?ref=refs/tags/hl0.33.0";
-      inputs.hyprland.follows = "hyprland";
-    };
+    # hy3 = {
+    #   url = "github:outfoxxed/hy3?ref=refs/tags/hl0.33.0";
+    #   inputs.hyprland.follows = "hyprland";
+    # };
 
     # Home manager
-    home-manager.url = "github:nix-community/home-manager/release-23.11";
+    home-manager.url = "github:nix-community/home-manager/";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nur.url = "github:nix-community/NUR";
@@ -37,6 +37,7 @@
         modules = [
           ./hardwares/fell_omen.nix
           ./temp/configuration.nix
+          ./pipewire.nix
           home-manager.nixosModules.default  # Otherwise home-manager isn't imported
           {
             home-manager = {

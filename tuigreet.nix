@@ -61,6 +61,16 @@ let
     };
   };
 
+  # swaySession = pkgs.writeTextFile {
+  #   name = "sway-session.desktop";
+  #   destination = "/sway-session.desktop";
+  #   text = ''
+  #     [Desktop Entry]
+  #     Name=Sway
+  #       Exec=$HOME/.winitrc
+  #       '';
+  # };
+
   mkSession = scfg: pkgs.writeTextFile {
     name = "${scfg.session}-session.desktop";
     destination = "/${scfg.session}-session.desktop";
@@ -159,6 +169,14 @@ in
       NIXOS_OZONE_WL = "1";
     };
     khome.tuigreet.sessions = {
+      sway = {
+        enable = mkDefault false;
+        command = "sway";
+        environment = {
+          XDG_SESSION_DESKTOP = "sway";
+          XDG_CURRENT_DESKTOP = "sway";
+        };
+      };
       hyprland = {
         enable = mkDefault false;
         command = "Hyprland";

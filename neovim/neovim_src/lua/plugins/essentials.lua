@@ -56,4 +56,5 @@ return {
 		"nyngwang/NeoZoom.lua",
 		opts = { winopts = { offset = 'left' }}
 	},
+	{"ellisonleao/glow.nvim", config = true, cmd = "Glow"},  -- Markdown preview
 }

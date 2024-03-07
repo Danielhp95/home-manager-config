@@ -4,7 +4,7 @@
 
   home.username = "daniel";
   home.homeDirectory = "/home/daniel";
-  home.stateVersion = "22.11";
+  home.stateVersion = "24.05";
   imports = [
     ./starship
     ./zsh
@@ -16,6 +16,7 @@
     ./zellij
     ./atuin.nix
     ./hyprland
+    ./sway
     ./eww
     #./kitty  # Kitty / alacritty break because of some GLX issues  (TODO: use nixGL?)
   ];
@@ -56,6 +57,7 @@
 
     feh # image viewer
     # imv # image viewer BROKEN on Ubuntu 22.04
+    hyprpaper
     ripgrep # better grep
     bat # Better cat
     ranger # File manager
@@ -82,8 +84,6 @@
     # authenticators
     awscli2
     amazon-ecr-credential-helper
-
-    nvidia-docker
   ];
 
   # Let Home Manager install and manage itself.
