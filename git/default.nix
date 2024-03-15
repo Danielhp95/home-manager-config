@@ -37,6 +37,10 @@
       rs = "restore --staged";
       st = "status -sb";
 
+      # Searching
+      find-file = ''!f() { for branch in $(git for-each-ref --format="%(refname)" refs/heads); do if git ls-tree -r --name-only $branch | grep "$1" > /dev/null; then echo -e "\033[1;32m''${branch}\033[0m by \033[1;34m$(git log -1 --format="%cn" $branch)\033[0m"; git ls-tree -r --name-only $branch | nl -bn -w3 | grep "$1"; fi; done; :; }; f'';
+
+
       # reset
       soft = "reset --soft";
       hard = "reset --hard";

@@ -12,9 +12,16 @@
   boot.initrd.kernelModules = [ "dm-snapshot" "amdgpu"];
   # boot.initrd.luks.devices.root.device = "/dev/disk/by-uuid/dacb058a-cf2e-4646-93a5-c2efe21de50b";
   boot.kernelModules = [ "kvm-amd" ];
+  # This line is needed to fix suspend/wakeup issues in Hyprland
+  # https://wiki.hyprland.org/Nvidia/#fixing-suspendwakeup-issues
+  boot.kernelParams = [ "nvidia.NVreg_PreserveVideoMemoryAllocations=1" ];
   boot.extraModulePackages = [ ];
 
-  services.xserver.videoDrivers = [ "nvidia" "amdgpu"];
+  services = {
+    xserver.videoDrivers = [ "nvidia" "amdgpu"]; # Have nvidia and amd GPUs active
+    # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
+    logind.lidSwitchDocked = "suspend";
+  };
 
   hardware = {
     opengl = {
@@ -26,8 +33,11 @@
     };
     nvidia = {
       modesetting.enable = true;
-      powerManagement.finegrained = true;
-      open = false;  # Use close source drivers
+      powerManagement = {
+        enable = true;
+        finegrained = true;
+      };
+      open = false;  # Don't use open source drivers (use closed-source)
       nvidiaSettings = true;
       prime = {
         offload = {
@@ -41,6 +51,7 @@
       };
     };
 
+    # Bluetooth 
     bluetooth = {
       enable = true;
     };
@@ -48,6 +59,16 @@
     # TODO: figure out what this does
     cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
   };
+
+  # Use headphone buttons to control media player: https://nixos.wiki/wiki/Bluetooth#Using_Bluetooth_headsets_with_PulseAudio
+  systemd.user.services.mpris-proxy = {
+    description = "Mpris proxy";
+    after = [ "network.target" "sound.target" ];
+    wantedBy = [ "default.target" ];
+    serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
+  };
+
+
 
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/9198a171-af25-4994-adc0-29dfebf18890";

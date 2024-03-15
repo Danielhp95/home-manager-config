@@ -18,10 +18,15 @@
     ./hyprland
     ./sway
     ./eww
-    #./kitty  # Kitty / alacritty break because of some GLX issues  (TODO: use nixGL?)
+    ./pulse_vpn.nix
   ];
 
-  programs.direnv.enable = true;
+  khome.desktop.swww = {
+    enable = true;
+    wallpaperDirs = [ "~/Pictures/hangmoon" ];
+  };
+
+
   programs.firefox.enable = true;
   # programs.rio.enable = true;
   services.flameshot.enable = true;
@@ -56,8 +61,10 @@
     pandoc
 
     feh # image viewer
-    # imv # image viewer BROKEN on Ubuntu 22.04
-    hyprpaper
+    imv # image viewer
+    hyprpaper # crappy wallpaper manager for hyprland
+    # swww # wallpaper manager
+
     ripgrep # better grep
     bat # Better cat
     ranger # File manager
@@ -74,7 +81,12 @@
     remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
 
     vlc
-    lnav
+
+    # debugging utils
+    lnav  # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
+    pciutils  # For `lspci` command
+    lshw  # list hardware. For instance `lshw -c display` shows all graphics cards
+    nvtop  # Better `nvidia-smi` that also supports AMD GPUs
 
     # Audio
     helvum
@@ -84,6 +96,11 @@
     # authenticators
     awscli2
     amazon-ecr-credential-helper
+
+    translate-shell
+
+    # Colorscheme generator
+    pywal
   ];
 
   # Let Home Manager install and manage itself.

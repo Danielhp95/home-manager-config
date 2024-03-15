@@ -172,6 +172,7 @@ in
       gopls
       stylua
       yamlfmt
+      nixpkgs-fmt
       python310Packages.gevent
       nodePackages.bash-language-server
       nodePackages.pyright

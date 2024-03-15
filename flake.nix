@@ -6,13 +6,14 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    hyprland.url = "github:hyprwm/Hyprland?ref=refs/tags/v0.33.0";
-    hyprland-plugins.url = "github:hyprwm/hyprland-plugins";
-    hyprland-plugins.inputs.hyprland.follows = "hyprland";
-    # hy3 = {
-    #   url = "github:outfoxxed/hy3?ref=refs/tags/hl0.33.0";
-    #   inputs.hyprland.follows = "hyprland";
-    # };
+    hyprcursor.url = "github:hyprwm/hyprcursor";
+    hyprcursor.inputs.nixpkgs.follows = "nixpkgs";
+
+    hyprland.url = "github:hyprwm/Hyprland?ref=v0.36.0";
+    hy3 = {
+      url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
+      inputs.hyprland.follows = "hyprland";
+    };
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager/";
@@ -43,12 +44,12 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
+              sharedModules = [ ./swww/default.nix ];
               extraSpecialArgs = { inherit inputs; };
               users.daniel = { config, ...}: {
-                imports = [ ./home.nix ];
+                imports = [ ./home.nix  ./swww/swww.nix ];
               };
             };
-
           }
           # overlays
           {
@@ -60,14 +61,17 @@
                   (mapAttrs (_: c: c.legacyPackages.${prev.system}))
                 ];
                 # override specific packages from unstable
-                inherit (final.channels.unstable) ansel wezterm eww;
+                # inherit (final.channels.unstable) ansel wezterm eww;
+
                 # Hyprland specifics
+                inherit (inputs.hyprcursor.packages.${prev.system}) hyprcursor;
                 inherit (inputs.hy3.packages.${prev.system}) hy3;
-                inherit (inputs.hyprland.packages.${prev.system})
-                  hyprland
-                  xdg-desktop-portal-hyprland
-                  hyprland-share-picker
-                  ;
+                # inherit (inputs.hy3.packages.${prev.system}) hy3;
+                # inherit (inputs.hyprland.packages.${prev.system})
+                #   hyprland
+                #   xdg-desktop-portal-hyprland
+                #   hyprland-share-picker
+                #   ;
               })
               (import ./overlays.nix)
               (import ./pkgs)

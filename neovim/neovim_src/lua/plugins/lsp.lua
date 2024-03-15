@@ -11,8 +11,8 @@ local Conform = {
 			lua = { "stylua" },
 			-- Conform will run multiple formatters sequentially
 			python = { "black", "ruff" },
-			nix = { "nixpkgs-fmt" },
 			yaml = { "yamlfmt" },
+			nix = { "nixpkgs-fmt" },
 		},
 	},
 }

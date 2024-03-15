@@ -65,9 +65,19 @@ local IndentLines = NixPlugin("lukas-reineke/indent-blankline.nvim", {
 	},
 })
 
+local Lushwal = {
+	"oncomouse/lushwal.nvim",
+	cmd = { "LushwalCompile" },
+	dependencies = {
+		{ "rktjmp/lush.nvim" },
+		{ "rktjmp/shipwright.nvim" },
+	},
+}
+
 return {
 	ColorSchemes,
 	LuaLine,
 	IndentLines,
 	BufferLine,
+	Lushwal
 }

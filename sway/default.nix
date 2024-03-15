@@ -1,13 +1,46 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
-  base = builtins.readFile ./sway_i3_shared.conf;
+  mod = config.wayland.windowManager.sway.config.modifier;
+in
+{
+  imports = [ ./waybar.nix ];
+
+  home.packages = with pkgs; [
+    swayidle # Autolock
+    swaybg # To set wallpapers
+    swww # To set better wallpapers
+    wdisplays # Display management
+    wl-clipboard # Clipboard managment
+
+    sway-contrib.grimshot # screenshots
+
+    brightnessctl # Controlling screen brightness
+    fcitx5 # Multi-language keyboard support
+    pamixer # Controlling volume. Mixer for pipewire
+
+    libnotify # Library to allow notifications
+  ];
+
+  home.sessionVariables = {
+    MOZ_ENABLE_WAYLAND = 1;
+    XDG_CURRENT_DESKTOP = "sway";
+    XDG_SESSION_TYPE = "wayland";
+    SDL_VIDEODRIVER = "wayland";
+    # TODO: maybe move these to their own keyboard setting profile?
+    GTK_IM_MODULE = "fcitx5";
+    QT_IM_MODULE = "fcitx5";
+    # XDG_SCREENSHOTS_DIR = "$HOME/Pictures/screenshots"; # This makes grim run from the commandline work, but not when used here!
+    SSH_ASKPASS = ""; # To remove annoying GUI showing up everytime one git pushes
+    WLR_DRM_DEVICES="/dev/dri/card0:/dev/dri/card1"; # TODO: move this to hardware.nix DIDN't WORK
+    WLR_NO_HARDWARE_CURSORS=1;
+  };
+
   wayland.windowManager.sway = {
     enable = true;
-    extraConfig = base + powerOffMode + screenshotMode +
+    extraConfig = builtins.readFile ./sway_i3_shared.conf +
       ''output "*" bg $HOME/Pictures/hangmoon/purple-blue-meadow-couple-sitting.jpg fill''; # Sets wallpaper on all outputs
-    # extraOptions = [ "--unsupported-gpu" ];
+    extraOptions = [ "--unsupported-gpu" ];
     wrapperFeatures.gtk = true;
     config = {
       modifier = "Mod4";
@@ -59,7 +92,7 @@ let
           l = "resize grow width 10 px";
         };
       };
-      keybindings = mkOptionDefault ({
+      keybindings = lib.mkOptionDefault ({
         # Rofi
         "${mod}+Shift+o" = "exec --no-startup-id rofi -show file-browser-extended";
         "${mod}+Shift+b" = "exec --no-startup-id bash ~/config/users/profiles/desktop/rofi/scripts/choose_bluetooth_device_from_paired.sh";
@@ -79,7 +112,7 @@ let
         "XF86AudioRaiseVolume" = "exec --no-startup-id pamixer -i 5"; # increase sound volume
         "XF86AudioLowerVolume" = "exec --no-startup-id pamixer -d 5"; # decrease sound volume
         "XF86AudioMute" = "exec --no-startup-id pamixer --toggle-mute"; # mute sound
-        "${mod}+Shift+m" = "exec pavucontrol";
+        "${mod}+Shift+a" = "exec pavucontrol";
 
         # Media control
         "XF86AudioPlay" = "exec --no-startup-id playerctl play-pause";
@@ -94,7 +127,7 @@ let
       });
       input = {
         "*" = {
-          xkb_layout = "gb";
+          xkb_layout = "us";
           xkb_options = "caps:escape";
           tap = "enabled";
         };
@@ -122,72 +155,5 @@ let
       # This has to be empty to disable ugly default bar at the bottom
       bars = [ ];
     };
-  };
-  powerOffMode = ''
-    set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
-    bindsym $mod+0 mode "$mode_system"
-    mode "$mode_system" {
-        bindsym l exec --no-startup-id swaylock lock, mode "default"
-        bindsym s exec --no-startup-id systemctl suspend, mode "default"
-        bindsym u exec --no-startup-id i3exit switch_user, mode "default"
-        bindsym e exec --no-startup-id i3exit logout, mode "default"
-        bindsym h exec --no-startup-id systemctl hibernate, mode "default"
-        bindsym r exec --no-startup-id systemctl reboot, mode "default"
-        bindsym Shift+s exec --no-startup-id systemctl poweroff, mode "default"
-
-        # exit system mode: "Enter" or "Escape"
-        bindsym Return mode "default"
-        bindsym Escape mode "default"
-    }
-  '';
-  screenshotMode = ''
-    set $mode_screenshot Shift to copy (a)area select, (t)arget window (s)screen
-    bindsym $mod+ctrl+s mode "$mode_screenshot"
-    mode "$mode_screenshot" {
-      bindsym a exec --no-startup-id grimshot save area   "$HOME/Pictures/screenshots/$(date +%d-%m-%y_%T).png", mode "default"
-      bindsym s exec --no-startup-id grimshot save screen "$HOME/Pictures/screenshots/$(date +%d-%m-%y_%T).png" , mode "default"
-      bindsym t exec --no-startup-id grimshot save window "$HOME/Pictures/screenshots/$(date +%d-%m-%y_%T).png", mode "default"
-      bindsym Shift+a exec --no-startup-id grimshot copy area, mode "default"
-      bindsym Shift+s exec --no-startup-id grimshot copy screen, mode "default"
-      bindsym Shift+t exec --no-startup-id grimshot copy window, mode "default"
-      bindsym Return mode "default"
-      bindsym Escape mode "default"
-    }
-  '';
-  mod = config.wayland.windowManager.sway.config.modifier;
-  # TODO: change this
-  # sway uses `app_id` instead of `class` for app identification
-  criteriaRewrite = criteria: builtins.removeAttrs
-    (criteria // {
-      app_id = criteria.class;
-    }) [ "class" ];
-in
-{
-  home.packages = with pkgs; [
-    swayidle # Autolock
-    swaybg # To set wallpapers
-    swww # To set better wallpapers
-    wdisplays # Display management
-    wl-clipboard # Clipboard managment
-
-    sway-contrib.grimshot # screenshots
-
-    brightnessctl # Controlling screen brightness
-    fcitx5 # Multi-language keyboard support
-    pamixer # Controlling volume. Mixer for pipewire
-
-    libnotify # Library to allow notifications
-  ];
-
-  home.sessionVariables = {
-    MOZ_ENABLE_WAYLAND = 1;
-    XDG_CURRENT_DESKTOP = "sway";
-    XDG_SESSION_TYPE = "wayland";
-    SDL_VIDEODRIVER = "wayland";
-    # TODO: maybe move these to their own keyboard setting profile?
-    GTK_IM_MODULE = "fcitx5";
-    QT_IM_MODULE = "fcitx5";
-    XDG_SCREENSHOTS_DIR = "$HOME/Pictures/screenshots"; # This makes grim run from the commandline work, but not when used here!
-    SSH_ASKPASS = ""; # To remove annoying GUI showing up everytime one git pushes
   };
 }

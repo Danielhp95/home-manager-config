@@ -5,7 +5,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [ ../tuigreet.nix ];
+  imports = [ ../tuigreet.nix  ];
 
   nix.settings.extra-experimental-features = ["flakes" "nix-command"];
 
@@ -24,12 +24,15 @@
     extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
   };
 
-  khome.tuigreet = {
-    enable = true;
-    enableWaylandEnvs = true;
-    sessions = {
-      hyprland.enable = true;
-      zsh.enable = true;
+  khome = {
+    tuigreet = {
+      enable = true;
+      enableWaylandEnvs = true;
+      sessions = {
+        hyprland.enable = true;
+        sway.enable = true;
+        zsh.enable = true; # Doesn't work!
+      };
     };
   };
 
@@ -59,19 +62,26 @@
     useXkbConfig = true; # use xkbOptions in tty.
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.session = [ {
-    manage = "window";
-    name = "Hyprland";
-    start = "Hyprland";
-  }];
+  services.xserver = {
+    # Enable the X11 windowing system.
+    enable = true;
+    desktopManager.gnome.enable = true;
+    displayManager.gdm.enable = true;
+    desktopManager.session = [
+      {
+        manage = "window";
+        name = "Hyprland";
+        start = "Hyprland";
+      }
 
-  services.xserver.desktopManager.gnome.enable = true;
+      {
+        manage = "window";
+        name = "sway";
+        start = "sway";
+      }
+    ];
+  };
 
   environment.pathsToLink = [ "/share/zsh" ];  # Make sure that home-manager installed `zsh` picks up system installed programs
 
@@ -86,9 +96,6 @@
   # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   programs.zsh.enable = true;
@@ -105,6 +112,38 @@
     ];
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
+
+  i18n.inputMethod = {
+    enabled = "fcitx5";
+    fcitx5.addons = with pkgs; [
+        fcitx5-mozc
+        fcitx5-gtk
+    ];
+  };
+
+
+  # DOES NOT WORK
+  # This was meant to fix 
+  systemd.services.suspend-hyprland = {
+    description = "Suspend hyprland";
+    before = [ "systemd-suspend.service" "systemd-hibernate.service" "nvidia-suspend.service" "nvidia-hibernate.service" ];
+    wantedBy = [ "systemd-suspend.service" "systemd-hibernate.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "killall -STOP Hyprland";
+    };
+  };
+  systemd.services.resume-hyprland = {
+    description = "Resume hyprland";
+    after = [ "systemd-suspend.service" "systemd-hibernate.service" "nvidia-resume.service" ];
+    wantedBy = [ "systemd-suspend.service" "systemd-hibernate.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "killall -CONT Hyprland";
+    };
+  };
+
+
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget

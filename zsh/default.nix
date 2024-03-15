@@ -82,6 +82,7 @@ in
     };
     plugins = [
       { name = "nix-zsh-completions"; src = pkgs.nix-zsh-completions; }
+      { name = "zsh-autopair"; src = pkgs.nix-zsh-completions; }
       {
         name = "fzf-tab";
         src = pkgs.fetchFromGitHub {
