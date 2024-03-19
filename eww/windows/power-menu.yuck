@@ -1,0 +1,50 @@
+(defwidget powerbutton []
+  (eventbox :cursor "hand"
+  (button   :class "net-button"
+            :onclick "eww open powermenu --toggle &"	""
+  ))
+)
+(defwidget powermenucontent []
+(box :orientation "h"
+  :class "system-menu-box"
+  (box :class "net-box"
+       :orientation "h"
+    (button :class "net-button"
+            :tooltip "Shutdown"
+            :onclick "eww close powermenu && shutdown now"
+      "⏻")
+    )
+  (box :class "net-box"
+       :orientation "h"
+    (button :class "net-button"
+            :tooltip "Reboot"
+            :onclick "eww close powermenu && reboot"
+      "")
+    )
+  (box :class "net-box"
+       :orientation "h"
+    (button :class "net-button"
+            :tooltip "Suspend"
+            :onclick "swaylock -f && systemctl suspend && eww close powermenu"
+      "󰗼")
+    )
+  (box :class "net-box"
+       :orientation "h"
+    (button :class "net-button"
+            :tooltip "Lock"
+            :onclick "swaylock -f && eww close powermenu"
+      "🔒")
+    )
+  )
+)
+
+(defwindow powermenu
+  :monitor 0
+  :geometry (geometry :x "0%"
+  :y "0%"
+  :width "30%"
+  :height "15%"
+  :anchor "center center")
+  :wm-ignore true
+  (powermenucontent)
+)

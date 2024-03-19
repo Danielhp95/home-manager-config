@@ -9,7 +9,25 @@
 
   nix.settings.extra-experimental-features = ["flakes" "nix-command"];
 
-  services.dbus.packages = [ pkgs.gcr ];
+  services.dbus.packages = [ pkgs.gcr ];  # Why do I want this?
+
+  # Doesn't work saying:
+  # But that's not in my config.
+  services.power-profiles-daemon.enable = false;
+  services.auto-cpufreq = {
+    enable = true;
+    settings = {
+      battery = {
+         governor = "powersave";
+         turbo = "never";
+      };
+      charger = {
+         governor = "performance";
+         turbo = "auto";
+      };
+    };
+  };
+
   programs.dconf.enable = true;
 
   # Enables docker
@@ -18,7 +36,7 @@
     enableNvidia = true;
   };
 
-  # To get screensharing working (TODO: fix)
+  # To get screensharing working
   xdg.portal = {
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
@@ -100,10 +118,9 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   programs.zsh.enable = true;
   users.users.daniel = {
-    # shell = pkgs.zsh;
     shell = pkgs.zsh;
     isNormalUser = true;
-    extraGroups = [ "wheel" "docker" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "docker" ]; # group "wheel" -> sudo access
     packages = with pkgs; [
       firefox
       tree
@@ -122,7 +139,7 @@
   };
 
 
-  # DOES NOT WORK
+  # Does this work?
   # This was meant to fix 
   systemd.services.suspend-hyprland = {
     description = "Suspend hyprland";

@@ -1,0 +1,24 @@
+ENV_VARS:
+  PS4_ADDR: 10.42.0.250  # In Playstation, go to Settings -> Network -> Network status. THIS CHANGES OFTEN
+ADDITIONAL_MOUNTS:
+  # Nix things
+  - "/nix/store/:/nix/store:ro"
+  - "/etc/profiles/per-user/daniel/bin/:/home/dev/.nix-profile/bin/:ro"
+  - "/home/daniel/nix_config:/home/dev/nix_config"
+
+  # Shelll stuff
+  - "/home/daniel/.zsh_history:/home/dev/.zsh_history"
+  - "/home/daniel/.zshenv:/home/dev/.zshenv"
+  - "/home/daniel/.config/zsh:/home/dev/.config/zsh/"
+  - "/home/daniel/.config/starship.toml:/home/dev/.config/starship.toml"
+
+  # Silk
+  - "/home/daniel/Projects/silk/inso_builds/:/inso_builds/"
+  - "/home/daniel/Projects/silk/proton_7.0.4:/proton7_build"
+
+  # Nvim
+  - "/home/daniel/.local/share/nvim/:/home/daniel/.local/share/nvim/"
+
+  # Firefox profiles DOESN'T work
+  - "/home/daniel/.mozilla/firefox/iejh502b.sai-container:/home/dev/.mozilla/firefox/iejh502b.sai-container"
+

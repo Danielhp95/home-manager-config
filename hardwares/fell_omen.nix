@@ -14,13 +14,15 @@
   boot.kernelModules = [ "kvm-amd" ];
   # This line is needed to fix suspend/wakeup issues in Hyprland
   # https://wiki.hyprland.org/Nvidia/#fixing-suspendwakeup-issues
-  boot.kernelParams = [ "nvidia.NVreg_PreserveVideoMemoryAllocations=1" ];
+  boot.kernelParams = [
+    "nvidia.NVreg_PreserveVideoMemoryAllocations=1"  # To prevent nvidia from crashing on suspend. DOES NOT WORK
+    "nvidia-drm.modeset=1"   # Needed for `gamescope`
+  ];
   boot.extraModulePackages = [ ];
 
   services = {
     xserver.videoDrivers = [ "nvidia" "amdgpu"]; # Have nvidia and amd GPUs active
-    # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
-    logind.lidSwitchDocked = "suspend";
+    logind.lidSwitchDocked = "suspend"; # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
   };
 
   hardware = {

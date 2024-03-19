@@ -35,7 +35,8 @@ wk.register({
       b = { "<cmd>Gitsigns blame_line<cr>", "[b]lame current line" },
       d = {
         name = "+[d]iff",
-        d = { "<cmd>DiffviewFileHistory %<cr>", "[d]iff history for current file" },
+        f = { "<cmd>DiffviewFileHistory %<cr>", "[d]iff history for current [f]ile" },
+        w = { "<cmd>windo diffthis<cr>", "[d]iff all files in [w]indow" },
         r = { "<cmd>DiffviewRefresh<cr>", "[r]efresh git merge state" },
         o = { "<cmd>DiffviewOpen<cr>", "[o]pen new tab with diff merger" },
         c = { "<cmd>DiffviewClose<cr>", "[c]lose diff merger" },
@@ -82,7 +83,7 @@ wk.register({
       r = { "<cmd>Telescope resume<CR>", "[r]esume last search" },
       s = { "<cmd>lua require('telescope.builtin').lsp_document_symbols({symbol_width = 50})<CR>", "Buffer lsp [s]ymbols" },
       S = { "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols({symbol_width = 50})<CR>", "Workspace lsp [S]ymbols" },
-      d = { "<cmd>lua require'telescope.builtin'.find_files({cwd='~/configs'})<cr>", "Open NIX config [d]irectory" },
+      d = { "<cmd>lua require'telescope.builtin'.find_files({cwd='~/nix_config'})<cr>", "Open NIX config [d]irectory" },
       v = { "<cmd>lua require'telescope.builtin'.find_files({cwd='~/Documents/Obsidian Vault/'})<cr>",
         "Open Obsidian [v]ault" },
       q = { "<cmd>lua require'telescope.action'.send_to_qflist()<cr>", "Send search results to [q]uickfix list" },

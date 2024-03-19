@@ -1,5 +1,5 @@
 {
-  description = "Config and dotfiles for personal NixOS laptop.";
+  description = "Sony AI developmenet setup home-manager flake";
 
   inputs = {
     # Nixpkgs
@@ -44,10 +44,13 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              sharedModules = [ ./swww/default.nix ];
+              sharedModules = [
+                ./swww/swww.nix
+                ./eww
+              ];
               extraSpecialArgs = { inherit inputs; };
               users.daniel = { config, ...}: {
-                imports = [ ./home.nix  ./swww/swww.nix ];
+                imports = [ ./home.nix  ];
               };
             };
           }
@@ -66,12 +69,11 @@
                 # Hyprland specifics
                 inherit (inputs.hyprcursor.packages.${prev.system}) hyprcursor;
                 inherit (inputs.hy3.packages.${prev.system}) hy3;
-                # inherit (inputs.hy3.packages.${prev.system}) hy3;
-                # inherit (inputs.hyprland.packages.${prev.system})
-                #   hyprland
-                #   xdg-desktop-portal-hyprland
-                #   hyprland-share-picker
-                #   ;
+                inherit (inputs.hyprland.packages.${prev.system})
+                  hyprland
+                  xdg-desktop-portal-hyprland
+                  hyprland-share-picker
+                  ;
               })
               (import ./overlays.nix)
               (import ./pkgs)
@@ -99,15 +101,14 @@
         extraSpecialArgs = {
           inherit inputs ;
         }; # Pass flake inputs to our config
-        # > Our main home-manager configuration file <
         modules = [
-            ./home.nix
-	    {  # Inlining an attribute set
-	      nix.registry = {
-	        nixos.flake = inputs.unstable;
-	        stable.flake = inputs.nixpkgs;
-	      };
-	    }
+          ./home.nix
+          {  # Inlining an attribute set
+            nix.registry = {
+              nixos.flake = inputs.unstable;
+              stable.flake = inputs.nixpkgs;
+            };
+          }
          ];
       };
     };

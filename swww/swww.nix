@@ -43,21 +43,13 @@ in
 
   config = mkIf cfg.enable {
 
-    programs.hyprland = {
-      binds."$mainMod SHIFT".I = "exec, ${singleRandom}";
-      execOnce = {
-        "swww-init" = startAndRandom;
-        "swww-randomise" = randomInterval;
-      };
-    };
-
-    wayland.windowManager.sway.config = {
-      keybindings."$mod+Shift+i" = "exec ${singleRandom}";
-      startup = mkAfter [
-        { command = startAndRandom; }
-        { command = randomInterval; }
-      ];
-    };
+    # wayland.windowManager.sway.config = {
+    #   keybindings."${config.wayland.windowManager.sway.config.modifier}+Shift+i" = "exec ${singleRandom}";
+    #   startup = mkAfter [
+    #     { command = startAndRandom; }
+    #     { command = randomInterval; }
+    #   ];
+    # };
 
     home.packages = with pkgs; [
       swww

@@ -14,11 +14,13 @@
     ./neovim
     ./rofi
     ./zellij
+    ./terminal
     ./atuin.nix
     ./hyprland
     ./sway
-    ./eww
+    ./sony_ai
     ./pulse_vpn.nix
+    ./mako.nix
   ];
 
   khome.desktop.swww = {
@@ -26,6 +28,7 @@
     wallpaperDirs = [ "~/Pictures/hangmoon" ];
   };
 
+  programs.eww-hyprland.enable = true;
 
   programs.firefox.enable = true;
   # programs.rio.enable = true;
@@ -33,7 +36,6 @@
   services.clipmenu.enable = true;
 
   home.packages = with pkgs; [
-    wezterm
     chromium
     powerline-fonts
     coreutils
@@ -55,6 +57,7 @@
     ansel
     davinci-resolve
     steam
+    gamescope  # micro compositor by steam
 
     # Latex stuff
     texlive.combined.scheme-full

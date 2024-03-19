@@ -5,7 +5,7 @@
     enable = true;
     # Let's have each window manager launch this on its own
     # Otherwise this only kicks in upon boot, and not upon loging in-out
-    # systemd.enable = true;
+    systemd.enable = true;
     # TODO: style
     style = ./waybar_style.css;
     settings = {

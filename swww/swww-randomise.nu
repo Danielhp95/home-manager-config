@@ -52,7 +52,7 @@ def main [
   loop {
     if $i < $length {
       let image = ($images | get $i)
-      swww img $image
+      swww img $image --transition-type center
       $i = $i + 1
       sleep (echo $interval sec | str join "" | into duration)
     } else {

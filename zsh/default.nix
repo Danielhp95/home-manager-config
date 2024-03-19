@@ -49,7 +49,7 @@ in
     autocd = true;
     dotDir = ".config/zsh";
     defaultKeymap = "emacs"; # this is the default, don't get scared
-    enableAutosuggestions = true;
+    autosuggestion.enable = true;
     enableCompletion = true;
     envExtra = ''
       EDITOR=vim
