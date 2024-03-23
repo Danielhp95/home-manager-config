@@ -4,14 +4,11 @@
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    stable.url = "github:nixos/nixpkgs/nixos-23.11";
 
-    hyprcursor.url = "github:hyprwm/hyprcursor";
-    hyprcursor.inputs.nixpkgs.follows = "nixpkgs";
-
-    hyprland.url = "github:hyprwm/Hyprland?ref=v0.36.0";
+    hyprland.url = "github:hyprwm/Hyprland?ref=v0.37.1";
     hy3 = {
-      url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
+      url = "github:outfoxxed/hy3?ref=hl0.37.1"; # where {version} is the hyprland release version
       inputs.hyprland.follows = "hyprland";
     };
 
@@ -67,8 +64,8 @@
                 # inherit (final.channels.unstable) ansel wezterm eww;
 
                 # Hyprland specifics
-                inherit (inputs.hyprcursor.packages.${prev.system}) hyprcursor;
                 inherit (inputs.hy3.packages.${prev.system}) hy3;
+                # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
                 inherit (inputs.hyprland.packages.${prev.system})
                   hyprland
                   xdg-desktop-portal-hyprland
@@ -81,12 +78,13 @@
             nixpkgs.config.allowUnfree = true;
             nixpkgs.config.permittedInsecurePackages = [
               "electron-25.9.0"
+              "zoom"
             ];
             # allows running packages from `nix run unstable#ansel`
             # `nix run nixos#lsd` is very fast as it uses local cache
             nix.registry = {
               nixos.flake = inputs.nixpkgs;
-              unstable.flake = inputs.unstable;
+              stable.flake = inputs.stable;
             };
           }
         ];
@@ -105,8 +103,8 @@
           ./home.nix
           {  # Inlining an attribute set
             nix.registry = {
-              nixos.flake = inputs.unstable;
-              stable.flake = inputs.nixpkgs;
+              nixos.flake = inputs.nixpkgs;
+              stable.flake = inputs.stable;
             };
           }
          ];

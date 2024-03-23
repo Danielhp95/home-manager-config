@@ -159,7 +159,7 @@ in
 
   config = mkIf cfg.enable {
     khome.tuigreet.defaultEnvironment = mkIf cfg.enableWaylandEnvs {
-      XDG_SESSION_TYPE = "wayland";
+      # XDG_SESSION_TYPE = "wayland";
       MOZ_ENABLE_WAYLAND = "1";
       QT_QPA_PLATFORM = "wayland";
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";
@@ -168,25 +168,25 @@ in
       _JAVA_AWT_WM_NONREPARENTING = "1";
       NIXOS_OZONE_WL = "1";
       # fcitx5 hacks
-      GTK_IM_MODULE = "fcitx";
-      QT_IM_MODULE = "fcitx";
-      XMODIFIERS = "@im=fcitx";
+      # GTK_IM_MODULE = "fcitx";
+      # QT_IM_MODULE = "fcitx";
+      # XMODIFIERS = "@im=fcitx";
     };
     khome.tuigreet.sessions = {
       sway = {
         enable = mkDefault false;
         command = "sway";
         environment = {
-          XDG_SESSION_DESKTOP = "sway";
-          XDG_CURRENT_DESKTOP = "sway";
+          # XDG_SESSION_DESKTOP = "sway";
+          # XDG_CURRENT_DESKTOP = "sway";
         };
       };
       hyprland = {
         enable = mkDefault false;
         command = "Hyprland";
         environment = {
-          XDG_SESSION_DESKTOP = "Hyprland";
-          XDG_CURRENT_DESKTOP = "Hyprland";
+          # XDG_SESSION_DESKTOP = "Hyprland";
+          # XDG_CURRENT_DESKTOP = "Hyprland";
         };
       };
       zsh = {

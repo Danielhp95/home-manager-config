@@ -13,6 +13,7 @@ return {
         darkest_gray = '#080808',
         color_column = '#181919',
         bg_statusline = '#1f1f23',
+
         -- glance.nvim
         GlancePreviewNormal = "require('onedarkpro.helpers').darken('bg', 6, 'onedark')",
         GlancePreviewLineNr = "require('onedarkpro.helpers').darken('bg', 6, 'onedark')",
@@ -21,7 +22,8 @@ return {
       },
       highlights = {
         CmpItemMenu = { bg = '${dark_gray}' },
-        PMenuSel = {bg = '${green}', bold= true},
+        PMenuSel = {bg = '${green}', bold = true},
+        Folded = {bold = true, fg='${green}'},
         CmdLine = {
           bg = '${dark_gray}',
           fg = '${fg}',

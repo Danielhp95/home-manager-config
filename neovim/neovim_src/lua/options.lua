@@ -54,3 +54,4 @@ vim.o.binary = true
 vim.o.matchpairs = "(:),{:},[:],<:>"
 vim.o.expandtab = true
 vim.o.wildmode = "list:longest,list:full"
+vim.o.modeline = true

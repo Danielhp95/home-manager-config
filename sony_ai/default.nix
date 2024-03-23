@@ -1,11 +1,11 @@
-{config, pkgs, lib, home, ...}:
+{config, pkgs, lib, home, inputs, ...}:
 let
   pathToSaiRepo = "$HOME/Projects/sai";
 in
 {
   home.packages = with pkgs; [
     git
-    awscli2
+    inputs.stable.legacyPackages.x86_64-linux.awscli2
     amazon-ecr-credential-helper
 
     docker

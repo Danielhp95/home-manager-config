@@ -28,8 +28,8 @@ in
     XDG_SESSION_TYPE = "wayland";
     SDL_VIDEODRIVER = "wayland";
     # TODO: maybe move these to their own keyboard setting profile?
-    GTK_IM_MODULE = "fcitx5";
-    QT_IM_MODULE = "fcitx5";
+    GTK_IM_MODULE = "fcitx";
+    QT_IM_MODULE = "fcitx";
     # XDG_SCREENSHOTS_DIR = "$HOME/Pictures/screenshots"; # This makes grim run from the commandline work, but not when used here!
     SSH_ASKPASS = ""; # To remove annoying GUI showing up everytime one git pushes
     WLR_DRM_DEVICES="/dev/dri/card0:/dev/dri/card1"; # TODO: move this to hardware.nix DIDN't WORK

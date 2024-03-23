@@ -1,4 +1,4 @@
-{ config, pkgs, environment, ... }:
+{ inputs, config, pkgs, environment, ... }:
 
 {
 
@@ -32,7 +32,7 @@
 
   programs.firefox.enable = true;
   # programs.rio.enable = true;
-  services.flameshot.enable = true;
+  # services.flameshot.enable = true;
   services.clipmenu.enable = true;
 
   home.packages = with pkgs; [
@@ -51,10 +51,11 @@
     slack
     telegram-desktop
     element-desktop
-    zoom-us
+    inputs.stable.legacyPackages.x86_64-linux.zoom-us
 
     # art
     ansel
+    # inputs.stable.legacyPackages.x86_64-linux.davinci-resolve
     davinci-resolve
     steam
     gamescope  # micro compositor by steam
@@ -89,16 +90,12 @@
     lnav  # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
     pciutils  # For `lspci` command
     lshw  # list hardware. For instance `lshw -c display` shows all graphics cards
-    nvtop  # Better `nvidia-smi` that also supports AMD GPUs
+    nvtopPackages.full  # Better `nvidia-smi` that also supports AMD GPUs
 
     # Audio
     helvum
     pamixer
     pavucontrol
-
-    # authenticators
-    awscli2
-    amazon-ecr-credential-helper
 
     translate-shell
 

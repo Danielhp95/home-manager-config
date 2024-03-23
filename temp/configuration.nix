@@ -13,20 +13,20 @@
 
   # Doesn't work saying:
   # But that's not in my config.
-  services.power-profiles-daemon.enable = false;
-  services.auto-cpufreq = {
-    enable = true;
-    settings = {
-      battery = {
-         governor = "powersave";
-         turbo = "never";
-      };
-      charger = {
-         governor = "performance";
-         turbo = "auto";
-      };
-    };
-  };
+  services.power-profiles-daemon.enable = true;
+  # services.auto-cpufreq = {
+  #   enable = true;
+  #   settings = {
+  #     battery = {
+  #        governor = "powersave";
+  #        turbo = "never";
+  #     };
+  #     charger = {
+  #        governor = "performance";
+  #        turbo = "auto";
+  #     };
+  #   };
+  # };
 
   programs.dconf.enable = true;
 
@@ -55,6 +55,15 @@
   };
 
   fonts.packages = with pkgs; [
+    # Noto: means no tofu. Tofu is the colloquial term for errors in rendering chinese characters
+    noto-fonts
+    noto-fonts-extra
+    noto-fonts-cjk-sans
+    noto-fonts-cjk-serif
+    babelstone-han  # unicode font with loooads of Han characters
+
+    fira-code
+    fira-code-symbols
     (nerdfonts.override { fonts = [ "FiraCode" "Iosevka" ]; })
   ];
 
@@ -73,7 +82,6 @@
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
   console = lib.mkForce {
     font = "Lat2-Terminus16";
     keyMap = "us";
@@ -130,13 +138,17 @@
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
 
-  i18n.inputMethod = {
-    enabled = "fcitx5";
-    fcitx5.addons = with pkgs; [
-        fcitx5-mozc
-        fcitx5-gtk
-    ];
+  i18n = {
+    defaultLocale = "en_US.UTF-8";
+    inputMethod = {
+      enabled = "fcitx5";
+      fcitx5.addons = with pkgs; [
+          fcitx5-mozc
+          fcitx5-gtk
+      ];
+    };
   };
+  services.xserver.desktopManager.runXdgAutostartIfNone = true;
 
 
   # Does this work?
