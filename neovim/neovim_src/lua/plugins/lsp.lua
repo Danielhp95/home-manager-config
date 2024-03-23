@@ -34,7 +34,8 @@ local neodev = NixPlugin("folke/neodev.nvim", {
 })
 
 -- LSP Configuration & Plugins
-local lspconfig_toplevel = NixPlugin("neovim/nvim-lspconfig", {
+local lspconfig_toplevel = {
+  "neovim/nvim-lspconfig",
 	dependencies = {
 		-- Useful status updates for LSP
 		NixPlugin("j-hui/fidget.nvim", { event = "LspAttach", opts = {} }),
@@ -45,8 +46,9 @@ local lspconfig_toplevel = NixPlugin("neovim/nvim-lspconfig", {
 		local lspconfig = require("lspconfig")
 
 		-- PYTHON
+		-- Try basedpyright in the future, it did not work for me (could not read pyproject.toml)
 		lspconfig.pyright.setup({
-			cmd = { "pyright-langserver", "--stdio" },
+			cmd = { "pyright-langserver", "--stdio"},
 
 			capabilities = vim.tbl_deep_extend(
 				"force",
@@ -115,7 +117,7 @@ local lspconfig_toplevel = NixPlugin("neovim/nvim-lspconfig", {
 			},
 		})
 	end,
-})
+}
 
 local LspSaga = NixPlugin("kkharji/lspsaga", {
 	config = function()

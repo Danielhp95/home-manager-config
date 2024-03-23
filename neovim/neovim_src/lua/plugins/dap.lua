@@ -5,8 +5,9 @@ local NixPlugin = require("helper").NixPlugin
 local Dap = {
   url = 'https://github.com/mfussenegger/nvim-dap',
   dependencies = {
-    'theHamsta/nvim-dap-virtual-text',
-    "rcarriga/nvim-dap-ui"
+    "theHamsta/nvim-dap-virtual-text",
+    "rcarriga/nvim-dap-ui",
+    "nvim-neotest/nvim-nio"
   },
   -- opts = {},
   config = function()

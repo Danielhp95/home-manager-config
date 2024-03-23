@@ -79,5 +79,6 @@ return {
 	LuaLine,
 	IndentLines,
 	BufferLine,
-	Lushwal
+	Lushwal,
+  {"junegunn/goyo.vim"}
 }

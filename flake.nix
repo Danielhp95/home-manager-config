@@ -12,11 +12,11 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    # Home manager
     home-manager.url = "github:nix-community/home-manager/";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    nur.url = "github:nix-community/NUR";
+    basedpyright-nix.url = "github:LoganWalls/basedpyright-nix";
+    basedpyright-nix.inputs.nixpkgs.follows = "nixpkgs";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";

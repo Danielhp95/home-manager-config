@@ -176,6 +176,7 @@ in
       python310Packages.gevent
       nodePackages.bash-language-server
       nodePackages.pyright
+      inputs.basedpyright-nix.packages.x86_64-linux.default  # basedpyright. Better version of pyright
       nodePackages.yaml-language-server
       nodePackages.dockerfile-language-server-nodejs
       docker-compose-language-service
