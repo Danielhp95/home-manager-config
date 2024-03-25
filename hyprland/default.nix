@@ -1,4 +1,4 @@
-{pkgs, ...}:
+{pkgs, inputs, ...}:
 {
   wayland.windowManager.hyprland = {
     enable = true;
@@ -6,7 +6,7 @@
     plugins = [ pkgs.hy3 ]; # make sure we are targetting the same version of hyprland and hy3
   };
   home.file.".config/hypr/hyprpaper.conf".source = ./hyprpaper.conf;
-  home.file.".config/hypr/hyprlock.conf".source = ./hyprlock.conf;
+  home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
   home.packages = with pkgs; [
     hyprlock
     hyprcursor
@@ -14,8 +14,12 @@
     grimblast
     swww
     mako
-    fcitx5
+
     imv
     mpv
+
+    pw-volume
+
+    inputs.stable.legacyPackages.x86_64-linux.librime
   ];
 }

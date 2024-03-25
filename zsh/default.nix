@@ -45,6 +45,7 @@ in
       [ -n "$PS1" ] && \
           [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
               source "$BASE16_SHELL/profile_helper.sh"
+      ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q
     '';
     autocd = true;
     dotDir = ".config/zsh";

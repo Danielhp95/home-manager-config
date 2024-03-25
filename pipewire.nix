@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   sound.enable = true;
   # To enable pipewire we need to remove pulseaudio

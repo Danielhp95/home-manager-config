@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running `nixos-help`).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports = [ ../tuigreet.nix  ];
@@ -143,11 +143,17 @@
     inputMethod = {
       enabled = "fcitx5";
       fcitx5.addons = with pkgs; [
-          fcitx5-mozc
-          fcitx5-gtk
+          inputs.stable.legacyPackages.x86_64-linux.fcitx5-rime
+          inputs.stable.legacyPackages.x86_64-linux.fcitx5-chinese-addons
+          # fcitx5-with-addons
+          fcitx5-rose-pine  # theme
+
+          inputs.stable.legacyPackages.x86_64-linux.librime
+          # fcitx5-gtk
       ];
     };
   };
+
   services.xserver.desktopManager.runXdgAutostartIfNone = true;
 
 

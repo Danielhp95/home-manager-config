@@ -3,7 +3,7 @@ local act = wezterm.action
 
 local home = os.getenv("HOME")
 
-wezterm.add_to_config_reload_watch_list(home .. '/.cache/wal/col.toml')
+wezterm.add_to_config_reload_watch_list(home .. '~/.cache/wal/colors')
 
 return {
   mouse_bindings = {
@@ -38,8 +38,8 @@ return {
   font = wezterm.font 'FiraCode Nerd Font Mono',
   font_size = 12.0,
   line_height = 1.,
-  color_scheme_dirs = { home .. '/.cache/wal' },
-  color_scheme = "Pywal",
+  -- color_scheme_dirs = { home .. '/.cache/wal' },
+  -- color_scheme = "Pywal",
   text_background_opacity = 1.,
-  window_background_opacity = .75,
+  window_background_opacity = .85,
 }

@@ -39,6 +39,12 @@ in
       type = types.listOf types.str;
       description = mdDoc "directories to source wallpapers from, matches png and jpg";
     };
+    # TODO: not coded
+    usePywall = mkOption {
+      default = [];
+      type = types.bool;
+      description = mdDoc "whether to use pywal after randomizing colors";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -53,6 +59,7 @@ in
 
     home.packages = with pkgs; [
       swww
+      pywal
       (pkgs.writeScriptBin "swww-randomise" (builtins.readFile ./swww-randomise.nu))
     ];
 

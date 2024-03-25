@@ -45,6 +45,8 @@ def main [
   }
   if $interval <= 0 {
     swww img ($images | first)
+    sleep 2sec
+    wal -i (open ~/.cache/swww/eDP-1)
     exit 0
   }
   mut i = 0
@@ -53,8 +55,11 @@ def main [
     if $i < $length {
       let image = ($images | get $i)
       swww img $image --transition-type center
+      sleep 2sec
+      wal -i (open ~/.cache/swww/eDP-1)
       $i = $i + 1
       sleep (echo $interval sec | str join "" | into duration)
+      # This assumes that we have eDPI-1 display!
     } else {
       $images = ($directories | findImages)
       $length = ($images | checkLength $directories)
