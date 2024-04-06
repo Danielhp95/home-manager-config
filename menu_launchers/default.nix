@@ -13,4 +13,8 @@
       rofi-pulse-select
     ];
   };
+  programs.fuzzel = {
+    enable = true;
+    # settings = ./fuzzel/config.ini;
+  };
 }

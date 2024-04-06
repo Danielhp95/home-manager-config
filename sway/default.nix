@@ -9,7 +9,6 @@ in
   home.packages = with pkgs; [
     swayidle # Autolock
     swaybg # To set wallpapers
-    swww # To set better wallpapers
     wdisplays # Display management
     wl-clipboard # Clipboard managment
 
@@ -39,7 +38,7 @@ in
   wayland.windowManager.sway = {
     enable = true;
     extraConfig = builtins.readFile ./sway_i3_shared.conf +
-      ''output "*" bg $HOME/Pictures/hangmoon/purple-blue-meadow-couple-sitting.jpg fill''; # Sets wallpaper on all outputs
+      ''output "*" bg $HOME/nix_config/wallpapers/purple-blue-meadow-couple-sitting.jpg fill''; # Sets wallpaper on all outputs
     extraOptions = [ "--unsupported-gpu" ];
     wrapperFeatures.gtk = true;
     config = {
@@ -95,8 +94,8 @@ in
       keybindings = lib.mkOptionDefault ({
         # Rofi
         "${mod}+Shift+o" = "exec --no-startup-id rofi -show file-browser-extended";
-        "${mod}+Shift+b" = "exec --no-startup-id bash ~/config/users/profiles/desktop/rofi/scripts/choose_bluetooth_device_from_paired.sh";
-        "${mod}+Shift+p" = "exec --no-startup-id bash ~/config/users/profiles/desktop/rofi/scripts/open_paper.sh";
+        "${mod}+Shift+b" = "exec --no-startup-id bash ~/nix_config/menu_launchers/scripts/choose_bluetooth_device_from_paired.sh";
+        "${mod}+Shift+p" = "exec --no-startup-id bash ~/nix_config/menu_launchers/scripts/open_paper.sh";
 
         # Put on scratchpad which maximes a 1080p screen
         "${mod}+Shift+n" = "move scratchpad, scratchpad show, resize set 1912 1043, move position 4 4";

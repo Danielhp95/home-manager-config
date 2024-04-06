@@ -12,7 +12,7 @@
     ./zathura.nix
     ./git
     ./neovim
-    ./rofi
+    ./menu_launchers
     ./zellij
     ./terminal
     ./atuin.nix
@@ -20,12 +20,12 @@
     ./sway
     ./sony_ai
     ./pulse_vpn.nix
-    ./mako.nix
+    ./notifications
   ];
 
   khome.desktop.swww = {
     enable = true;
-    wallpaperDirs = [ "~/Pictures/hangmoon" ];
+    wallpaperDirs = [ "~/nix_config/wallpapers" ];  # TODO: create an env variable based on this and use that everywhere else
   };
 
   programs.eww-hyprland.enable = true;
@@ -45,13 +45,11 @@
     nvd  # Nix version diff tool
     nushell
 
-    fuzzel
-
     # Communication
     slack
     telegram-desktop
     element-desktop
-    inputs.stable.legacyPackages.x86_64-linux.zoom-us
+    zoom-us
 
     # art
     ansel
@@ -101,6 +99,9 @@
 
     # Colorscheme generator
     pywal
+    pywalfox-native  # addon for firefox to read colorscheme from pywal
+
+    unzip
   ];
 
   # Let Home Manager install and manage itself.

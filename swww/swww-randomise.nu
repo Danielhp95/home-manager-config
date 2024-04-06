@@ -46,7 +46,7 @@ def main [
   if $interval <= 0 {
     swww img ($images | first)
     sleep 2sec
-    wal -i (open ~/.cache/swww/eDP-1)
+    wal -i (open ~/.cache/swww/eDP-1) -n
     exit 0
   }
   mut i = 0
@@ -56,7 +56,7 @@ def main [
       let image = ($images | get $i)
       swww img $image --transition-type center
       sleep 2sec
-      wal -i (open ~/.cache/swww/eDP-1)
+      wal -i (open ~/.cache/swww/eDP-1) -n
       $i = $i + 1
       sleep (echo $interval sec | str join "" | into duration)
       # This assumes that we have eDPI-1 display!

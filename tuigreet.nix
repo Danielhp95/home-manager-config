@@ -185,8 +185,8 @@ in
         enable = mkDefault false;
         command = "Hyprland";
         environment = {
-          # XDG_SESSION_DESKTOP = "Hyprland";
-          # XDG_CURRENT_DESKTOP = "Hyprland";
+          XDG_SESSION_DESKTOP = "Hyprland";
+          XDG_CURRENT_DESKTOP = "Hyprland";
         };
       };
       zsh = {

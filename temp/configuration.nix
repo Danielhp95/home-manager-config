@@ -7,7 +7,15 @@
 {
   imports = [ ../tuigreet.nix  ];
 
-  nix.settings.extra-experimental-features = ["flakes" "nix-command"];
+  nix = {
+    settings.extra-experimental-features = ["flakes" "nix-command"];
+    gc = {
+      automatic = true;
+      randomizedDelaySec = "14m";  # What does this do?
+      options = "--delete-older-than 30d";
+    };
+  };
+
 
   services.dbus.packages = [ pkgs.gcr ];  # Why do I want this?
 
@@ -68,8 +76,11 @@
   ];
 
   # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader = {
+    systemd-boot.enable = true;
+    efi.canTouchEfiVariables = true;
+    grub.configurationLimit = 42;
+  };
 
   networking.hostName = "fell-omen"; # Define your hostname.
   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.

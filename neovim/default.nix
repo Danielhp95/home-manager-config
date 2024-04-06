@@ -180,6 +180,7 @@ in
       nodePackages.yaml-language-server
       nodePackages.dockerfile-language-server-nodejs
       docker-compose-language-service
+      libgit2
     ];
   };
   home.file = mkMerge [

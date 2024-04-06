@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ inputs, config, pkgs, lib, ... }:
 let
   inherit (lib)
     concatStringsSep
@@ -58,7 +58,7 @@ in
     # };
 
     home.packages = with pkgs; [
-      swww
+      inputs.stable.legacyPackages.x86_64-linux.swww
       pywal
       (pkgs.writeScriptBin "swww-randomise" (builtins.readFile ./swww-randomise.nu))
     ];

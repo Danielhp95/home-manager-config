@@ -1,6 +1,6 @@
 { pkgs, ...}:
 {
-  home.packages = [pkgs.gh];
+  home.packages = with pkgs; [ gh libgit2 ];
   programs.git = {
     enable = true;
 

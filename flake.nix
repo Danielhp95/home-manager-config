@@ -68,6 +68,7 @@
                 # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
                 inherit (inputs.hyprland.packages.${prev.system})
                   hyprland
+                  # hyprcursor  # Doesn't have this exact name
                   xdg-desktop-portal-hyprland
                   hyprland-share-picker
                   ;
@@ -76,6 +77,7 @@
               (import ./pkgs)
             ];
             nixpkgs.config.allowUnfree = true;
+            nixpkgs.config.nvidia.acceptLicense = true;
             nixpkgs.config.permittedInsecurePackages = [
               "electron-25.9.0"
               "zoom"

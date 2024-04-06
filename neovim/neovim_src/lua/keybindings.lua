@@ -10,7 +10,7 @@ wk.register({
   ["<C-Down>"] = { "<cmd>resize +1<cr>", "Continuous window vertical resize" },
   ["<C-Left>"] = { "<cmd>vertical resize +1<cr>", "Continuous window horizontal resize" },
   ["<C-Right>"] = { "<cmd>vertical resize -1<cr>", "Continuous window horizontal resize" },
-  ["yg"] = { "<cmd>let @\" = expand(\"%\")<cr>", "Yank current register path" },
+  ["<leader>yb"] = { "<cmd>let @\" = expand(\"%\")<cr>", "[y]ank [b]uffer path" },
   ['<leader>nw'] = {
     name = '+[n]o',
     w = { "<cmd>set wrap!<cr>", "line [w]rap" },

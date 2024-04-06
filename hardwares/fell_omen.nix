@@ -15,7 +15,7 @@
   # This line is needed to fix suspend/wakeup issues in Hyprland
   # https://wiki.hyprland.org/Nvidia/#fixing-suspendwakeup-issues
   boot.kernelParams = [
-    "nvidia.NVreg_PreserveVideoMemoryAllocations=1"  # To prevent nvidia from crashing on suspend. DOES NOT WORK
+    "nvidia.NVreg_PreserveVideoMemoryAllocations=1"  # To prevent nvidia from crashing on suspend. DOES NOT WORK when other monitors are connected
     "nvidia-drm.modeset=1"   # Needed for `gamescope`
   ];
   boot.extraModulePackages = [ ];
@@ -35,6 +35,30 @@
       ];
     };
     nvidia = {
+      # package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+      package = let
+        rcu_patch = pkgs.fetchpatch {
+          url = "https://github.com/gentoo/gentoo/raw/c64caf53/x11-drivers/nvidia-drivers/files/nvidia-drivers-470.223.02-gpl-pfn_valid.patch";
+          hash = "sha256-eZiQQp2S/asE7MfGvfe6dA/kdCvek9SYa/FFGp24dVg=";
+        };
+        in
+        # config.boot.kernelPackages.nvidiaPackages.mkDriver {
+        #   version = "535.154.05";
+        #   sha256_64bit = "sha256-fpUGXKprgt6SYRDxSCemGXLrEsIA6GOinp+0eGbqqJg=";
+        #   sha256_aarch64 = "sha256-G0/GiObf/BZMkzzET8HQjdIcvCSqB1uhsinro2HLK9k=";
+        #   openSha256 = "sha256-wvRdHguGLxS0mR06P5Qi++pDJBCF8pJ8hr4T8O6TJIo=";
+        #   settingsSha256 = "sha256-9wqoDEWY4I7weWW05F4igj1Gj9wjHsREFMztfEmqm10=";
+        #   persistencedSha256 = "sha256-d0Q3Lk80JqkS1B54Mahu2yY/WocOqFFbZVBh+ToGhaE=";
+        #   patches = [ rcu_patch ];
+        config.boot.kernelPackages.nvidiaPackages.mkDriver {
+          version = "535.129.03";
+          sha256_64bit = "sha256-5tylYmomCMa7KgRs/LfBrzOLnpYafdkKwJu4oSb/AC4=";
+          sha256_aarch64 = "sha256-i6jZYUV6JBvN+Rt21v4vNstHPIu9sC+2ZQpiLOLoWzM=";
+          openSha256 = "sha256-/Hxod/LQ4CGZN1B1GRpgE/xgoYlkPpMh+n8L7tmxwjs=";
+          settingsSha256 = "sha256-QKN/gLGlT+/hAdYKlkIjZTgvubzQTt4/ki5Y+2Zj3pk=";
+          persistencedSha256 = "sha256-FRMqY5uAJzq3o+YdM2Mdjj8Df6/cuUUAnh52Ne4koME=";
+          patches = [ rcu_patch ];
+      };
       modesetting.enable = true;
       powerManagement = {
         enable = true;

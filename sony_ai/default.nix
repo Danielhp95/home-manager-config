@@ -15,6 +15,8 @@ in
   home.file.".config/pip/pip.conf".source = ./pip.conf;
   home.file.".docker/config.json".source = ./docker_config.json;
   home.file.".config/sai_docker/config.yaml".source = ./sai_docker_config.yaml;
+  home.file.".config/pypoetry/auth.toml".source = ./poetry_auth.toml;
+  # etc.file.
 
   home.activation.cloneRepo = lib.hm.dag.entryAfter ["writeBoundary"] ''
     if [ ! -d "${pathToSaiRepo}" ]; then
