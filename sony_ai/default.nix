@@ -11,6 +11,10 @@ in
     docker
 
     steam-run  # To run proton via Steam's FHS
+
+    (writeShellScriptBin "sie-vpn-connect" ''
+    ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
+  '')
   ];
 
   # Ensure that credentials are stored in `.netrc`
