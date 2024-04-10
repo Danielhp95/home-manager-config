@@ -13,7 +13,8 @@
   "script-fail-notify": true,
 
   "widgets": [
-    "mpris"
+    "mpris",
+    "dnd"
   ],
   "widget-config": {
     "mpris": {
