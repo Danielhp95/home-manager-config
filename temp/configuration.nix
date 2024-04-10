@@ -19,22 +19,21 @@
 
   services.dbus.packages = [ pkgs.gcr ];  # Why do I want this?
 
-  # Doesn't work saying:
-  # But that's not in my config.
   services.power-profiles-daemon.enable = true;
-  # services.auto-cpufreq = {
-  #   enable = true;
-  #   settings = {
-  #     battery = {
-  #        governor = "powersave";
-  #        turbo = "never";
-  #     };
-  #     charger = {
-  #        governor = "performance";
-  #        turbo = "auto";
-  #     };
-  #   };
-  # };
+
+  # To get PS5 controller working in proton
+  services.udev.packages = [
+    (pkgs.writeTextFile {
+      name = "70-ps5-controller.rules";
+      text = ''
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
+      '';
+      destination = "/etc/udev/rules.d/70-ps5-controller.rules";
+    })
+  ];
+
+
 
   programs.dconf.enable = true;
 
@@ -150,20 +149,58 @@
   };
 
   i18n = {
-    defaultLocale = "en_US.UTF-8";
+    # defaultLocale = "en_US.UTF-8";
     inputMethod = {
+      # Mine
       enabled = "fcitx5";
       fcitx5.addons = with pkgs; [
-          inputs.stable.legacyPackages.x86_64-linux.fcitx5-rime
-          inputs.stable.legacyPackages.x86_64-linux.fcitx5-chinese-addons
-          # fcitx5-with-addons
+          fcitx5-rime
+          fcitx5-chinese-addons
           fcitx5-rose-pine  # theme
 
-          inputs.stable.legacyPackages.x86_64-linux.librime
+          # fcitx5-with-addons
+          # librime
           # fcitx5-gtk
       ];
+      # enabled = "fcitx5";
+      # fcitx5.addons = with pkgs; [
+      #   fcitx5-rime
+      #   fcitx5-chinese-addons
+      #   fcitx5-hangul
+      #   fcitx5-m17n
+      #   fcitx5-mozc
+      # ];
+      # Chris
+      fcitx5.settings = {
+        globalOptions = {
+          "Hotkey"."EnumerateSkipFirst" = "False";
+          "Hotkey/TriggerKeys"."0" = "Control+space";
+          "Hotkey/EnumerateForwardKeys"."0" = "Alt+Shift_L";
+          "Hotkey/EnumerateBackwardKeys"."0" = "Alt+Shift_R";
+        };
+        inputMethod = {
+          "GroupOrder" = {
+            "0" = "NixOS_test";
+          };
+          "Groups/0" = {
+            "Default Layout" = "us";
+            "DefaultIM" = "wbx";
+            "Name" = "NixOS_test";
+          };
+          "Groups/0/Items/0" = {
+            "Name" = "keyboard-us";
+          };
+        };
+      };
+      # Yuexuan
+    # enabled = "ibus";
+    # ibus.engines = with pkgs.ibus-engines; [
+    #   libpinyin
+    #   rime
+    # ];
     };
   };
+
 
   services.xserver.desktopManager.runXdgAutostartIfNone = true;
 
@@ -229,6 +266,5 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
-
 }
 

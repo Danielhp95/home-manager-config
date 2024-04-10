@@ -25,7 +25,7 @@ in
   programs.zsh = {
     enable = true;
     initExtra = keyBindings + fzf-tab-conf + ''
-      # Remaping caps to escape
+      # Remaping caps to escape: Only needed on Xservres
       # setxkbmap -option caps:escape
 
       # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space

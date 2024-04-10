@@ -7,6 +7,8 @@ ADDITIONAL_MOUNTS:
   - "/etc/profiles/per-user/daniel/bin/:/home/dev/.nix-profile/bin/:ro"
   - "/home/daniel/nix_config:/home/dev/nix_config"
 
+  - "/etc/profiles/per-user/daniel/bin/starship:/etc/profiles/per-user/daniel/bin/starship"
+
   # Shelll stuff
   - "/home/daniel/.zsh_history:/home/dev/.zsh_history"
   - "/home/daniel/.zshenv:/home/dev/.zshenv"
