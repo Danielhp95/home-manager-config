@@ -61,16 +61,6 @@ let
     };
   };
 
-  # swaySession = pkgs.writeTextFile {
-  #   name = "sway-session.desktop";
-  #   destination = "/sway-session.desktop";
-  #   text = ''
-  #     [Desktop Entry]
-  #     Name=Sway
-  #       Exec=$HOME/.winitrc
-  #       '';
-  # };
-
   mkSession = scfg: pkgs.writeTextFile {
     name = "${scfg.session}-session.desktop";
     destination = "/${scfg.session}-session.desktop";
@@ -177,8 +167,16 @@ in
         enable = mkDefault false;
         command = "sway";
         environment = {
-          # XDG_SESSION_DESKTOP = "sway";
-          # XDG_CURRENT_DESKTOP = "sway";
+          XDG_SESSION_DESKTOP = "sway";
+          XDG_CURRENT_DESKTOP = "sway";
+          # To get fcitx to work. DOES NOT WORK
+          GLFW_IM_MODULE = "fcitx";
+          GTK_IM_MODULE = "fcitx";
+          INPUT_METHOD = "fcitx";
+          XMODIFIERS = "@im=fcitx";
+          IMSETTINGS_MODULE = "fcitx";
+          QT_IM_MODULE = "fcitx";
+          SDL_IM_MODULE = "fcitx";
         };
       };
       hyprland = {
@@ -187,6 +185,14 @@ in
         environment = {
           XDG_SESSION_DESKTOP = "Hyprland";
           XDG_CURRENT_DESKTOP = "Hyprland";
+          # To get fcitx to work. DOES NOT WORK
+          GLFW_IM_MODULE = "fcitx";
+          GTK_IM_MODULE = "fcitx";
+          INPUT_METHOD = "fcitx";
+          XMODIFIERS = "@im=fcitx";
+          IMSETTINGS_MODULE = "fcitx";
+          QT_IM_MODULE = "fcitx";
+          SDL_IM_MODULE = "fcitx";
         };
       };
       zsh = {
