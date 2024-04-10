@@ -8,7 +8,6 @@
   home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
   home.packages = with pkgs; [
     hyprlock
-    hyprcursor
 
     grimblast
 
@@ -16,6 +15,5 @@
     mpv
 
     pw-volume
-    inputs.stable.legacyPackages.x86_64-linux.librime
   ];
 }
