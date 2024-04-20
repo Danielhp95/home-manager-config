@@ -20,7 +20,7 @@ ADDITIONAL_MOUNTS:
   # - "/home/daniel/Projects/silk/proton_7.0.4:/proton7_build"
 
   # Mirror Pond
-  - "/home/daniel/Projects/MirrorPond:/MirrorPond"
+  - "/home/daniel/Projects/MirrorPond:/home/dev/MirrorPond"
 
   # Nvim
   - "/home/daniel/.local/share/nvim/:/home/daniel/.local/share/nvim/"
