@@ -102,6 +102,7 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
   services.xserver = {
     # Enable the X11 windowing system.
     enable = true;
+    # TODO: remove these two, as gnome leaves breadcrumbs of programs around!
     desktopManager.gnome.enable = true;
     displayManager.gdm.enable = true;
     desktopManager.session = [
