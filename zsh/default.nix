@@ -25,14 +25,10 @@ in
   programs.zsh = {
     enable = true;
     initExtra = keyBindings + fzf-tab-conf + ''
-      # Remaping caps to escape: Only needed on Xservres
-      # setxkbmap -option caps:escape
-
       # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
       autoload -U select-word-style
       select-word-style bash
 
-      # bindkey '^r' fzf-history-widget  # [Ctrl-r] - Search backward incrementally for a specified string. The string may begin with ^ to anchor the search to the beginning of the line.
       bindkey ' ' magic-space          # [Space] - don't do history expansion
 
       # Edit the current command line in $EDITOR
@@ -45,6 +41,11 @@ in
       [ -n "$PS1" ] && \
           [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
               source "$BASE16_SHELL/profile_helper.sh"
+
+      export FZF_DEFAULT_OPTS="
+      --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
+      "
+
       ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
     '';
     autocd = true;
@@ -53,7 +54,7 @@ in
     autosuggestion.enable = true;
     enableCompletion = true;
     envExtra = ''
-      EDITOR=vim
+      EDITOR=nvim
       TERM=xterm-256color
     '';
     history = {
