@@ -47,8 +47,10 @@ local lspconfig_toplevel = {
 
 		-- PYTHON
 		-- Try basedpyright in the future, it did not work for me (could not read pyproject.toml)
-		lspconfig.pyright.setup({
+		lspconfig.pyright.setup(
+		{
 			cmd = { "pyright-langserver", "--stdio"},
+			root_dir = lspconfig.util.find_git_ancestor,
 
 			capabilities = vim.tbl_deep_extend(
 				"force",
@@ -59,6 +61,18 @@ local lspconfig_toplevel = {
 				{ workspace = { didChangeWatchedFiles = { dynamicRegistration = false } } } -- keeping it false because it makes CPU spikes
 			),
 		})
+		-- lspconfig.basedpyright.setup({
+		-- 	cmd = { "basedpyright-langserver", "--stdio"},
+		--
+		-- 	capabilities = vim.tbl_deep_extend(
+		-- 		"force",
+		-- 		vim.lsp.protocol.make_client_capabilities(),
+		-- 		require("cmp_nvim_lsp").default_capabilities(),
+		-- 		-- File watching is disabled by default for neovim.
+		-- 		-- See: https://github.com/neovim/neovim/pull/22405
+		-- 		{ workspace = { didChangeWatchedFiles = { dynamicRegistration = false } } } -- keeping it false because it makes CPU spikes
+		-- 	),
+		-- })
 		-- lua
 		lspconfig.lua_ls.setup({
 			cmd = { "lua-language-server" },
