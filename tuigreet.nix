@@ -207,7 +207,7 @@ in
 
     systemd.services.display-manager.enable = false;
     services.xserver.displayManager.lightdm.enable = lib.mkForce false;
-    services.xserver.displayManager.job.execCmd = "";
+    services.displayManager.execCmd = "";
 
     security.pam.services.greetd.enableGnomeKeyring = cfg.enableGnomeKeyring;
 

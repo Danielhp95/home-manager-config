@@ -33,8 +33,9 @@ in
 
   wayland.windowManager.sway = {
     enable = true;
-    extraConfig = builtins.readFile ./sway_i3_shared.conf +
-      ''output "*" bg $HOME/nix_config/wallpapers/purple-blue-meadow-couple-sitting.jpg fill''; # Sets wallpaper on all outputs
+    extraConfig = builtins.readFile ./sway_i3_shared.conf;
+      # TODO: doesn't seem to work
+      # ''output "*" bg /home/daniel/nix_config/wallpapers/purple-blue-meadow-couple-sitting.jpg fill''; # Sets wallpaper on all outputs
     extraOptions = [ "--unsupported-gpu" ];
     wrapperFeatures.gtk = true;
     config = {
