@@ -9,17 +9,23 @@
     ./starship
     ./zsh
     ./tmux
+    ./zellij
+
     ./zathura.nix
     ./git
-    ./neovim
     ./menu_launchers
-    ./zellij
+
+    ./neovim
     ./terminal
     ./atuin.nix
+
     ./hyprland
     ./sway
+
     ./sony_ai
     ./pulse_vpn.nix
+
+    ./ags
     ./notifications
   ];
 
