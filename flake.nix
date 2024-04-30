@@ -6,9 +6,9 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stable.url = "github:nixos/nixpkgs/nixos-23.11";
 
-    hyprland.url = "github:hyprwm/Hyprland?ref=v0.39.1";
+    hyprland.url = "github:hyprwm/Hyprland?ref=v0.36.0";
     hy3 = {
-      url = "github:outfoxxed/hy3?ref=hl0.39.1"; # where {version} is the hyprland release version
+      url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
       inputs.hyprland.follows = "hyprland";
     };
 
