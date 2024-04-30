@@ -1,6 +1,10 @@
 -- [[ Setting options ]]
 -- See `:help vim.o`
 
+vim.filetype.add({
+  pattern = { [".*/hyprland.*%.conf"] = "hyprlang" },
+})
+
 vim.g.nofoldenable = true
 vim.g.completeopt = "menu,menuone,noselect"
 vim.g.noswapfile = true
