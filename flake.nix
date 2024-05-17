@@ -13,6 +13,9 @@
     };
 
     ags.url = "github:Aylur/ags";
+    ags.inputs.nixpkgs.follows = "nixpkgs";
+    anyrun.url = "github:Kirottu/anyrun";
+    anyrun.inputs.nixpkgs.follows = "nixpkgs";
 
 
     home-manager.url = "github:nix-community/home-manager/";

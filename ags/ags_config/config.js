@@ -46,10 +46,11 @@ const Windows = () => [
     // forMonitors(Bar),
     // forMonitors(BarCornerTopleft),
     // forMonitors(BarCornerTopright),
-    forMonitors((id) => Corner(id, 'top left')),
-    forMonitors((id) => Corner(id, 'top right')),
-    forMonitors((id) => Corner(id, 'bottom left')),
-    forMonitors((id) => Corner(id, 'bottom right')),
+    // Remove cute corners on the side
+    // forMonitors((id) => Corner(id, 'top left')),
+    // forMonitors((id) => Corner(id, 'top right')),
+    // forMonitors((id) => Corner(id, 'bottom left')),
+    // forMonitors((id) => Corner(id, 'bottom right')),
 ];
 const CLOSE_ANIM_TIME = 210; // Longer than actual anim time to make sure widgets animate fully
 export default {

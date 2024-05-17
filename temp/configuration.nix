@@ -43,11 +43,7 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     enableNvidia = true;
   };
 
-  # To get screensharing working
-  xdg.portal = {
-    enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
-  };
+  xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
 
   khome = {
     tuigreet = {
@@ -68,6 +64,10 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     noto-fonts-cjk-sans
     noto-fonts-cjk-serif
     babelstone-han  # unicode font with loooads of Han characters
+
+    material-symbols
+    lexend
+    nerdfonts
 
     fira-code
     fira-code-symbols
@@ -102,16 +102,19 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
   services.xserver = {
     # Enable the X11 windowing system.
     enable = true;
+    excludePackages = [ pkgs.xterm ];
     # TODO: remove these two, as gnome leaves breadcrumbs of programs around!
+    # Figure out how to get these features without gnome
     desktopManager.gnome.enable = true;
     displayManager.gdm.enable = true;
+
+    desktopManager.runXdgAutostartIfNone = true;
     desktopManager.session = [
       {
         manage = "window";
         name = "Hyprland";
         start = "Hyprland";
       }
-
       {
         manage = "window";
         name = "sway";
@@ -201,10 +204,6 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     # ];
     };
   };
-
-
-  services.xserver.desktopManager.runXdgAutostartIfNone = true;
-
 
   # Does this work?
   # This was meant to fix 

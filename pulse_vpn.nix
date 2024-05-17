@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, inputs, ... }:
 let
   pulse-cookie = pkgs.python3.pkgs.buildPythonApplication rec {
     pname = "pulse-cookie";
@@ -55,7 +55,7 @@ let
 in
 {
   home.packages = with pkgs; [
-    openconnect
+    inputs.stable.legacyPackages.${system}.openconnect
     start-pulse-vpn
   ];
 }

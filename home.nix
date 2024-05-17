@@ -5,6 +5,11 @@
   home.username = "daniel";
   home.homeDirectory = "/home/daniel";
   home.stateVersion = "24.05";
+
+  home.sessionVariables = {
+    BROWSER = "firefox";
+  };
+
   imports = [
     ./starship
     ./zsh
@@ -20,12 +25,13 @@
     ./atuin.nix
 
     ./hyprland
-    ./sway
+    # ./sway
 
     ./sony_ai
     ./pulse_vpn.nix
 
     ./ags
+    ./anyrun
     ./notifications
   ];
 
@@ -50,6 +56,8 @@
     gnugrep
     nvd  # Nix version diff tool
     nushell
+
+    gnome.adwaita-icon-theme  # icon themes
 
     # Communication
     slack
@@ -76,7 +84,7 @@
     ripgrep # better grep
     bat # Better cat
     ranger # File manager
-    bottom # like htop but cooler
+    zenith # better top
     tldr   # succint command explanations
     acpi  # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
@@ -85,7 +93,7 @@
     spotify
     mpv
     # obsidian
-    rmview  # Remarkable desktop client
+    # rmview  # Remarkable desktop client
     remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
 
     vlc
@@ -108,6 +116,8 @@
     pywalfox-native  # addon for firefox to read colorscheme from pywal
 
     unzip
+    wget
+    ffmpeg
   ];
 
   # Let Home Manager install and manage itself.

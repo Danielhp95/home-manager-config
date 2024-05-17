@@ -19,6 +19,9 @@
 
     # Color picker
     hyprpicker
+
+    # Day/night gamma adjustments for Wayland compositors
+    wlsunset
   ];
 
   programs.ags = {

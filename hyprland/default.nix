@@ -15,5 +15,9 @@
     mpv
 
     pw-volume
+
+    libnotify
+
+    wdisplays  # manage display positioning
   ];
 }

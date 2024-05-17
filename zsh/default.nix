@@ -53,10 +53,10 @@ in
     defaultKeymap = "emacs"; # this is the default, don't get scared
     autosuggestion.enable = true;
     enableCompletion = true;
-    envExtra = ''
-      EDITOR=nvim
-      TERM=xterm-256color
-    '';
+    # envExtra = ''
+    #   EDITOR=nvim
+    #   TERM=xterm-256color
+    # '';
     history = {
       ignoreDups = true;
       extended = true;

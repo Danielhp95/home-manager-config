@@ -97,17 +97,18 @@ local lspconfig_toplevel = {
 			},
 		})
 		-- NIX
-		lspconfig.nil_ls.setup({
-			autostart = true,
-			cmd = { "nil" },
-			settings = {
-				["nil"] = {
-					formatting = {
-						command = { "nixpkgs-fmt" },
-					},
-				},
-			},
-		})
+		-- lspconfig.nil_ls.setup({
+		-- 	autostart = true,
+		-- 	cmd = { "nil" },
+		-- 	settings = {
+		-- 		["nil"] = {
+		-- 			formatting = {
+		-- 				command = { "nixpkgs-fmt" },
+		-- 			},
+		-- 		},
+		-- 	},
+		-- })
+		lspconfig.nixd.setup{}
 		-- BASH
 		lspconfig.bashls.setup({
 			cmd = { "bash-language-server", "start" },
@@ -124,6 +125,8 @@ local lspconfig_toplevel = {
 				},
 			},
 		})
+		-- Typescript
+		-- lspconfig.type
 		require("lsp_signature").setup({
 			bind = true, -- This is mandatory, otherwise border config won't get registered.
 			handler_opts = {

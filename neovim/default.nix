@@ -90,7 +90,7 @@ let
 
     ## Git
     "gitlinker.nvim" = gitlinker-nvim;
-    "gitsigns.nvim" = gitsigns-nvim;
+    "gitsigns.nvim" = inputs.stable.legacyPackages.x86_64-linux.vimPlugins.gitsigns-nvim;
 
     ## General
     "sqlite.lua" = sqlite-lua;
@@ -100,7 +100,6 @@ let
     "term-edit.nvim" = term-edit-nvim;
     "sniprun" = sniprun;
 
-    "suda.vim" = suda-vim;
     "vim-togglelist" = vim-togglelist;
     "nvim-bqf" = nvim-bqf;
     "fzf" = pkgs.fzf;
@@ -168,7 +167,8 @@ in
     enable = lib.mkForce true;
     extraPackages = with pkgs; [
       lua-language-server
-      nil
+      # nil  # older nix lsp
+      nixd
       gopls
       stylua
       yamlfmt
@@ -181,10 +181,12 @@ in
       nodePackages.dockerfile-language-server-nodejs
       docker-compose-language-service
       libgit2
+      nodePackages.typescript-language-server
     ];
   };
   home.file = mkMerge [
     pluginFileLinks
     neovimFileLinks
   ];
+  home.sessionVariables.EDITOR = "nvim";
 }
