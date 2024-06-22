@@ -6,24 +6,26 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stable.url = "github:nixos/nixpkgs/nixos-24.05";
 
-    hyprland = {
-      type = "git";
-      url = "https://github.com/hyprwm/Hyprland?ref=v0.36.0";
-      # url = "https://github.com/hyprwm/Hyprland?rev=4778afe2e6b4a6f8c7d218ccd8fe7e0bd4d2ee9c";
-      # submodules = true;
-      inputs.nixpkgs.follows = "stable";
-    };
+    hyprland.url = "github:hyprwm/Hyprland?submodules=1&ref=v0.36.0";
+    # hyprland.url = "github:hyprwm/Hyprland?ref=v0.36.0";
+    # hyprland = {
+    #   type = "git";
+    #   url = "https://github.com/hyprwm/Hyprland?ref=v0.41.1";
+    #   # submodules = true;
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
     hy3 = {
       url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
       # url = "github:outfoxxed/hy3?rev=3c42fae982bb9de0d5a7e6d9aa80942abf2737fb"; # where {version} is the hyprland release version
       inputs.hyprland.follows = "hyprland";
     };
 
-    # hycov={
-    #   # url = "github:DreamMaoMao/hycov?ref=v0.36.0.1";
-    #   url = "github:DreamMaoMao/hycov";
-    #   inputs.hyprland.follows = "hyprland";
-    # };
+    hycov={
+      # version 0.36.0.1
+      url = "github:DreamMaoMao/hycov?rev=7d48cff8364a7b6ae52a3472ad1dfe01b9f728ae";
+      # url = "github:DreamMaoMao/hycov";
+      inputs.hyprland.follows = "hyprland";
+    };
 
     # TODO: see if we wanna keep this
     ags.url = "github:Aylur/ags";
