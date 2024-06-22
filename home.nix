@@ -134,6 +134,8 @@ in
     # wmctrl
     # ydotool
 
+    xfce.thunar
+
     # Authentication protocol
     kdePackages.polkit-kde-agent-1
   ];

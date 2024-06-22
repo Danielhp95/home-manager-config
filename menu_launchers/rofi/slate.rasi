@@ -42,7 +42,8 @@ element {
 }
 
 element selected {
-  background-color: rgba(48, 119, 15, 0.35);
+  /* Orange color from WhiteSur-Dark-orange */
+  background-color: rgba(233, 135, 58, 0.35);
 }
 
 /* vim:ft=css
