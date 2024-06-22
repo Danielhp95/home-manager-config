@@ -27,9 +27,12 @@
 
   hardware = {
     graphics = {
+    # Apparently necessary for davinci. Not sure
+      enable = true;
       extraPackages = with pkgs; [
         vaapiVdpau
         libvdpau-va-gl
+        intel-compute-runtime
       ];
       enable32Bit = true;
     };

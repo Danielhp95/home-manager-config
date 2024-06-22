@@ -80,6 +80,10 @@ in
       targetPkgs = pkgs: (with pkgs; [ davinci-resolve ]);
       runScript = "davinci-resolve";
     }) # does not work :(
+    (writeScriptBin "davinci" ''
+      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+    '')
+    # davinci-resolve
 
     ### Gaming
     steam
@@ -138,6 +142,9 @@ in
 
     # Authentication protocol
     kdePackages.polkit-kde-agent-1
+
+    # Weather app
+    mousam
   ];
 
   # Let Home Manager install and manage itself.

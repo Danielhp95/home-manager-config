@@ -9,6 +9,7 @@ in
     plugins = [
       pkgs.hy3 # make sure we are targetting the same version of hyprland and hy3
       inputs.hycov.packages.x86_64-linux.hycov
+      # inputs.hyprspace.packages.x86_64-linux.Hyprspace
     ];
     settings = {
       exec-once = [

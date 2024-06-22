@@ -1,7 +1,7 @@
 bluetoothctl power on
 bluetoothctl agent on
 icon=
-device=$(bluetoothctl devices | sed "s/^/$icon / " | rofi -p "Connect to Bluetooth decive:" -dmenu | awk '{print $3}')
+device=$(bluetoothctl devices | sed "s/^/$icon/  " | rofi -p "Connect to Bluetooth decive:" -dmenu | awk '{print $3}')
 if [ $? -eq 0 ]; then
     # This allows reconnection to a device
     bluetoothctl disconnect
