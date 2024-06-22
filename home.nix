@@ -1,5 +1,10 @@
 { inputs, config, pkgs, environment, ... }:
 
+let
+  nvidiaZoom = pkgs.zoom-us.override {
+    meta.mainProgram = "nvidia-offload zoom";
+  }; 
+in 
 {
 
   home.username = "daniel";
@@ -20,19 +25,22 @@
     ./git
     ./menu_launchers
 
+    # Gestures
+    # ./fusuma
+
     ./neovim
     ./terminal
+    ./kitty
     ./atuin.nix
 
     ./hyprland
-    # ./sway
+    # ./sway  # It will be outdated
 
     ./sony_ai
-    ./pulse_vpn.nix
 
     ./ags
-    ./anyrun
-    ./notifications
+    # ./anyrun
+    ./notifications  # TODO: remove
   ];
 
   khome.desktop.swww = {
@@ -48,39 +56,39 @@
   services.clipmenu.enable = true;
 
   home.packages = with pkgs; [
+    ### Browsers
     chromium
-    powerline-fonts
-    coreutils
-    gzip
-    gawk
-    gnugrep
+
     nvd  # Nix version diff tool
     nushell
 
-    gnome.adwaita-icon-theme  # icon themes
+    ### Style
+    pywal # Colorscheme generator
 
-    # Communication
+    ### Communication
     slack
     telegram-desktop
     element-desktop
     zoom-us
 
-    # art
-    ansel
-    # inputs.stable.legacyPackages.x86_64-linux.davinci-resolve
-    davinci-resolve
+    ### Photography
+    # ansel
+
+    ### Videography
+    (buildFHSEnv {
+      name = "davinci-resolve";
+      targetPkgs = pkgs: (with pkgs; [ davinci-resolve ]);
+      runScript = "davinci-resolve";
+    }) # does not work :(
+
+    ### Gaming
     steam
     gamescope  # micro compositor by steam
 
     # Latex stuff
-    texlive.combined.scheme-full
     pandoc
 
-    feh # image viewer
-    imv # image viewer
-    hyprpaper # crappy wallpaper manager for hyprland
-    # swww # wallpaper manager
-
+    ### Basic utilities
     ripgrep # better grep
     bat # Better cat
     ranger # File manager
@@ -88,36 +96,46 @@
     tldr   # succint command explanations
     acpi  # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
-
-    # For fun
-    spotify
-    mpv
-    # obsidian
-    # rmview  # Remarkable desktop client
-    remarkable-mouse  # (Program: remouse) Using Remarkable as a mouse
-
-    vlc
-
-    # debugging utils
-    lnav  # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
-    pciutils  # For `lspci` command
-    lshw  # list hardware. For instance `lshw -c display` shows all graphics cards
-    nvtopPackages.full  # Better `nvidia-smi` that also supports AMD GPUs
-
-    # Audio
-    helvum
-    pamixer
-    pavucontrol
-
-    translate-shell
-
-    # Colorscheme generator
-    pywal
-    pywalfox-native  # addon for firefox to read colorscheme from pywal
-
+    coreutils
+    gzip
+    gawk
+    gnugrep
     unzip
     wget
     ffmpeg
+
+    ### Media viewing
+    # video
+    vlc
+    mpv
+    # music
+    spotify
+    # Images
+    imv
+
+    ### debugging utils
+    lnav  # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
+    pciutils  # For `lspci` command.
+    lshw  # list hardware. For instance `lshw -c display` shows all graphics cards
+    nvtopPackages.full  # Better `nvidia-smi` that also supports AMD GPUs
+    powertop  # Analyze power consumption for intel based processors
+
+    ### Audio
+    helvum  # visual audio mixer
+    pamixer  # cli for pulseaudio
+    pavucontrol  # not working!
+
+    translate-shell
+
+    ### VPN
+    openconnect
+    # libinput
+    # libinput-gestures
+    # wmctrl
+    # ydotool
+
+    # Authentication protocol
+    kdePackages.polkit-kde-agent-1
   ];
 
   # Let Home Manager install and manage itself.

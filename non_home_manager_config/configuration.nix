@@ -7,15 +7,17 @@
 {
   imports = [ ../tuigreet.nix  ];
 
+  # Authenticator manager
+  security.polkit.enable = true;
+
   nix = {
     settings.extra-experimental-features = ["flakes" "nix-command"];
     gc = {
       automatic = true;
       randomizedDelaySec = "14m";  # What does this do?
-      options = "--delete-older-than 30d";
+      options = "--delete-older-than 15d";
     };
   };
-
 
   services.dbus.packages = [ pkgs.gcr ];  # Why do I want this?
 
@@ -32,8 +34,6 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
       destination = "/etc/udev/rules.d/70-ps5-controller.rules";
     })
   ];
-
-
 
   programs.dconf.enable = true;
 
@@ -152,59 +152,6 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
 
-  i18n = {
-    # defaultLocale = "en_US.UTF-8";
-    inputMethod = {
-      # Mine
-      enabled = "fcitx5";
-      fcitx5.addons = with pkgs; [
-          fcitx5-rime
-          fcitx5-chinese-addons
-          fcitx5-rose-pine  # theme
-
-          # fcitx5-with-addons
-          # librime
-          # fcitx5-gtk
-      ];
-      # enabled = "fcitx5";
-      # fcitx5.addons = with pkgs; [
-      #   fcitx5-rime
-      #   fcitx5-chinese-addons
-      #   fcitx5-hangul
-      #   fcitx5-m17n
-      #   fcitx5-mozc
-      # ];
-      # Chris
-      fcitx5.settings = {
-        globalOptions = {
-          "Hotkey"."EnumerateSkipFirst" = "False";
-          "Hotkey/TriggerKeys"."0" = "Control+space";
-          "Hotkey/EnumerateForwardKeys"."0" = "Alt+Shift_L";
-          "Hotkey/EnumerateBackwardKeys"."0" = "Alt+Shift_R";
-        };
-        inputMethod = {
-          "GroupOrder" = {
-            "0" = "NixOS_test";
-          };
-          "Groups/0" = {
-            "Default Layout" = "us";
-            "DefaultIM" = "wbx";
-            "Name" = "NixOS_test";
-          };
-          "Groups/0/Items/0" = {
-            "Name" = "keyboard-us";
-          };
-        };
-      };
-      # Yuexuan
-    # enabled = "ibus";
-    # ibus.engines = with pkgs.ibus-engines; [
-    #   libpinyin
-    #   rime
-    # ];
-    };
-  };
-
   # Does this work?
   # This was meant to fix 
   systemd.services.suspend-hyprland = {
@@ -216,6 +163,7 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
       ExecStart = "killall -STOP Hyprland";
     };
   };
+
   systemd.services.resume-hyprland = {
     description = "Resume hyprland";
     after = [ "systemd-suspend.service" "systemd-hibernate.service" "nvidia-resume.service" ];
@@ -226,24 +174,6 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     };
   };
 
-
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  # environment.systemPackages = with pkgs; [
-  #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #   wget
-  # ];
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
@@ -258,6 +188,13 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
   # (/run/current-system/configuration.nix). This is useful in case you
   # accidentally delete configuration.nix.
   # system.copySystemConfiguration = true;
+
+  # Shows what closure differences from last generation
+  system.activationScripts.diff = ''
+    if [[ -e /run/current-system ]]; then
+      ${pkgs.nix}/bin/nix store diff-closures /run/current-system "$systemConfig"
+    fi
+  '';
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

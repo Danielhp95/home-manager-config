@@ -10,6 +10,7 @@ in
 
     docker
 
+    # inputs.stable.legacyPackages.x86_64-linux.steam-run  # To run proton via Steam's FHS
     steam-run  # To run proton via Steam's FHS
 
     (writeShellScriptBin "sie-vpn-connect" ''

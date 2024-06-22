@@ -28,7 +28,7 @@ local Treesitter = NixPlugin('nvim-treesitter/nvim-treesitter', {
     NixPlugin('nvim-treesitter/playground'),
     'RRethy/nvim-treesitter-textsubjects',
     Context,
-    'HiPhish/nvim-ts-rainbow2'
+    'hiphish/rainbow-delimiters.nvim'
   },
   -- build = 'TSInstall',
   -- build = ':TSUpdate',

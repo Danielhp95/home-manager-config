@@ -4,25 +4,33 @@
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    stable.url = "github:nixos/nixpkgs/nixos-23.11";
+    stable.url = "github:nixos/nixpkgs/nixos-24.05";
 
-    hyprland.url = "github:hyprwm/Hyprland?ref=v0.36.0";
+    hyprland = {
+      type = "git";
+      url = "https://github.com/hyprwm/Hyprland?ref=v0.36.0";
+      # url = "https://github.com/hyprwm/Hyprland?rev=4778afe2e6b4a6f8c7d218ccd8fe7e0bd4d2ee9c";
+      # submodules = true;
+      inputs.nixpkgs.follows = "stable";
+    };
     hy3 = {
       url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
+      # url = "github:outfoxxed/hy3?rev=3c42fae982bb9de0d5a7e6d9aa80942abf2737fb"; # where {version} is the hyprland release version
       inputs.hyprland.follows = "hyprland";
     };
 
+    # hycov={
+    #   # url = "github:DreamMaoMao/hycov?ref=v0.36.0.1";
+    #   url = "github:DreamMaoMao/hycov";
+    #   inputs.hyprland.follows = "hyprland";
+    # };
+
+    # TODO: see if we wanna keep this
     ags.url = "github:Aylur/ags";
     ags.inputs.nixpkgs.follows = "nixpkgs";
-    anyrun.url = "github:Kirottu/anyrun";
-    anyrun.inputs.nixpkgs.follows = "nixpkgs";
-
 
     home-manager.url = "github:nix-community/home-manager/";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-    basedpyright-nix.url = "github:LoganWalls/basedpyright-nix";
-    basedpyright-nix.inputs.nixpkgs.follows = "nixpkgs";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";
@@ -39,8 +47,10 @@
         }; # Pass flake inputs to our config
         # > Our main nixos configuration file <
         modules = [
+          ./fcitx5
           ./hardwares/fell_omen.nix
-          ./temp/configuration.nix
+          ./non_home_manager_config/configuration.nix
+          ./non_home_manager_config/gestures.nix
           ./pipewire.nix
           home-manager.nixosModules.default  # Otherwise home-manager isn't imported
           {
@@ -50,6 +60,7 @@
               sharedModules = [
                 ./swww/swww.nix
                 ./eww
+                ./hyprland/pyprland.nix
               ];
               extraSpecialArgs = { inherit inputs; };
               users.daniel = { config, ...}: {
@@ -80,7 +91,6 @@
                   ;
               })
               (import ./overlays.nix)
-              (import ./pkgs)
             ];
             nixpkgs.config.allowUnfree = true;
             nixpkgs.config.nvidia.acceptLicense = true;

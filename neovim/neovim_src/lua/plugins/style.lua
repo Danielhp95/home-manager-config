@@ -74,11 +74,23 @@ local Lushwal = {
 	},
 }
 
+local deviconsAutoColors = {
+    "rachartier/tiny-devicons-auto-colors.nvim",
+    dependencies = {
+        "nvim-tree/nvim-web-devicons"
+    },
+    event = "VeryLazy",
+    config = function()
+        require('tiny-devicons-auto-colors').setup()
+    end
+}
+
 return {
 	ColorSchemes,
 	LuaLine,
 	IndentLines,
 	BufferLine,
 	Lushwal,
-  {"junegunn/goyo.vim"}
+  {"junegunn/goyo.vim"},
+  deviconsAutoColors
 }

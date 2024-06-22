@@ -58,7 +58,7 @@ in
     # };
 
     home.packages = with pkgs; [
-      inputs.stable.legacyPackages.x86_64-linux.swww
+      swww
       pywal
       (pkgs.writeScriptBin "swww-randomise" (builtins.readFile ./swww-randomise.nu))
     ];

@@ -47,22 +47,10 @@ local lspconfig_toplevel = {
 
 		-- PYTHON
 		-- Try basedpyright in the future, it did not work for me (could not read pyproject.toml)
-		lspconfig.pyright.setup(
-		{
-			cmd = { "pyright-langserver", "--stdio"},
-			root_dir = lspconfig.util.find_git_ancestor,
-
-			capabilities = vim.tbl_deep_extend(
-				"force",
-				vim.lsp.protocol.make_client_capabilities(),
-				require("cmp_nvim_lsp").default_capabilities(),
-				-- File watching is disabled by default for neovim.
-				-- See: https://github.com/neovim/neovim/pull/22405
-				{ workspace = { didChangeWatchedFiles = { dynamicRegistration = false } } } -- keeping it false because it makes CPU spikes
-			),
-		})
-		-- lspconfig.basedpyright.setup({
-		-- 	cmd = { "basedpyright-langserver", "--stdio"},
+		-- lspconfig.pyright.setup(
+		-- {
+		-- 	cmd = { "pyright-langserver", "--stdio"},
+		-- 	root_dir = lspconfig.util.find_git_ancestor,
 		--
 		-- 	capabilities = vim.tbl_deep_extend(
 		-- 		"force",
@@ -73,6 +61,22 @@ local lspconfig_toplevel = {
 		-- 		{ workspace = { didChangeWatchedFiles = { dynamicRegistration = false } } } -- keeping it false because it makes CPU spikes
 		-- 	),
 		-- })
+		lspconfig.basedpyright.setup({
+        -- handlers = {
+        --     -- Don't publish basedpyright diagnostics (we use ruff and mypy instead)
+        --     ['textDocument/publishDiagnostics'] = function() end,
+        -- },
+        root_dir = lspconfig.util.find_git_ancestor,
+        settings = {
+            basedpyright = {
+                analysis = {
+                    autoSearchPaths = true,
+                    diagnosticMode = 'openFilesOnly',
+                    useLibraryCodeForTypes = true,
+                },
+            },
+        },
+    })
 		-- lua
 		lspconfig.lua_ls.setup({
 			cmd = { "lua-language-server" },
@@ -96,18 +100,9 @@ local lspconfig_toplevel = {
 				},
 			},
 		})
+		-- latex
+    lspconfig.texlab.setup{}
 		-- NIX
-		-- lspconfig.nil_ls.setup({
-		-- 	autostart = true,
-		-- 	cmd = { "nil" },
-		-- 	settings = {
-		-- 		["nil"] = {
-		-- 			formatting = {
-		-- 				command = { "nixpkgs-fmt" },
-		-- 			},
-		-- 		},
-		-- 	},
-		-- })
 		lspconfig.nixd.setup{}
 		-- BASH
 		lspconfig.bashls.setup({
@@ -125,7 +120,8 @@ local lspconfig_toplevel = {
 				},
 			},
 		})
-		-- Typescript
+		-- Markdown: TODO: not in love with this
+		lspconfig.marksman.setup{}
 		-- lspconfig.type
 		require("lsp_signature").setup({
 			bind = true, -- This is mandatory, otherwise border config won't get registered.
@@ -141,6 +137,12 @@ local LspSaga = NixPlugin("kkharji/lspsaga", {
 		require("lspsaga").setup({ lightbulb = { enable = false } })
 	end,
 })
+
+-- Add rounded borders to hover
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+  border = "rounded",
+})
+
 
 return {
 	lspconfig_toplevel,

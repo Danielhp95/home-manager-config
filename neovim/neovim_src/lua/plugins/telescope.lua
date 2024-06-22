@@ -72,7 +72,7 @@ telescope.config = function()
 						action_layout.cycle_layout_prev(prompt_bufnr)
 					end,
 					["<c-d>"] = actions.drop_all, -- Drop all selections from multi select
-					["<c-l>"] = require("trouble.providers.telescope").open_with_trouble,
+					["<c-l>"] = require("trouble.sources.telescope").open,
 					["<c-f>"] = actions.send_to_qflist + actions.open_qflist,
 					["<tab>"] = actions.toggle_selection,
 					-- TODO: not working Select all
@@ -88,7 +88,7 @@ telescope.config = function()
 				},
 				n = {
 					["<esc>"] = actions.close,
-					["<a-t>"] = require("trouble.providers.telescope").open_with_trouble,
+					["<a-t>"] = require("trouble.sources.telescope"),
 				},
 			},
 		},

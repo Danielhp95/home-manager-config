@@ -15,6 +15,11 @@ local home = os.getenv("HOME")
 
 wezterm.add_to_config_reload_watch_list(home .. '~/.cache/wal/colors')
 
+
+
+local xcursor_size = nil
+local xcursor_theme = nil
+
 return {
   mouse_bindings = {
     {
@@ -52,6 +57,9 @@ return {
   -- color_scheme = "Pywal",
   text_background_opacity = 1.0,
   window_background_opacity = .65,
+
+  -- Cursor
+  hide_mouse_cursor_when_typing = false;
 }
 
 

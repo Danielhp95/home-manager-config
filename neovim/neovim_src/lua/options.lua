@@ -21,7 +21,6 @@ vim.o.showcmd = true
 vim.o.showmatch = true
 vim.o.ignorecase = true
 vim.o.smartcase = true
-vim.o.termguicolors = true
 vim.o.inccommand = "split"
 vim.o.incsearch = true
 vim.o.tabstop = 2

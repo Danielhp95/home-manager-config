@@ -121,22 +121,11 @@ wk.register({
   }
 })
 
--- Comments
-wk.register({
-  ['<leader>'] = {
-    c = {
-      name = '[c]omments',
-      l = { "<cmd>lua require('Comment.api').toggle.linewise.current()<cr>", "[l]inewise comment" },
-      b = { "<cmd>lua require('Comment.api').toggle.blockwise.current()<cr>", "[b]lockwise comment" },
-    }
-  }
-})
-
 
 -- LSP
 local vertical_layout = "{layout_strategy='vertical', layout_config = {mirror = true}}"
 wk.register({
-  K = { "<cmd>lua vim.lsp.buf.hover()<CR>", "Show do[k]umentation" },
+  K = { "<cmd>lua vim.lsp.buf.hover({border = 'double'})<CR>", "Show do[k]umentation" },
   ['<C-k>'] = { "<cmd>lua require('lsp_signature').toggle_float_win()<CR>", "Show signature help" },
   ['<leader>'] = {
     l = {
@@ -147,6 +136,7 @@ wk.register({
       D = { string.format("<cmd>lua vim.lsp.buf.definition(%s)<CR>", vertical_layout), "Go to [D]efinition" },
       i = { string.format("<cmd>lua vim.lsp.buf.implementation(%s)<CR>", vertical_layout), "Go to [i]mplementation" },
       r = { string.format("<cmd>Trouble lsp_references<cr>", vertical_layout), "Show [r]eferences" },
+      h = { "<cmd>lua vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())<cr>", "Toggle lsp [h]ints" },
       n = { "<cmd>Lspsaga rename<cr>", "Re[n]ame" },
       f = { "<cmd>lua require('conform').format()<cr>", "[F]ormat file" },
       R = { "<cmd>LspRestart<cr>", "[R]estart LSP" },

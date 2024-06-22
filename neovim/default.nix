@@ -39,8 +39,6 @@ let
   neovimLinks = listToAttrs (flattenAttrsFileStructure luafiles);
   neovimFileLinks = mapAttrs' (path: source: nameValuePair ".config/nvim${path}" { inherit source; }) neovimLinks;
 
-  treesitterWithParsers = pkgs.vimPlugins.nvim-treesitter.withPlugins (_: pkgs.tree-sitter-full.allGrammars);
-
   plugins = with pkgs.vimPlugins; {
     ## Core
     "lazy.nvim" = lazy-nvim;
@@ -61,6 +59,7 @@ let
     "neodev.nvim" = neodev-nvim;  # Lua LSP
     "lsp_signature.nvim" = lsp_signature-nvim;  # Show function signature
     "lspsaga" = lspsaga-nvim; # extra UI for lsp
+    "sg.nvim" = inputs.stable.legacyPackages.x86_64-linux.vimPlugins.sg-nvim; # Sourcegraph
 
     ## cmp
     "nvim-cmp" = nvim-cmp;
@@ -79,7 +78,6 @@ let
     "plenary.nvim" = plenary-nvim;
     "lualine.nvim" = lualine-nvim;
     "which-key.nvim" = which-key-nvim;
-    "fm-nvim" = fm-nvim;
     "wilder.nvim" = wilder-nvim;
     "cpsm" = cpsm;
     "nvim-web-devicons" = nvim-web-devicons;
@@ -174,14 +172,17 @@ in
       yamlfmt
       nixpkgs-fmt
       python310Packages.gevent
-      nodePackages.bash-language-server
-      nodePackages.pyright
-      inputs.basedpyright-nix.packages.x86_64-linux.default  # basedpyright. Better version of pyright
+      inputs.stable.legacyPackages.x86_64-linux.nodePackages.bash-language-server
+      basedpyright  # basedpyright. Better version of pyright
+      nodejs_22  # for sourcegraph
       nodePackages.yaml-language-server
       nodePackages.dockerfile-language-server-nodejs
       docker-compose-language-service
       libgit2
       nodePackages.typescript-language-server
+      marksman
+      texlab
+      cargo
     ];
   };
   home.file = mkMerge [

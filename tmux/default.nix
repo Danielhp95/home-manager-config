@@ -5,7 +5,7 @@ let
 in
 {
   programs.tmux = {
-    enable = true;
+    enable = false;
     shortcut = "a";
     clock24 = true;
     # Start windows and panes index at 1, not 0
