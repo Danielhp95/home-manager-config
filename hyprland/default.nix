@@ -6,8 +6,8 @@ in
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = builtins.readFile ./hyprland.conf;
-    plugins = [
-      pkgs.hy3 # make sure we are targetting the same version of hyprland and hy3
+    plugins = with pkgs; [
+      hy3 # make sure we are targetting the same version of hyprland and hy3
       # inputs.hycov.packages.x86_64-linux.hycov
       # inputs.hyprspace.packages.x86_64-linux.Hyprspace
     ];

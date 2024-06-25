@@ -10,13 +10,14 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      rev = "8a68199a0ceb2894a5d9cc300961c38123ac0312";
+      # version 0.41.2 + a few commits
+      rev = "95782de966ec9e182d49b2f032b74a1101f423e8";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       # url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
-      url = "github:outfoxxed/hy3?rev=d0056945d088c984232216c82e19428b9981fafc"; # where {version} is the hyprland release version
+      url = "github:outfoxxed/hy3?ref=hl0.41.2"; # where {version} is the hyprland release version
       inputs.hyprland.follows = "hyprland";
     };
 
