@@ -8,12 +8,13 @@ in
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = [
       pkgs.hy3 # make sure we are targetting the same version of hyprland and hy3
-      inputs.hycov.packages.x86_64-linux.hycov
+      # inputs.hycov.packages.x86_64-linux.hycov
       # inputs.hyprspace.packages.x86_64-linux.Hyprspace
     ];
     settings = {
       exec-once = [
         "${pkgs.dbus}/bin/dbus-update-activation-environment --all"
+        "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         "${pkgs.kdePackages.polkit-kde-agent-1}/bin/polkit-kde-agent-1"
       ];
     };

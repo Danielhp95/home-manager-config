@@ -3,8 +3,22 @@
   services.fusuma = {
     enable = true;
     extraPackages = with pkgs; [ ydotool ];
-    # package = inputs.anyrun.packages.${pkgs.system}.anyrun-with-all-plugins;
-    settings = builtins.readFile ./config.yaml;
+    settings = {
+      threshold = {
+        swipe = 0.1;
+      };
+      interval = {
+        swipe = 0.7;
+      };
+      swipe = {
+        "3" = {
+          up = {
+            # GNOME: Switch to left workspace
+            command = "hyprctl dispatch fullscreen 1";
+          };
+        };
+      };
+    };
   };
   home.packages = with pkgs; [
     fusuma

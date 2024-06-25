@@ -26,7 +26,7 @@ in
     ./menu_launchers
 
     # Gestures
-    # ./fusuma
+    ./fusuma
 
     ./neovim
     ./terminal
@@ -116,6 +116,8 @@ in
     spotify
     # Images
     imv
+
+    texlive.combined.scheme-full
 
     ### debugging utils
     lnav  # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
