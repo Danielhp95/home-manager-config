@@ -22,6 +22,7 @@ in
       enable = true;
       variables = ["--all"];
       extraCommands = [
+        "systemctl --user import-environment QT_QPA_PLATFORMTHEME"  # (TEST) To get the screen share picker to use system theme
         "systemctl --user stop graphical-suession.target"
         "systemctl --user start hyprland-session.target"
         "systemctl start --user polkit-gnome-authentication-agent-1 "
