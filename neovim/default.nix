@@ -59,7 +59,7 @@ let
     "neodev.nvim" = neodev-nvim;  # Lua LSP
     "lsp_signature.nvim" = lsp_signature-nvim;  # Show function signature
     "lspsaga" = lspsaga-nvim; # extra UI for lsp
-    "sg.nvim" = inputs.stable.legacyPackages.x86_64-linux.vimPlugins.sg-nvim; # Sourcegraph
+    "sg.nvim" = sg-nvim; # Sourcegraph
 
     ## cmp
     "nvim-cmp" = nvim-cmp;
@@ -88,7 +88,7 @@ let
 
     ## Git
     "gitlinker.nvim" = gitlinker-nvim;
-    "gitsigns.nvim" = inputs.stable.legacyPackages.x86_64-linux.vimPlugins.gitsigns-nvim;
+    "gitsigns.nvim" = gitsigns-nvim;
 
     ## General
     "sqlite.lua" = sqlite-lua;
@@ -172,8 +172,10 @@ in
       yamlfmt
       nixpkgs-fmt
       python310Packages.gevent
-      inputs.stable.legacyPackages.x86_64-linux.nodePackages.bash-language-server
-      basedpyright  # basedpyright. Better version of pyright
+      # inputs.stable.legacyPackages.x86_64-linux.nodePackages.bash-language-server
+      bash-language-server
+      inputs.basedpyright_stable.legacyPackages.x86_64-linux.basedpyright
+
       nodejs_22  # for sourcegraph
       nodePackages.yaml-language-server
       nodePackages.dockerfile-language-server-nodejs

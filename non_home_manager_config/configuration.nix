@@ -85,7 +85,7 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
   networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = "Europe/Paris";
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";

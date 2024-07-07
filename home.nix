@@ -147,6 +147,9 @@ in
 
     # Weather app
     mousam
+
+    # Best youtube downloader
+    yt-dlp
   ];
 
   # Let Home Manager install and manage itself.

@@ -45,28 +45,10 @@ local lspconfig_toplevel = {
 	config = function()
 		local lspconfig = require("lspconfig")
 
-		-- PYTHON
-		-- Try basedpyright in the future, it did not work for me (could not read pyproject.toml)
-		-- lspconfig.pyright.setup(
-		-- {
-		-- 	cmd = { "pyright-langserver", "--stdio"},
-		-- 	root_dir = lspconfig.util.find_git_ancestor,
-		--
-		-- 	capabilities = vim.tbl_deep_extend(
-		-- 		"force",
-		-- 		vim.lsp.protocol.make_client_capabilities(),
-		-- 		require("cmp_nvim_lsp").default_capabilities(),
-		-- 		-- File watching is disabled by default for neovim.
-		-- 		-- See: https://github.com/neovim/neovim/pull/22405
-		-- 		{ workspace = { didChangeWatchedFiles = { dynamicRegistration = false } } } -- keeping it false because it makes CPU spikes
-		-- 	),
-		-- })
 		lspconfig.basedpyright.setup({
-        -- handlers = {
-        --     -- Don't publish basedpyright diagnostics (we use ruff and mypy instead)
-        --     ['textDocument/publishDiagnostics'] = function() end,
-        -- },
         root_dir = lspconfig.util.find_git_ancestor,
+        -- version 1.12 works (the hardcoded path), but not the current one in nixpkgs-unstable (as of july 3rd 2024). So hardcoding path here
+        -- cmd = {"/nix/store/mv7f38kfxs0ry59zr0fw6p2kw7bk944r-basedpyright-1.12.6/bin/basedpyright-langserver --stdio"},
         settings = {
             basedpyright = {
                 analysis = {

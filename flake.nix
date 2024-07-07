@@ -5,19 +5,23 @@
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stable.url = "github:nixos/nixpkgs/nixos-24.05";
-
+    basedpyright_stable.url = "github:nixos/nixpkgs?rev=2893f56de08021cffd9b6b6dfc70fd9ccd51eb60";
     # hyprland.url = "github:hyprwm/Hyprland?submodules=1&ref=v0.36.0";
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.41.2 + a few commits
-      rev = "e4d09aa3a9de9a9e71c10bf4b6800585b3db9a4c";
+      rev = "22138ac259b2f4253be29311f6b60fbd675074b4";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       # url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
       url = "github:outfoxxed/hy3?ref=hl0.41.2"; # where {version} is the hyprland release version
+      inputs.hyprland.follows = "hyprland";
+    };
+    hyprland-plugins = {
+      url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
 
@@ -88,7 +92,6 @@
                 # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
                 inherit (inputs.hyprland.packages.${prev.system})
                   hyprland
-                  # hyprcursor  # Doesn't have this exact name
                   xdg-desktop-portal-hyprland
                   hyprland-share-picker
                   ;
