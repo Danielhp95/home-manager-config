@@ -8,7 +8,7 @@ in
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
       hy3 # make sure we are targetting the same version of hyprland and hy3
-      # inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
+      inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
     ];
     settings = {
       exec-once = [
