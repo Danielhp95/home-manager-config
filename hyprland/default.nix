@@ -1,4 +1,4 @@
-{pkgs, inputs, ...}:
+{ pkgs, inputs, ... }:
 let
   cursor-theme-name = "Bibata-Modern-Classic";
 in
@@ -8,9 +8,7 @@ in
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
       hy3 # make sure we are targetting the same version of hyprland and hy3
-      inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
-      # inputs.hycov.packages.x86_64-linux.hycov
-      # inputs.hyprspace.packages.x86_64-linux.Hyprspace
+      # inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
     ];
     settings = {
       exec-once = [
@@ -21,9 +19,9 @@ in
     };
     systemd = {
       enable = true;
-      variables = ["--all"];
+      variables = [ "--all" ];
       extraCommands = [
-        "systemctl --user import-environment QT_QPA_PLATFORMTHEME"  # (TEST) To get the screen share picker to use system theme
+        "systemctl --user import-environment QT_QPA_PLATFORMTHEME" # (TEST) To get the screen share picker to use system theme
         "systemctl --user stop graphical-suession.target"
         "systemctl --user start hyprland-session.target"
         "systemctl start --user polkit-gnome-authentication-agent-1 "
@@ -39,7 +37,9 @@ in
   home.packages = with pkgs; [
     hyprlock
 
-    grimblast
+    # For screenshots
+    hyprshot
+    satty
 
     imv
     mpv
@@ -48,11 +48,11 @@ in
 
     libnotify
 
-    wdisplays  # manage display positioning
-    wl-clipboard  # wayland clipboard utilities
+    wdisplays # manage display positioning
+    wl-clipboard # wayland clipboard utilities
 
     polkit
-    polkit_gnome  # Authenticator
+    polkit_gnome # Authenticator
   ];
 
   # Cursor. This might not be necessary with hyprland 0.41
@@ -64,7 +64,7 @@ in
     size = 20;
   };
   home.sessionVariables = {
-    GTK_THEME = "WhiteSur-Dark-orange";  # For nautilus. Not working
+    GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
     POLKIT_AUTH_AGENT = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
   };
 
@@ -74,7 +74,7 @@ in
     # gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     theme = {
       package = pkgs.whitesur-gtk-theme.override {
-        themeVariants = ["orange"];
+        themeVariants = [ "orange" ];
       };
       name = "WhiteSur-Dark-orange";
     };

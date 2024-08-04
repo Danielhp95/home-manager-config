@@ -77,7 +77,7 @@ let
     ## UI
     "plenary.nvim" = plenary-nvim;
     "lualine.nvim" = lualine-nvim;
-    "which-key.nvim" = which-key-nvim;
+    "which-key.nvim" = inputs.stable.legacyPackages.x86_64-linux.vimPlugins.which-key-nvim;
     "wilder.nvim" = wilder-nvim;
     "cpsm" = cpsm;
     "nvim-web-devicons" = nvim-web-devicons;
@@ -120,6 +120,10 @@ let
     # colorscheme
     "onedark.nvim" = onedark-nvim;
     "nightfox.nvim" = nightfox-nvim;
+
+    # Note taking
+    "obsidian.nvim" = obsidian-nvim;
+    "markdown-preview.nvim" = markdown-preview-nvim;
 
     ## Treesitter
     "nvim-treesitter-textobjects" = nvim-treesitter-textobjects;
@@ -170,11 +174,11 @@ in
       gopls
       stylua
       yamlfmt
-      nixpkgs-fmt
+      nixfmt
       python310Packages.gevent
-      # inputs.stable.legacyPackages.x86_64-linux.nodePackages.bash-language-server
       bash-language-server
-      inputs.basedpyright_stable.legacyPackages.x86_64-linux.basedpyright
+      # inputs.basedpyright_stable.legacyPackages.x86_64-linux.basedpyright
+      basedpyright
 
       nodejs_22  # for sourcegraph
       nodePackages.yaml-language-server

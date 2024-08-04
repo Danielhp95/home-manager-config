@@ -114,7 +114,7 @@ wk.register({
       n = { '<cmd>lua vim.diagnostic.goto_next({ border = "rounded" })<CR>', "[n]ext diagnostic" },
       p = { '<cmd>lua vim.diagnostic.goto_prev({ border = "rounded" })<CR>', "[p]revious diagnostic" },
       s = { "<cmd>lua vim.diagnostic.open_float()<CR>", "[s]how diagnostic under cursor" },
-      b = { "<cmd>Trouble diagnostics toggle filter.buf=0CR>", "[b]uffer diagnostics" },
+      b = { "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", "[b]uffer diagnostics" },
       P = { "<cmd>Trouble diagnostics toggle <CR>", "all [P]roject diagnostics" },
     }
     -- Recall that in Trouble pop-up thingy there's a keymap of "m" to change between document and workspace diagnostics

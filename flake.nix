@@ -6,31 +6,25 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stable.url = "github:nixos/nixpkgs/nixos-24.05";
     basedpyright_stable.url = "github:nixos/nixpkgs?rev=2893f56de08021cffd9b6b6dfc70fd9ccd51eb60";
-    # hyprland.url = "github:hyprwm/Hyprland?submodules=1&ref=v0.36.0";
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.41.2 + a few commits
-      rev = "22138ac259b2f4253be29311f6b60fbd675074b4";
+      rev = "928d1dd38a6e4a791d4a4374a4a3bf02311adbb2";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
-      # url = "github:outfoxxed/hy3?ref=hl0.36.0"; # where {version} is the hyprland release version
-      url = "github:outfoxxed/hy3?ref=hl0.41.2"; # where {version} is the hyprland release version
+      type = "git";
+      url = "https://github.com/outfoxxed/hy3";
+      # rev = "d200873687ea1f10958adb6c08cfcfa44b13267f";
+      rev = "df42a80827c2c3331c6f612eb86464d67ba55e50";
       inputs.hyprland.follows = "hyprland";
     };
     hyprland-plugins = {
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
-
-    # hycov={
-    #   # version 0.36.0.1
-    #   # url = "github:DreamMaoMao/hycov?rev=7d48cff8364a7b6ae52a3472ad1dfe01b9f728ae";
-    #   url = "github:DreamMaoMao/hycov?ref=0.40.0.1";
-    #   inputs.hyprland.follows = "hyprland";
-    # };
 
     # TODO: see if we wanna keep this
     ags.url = "github:Aylur/ags";
@@ -43,96 +37,105 @@
     haumea.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { nixpkgs, home-manager, ... }@inputs: {
-    # NixOS configuration entrypoint
-    # Available through 'nixos-rebuild --flake .#your-hostname'
-    nixosConfigurations = {
-      fell-omen = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {
-          inherit inputs ;
-        }; # Pass flake inputs to our config
-        # > Our main nixos configuration file <
-        modules = [
-          ./fcitx5
-          ./hardwares/fell_omen.nix
-          ./non_home_manager_config/configuration.nix
-          ./non_home_manager_config/gestures.nix
-          ./pipewire.nix
-          home-manager.nixosModules.default  # Otherwise home-manager isn't imported
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              sharedModules = [
-                ./swww/swww.nix
-                ./eww
-                ./hyprland/pyprland.nix
-              ];
-              extraSpecialArgs = { inherit inputs; };
-              users.daniel = { config, ...}: {
-                imports = [ ./home.nix  ];
-              };
-            };
-          }
-          # overlays
-          {
-            nixpkgs.overlays = with nixpkgs.lib; [
-              (final: prev: {
-                # load in inputs and provide as `channels` attribute in `pkgs.channels`
-                channels = pipe inputs [
-                  (filterAttrs (name: _: elem name [ "nixpkgs" "unstable" ]))
-                  (mapAttrs (_: c: c.legacyPackages.${prev.system}))
+  outputs = { nixpkgs, stable, home-manager, ... }@inputs:
+    let
+      system = "x86_64-linux";
+      stableWithUnfree = import stable {
+        config = { allowUnfree = true; };
+        inherit system;
+      };
+    in
+    {
+      # NixOS configuration entrypoint
+      # Available through 'nixos-rebuild --flake .#your-hostname'
+      nixosConfigurations = {
+        fell-omen = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {
+            inherit inputs;
+          }; # Pass flake inputs to our config
+          # > Our main nixos configuration file <
+          modules = [
+            ./fcitx5
+            ./hardwares/fell_omen.nix
+            ./non_home_manager_config/configuration.nix
+            ./non_home_manager_config/gestures.nix
+            ./pipewire.nix
+            home-manager.nixosModules.default # Otherwise home-manager isn't imported
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                sharedModules = [
+                  ./swww/swww.nix
+                  ./eww
+                  ./hyprland/pyprland.nix
                 ];
-                # override specific packages from unstable
-                # inherit (final.channels.unstable) ansel wezterm eww;
+                extraSpecialArgs = { inherit inputs stableWithUnfree; };
+                users.daniel = { config, ... }: {
+                  imports = [ ./home.nix ];
+                };
+              };
+            }
+            # overlays
+            {
+              nixpkgs.overlays = with nixpkgs.lib; [
+                (final: prev: {
+                  # load in inputs and provide as `channels` attribute in `pkgs.channels`
+                  channels = pipe inputs [
+                    (filterAttrs (name: _: elem name [ "nixpkgs" "unstable" ]))
+                    (mapAttrs (_: c: c.legacyPackages.${prev.system}))
+                  ];
+                  # override specific packages from unstable
+                  # inherit (final.channels.unstable) ansel wezterm eww;
 
-                # Hyprland specifics
-                inherit (inputs.hy3.packages.${prev.system}) hy3;
-                # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
-                inherit (inputs.hyprland.packages.${prev.system})
-                  hyprland
-                  xdg-desktop-portal-hyprland
-                  hyprland-share-picker
-                  ;
-              })
-              (import ./overlays.nix)
-            ];
-            nixpkgs.config.allowUnfree = true;
-            nixpkgs.config.nvidia.acceptLicense = true;
-            nixpkgs.config.permittedInsecurePackages = [
-              "electron-25.9.0"
-              "zoom"
-            ];
-            # allows running packages from `nix run unstable#ansel`
-            # `nix run nixos#lsd` is very fast as it uses local cache
-            nix.registry = {
-              nixos.flake = inputs.nixpkgs;
-              stable.flake = inputs.stable;
-            };
-          }
-        ];
+                  # Hyprland specifics
+                  inherit (inputs.hy3.packages.${prev.system}) hy3;
+                  # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
+                  inherit (inputs.hyprland.packages.${prev.system})
+                    hyprland
+                    xdg-desktop-portal-hyprland
+                    hyprland-share-picker
+                    ;
+                })
+                (import ./overlays.nix)
+              ];
+              nixpkgs.config.allowUnfree = true;
+              nixpkgs.config.nvidia.acceptLicense = true;
+              nixpkgs.config.permittedInsecurePackages = [
+                "electron-25.9.0"
+                "zoom"
+              ];
+              # allows running packages from `nix run unstable#ansel`
+              # `nix run nixos#lsd` is very fast as it uses local cache
+              nix.registry = {
+                nixos.flake = inputs.nixpkgs;
+                stable.flake = inputs.stable;
+              };
+            }
+          ];
+        };
+      };
+
+      # Standalone home-manager configuration entrypoint
+      # Available through 'home-manager --flake .#your-username@your-hostname'
+      homeConfigurations = {
+        "dani@fell-omen" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+          extraSpecialArgs = {
+            inherit inputs;
+          }; # Pass flake inputs to our config
+          modules = [
+            ./home.nix
+            {
+              # Inlining an attribute set
+              nix.registry = {
+                nixos.flake = inputs.nixpkgs;
+                stable.flake = inputs.stable;
+              };
+            }
+          ];
+        };
       };
     };
-
-    # Standalone home-manager configuration entrypoint
-    # Available through 'home-manager --flake .#your-username@your-hostname'
-    homeConfigurations = {
-      "dani@fell-omen" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-        extraSpecialArgs = {
-          inherit inputs ;
-        }; # Pass flake inputs to our config
-        modules = [
-          ./home.nix
-          {  # Inlining an attribute set
-            nix.registry = {
-              nixos.flake = inputs.nixpkgs;
-              stable.flake = inputs.stable;
-            };
-          }
-         ];
-      };
-    };
-  };
 }

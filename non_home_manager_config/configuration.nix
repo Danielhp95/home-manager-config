@@ -5,21 +5,21 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-  imports = [ ../tuigreet.nix  ];
+  imports = [ ../tuigreet.nix ];
 
   # Authenticator manager
   security.polkit.enable = true;
 
   nix = {
-    settings.extra-experimental-features = ["flakes" "nix-command"];
+    settings.extra-experimental-features = [ "flakes" "nix-command" ];
     gc = {
       automatic = true;
-      randomizedDelaySec = "14m";  # What does this do?
+      randomizedDelaySec = "14m"; # What does this do?
       options = "--delete-older-than 15d";
     };
   };
 
-  services.dbus.packages = [ pkgs.gcr ];  # Why do I want this?
+  services.dbus.packages = [ pkgs.gcr ]; # Why do I want this?
 
   services.power-profiles-daemon.enable = true;
 
@@ -28,8 +28,8 @@
     (pkgs.writeTextFile {
       name = "70-ps5-controller.rules";
       text = ''
-KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", MODE="0660", TAG+="uaccess"
-KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
+        KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", MODE="0660", TAG+="uaccess"
+        KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
       '';
       destination = "/etc/udev/rules.d/70-ps5-controller.rules";
     })
@@ -63,7 +63,7 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     noto-fonts-extra
     noto-fonts-cjk-sans
     noto-fonts-cjk-serif
-    babelstone-han  # unicode font with loooads of Han characters
+    babelstone-han # unicode font with loooads of Han characters
 
     material-symbols
     lexend
@@ -82,10 +82,10 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
   };
 
   networking.hostName = "fell-omen"; # Define your hostname.
-  networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
+  networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
 
   # Set your time zone.
-  time.timeZone = "Europe/Paris";
+  time.timeZone = "America/New_York";
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -123,7 +123,7 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
     ];
   };
 
-  environment.pathsToLink = [ "/share/zsh" ];  # Make sure that home-manager installed `zsh` picks up system installed programs
+  environment.pathsToLink = [ "/share/zsh" ]; # Make sure that home-manager installed `zsh` picks up system installed programs
 
   # Commented out because we are not using X
   # Configure keymap in X11
@@ -133,8 +133,6 @@ KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
-  # Enable sound.
-  sound.enable = true;
   hardware.pulseaudio.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.

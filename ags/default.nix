@@ -17,6 +17,9 @@
     slurp
     wf-recorder
 
+    # screenshot annotator
+    swappy
+
     # Color picker
     hyprpicker
 

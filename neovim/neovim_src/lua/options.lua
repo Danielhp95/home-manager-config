@@ -58,3 +58,4 @@ vim.o.matchpairs = "(:),{:},[:],<:>"
 vim.o.expandtab = true
 vim.o.wildmode = "list:longest,list:full"
 vim.o.modeline = true
+vim.o.conceallevel = 1

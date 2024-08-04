@@ -1,6 +1,5 @@
 { lib, pkgs, ... }:
 {
-  sound.enable = true;
   # To enable pipewire we need to remove pulseaudio
   hardware.pulseaudio.enable = lib.mkForce false;
   security.rtkit.enable = true;

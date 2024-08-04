@@ -10,10 +10,11 @@ local Conform = {
 		formatters_by_ft = {
 			lua = { "stylua" },
 			-- Conform will run multiple formatters sequentially
-			python = { "black", "ruff" },
+			python = { "ruff_format" },
 			yaml = { "yamlfmt" },
-			nix = { "nixpkgs-fmt" },
+			nix = { "nixfmt" },
 		},
+		notify_on_error = true,
 	},
 }
 
@@ -35,7 +36,7 @@ local neodev = NixPlugin("folke/neodev.nvim", {
 
 -- LSP Configuration & Plugins
 local lspconfig_toplevel = {
-  "neovim/nvim-lspconfig",
+	"neovim/nvim-lspconfig",
 	dependencies = {
 		-- Useful status updates for LSP
 		NixPlugin("j-hui/fidget.nvim", { event = "LspAttach", opts = {} }),
@@ -46,19 +47,19 @@ local lspconfig_toplevel = {
 		local lspconfig = require("lspconfig")
 
 		lspconfig.basedpyright.setup({
-        root_dir = lspconfig.util.find_git_ancestor,
-        -- version 1.12 works (the hardcoded path), but not the current one in nixpkgs-unstable (as of july 3rd 2024). So hardcoding path here
-        -- cmd = {"/nix/store/mv7f38kfxs0ry59zr0fw6p2kw7bk944r-basedpyright-1.12.6/bin/basedpyright-langserver --stdio"},
-        settings = {
-            basedpyright = {
-                analysis = {
-                    autoSearchPaths = true,
-                    diagnosticMode = 'openFilesOnly',
-                    useLibraryCodeForTypes = true,
-                },
-            },
-        },
-    })
+			root_dir = lspconfig.util.find_git_ancestor,
+			-- version 1.12 works (the hardcoded path), but not the current one in nixpkgs-unstable (as of july 3rd 2024). So hardcoding path here
+			-- cmd = {"/nix/store/mv7f38kfxs0ry59zr0fw6p2kw7bk944r-basedpyright-1.12.6/bin/basedpyright-langserver --stdio"},
+			settings = {
+				basedpyright = {
+					analysis = {
+						autoSearchPaths = true,
+						diagnosticMode = "openFilesOnly",
+						useLibraryCodeForTypes = true,
+					},
+				},
+			},
+		})
 		-- lua
 		lspconfig.lua_ls.setup({
 			cmd = { "lua-language-server" },
@@ -83,9 +84,9 @@ local lspconfig_toplevel = {
 			},
 		})
 		-- latex
-    lspconfig.texlab.setup{}
+		lspconfig.texlab.setup({})
 		-- NIX
-		lspconfig.nixd.setup{}
+		lspconfig.nixd.setup({})
 		-- BASH
 		lspconfig.bashls.setup({
 			cmd = { "bash-language-server", "start" },
@@ -103,7 +104,7 @@ local lspconfig_toplevel = {
 			},
 		})
 		-- Markdown: TODO: not in love with this
-		lspconfig.marksman.setup{}
+		lspconfig.marksman.setup({})
 		-- lspconfig.type
 		require("lsp_signature").setup({
 			bind = true, -- This is mandatory, otherwise border config won't get registered.
@@ -122,9 +123,8 @@ local LspSaga = NixPlugin("kkharji/lspsaga", {
 
 -- Add rounded borders to hover
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-  border = "rounded",
+	border = "rounded",
 })
-
 
 return {
 	lspconfig_toplevel,

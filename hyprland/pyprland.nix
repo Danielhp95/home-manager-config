@@ -22,23 +22,23 @@ in {
 
             [scratchpads.terminal]
             animation = "fromTop"
+            class = "pypr_scratchpad"
             command = "kitty"
-            class = "Kitty"
-            lazy = false
+            lazy = true
             size = "80% 80%"
 
             [scratchpads.filemanager]
             animation = "fromTop"
+            class = "pypr_scratchpad"
             command = "thunar"
-            class = "nemo"
             lazy = true
-            size = "60% 60%"
+            size = "80% 80%"
 
             [scratchpads.pavucontrol]
             animation = "fromTop"
+            class = "pypr_scratchpad"
             command = "pavucontrol"
-            class = "Pavucontrol"
-            lazy = true
+            lazy = false
             size = "70% 70%"
           '';
         };

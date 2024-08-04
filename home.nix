@@ -1,10 +1,10 @@
-{ inputs, config, pkgs, environment, ... }:
+{ inputs, stableWithUnfree, config, pkgs, environment, ... }:
 
 let
   nvidiaZoom = pkgs.zoom-us.override {
     meta.mainProgram = "nvidia-offload zoom";
-  }; 
-in 
+  };
+in
 {
 
   home.username = "daniel";
@@ -20,6 +20,8 @@ in
     ./zsh
     ./tmux
     ./zellij
+
+    # ./flameshot
 
     ./zathura.nix
     ./git
@@ -40,12 +42,12 @@ in
 
     ./ags
     # ./anyrun
-    ./notifications  # TODO: remove
+    ./notifications # TODO: remove
   ];
 
   khome.desktop.swww = {
     enable = true;
-    wallpaperDirs = [ "~/nix_config/wallpapers" ];  # TODO: create an env variable based on this and use that everywhere else
+    wallpaperDirs = [ "~/nix_config/wallpapers" ]; # TODO: create an env variable based on this and use that everywhere else
   };
 
   programs.eww-hyprland.enable = true;
@@ -59,7 +61,11 @@ in
     ### Browsers
     chromium
 
-    nvd  # Nix version diff tool
+    (flameshot.overrideAttrs (old: {
+      cmakeFlags = [ "-DUSE_WAYLAND_GRIM=true" ];
+    }))
+
+    nvd # Nix version diff tool
     nushell
 
     ### Style
@@ -69,7 +75,7 @@ in
     slack
     telegram-desktop
     element-desktop
-    zoom-us
+    stableWithUnfree.zoom-us
 
     ### Photography
     # ansel
@@ -87,7 +93,7 @@ in
 
     ### Gaming
     steam
-    gamescope  # micro compositor by steam
+    gamescope # micro compositor by steam
 
     # Latex stuff
     pandoc
@@ -97,8 +103,8 @@ in
     bat # Better cat
     ranger # File manager
     zenith # better top
-    tldr   # succint command explanations
-    acpi  # To meassure laptop battery levels
+    tldr # succint command explanations
+    acpi # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
     coreutils
     gzip
@@ -120,16 +126,16 @@ in
     texlive.combined.scheme-full
 
     ### debugging utils
-    lnav  # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
-    pciutils  # For `lspci` command.
-    lshw  # list hardware. For instance `lshw -c display` shows all graphics cards
-    nvtopPackages.full  # Better `nvidia-smi` that also supports AMD GPUs
-    powertop  # Analyze power consumption for intel based processors
+    lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
+    pciutils # For `lspci` command.
+    lshw # list hardware. For instance `lshw -c display` shows all graphics cards
+    nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
+    powertop # Analyze power consumption for intel based processors
 
     ### Audio
-    helvum  # visual audio mixer
-    pamixer  # cli for pulseaudio
-    pavucontrol  # not working!
+    helvum # visual audio mixer
+    pamixer # cli for pulseaudio
+    pavucontrol # not working!
 
     translate-shell
 
@@ -150,6 +156,8 @@ in
 
     # Best youtube downloader
     yt-dlp
+
+    obsidian
   ];
 
   # Let Home Manager install and manage itself.

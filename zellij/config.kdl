@@ -12,7 +12,7 @@ keybinds {
         bind "Alt s" { SwitchToMode "search";}
         bind "Alt g" { SwitchToMode "search";}
         // uncomment this and adjust key if using copy_on_select=false
-        // bind "Alt c" { Copy; }
+        bind "Alt y" { Copy; }
     }
     locked {
         bind "Alt g" { SwitchToMode "Normal"; }
@@ -87,7 +87,7 @@ keybinds {
         bind "d" { HalfPageScrollDown; }
         bind "u" { HalfPageScrollUp; }
         // uncomment this and adjust key if using copy_on_select=false
-        // bind "Alt c" { Copy; }
+        bind "Alt y" { Copy; }
     }
     search {
         bind "Ctrl s" { SwitchToMode "Normal"; }
@@ -269,9 +269,7 @@ pane_frames false
 // that will be used by default if this option is not set.
 // Examples:
 //
-// copy_command "xclip -selection clipboard" // x11
-// copy_command "wl-copy"                    // wayland
-// copy_command "pbcopy"                     // osx
+copy_command "wl-copy"                    // wayland
 
 // Choose the destination for copied text
 // Allows using the primary selection buffer (on x11/wayland) instead of the system clipboard.
