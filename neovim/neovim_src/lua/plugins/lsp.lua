@@ -10,7 +10,7 @@ local Conform = {
 		formatters_by_ft = {
 			lua = { "stylua" },
 			-- Conform will run multiple formatters sequentially
-			python = { "ruff_format" },
+			python = { "ruff_format", "ruff" },
 			yaml = { "yamlfmt" },
 			nix = { "nixfmt" },
 		},
