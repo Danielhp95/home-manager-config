@@ -158,6 +158,9 @@ in
     yt-dlp
 
     obsidian
+
+    # Audio recording
+    asak
   ];
 
   # Let Home Manager install and manage itself.
