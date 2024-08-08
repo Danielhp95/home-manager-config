@@ -40,6 +40,7 @@
   # Enables docker
   virtualisation.docker = {
     enable = true;
+    enableNvidia = true;
   };
 
   xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
@@ -134,7 +135,7 @@
 
   hardware = {
     pulseaudio.enable = true;
-    nvidia-container-toolkit.enable = true;
+    # nvidia-container-toolkit.enable = true;
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
