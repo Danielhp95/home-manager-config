@@ -96,7 +96,7 @@ in
     gamescope # micro compositor by steam
 
     # Latex stuff
-    pandoc
+    inputs.stable.legacyPackages.x86_64-linux.pandoc
 
     ### Basic utilities
     ripgrep # better grep
