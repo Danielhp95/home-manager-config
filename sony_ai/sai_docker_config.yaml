@@ -1,5 +1,6 @@
 ENV_VARS:
   PS4_ADDR: 10.42.0.250  # In Playstation, go to Settings -> Network -> Network status. THIS CHANGES OFTEN
+  TF_USE_LEGACY_KERAS: 1  # TODO: change this to be added elsewhere
 # IMAGE_PREFIX: 'dev-proton8'
 ADDITIONAL_MOUNTS:
   # Nix things

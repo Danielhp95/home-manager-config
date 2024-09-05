@@ -10,7 +10,7 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.42.0 + a few commits
-      rev = "9a09eac79b85c846e3a865a9078a3f8ff65a9259";
+      rev = "727f1b54cd1ba48774092a5d54acc0e55f3ffe0f";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -18,7 +18,7 @@
       type = "git";
       url = "https://github.com/outfoxxed/hy3";
       # 0.42
-      rev = "6af5f6004180664d883bd428f1da117bb6b1b6dc";
+      rev = "9612917bbabff6a76f07bbe3f283ccee2b4b3eeb";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -57,7 +57,7 @@
           }; # Pass flake inputs to our config
           # > Our main nixos configuration file <
           modules = [
-            ./fcitx5
+            # ./fcitx5
             ./hardwares/fell_omen.nix
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/gestures.nix

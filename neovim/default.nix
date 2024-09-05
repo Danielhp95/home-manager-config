@@ -59,7 +59,7 @@ let
     "neodev.nvim" = neodev-nvim;  # Lua LSP
     "lsp_signature.nvim" = lsp_signature-nvim;  # Show function signature
     "lspsaga" = lspsaga-nvim; # extra UI for lsp
-    "sg.nvim" = sg-nvim; # Sourcegraph
+    # "sg.nvim" = sg-nvim; # Sourcegraph
 
     ## cmp
     "nvim-cmp" = nvim-cmp;
@@ -85,6 +85,7 @@ let
     "indent-blankline.nvim" = indent-blankline-nvim;
     "bufferline.nvim" = bufferline-nvim;
     "trouble.nvim" = trouble-nvim;
+    "yazi.nvim" = yazi-nvim;
 
     ## Git
     "gitlinker.nvim" = gitlinker-nvim;

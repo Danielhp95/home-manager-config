@@ -101,7 +101,7 @@ in
     ### Basic utilities
     ripgrep # better grep
     bat # Better cat
-    ranger # File manager
+    yazi # File manager
     zenith # better top
     tldr # succint command explanations
     acpi # To meassure laptop battery levels

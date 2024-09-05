@@ -12,6 +12,7 @@
 
   nix = {
     settings.extra-experimental-features = [ "flakes" "nix-command" ];
+    optimise.automatic = true;  # periodically run `nix store optimise`
     gc = {
       automatic = true;
       randomizedDelaySec = "14m"; # What does this do?
