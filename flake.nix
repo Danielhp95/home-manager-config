@@ -9,16 +9,16 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.42.0 + a few commits
-      rev = "727f1b54cd1ba48774092a5d54acc0e55f3ffe0f";
+      # version 0.43.0 + a few commits
+      rev = "518399a95bada8bad8a4c29514da9962ce442307";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3";
-      # 0.42
-      rev = "9612917bbabff6a76f07bbe3f283ccee2b4b3eeb";
+      # 0.43
+      rev = "4b194eb5486b89102726ad5f4492bb3440c46031";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -26,6 +26,9 @@
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
+
+    # For system-wide styling
+    stylix.url = "github:danth/stylix";
 
     # TODO: see if we wanna keep this
     ags.url = "github:Aylur/ags";
@@ -58,11 +61,12 @@
           # > Our main nixos configuration file <
           modules = [
             # ./fcitx5
+            inputs.stylix.nixosModules.stylix
+            home-manager.nixosModules.default # Otherwise home-manager isn't imported
             ./hardwares/fell_omen.nix
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/gestures.nix
             ./pipewire.nix
-            home-manager.nixosModules.default # Otherwise home-manager isn't imported
             {
               home-manager = {
                 useGlobalPkgs = true;
