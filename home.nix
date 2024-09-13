@@ -113,6 +113,7 @@ in
     unzip
     wget
     ffmpeg
+    zip
 
     ### Media viewing
     # video
