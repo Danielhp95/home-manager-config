@@ -10,7 +10,7 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.43.0 + a few commits
-      rev = "518399a95bada8bad8a4c29514da9962ce442307";
+      rev = "9e356562446f44c471ae38a80506a9df039305d6";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
