@@ -8,6 +8,10 @@ ADDITIONAL_MOUNTS:
   - "/etc/profiles/per-user/daniel/bin/:/home/dev/.nix-profile/bin/:ro"
   - "/home/daniel/nix_config:/home/dev/nix_config"
 
+  # Obsidian
+  - "/home/daniel/vaults/Obsidian:/home/dev/vaults/Obsidian"
+
+  # Starship: is this needed?
   - "/etc/profiles/per-user/daniel/bin/starship:/etc/profiles/per-user/daniel/bin/starship"
 
   # Shelll stuff
