@@ -96,7 +96,7 @@ wk.register({
 				"<cmd>lua require'telescope.builtin'.find_files({cwd='~/Documents/Obsidian Vault/'})<cr>",
 				"Open Obsidian [v]ault",
 			},
-			q = { "<cmd>lua require'telescope.action'.send_to_qflist()<cr>", "Send search results to [q]uickfix list" },
+			q = { "<cmd>lua require'telescope.actions'.smart_send_to_qflist()<cr>", "Send search results to [q]uickfix list" },
 		},
 	},
 })

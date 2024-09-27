@@ -11,12 +11,10 @@
 
     extraConfig = {
       pull.rebase = false;
-      pager = {
-        diff = "difftastic";
-        show = "difftastic";
-        log = "difftastic";
-        reflog = "difftastic";
-      };
+      # diff.external = "${pkgs.difftastic}/bin/difft";
+       # Use saner diff prefixes than a/ and b/.
+      diff.mnemonicPrefix = true;
+      diff.algorithm = "patience";
     };
 
     aliases = {
