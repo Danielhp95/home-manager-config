@@ -81,15 +81,9 @@ in
     # ansel
 
     ### Videography
-    (buildFHSEnv {
-      name = "davinci-resolve";
-      targetPkgs = pkgs: (with pkgs; [ davinci-resolve ]);
-      runScript = "davinci-resolve";
-    }) # does not work :(
     (writeScriptBin "davinci" ''
       QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
     '')
-    # davinci-resolve
 
     ### Gaming
     steam

@@ -9,6 +9,7 @@ in
     plugins = with pkgs; [
       hy3 # make sure we are targetting the same version of hyprland and hy3
       inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
+      inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion
       # inputs.hyprspace.packages.x86_64-linux.Hyprspace
     ];
     settings = {
