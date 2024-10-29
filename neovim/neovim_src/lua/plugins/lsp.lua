@@ -105,6 +105,9 @@ local lspconfig_toplevel = {
 		})
 		-- Markdown: TODO: not in love with this
 		lspconfig.marksman.setup({})
+		-- Hyprland cofig
+		-- DOES NOT support folds nicely, which is a must for my config file
+		-- lspconfig.hyprls.setup({})
 		-- lspconfig.type
 		require("lsp_signature").setup({
 			bind = true, -- This is mandatory, otherwise border config won't get registered.
