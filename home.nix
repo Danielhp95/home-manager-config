@@ -21,7 +21,7 @@ in
     ./tmux
     ./zellij
 
-    # ./flameshot
+    ./flameshot
 
     ./zathura.nix
     ./git
