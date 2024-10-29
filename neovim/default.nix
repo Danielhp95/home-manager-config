@@ -176,10 +176,11 @@ in
       stylua
       yamlfmt
       nixfmt
-      python310Packages.gevent
+      python310Packages.gevent  # Never got this to work!
       bash-language-server
       # inputs.basedpyright_stable.legacyPackages.x86_64-linux.basedpyright
       basedpyright
+      hyprls
 
       nodejs_22  # for sourcegraph
       nodePackages.yaml-language-server
