@@ -5,10 +5,11 @@ let
     zstyle ":completion:*:git-checkout:*" sort false
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':completion:*' list-colors ${"\${(s.:.)LS_COLORS}"}
+
+    # Completions for specific programs
     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
   '';
-in
-{
+in {
   home.packages = with pkgs; [
     nix-zsh-completions
 
@@ -16,7 +17,8 @@ in
     fd # find alternative
     bat # cat alternative
     du-dust # du alternative. Pretty crazy
-    duf  # like du, but for free space
+    duf # like du, but for free space
+    most
   ];
 
   # If command is not present, it tells us where it can be found
@@ -30,6 +32,13 @@ in
     fzf.enable = true;
     zsh = {
       enable = true;
+      sessionVariables = {
+        PAGER = "most";
+        # Default from https://github.com/zsh-users/zsh-autosuggestions
+        ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE = "fg=8";
+        ZSH_AUTOSUGGEST_STRATEGY="(history completion)";
+        ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20;  # Only suggest up to 20 characters
+      };
       initExtra = keyBindings + fzf-tab-conf + ''
         # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
         autoload -U select-word-style
@@ -80,35 +89,39 @@ in
 
         # eza
         ls = "eza -lahF --git";
-        # Hack to get colored man pages, for some reason MANPAGER would not work properly if set on envExtra (see above)
-        man = "MANPAGER=\"less -R --use-color -Dd+r -Du+b\" man";
 
         # rust alternatives
         du = "dust";
         # TODO: Check if this prints the last branch from which the current branch forked
-        git-parent = "git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'";
+        git-parent =
+          "git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'";
       };
       plugins = [
-        { name = "nix-zsh-completions"; src = pkgs.nix-zsh-completions; }
-        { name = "zsh-autopair"; src = pkgs.nix-zsh-completions; }
         {
           name = "fzf-tab";
-          src = pkgs.fetchFromGitHub {
-            owner = "Aloxaf";
-            repo = "fzf-tab";
-            rev = "190500bf1de6a89416e2a74470d3b5cceab102ba";
-            sha256 = "sha256-C6cE96YXyYP1RxpCLVtG1hcYLluplPLiIdkdo4HXN7Y=";
-          };
+          src = "${pkgs.zsh-fzf-tab}/share/fzf-tab";
           file = "fzf-tab.plugin.zsh";
         }
         {
+					# Don't know what this is
+          name = "nix-zsh-completions";
+          src = pkgs.nix-zsh-completions;
+        }
+        # Does not work
+        {
+          name = "zsh-autopair";
+          file = "share/zsh/zsh-autopair/autopair.zsh";
+          src = pkgs.zsh-autopair;
+        }
+        {
+          name = "zsh-autosuggestions";
+          src =
+            "${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh";
+        }
+        {
           name = "zsh-syntax-highlighting";
-          src = pkgs.fetchFromGitHub {
-            owner = "zsh-users";
-            repo = "zsh-syntax-highlighting";
-            rev = "caa749d030d22168445c4cb97befd406d2828db0";
-            sha256 = "sha256-YV9lpJ0X2vN9uIdroDWEize+cp9HoKegS3sZiSpNk50=";
-          };
+          file = "share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh";
+          src = pkgs.zsh-syntax-highlighting;
         }
       ];
     };

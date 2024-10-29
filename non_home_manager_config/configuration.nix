@@ -5,14 +5,14 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-  imports = [ ../tuigreet.nix ];
+  imports = [ ../tuigreet.nix ../fcitx5 ];
 
   # Authenticator manager
   security.polkit.enable = true;
 
   nix = {
     settings.extra-experimental-features = [ "flakes" "nix-command" ];
-    optimise.automatic = true;  # periodically run `nix store optimise`
+    optimise.automatic = true; # periodically run `nix store optimise`
     gc = {
       automatic = true;
       randomizedDelaySec = "14m"; # What does this do?
@@ -83,7 +83,8 @@
   };
 
   networking.hostName = "fell-omen"; # Define your hostname.
-  networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
+  networking.networkmanager.enable =
+    true; # Easiest to use and most distros use this by default.
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -124,7 +125,9 @@
     ];
   };
 
-  environment.pathsToLink = [ "/share/zsh" ]; # Make sure that home-manager installed `zsh` picks up system installed programs
+  environment.pathsToLink = [
+    "/share/zsh"
+  ]; # Make sure that home-manager installed `zsh` picks up system installed programs
 
   # Commented out because we are not using X
   # Configure keymap in X11
@@ -145,20 +148,21 @@
     shell = pkgs.zsh;
     isNormalUser = true;
     extraGroups = [ "wheel" "docker" ]; # group "wheel" -> sudo access
-    packages = with pkgs; [
-      firefox
-      tree
-      vim
-      git
-    ];
-    hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
+    packages = with pkgs; [ firefox tree vim git ];
+    hashedPassword =
+      "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
 
   # Does this work?
   # This was meant to fix 
   systemd.services.suspend-hyprland = {
     description = "Suspend hyprland";
-    before = [ "systemd-suspend.service" "systemd-hibernate.service" "nvidia-suspend.service" "nvidia-hibernate.service" ];
+    before = [
+      "systemd-suspend.service"
+      "systemd-hibernate.service"
+      "nvidia-suspend.service"
+      "nvidia-hibernate.service"
+    ];
     wantedBy = [ "systemd-suspend.service" "systemd-hibernate.service" ];
     serviceConfig = {
       Type = "oneshot";
@@ -168,14 +172,17 @@
 
   systemd.services.resume-hyprland = {
     description = "Resume hyprland";
-    after = [ "systemd-suspend.service" "systemd-hibernate.service" "nvidia-resume.service" ];
+    after = [
+      "systemd-suspend.service"
+      "systemd-hibernate.service"
+      "nvidia-resume.service"
+    ];
     wantedBy = [ "systemd-suspend.service" "systemd-hibernate.service" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "killall -CONT Hyprland";
     };
   };
-
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
