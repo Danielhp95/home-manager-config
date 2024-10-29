@@ -36,28 +36,17 @@ end
 vim.keymap.set("", "<f1>", toggle_profile)
 
 return {
-	NixPlugin("bmichaelb/sniprun", {
-		build = "bash install.sh",
-		config = function()
-			require("sniprun").setup({
-				live_mode_toggle = "enable",
-				selected_interpreters = { "Python3_fifo" },
-				repl_enable = { "Python3_fifo" },
-				display = { "VirtualTextOk", "LongTempFloatingWindow", "TempFloatingWindow" },
-				borders = "double",
-				interpreter_options = {
-					Python3_fifo = {
-						venv = { "/home/dev/venv" }, -- Specifically for Sony AI
-					},
-				},
-			})
-		end,
-	}),
 	"sanfusu/neovim-undotree",
 	NixPlugin("folke/which-key.nvim"),
 	NixPlugin("windwp/nvim-autopairs", { event = "InsertEnter", opts = {} }),
 	NixPlugin("nvim-tree/nvim-tree.lua", { opts = {} }),
-	NixPlugin("kylechui/nvim-surround"),
+	NixPlugin("kylechui/nvim-surround", {
+		opts = {
+			highlight = {
+				duration = 0, -- Highlight always on
+			},
+		},
+	}),
 	"stevearc/profile.nvim",
 	{ "Danielhp95/tmpclone-nvim", opts = {} },
 	{
