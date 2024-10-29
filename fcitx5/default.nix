@@ -3,15 +3,18 @@
 {
   # TODO: enshrine in this config the info that you care about from ~/.config/fcitx5
   i18n.inputMethod = {
-    enabled = "fcitx5";
-    fcitx5.waylandFrontend = true;
-    fcitx5.addons = with pkgs; [
-        rime-data
-        fcitx5-rime
-        fcitx5-configtool
-        fcitx5-chinese-addons
-        fcitx5-rose-pine
-      ];
+    enable = true;
+    type = "fcitx5";
+    fcitx5 = {
+      waylandFrontend = true;
+      addons = with pkgs; [
+          rime-data
+          fcitx5-rime
+          fcitx5-configtool
+          fcitx5-chinese-addons
+          fcitx5-rose-pine
+        ];
+    };
   };
   fonts = {
     packages = with pkgs; [
