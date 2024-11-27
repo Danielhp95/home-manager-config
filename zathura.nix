@@ -36,4 +36,12 @@
       map [normal] p toggle_presentation
     '';
   };
+  xdg = {
+    enable = true;
+    mime.enable = true;
+    mimeApps.defaultApplications = {
+      # Does not seem to work
+      "application/pdf" = ["org.pwmt.zathura.desktop"];
+    };
+  };
 }
