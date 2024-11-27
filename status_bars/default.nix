@@ -5,43 +5,55 @@
     i3status-rust
   ];
 
-  home.file.".config/i3bar-river/config.toml" = ''
+  home.file.".config/i3bar-river/config.toml".text = ''
     # The status generator command.
     # Optional: with no status generator the bar will display only tags and layout name.
-     command = "i3status-rs"
-
-    # Colors
-    background = "#282828ff"
-    color = "#ffffffff"
-    separator = "#9a8a62ff"
-    tag_fg = "#d79921ff"
-    tag_bg = "#282828ff"
-    tag_focused_fg = "#1d2021ff"
-    tag_focused_bg = "#689d68ff"
-    tag_urgent_fg = "#282828ff"
-    tag_urgent_bg = "#cc241dff"
-    tag_inactive_fg = "#d79921ff"
-    tag_inactive_bg = "#282828ff"
-
-    # The font and various sizes
-    font = "JetBrainsMono Nerd Font 10"
-    height = 20
-    margin_top = 0
-    margin_bottom = 0
-    margin_left = 0
-    margin_right = 0
-    separator_width = 2.0
-    tags_r = 0.0
-    tags_padding = 10.0
-    blocks_r = 0.0
-    blocks_overlap = 0.0
-
-    # Misc
-    position = "top" # either "top" or "bottom"
-    hide_inactive_tags = true
-    invert_touchpad_scrolling = true
-    show_layout_name = true
-    blend = true # whether tags/blocks colors should blend with bar's background
-    show_mode = true
+    command = "i3status-rs"
   '';
+  home.file.".config/i3status-rust/config.toml".text = ''
+[theme]
+theme = "slick"
+
+[[block]]
+block = "net"
+format = " $icon {$signal_strength $ssid $frequency|Wired connection} via $device "
+
+[[block]]
+block = "music"
+
+[[block]]
+block = "disk_space"
+info_type = "available"
+alert_unit = "GB"
+alert = 10.0
+warning = 15.0
+format = " $icon $available "
+format_alt = " $icon $available / $total "
+
+[[block]]
+block = "memory"
+format = " $icon $mem_used_percents.eng(w:1) "
+format_alt = " $icon_swap $swap_free.eng(w:3,u:B,p:Mi)/$swap_total.eng(w:3,u:B,p:Mi)($swap_used_percents.eng(w:2)) "
+interval = 30
+warning_mem = 70
+critical_mem = 90
+
+[[block]]
+block = "cpu"
+interval = 1
+
+[[block]]
+block = "time"
+interval = 60
+[block.format]
+short = " $icon $timestamp.datetime(f:%R) "
+
+[[block]]
+block = "battery"
+
+[[block]]
+block = "bluetooth"
+mac = "14:3F:A6:58:C8:61"
+format = "Headphones Connected"
+'';
 }

@@ -149,10 +149,9 @@ in
 
   config = mkIf cfg.enable {
     khome.tuigreet.defaultEnvironment = mkIf cfg.enableWaylandEnvs {
-      # XDG_SESSION_TYPE = "wayland";
       MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland";
-      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+      QT_QPA_PLATFORM = "wayland;xcb";  # Tell Qt applications to use the Wayland backend, and fall back to x11 if Wayland is unavailable
+      QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # enables automatic scaling, based on the monitor’s pixel density
       QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
       SDL_VIDEODRIVER = "wayland";
       _JAVA_AWT_WM_NONREPARENTING = "1";
@@ -184,6 +183,7 @@ in
         command = "Hyprland";
         environment = {
           XDG_SESSION_DESKTOP = "Hyprland";
+          XDG_SESSION_TYPE = "wayland";
           XDG_CURRENT_DESKTOP = "Hyprland";
           # To get fcitx to work. DOES NOT WORK
           GLFW_IM_MODULE = "fcitx";
@@ -193,6 +193,7 @@ in
           IMSETTINGS_MODULE = "fcitx";
           QT_IM_MODULE = "fcitx";
           SDL_IM_MODULE = "fcitx";
+          GSK_RENDERER = "gl";  # For GSK applications
         };
       };
       zsh = {
