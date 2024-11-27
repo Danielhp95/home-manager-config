@@ -18,7 +18,6 @@ in {
     bat # cat alternative
     du-dust # du alternative. Pretty crazy
     duf # like du, but for free space
-    most
   ];
 
   # If command is not present, it tells us where it can be found
@@ -33,7 +32,6 @@ in {
     zsh = {
       enable = true;
       sessionVariables = {
-        PAGER = "most";
         # Default from https://github.com/zsh-users/zsh-autosuggestions
         ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE = "fg=8";
         ZSH_AUTOSUGGEST_STRATEGY="(history completion)";
