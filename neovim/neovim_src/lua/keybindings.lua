@@ -33,6 +33,7 @@ wk.register({
 			t = { "<cmd>Gitsigns toggle_signs<cr>", "[t]oggle gitsigns" },
 			r = { "<cmd>Gread<cr>", "[r]evert to latest git version" },
 			b = { "<cmd>Gitsigns blame_line<cr>", "[b]lame current line" },
+			B = { "<cmd>Gitsigns blame<cr>", "[b]lame all buffer" },
 			d = {
 				name = "+[d]iff",
 				f = { "<cmd>DiffviewFileHistory %<cr>", "[d]iff history for current [f]ile" },
