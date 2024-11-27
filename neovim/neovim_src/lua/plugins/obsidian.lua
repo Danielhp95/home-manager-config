@@ -15,14 +15,20 @@ return {
 		dependencies = {
 			-- Required.
 			"nvim-lua/plenary.nvim",
-
-			-- see below for full list of optional dependencies 👇
 		},
 		opts = {
 			workspaces = {
 				{
 					name = "Obsidian",
 					path = "~/vaults/Obsidian",
+				},
+				{
+					name = "SonyAI",
+					path = "~/vaults/sony_ai",
+				},
+				{
+					name = "NewYork",
+					path = "~/vaults/new_york",
 				},
 			},
 		},
