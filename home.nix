@@ -1,19 +1,15 @@
 { inputs, stableWithUnfree, config, pkgs, environment, ... }:
 
 let
-  nvidiaZoom = pkgs.zoom-us.override {
-    meta.mainProgram = "nvidia-offload zoom";
-  };
-in
-{
+  nvidiaZoom =
+    pkgs.zoom-us.override { meta.mainProgram = "nvidia-offload zoom"; };
+in {
 
   home.username = "daniel";
   home.homeDirectory = "/home/daniel";
   home.stateVersion = "24.05";
 
-  home.sessionVariables = {
-    BROWSER = "firefox";
-  };
+  home.sessionVariables = { BROWSER = "firefox"; };
 
   imports = [
     ./starship
@@ -21,7 +17,7 @@ in
     ./tmux
     ./zellij
 
-    ./flameshot
+    ./yazi
 
     ./zathura.nix
     ./git
@@ -36,7 +32,8 @@ in
     ./atuin.nix
 
     ./hyprland
-    # ./sway  # It will be outdated
+    ./sway/waybar.nix # It will be outdated
+    ./status_bars
 
     ./sony_ai
 
@@ -47,7 +44,9 @@ in
 
   khome.desktop.swww = {
     enable = true;
-    wallpaperDirs = [ "~/nix_config/wallpapers" ]; # TODO: create an env variable based on this and use that everywhere else
+    wallpaperDirs = [
+      "~/nix_config/wallpapers"
+    ]; # TODO: create an env variable based on this and use that everywhere else
   };
 
   programs.eww-hyprland.enable = true;
@@ -61,9 +60,8 @@ in
     ### Browsers
     chromium
 
-    (flameshot.overrideAttrs (old: {
-      cmakeFlags = [ "-DUSE_WAYLAND_GRIM=true" ];
-    }))
+    (flameshot.overrideAttrs
+      (old: { cmakeFlags = [ "-DUSE_WAYLAND_GRIM=true" ]; }))
 
     nvd # Nix version diff tool
     nushell
@@ -76,6 +74,8 @@ in
     telegram-desktop
     element-desktop
     stableWithUnfree.zoom-us
+
+    openconnect
 
     ### Photography
     # ansel
@@ -95,7 +95,6 @@ in
     ### Basic utilities
     ripgrep # better grep
     bat # Better cat
-    yazi # File manager
     zenith # better top
     tldr # succint command explanations
     acpi # To meassure laptop battery levels
@@ -134,17 +133,8 @@ in
 
     translate-shell
 
-    ### VPN
-    openconnect
-    # libinput
-    # libinput-gestures
-    # wmctrl
-    # ydotool
-
     xfce.thunar
 
-    # Authentication protocol
-    kdePackages.polkit-kde-agent-1
 
     # Weather app
     mousam
@@ -156,6 +146,8 @@ in
 
     # Audio recording
     asak
+
+    gparted
   ];
 
   # Let Home Manager install and manage itself.
