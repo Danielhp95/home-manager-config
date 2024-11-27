@@ -17,29 +17,7 @@ in {
             plugins = [
               "fetch_client_menu",
               "magnify",
-              "scratchpads"
             ]
-
-            [scratchpads.terminal]
-            animation = "fromTop"
-            class = "pypr_scratchpad"
-            command = "kitty"
-            lazy = true
-            size = "80% 80%"
-
-            [scratchpads.filemanager]
-            animation = "fromTop"
-            class = "pypr_scratchpad"
-            command = "thunar"
-            lazy = true
-            size = "80% 80%"
-
-            [scratchpads.pavucontrol]
-            animation = "fromTop"
-            class = "pypr_scratchpad"
-            command = "pavucontrol"
-            lazy = false
-            size = "70% 70%"
           '';
         };
       };
