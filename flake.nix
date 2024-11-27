@@ -5,20 +5,21 @@
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stable.url = "github:nixos/nixpkgs/nixos-24.05";
-    basedpyright_stable.url = "github:nixos/nixpkgs?rev=2893f56de08021cffd9b6b6dfc70fd9ccd51eb60";
+    basedpyright_stable.url =
+      "github:nixos/nixpkgs?rev=2893f56de08021cffd9b6b6dfc70fd9ccd51eb60";
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.44.1 + a few commits
-      rev = "d679d200299ed4670f0d0f138c793d5f507b7cec";
+      # version 0.45.2 + a few commits
+      rev = "1fb720b62aeb474873ba43426ddc53afde1e6cdd";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3";
-      # 0.44
-      rev = "4c79361db9c065886c163d1cf873889e1e641e44";
+      # 0.45
+      rev = "7e792f712a2a896bd8d3174780c8944ef5ae7931";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -31,12 +32,18 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    # For system-wide styling
-    stylix.url = "github:danth/stylix";
+    hyprspace = {
+      url = "github:KZDKM/Hyprspace";
+      inputs.hyprland.follows = "hyprland";
+    };
 
     # TODO: see if we wanna keep this
-    ags.url = "github:Aylur/ags";
-    ags.inputs.nixpkgs.follows = "nixpkgs";
+    ags = {
+      type = "git";
+      url = "https://github.com/Aylur/ags";
+      rev = "33bcaf34d5277031ecb97047fb8ddd44abd8d80e";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     home-manager.url = "github:nix-community/home-manager/";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -52,20 +59,16 @@
         config = { allowUnfree = true; };
         inherit system;
       };
-    in
-    {
+    in {
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {
         fell-omen = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {
-            inherit inputs;
-          }; # Pass flake inputs to our config
+          specialArgs = { inherit inputs; }; # Pass flake inputs to our config
           # > Our main nixos configuration file <
           modules = [
             # ./fcitx5
-            inputs.stylix.nixosModules.stylix
             home-manager.nixosModules.default # Otherwise home-manager isn't imported
             ./hardwares/fell_omen.nix
             ./non_home_manager_config/configuration.nix
@@ -75,15 +78,10 @@
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
-                sharedModules = [
-                  ./swww/swww.nix
-                  ./eww
-                  ./hyprland/pyprland.nix
-                ];
+                sharedModules =
+                  [ ./swww/swww.nix ./eww ./hyprland/pyprland.nix ];
                 extraSpecialArgs = { inherit inputs stableWithUnfree; };
-                users.daniel = { config, ... }: {
-                  imports = [ ./home.nix ];
-                };
+                users.daniel = { config, ... }: { imports = [ ./home.nix ]; };
               };
             }
             # overlays
@@ -102,19 +100,14 @@
                   inherit (inputs.hy3.packages.${prev.system}) hy3;
                   # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
                   inherit (inputs.hyprland.packages.${prev.system})
-                    hyprland
-                    xdg-desktop-portal-hyprland
-                    hyprland-share-picker
-                    ;
+                    hyprland xdg-desktop-portal-hyprland hyprland-share-picker;
                 })
                 (import ./overlays.nix)
               ];
               nixpkgs.config.allowUnfree = true;
               nixpkgs.config.nvidia.acceptLicense = true;
-              nixpkgs.config.permittedInsecurePackages = [
-                "electron-25.9.0"
-                "zoom"
-              ];
+              nixpkgs.config.permittedInsecurePackages =
+                [ "electron-25.9.0" "zoom" ];
               # allows running packages from `nix run unstable#ansel`
               # `nix run nixos#lsd` is very fast as it uses local cache
               nix.registry = {
@@ -130,7 +123,8 @@
       # Available through 'home-manager --flake .#your-username@your-hostname'
       homeConfigurations = {
         "dani@fell-omen" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+          pkgs =
+            nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
           extraSpecialArgs = {
             inherit inputs;
           }; # Pass flake inputs to our config
