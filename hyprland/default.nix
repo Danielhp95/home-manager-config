@@ -1,43 +1,44 @@
 { pkgs, inputs, ... }:
-let
-  cursor-theme-name = "Bibata-Modern-Amber";
-in
-{
+let cursor-theme-name = "Bibata-Modern-Amber";
+in {
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
       hy3 # make sure we are targetting the same version of hyprland and hy3
-      # inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
+      inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
       # inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion
-      # inputs.hyprspace.packages.x86_64-linux.Hyprspace
+      inputs.hyprspace.packages.x86_64-linux.Hyprspace
     ];
     settings = {
       exec-once = [
         "${pkgs.dbus}/bin/dbus-update-activation-environment --all"
-        "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        "${pkgs.kdePackages.polkit-kde-agent-1}/bin/polkit-kde-agent-1"
+        "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME"
+
+        # TODO(1) Commenting scenario, not working
+        # "${pkgs.kdePackages.polkit-kde-agent-1}/bin/polkit-kde-agent-1"
       ];
     };
     systemd = {
       enable = true;
       variables = [ "--all" ];
       extraCommands = [
-        "systemctl --user import-environment QT_QPA_PLATFORMTHEME" # (TEST) To get the screen share picker to use system theme
-        "systemctl --user stop graphical-suession.target"
+        "systemctl --user start hyprpolkitagent"
+        "systemctl --user stop graphical-session.target"
         "systemctl --user start hyprland-session.target"
-        "systemctl start --user polkit-gnome-authentication-agent-1 "
+        # TODO(1) Commenting scenario, not working
+        # "systemctl start --user polkit-gnome-authentication-agent-1 "
       ];
     };
     xwayland.enable = true;
   };
-  khome.desktop.pyprland = {
-    enable = true;
-  };
-  home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
+  khome.desktop.pyprland = { enable = true; };
+  home.file.".config/wal/templates/colors-hyprland.conf".source =
+    ./colors-hyprland.conf;
 
   home.packages = with pkgs; [
     hyprlock
+    hyprpolkitagent  # Authenticator
 
     # For screenshots
     hyprshot
@@ -52,9 +53,12 @@ in
 
     wdisplays # manage display positioning
     wl-clipboard # wayland clipboard utilities
+    wl-mirror # For mirroring screens
 
-    polkit
-    polkit_gnome # Authenticator
+    # polkit
+    # polkit_gnome # Authenticator
+
+    lxde.lxsession # Authenticator
   ];
 
   # Cursor. This might not be necessary with hyprland 0.41
@@ -66,18 +70,26 @@ in
     size = 20;
   };
   home.sessionVariables = {
+
+    # TODO: this was introduced in November 2024, can we remove this at some point?
+    # To surpress error: GSK-message Error 71 (Protocol error) dispatching to Wayland display.
+    QT_QPA_PLATFORMTHEME="gtk4";
     GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
-    POLKIT_AUTH_AGENT = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+    # TODO(1) Commenting scenario, not working
+    # POLKIT_AUTH_AGENT =
+    #   "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
   };
 
   gtk = {
     enable = true;
-    gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
-    # gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
+    gtk4.extraConfig = {
+      # TODO: This still places things under [Settings] and we want this to be placed under [AdwStyleManager]. How do we do it?
+      AdwStyleManager = "color-scheme=ADW_COLOR_SCHEME_PREFER_DARK";
+    };
+    gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     theme = {
-      package = pkgs.whitesur-gtk-theme.override {
-        themeVariants = [ "orange" ];
-      };
+      package =
+        pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
       name = "WhiteSur-Dark-orange";
     };
 
