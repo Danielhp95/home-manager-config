@@ -9,6 +9,7 @@
       waylandFrontend = true;
       addons = with pkgs; [
           rime-data
+          fcitx5-gtk  # Does help with making fcitx5 work in QT apps
           fcitx5-rime
           fcitx5-configtool
           fcitx5-chinese-addons
