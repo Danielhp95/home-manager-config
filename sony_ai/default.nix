@@ -10,12 +10,11 @@ in
 
     docker
 
-    stableWithUnfree.steam-run
-    # inputs.stable.legacyPackages.x86_64-linux.steam-run  # To run proton via Steam's FHS
-    # steam-run  # To run proton via Steam's FHS
+    # stableWithUnfree.steam-run
+    steam-run  # To run proton via Steam's FHS
 
     (writeShellScriptBin "sie-vpn-connect" ''
-    ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
+    sudo ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
   '')
   ];
 

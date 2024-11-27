@@ -1,6 +1,7 @@
 ENV_VARS:
   PS4_ADDR: 10.42.0.250  # In Playstation, go to Settings -> Network -> Network status. THIS CHANGES OFTEN
   TF_USE_LEGACY_KERAS: 1  # TODO: change this to be added elsewhere
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE: "fg=8"  # to have completion suggestions look gray
 # IMAGE_PREFIX: 'dev-proton8'
 ADDITIONAL_MOUNTS:
   # Nix things
@@ -9,7 +10,7 @@ ADDITIONAL_MOUNTS:
   - "/home/daniel/nix_config:/home/dev/nix_config"
 
   # Obsidian
-  - "/home/daniel/vaults/Obsidian:/home/dev/vaults/Obsidian"
+  - "/home/daniel/vaults:/home/dev/vaults"
 
   # Starship: is this needed?
   - "/etc/profiles/per-user/daniel/bin/starship:/etc/profiles/per-user/daniel/bin/starship"
