@@ -1,26 +1,5 @@
 {
   "nodes": {
-    "ags": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1713301451,
-        "narHash": "sha256-LzYVqEukjOJjm4HGFe6rtHBiuJxAyPqd2MY1k5ci9QU=",
-        "ref": "refs/heads/main",
-        "rev": "33bcaf34d5277031ecb97047fb8ddd44abd8d80e",
-        "revCount": 519,
-        "type": "git",
-        "url": "https://github.com/Aylur/ags"
-      },
-      "original": {
-        "rev": "33bcaf34d5277031ecb97047fb8ddd44abd8d80e",
-        "type": "git",
-        "url": "https://github.com/Aylur/ags"
-      }
-    },
     "aquamarine": {
       "inputs": {
         "hyprutils": [
@@ -135,11 +114,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1732482255,
-        "narHash": "sha256-GUffLwzawz5WRVfWaWCg78n/HrBJrOG7QadFY6rtV8A=",
+        "lastModified": 1732884235,
+        "narHash": "sha256-r8j6R3nrvwbT1aUp4EPQ1KC7gm0pu9VcV1aNaB+XG6Q=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "a9953635d7f34e7358d5189751110f87e3ac17da",
+        "rev": "819f682269f4e002884702b87e445c82840c68f2",
         "type": "github"
       },
       "original": {
@@ -155,20 +134,20 @@
         ]
       },
       "locked": {
-        "lastModified": 1731228735,
-        "narHash": "sha256-b3PuEtRHTSxV809RLUiZVQhDQZ8NxxpWUjboTe9QAAY=",
+        "lastModified": 1732578490,
+        "narHash": "sha256-QGCCD9XbVTcjylRRIM1bz/OH3RYCaH+P+0buYjbTbzw=",
         "ref": "refs/heads/master",
-        "rev": "7e792f712a2a896bd8d3174780c8944ef5ae7931",
-        "revCount": 357,
+        "rev": "36340e627d1b9c844ce73443db042c953ffdd1bf",
+        "revCount": 359,
         "submodules": true,
         "type": "git",
-        "url": "https://github.com/outfoxxed/hy3"
+        "url": "https://github.com/ZWORX52/hy3/"
       },
       "original": {
-        "rev": "7e792f712a2a896bd8d3174780c8944ef5ae7931",
+        "rev": "36340e627d1b9c844ce73443db042c953ffdd1bf",
         "submodules": true,
         "type": "git",
-        "url": "https://github.com/outfoxxed/hy3"
+        "url": "https://github.com/ZWORX52/hy3/"
       }
     },
     "hyprcursor": {
@@ -482,7 +461,6 @@
     },
     "root": {
       "inputs": {
-        "ags": "ags",
         "basedpyright_stable": "basedpyright_stable",
         "haumea": "haumea",
         "home-manager": "home-manager",
@@ -497,11 +475,11 @@
     },
     "stable": {
       "locked": {
-        "lastModified": 1731797254,
-        "narHash": "sha256-df3dJApLPhd11AlueuoN0Q4fHo/hagP75LlM5K1sz9g=",
+        "lastModified": 1732749044,
+        "narHash": "sha256-T38FQOg0BV5M8FN1712fovzNakSOENEYs+CSkg31C9Y=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "e8c38b73aeb218e27163376a2d617e61a2ad9b59",
+        "rev": "0c5b4ecbed5b155b705336aa96d878e55acd8685",
         "type": "github"
       },
       "original": {

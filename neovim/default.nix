@@ -68,7 +68,7 @@ let
     "cmp-path" = cmp-path;
     "cmp-rg" = cmp-rg;
     "cmp_luasnip" = cmp_luasnip;
-    "compe-latex-symbols" = compe-latex-symbols;
+    "compe-latex-symbols" = cmp-latex-symbols;
     "LuaSnip" = luasnip;
     "cmp-nvim-lsp" = cmp-nvim-lsp;
     "friendly-snippets" = friendly-snippets;

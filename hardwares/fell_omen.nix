@@ -26,6 +26,7 @@
   };
 
   hardware = {
+    enableAllFirmware = true;  # What does this do?
     graphics = {
     # Apparently necessary for davinci. Not sure
       enable = true;

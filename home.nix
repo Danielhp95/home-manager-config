@@ -37,7 +37,7 @@ in {
 
     ./sony_ai
 
-    ./ags
+    # ./ags
     # ./anyrun
     ./notifications # TODO: remove
   ];

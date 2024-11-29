@@ -17,9 +17,9 @@
     };
     hy3 = {
       type = "git";
-      url = "https://github.com/outfoxxed/hy3";
+      url = "https://github.com/ZWORX52/hy3/";
       # 0.45
-      rev = "7e792f712a2a896bd8d3174780c8944ef5ae7931";
+      rev = "36340e627d1b9c844ce73443db042c953ffdd1bf";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -35,14 +35,6 @@
     hyprspace = {
       url = "github:KZDKM/Hyprspace";
       inputs.hyprland.follows = "hyprland";
-    };
-
-    # TODO: see if we wanna keep this
-    ags = {
-      type = "git";
-      url = "https://github.com/Aylur/ags";
-      rev = "33bcaf34d5277031ecb97047fb8ddd44abd8d80e";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     home-manager.url = "github:nix-community/home-manager/";
