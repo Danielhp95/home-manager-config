@@ -1,6 +1,9 @@
 { pkgs, ...}:
 {
   home.packages = with pkgs; [ gh libgit2 ];
+  programs.lazygit = {
+    enable = true;
+  };
   programs.git = {
     enable = true;
 
