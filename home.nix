@@ -81,9 +81,9 @@ in {
     # ansel
 
     ### Videography
-    (writeScriptBin "davinci" ''
-      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
-    '')
+    # (writeScriptBin "davinci" ''
+    #   QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+    # '')
 
     ### Gaming
     steam
@@ -148,6 +148,7 @@ in {
     asak
 
     gparted
+    bottom
   ];
 
   # Let Home Manager install and manage itself.

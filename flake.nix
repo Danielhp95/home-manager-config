@@ -11,15 +11,15 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.45.2 + a few commits
-      rev = "1fb720b62aeb474873ba43426ddc53afde1e6cdd";
+      rev = "bba2d9a1971b51a25a5ae3fc30a453e106e6b8a9";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
-      url = "https://github.com/ZWORX52/hy3/";
+      url = "https://github.com/outfoxxed/hy3/";
       # 0.45
-      rev = "36340e627d1b9c844ce73443db042c953ffdd1bf";
+      rev = "d9eb126b2475a3b60445be8b2ef0bce4eb1ae8b2";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -32,10 +32,10 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    hyprspace = {
-      url = "github:KZDKM/Hyprspace";
-      inputs.hyprland.follows = "hyprland";
-    };
+    # hyprspace = {
+    #   url = "github:KZDKM/Hyprspace";
+    #   inputs.hyprland.follows = "hyprland";
+    # };
 
     home-manager.url = "github:nix-community/home-manager/";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -90,7 +90,6 @@
 
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;
-                  # inherit (inputs.stable.legacyPackages.${prev.system}) davinci-resolve;
                   inherit (inputs.hyprland.packages.${prev.system})
                     hyprland xdg-desktop-portal-hyprland hyprland-share-picker;
                 })

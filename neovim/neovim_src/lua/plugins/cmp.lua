@@ -16,7 +16,8 @@ local NvimCmp = NixPlugin('hrsh7th/nvim-cmp', {
     NixPlugin('rafamadriz/friendly-snippets'), -- Adds a number of user-friendly snippets
     -- Adds LSP completion capabilities
     NixPlugin('hrsh7th/cmp-nvim-lsp'),
-    NixPlugin('hrsh7th/cmp-nixpkgs'),
+    -- Remove?
+    -- NixPlugin('hrsh7th/cmp-nixpkgs'),
     NixPlugin('hrsh7th/cmp-buffer'),
     NixPlugin('hrsh7th/cmp-path'),
     NixPlugin('GoldsteinE/compe-latex-symbols'),
@@ -42,7 +43,6 @@ NvimCmp.config = function()
 
     sources = {
       { name = 'path',    options = { trailing_slash = true } },
-      { name = 'nixpkgs' },
       { name = 'nvim_lsp' },
       { name = 'luasnip', max_item_count = 10 },
       { name = 'latex_symbols'},

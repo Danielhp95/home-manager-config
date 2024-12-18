@@ -59,7 +59,7 @@ in {
         --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
         "
 
-        ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
+	# ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
       '';
       autocd = true;
       dotDir = ".config/zsh";

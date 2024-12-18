@@ -5,8 +5,6 @@ telescope.dependencies = {
 	NixPlugin("nvim-lua/plenary.nvim"),
 	"LinArcX/telescope-env.nvim",
 	NixPlugin("debugloop/telescope-undo.nvim"),
-	NixPlugin("LinArcX/telescope-changes.nvim"),
-	NixPlugin("LukasPietzschmann/telescope-tabs"),
 	NixPlugin("nvim-telescope/telescope-cheat.nvim"),
 	NixPlugin("nvim-telescope/telescope-live-grep-args.nvim"),
 	NixPlugin("folke/trouble.nvim"),

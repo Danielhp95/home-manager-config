@@ -62,6 +62,7 @@ let
     # "sg.nvim" = sg-nvim; # Sourcegraph
 
     ## cmp
+    "blink-cmp" = blink-cmp;  # nvim-cmp replacement
     "nvim-cmp" = nvim-cmp;
     "cmp-cmdline" = cmp-cmdline;
     "cmp-buffer" = cmp-buffer;
@@ -111,7 +112,6 @@ let
     "telescope-manix" = telescope-manix; # nix manix search
     "telescope-cheat.nvim" = telescope-cheat-nvim; # cheatsheet search
     "telescope-live-grep-args.nvim" = telescope-live-grep-args-nvim;  # Being able to pass arguments for ripgrep (used by live grep in Telescope)
-    # "telescope-tabs" = telescope-tabs;  # TODO: maybe add?
     # "telescope-env.nvim" = telescope-env;  # TODO: Add later
     "telescope-undo.nvim" = telescope-undo-nvim;
     # "telescope-changes.nvim" = telescope-changes;
@@ -175,7 +175,7 @@ in
       gopls
       stylua
       yamlfmt
-      nixfmt
+      nixfmt-rfc-style
       python310Packages.gevent  # Never got this to work!
       bash-language-server
       # inputs.basedpyright_stable.legacyPackages.x86_64-linux.basedpyright

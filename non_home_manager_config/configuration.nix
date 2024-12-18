@@ -68,11 +68,6 @@
 
     material-symbols
     lexend
-    nerdfonts
-
-    fira-code
-    fira-code-symbols
-    (nerdfonts.override { fonts = [ "FiraCode" "Iosevka" ]; })
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -87,7 +82,9 @@
     true; # Easiest to use and most distros use this by default.
 
   # Set your time zone.
-  time.timeZone = "America/New_York";
+  # services.automatic-timezoned.enable = true;
+  # For manual timezones
+  time.timeZone = "Europe/Paris";
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";

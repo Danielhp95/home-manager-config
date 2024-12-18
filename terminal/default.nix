@@ -2,7 +2,7 @@
 {
   home.packages = with pkgs; [
     gh
-    (nerdfonts.override { fonts = [ "FiraCode" "Iosevka" ]; })
+    nerd-fonts.fira-code
     powerline-fonts
   ];
   home.sessionVariables.TERM = "wezterm";

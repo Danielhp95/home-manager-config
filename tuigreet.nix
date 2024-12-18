@@ -150,7 +150,7 @@ in
   config = mkIf cfg.enable {
     khome.tuigreet.defaultEnvironment = mkIf cfg.enableWaylandEnvs {
       MOZ_ENABLE_WAYLAND = "1";
-      QT_QPA_PLATFORM = "wayland;xcb";  # Tell Qt applications to use the Wayland backend, and fall back to x11 if Wayland is unavailable
+      QT_QPA_PLATFORM = "wayland";  # Tell Qt applications to use the Wayland backend, and fall back to x11 if Wayland is unavailable
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # enables automatic scaling, based on the monitor’s pixel density
       QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
       SDL_VIDEODRIVER = "wayland";
