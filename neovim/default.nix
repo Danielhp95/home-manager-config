@@ -191,6 +191,8 @@ in
       marksman
       texlab
       cargo
+
+      python312Packages.pylatexenc  # for rendering latex in render-markdown plugin
     ];
   };
   home.file = mkMerge [
