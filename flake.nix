@@ -11,7 +11,7 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.45.2 + a few commits
-      rev = "bba2d9a1971b51a25a5ae3fc30a453e106e6b8a9";
+      rev = "71dc9f6128b8d2e382b2a574d2d5f15e2d907f3a";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -19,7 +19,7 @@
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
       # 0.45
-      rev = "d9eb126b2475a3b60445be8b2ef0bce4eb1ae8b2";
+      rev = "f8a8458663fe2b61796a2f10264aa09e362fa6a5";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -32,10 +32,10 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    # hyprspace = {
-    #   url = "github:KZDKM/Hyprspace";
-    #   inputs.hyprland.follows = "hyprland";
-    # };
+    hyprspace = {
+      url = "github:KZDKM/Hyprspace";
+      inputs.hyprland.follows = "hyprland";
+    };
 
     home-manager.url = "github:nix-community/home-manager/";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
