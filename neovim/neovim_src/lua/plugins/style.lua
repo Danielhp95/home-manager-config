@@ -58,8 +58,8 @@ local IndentLines = NixPlugin("lukas-reineke/indent-blankline.nvim", {
 		"TheGLander/indent-rainbowline.nvim", -- This plugin is used to make configuratino for indent-blankline.nvim
 	},
 	main = "ibl",
-	show_start=false,
-	show_end=false,
+	show_start = false,
+	show_end = false,
 	opts = {
 		indent = { char = "┊" },
 	},
@@ -75,14 +75,26 @@ local Lushwal = {
 }
 
 local deviconsAutoColors = {
-    "rachartier/tiny-devicons-auto-colors.nvim",
-    dependencies = {
-        "nvim-tree/nvim-web-devicons"
-    },
-    event = "VeryLazy",
-    config = function()
-        require('tiny-devicons-auto-colors').setup()
-    end
+	"rachartier/tiny-devicons-auto-colors.nvim",
+	dependencies = {
+		"nvim-tree/nvim-web-devicons",
+	},
+	event = "VeryLazy",
+	config = function()
+		require("tiny-devicons-auto-colors").setup()
+	end,
+}
+
+local markview = {
+	"OXY2DEV/markview.nvim",
+	-- the README says it is not recommended to lazy load this, I don't know why
+	lazy = true,
+	ft = "markdown", -- If you decide to lazy-load anyway
+
+	dependencies = {
+		"nvim-treesitter/nvim-treesitter",
+		"nvim-tree/nvim-web-devicons",
+	},
 }
 
 return {
@@ -91,15 +103,16 @@ return {
 	IndentLines,
 	BufferLine,
 	Lushwal,
-  {"junegunn/goyo.vim"},
-  deviconsAutoColors,
-  -- Messes up conceallevel!
-  -- {
-  --   'MeanderingProgrammer/markdown.nvim',
-  --   name = 'render-markdown', -- Only needed if you have another plugin named markdown.nvim
-  --   dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
-  --   config = function()
-  --       require('render-markdown').setup({})
-  --   end,
-  -- }
+	{ "junegunn/goyo.vim" },
+	deviconsAutoColors,
+	markview,
+	-- Messes up conceallevel!
+	-- {
+	--   'MeanderingProgrammer/markdown.nvim',
+	--   name = 'render-markdown', -- Only needed if you have another plugin named markdown.nvim
+	--   dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+	--   config = function()
+	--       require('render-markdown').setup({})
+	--   end,
+	-- }
 }
