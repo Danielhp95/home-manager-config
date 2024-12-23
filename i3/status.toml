@@ -1,0 +1,42 @@
+# [icons]
+# icons = "awesome"
+
+# [theme]
+theme = "slick"
+
+[[block]]
+block = "music"
+
+[[block]]
+block = "disk_space"
+info_type = "available"
+alert_unit = "GB"
+alert = 10.0
+warning = 15.0
+format = " $icon $available "
+format_alt = " $icon $available / $total "
+
+[[block]]
+block = "memory"
+format = " $icon $mem_used_percents.eng(1) "
+format_alt = " $icon_swap $swap_free.eng(3,B,M)/$swap_total.eng(3,B,M)($swap_used_percents.eng(2)) "
+interval = 30
+
+[[block]]
+block = "cpu"
+interval = 1
+
+[[block]]
+block = "time"
+interval = 60
+format = "%a %d/%m %R"
+
+[[block]]
+block = "battery"
+driver = "upower"
+format = " $icon $percentage"
+
+[[block]]
+block = "bluetooth"
+mac = "14:3F:A6:58:C8:61"
+format = "Headphones Connected"
