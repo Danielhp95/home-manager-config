@@ -2,7 +2,7 @@
 {
   home.packages = with pkgs; [
     gh
-    nerd-fonts.fira-code
+    fira-code
     powerline-fonts
   ];
   home.sessionVariables.TERM = "wezterm";

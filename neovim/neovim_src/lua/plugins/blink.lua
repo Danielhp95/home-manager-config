@@ -1,19 +1,64 @@
-return {
-  {
-    'saghen/blink.cmp',
-    dependencies = 'rafamadriz/friendly-snippets',
-
-    version = 'v0.*',
-
-    opts = {
-      keymap = { preset = 'default' },
-
-      appearance = {
-        use_nvim_cmp_as_default = true,
-        nerd_font_variant = 'mono'
-      },
-
-      signature = { enabled = true }
-    },
-  },
-}
+return { }
+-- return {
+-- 	{
+-- 		"saghen/blink.cmp",
+-- 		dependencies = "rafamadriz/friendly-snippets",
+--
+-- 		version = "v0.*",
+--
+-- 		opts = {
+-- 			keymap = {
+-- 				["<C-j>"] = { "select_next" },
+-- 				["<C-k>"] = { "select_prev" },
+-- 				["<C-u>"] = { "scroll_documentation_up", "fallback" },
+-- 				["<C-d>"] = { "scroll_documentation_down", "fallback" },
+-- 				-- ['<C-u>'] = cmp.mapping.scroll_docs(-4),
+-- 				-- ['<C-d>'] = cmp.mapping.scroll_docs(4),
+-- 				["<C-e>"] = { "hide", "fallback" },
+-- 				["<CR>"] = { "accept", "fallback" },
+-- 				["<Tab>"] = {
+-- 					function(cmp)
+-- 						if cmp.snippet_active() then
+-- 							return cmp.accept()
+-- 						else
+-- 							return cmp.select_and_accept()
+-- 						end
+-- 					end,
+-- 					"snippet_forward",
+-- 					"fallback",
+-- 				},
+-- 				["<S-Tab>"] = { "snippet_backward", "fallback" },
+-- 			},
+--
+-- 			sources = {
+-- 				default = { "path", "lsp", "snippets", "buffer" },
+-- 			},
+-- 			signature = { enabled = true, window = { border = "single" } },
+--
+-- 			appearance = {
+-- 				use_nvim_cmp_as_default = true,
+-- 				nerd_font_variant = "mono",
+-- 			},
+--
+-- 			completion = {
+-- 				ghost_text = { enabled = true },
+-- 				documentation = {
+-- 					auto_show = true,
+-- 					auto_show_delay_ms = 200,
+-- 					window = {
+-- 						border = "single",
+-- 					},
+-- 				},
+-- 				menu = {
+-- 					border = "single",
+-- 					draw = {
+-- 						columns = { { "label", gap = 1 }, { "kind_icon", "kind", gap = 1 }, { "label_description" } },
+-- 						components = {
+-- 							label_description = { ellipsis = false }, -- Show full description
+-- 						},
+-- 					},
+-- 				},
+-- 			},
+-- 		},
+-- 	},
+-- }

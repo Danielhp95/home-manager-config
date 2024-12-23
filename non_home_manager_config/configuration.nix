@@ -2,16 +2,28 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running `nixos-help`).
 
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
-  imports = [ ../tuigreet.nix ../fcitx5 ];
+  imports = [
+    ../tuigreet.nix
+    ../fcitx5
+  ];
 
   # Authenticator manager
   security.polkit.enable = true;
 
   nix = {
-    settings.extra-experimental-features = [ "flakes" "nix-command" ];
+    settings.extra-experimental-features = [
+      "flakes"
+      "nix-command"
+    ];
     optimise.automatic = true; # periodically run `nix store optimise`
     gc = {
       automatic = true;
@@ -66,6 +78,17 @@
     noto-fonts-cjk-serif
     babelstone-han # unicode font with loooads of Han characters
 
+    nerdfonts
+
+    fira-code
+    fira-code-symbols
+    (nerdfonts.override {
+      fonts = [
+        "FiraCode"
+        "Iosevka"
+      ];
+    })
+
     material-symbols
     lexend
   ];
@@ -78,8 +101,7 @@
   };
 
   networking.hostName = "fell-omen"; # Define your hostname.
-  networking.networkmanager.enable =
-    true; # Easiest to use and most distros use this by default.
+  networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
 
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
@@ -144,14 +166,21 @@
   users.users.daniel = {
     shell = pkgs.zsh;
     isNormalUser = true;
-    extraGroups = [ "wheel" "docker" ]; # group "wheel" -> sudo access
-    packages = with pkgs; [ firefox tree vim git ];
-    hashedPassword =
-      "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
+    extraGroups = [
+      "wheel"
+      "docker"
+    ]; # group "wheel" -> sudo access
+    packages = with pkgs; [
+      firefox
+      tree
+      vim
+      git
+    ];
+    hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
 
   # Does this work?
-  # This was meant to fix 
+  # This was meant to fix
   systemd.services.suspend-hyprland = {
     description = "Suspend hyprland";
     before = [
@@ -160,7 +189,10 @@
       "nvidia-suspend.service"
       "nvidia-hibernate.service"
     ];
-    wantedBy = [ "systemd-suspend.service" "systemd-hibernate.service" ];
+    wantedBy = [
+      "systemd-suspend.service"
+      "systemd-hibernate.service"
+    ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "killall -STOP Hyprland";
@@ -174,7 +206,10 @@
       "systemd-hibernate.service"
       "nvidia-resume.service"
     ];
-    wantedBy = [ "systemd-suspend.service" "systemd-hibernate.service" ];
+    wantedBy = [
+      "systemd-suspend.service"
+      "systemd-hibernate.service"
+    ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "killall -CONT Hyprland";
@@ -210,4 +245,3 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
 }
-

@@ -32,7 +32,7 @@ in {
     ./atuin.nix
 
     ./hyprland
-    ./sway/waybar.nix # It will be outdated
+    # ./sway/waybar.nix # It will be outdated
     ./status_bars
 
     ./sony_ai
@@ -78,19 +78,19 @@ in {
     openconnect
 
     ### Photography
-    # ansel
+    ansel
 
     ### Videography
-    # (writeScriptBin "davinci" ''
-    #   QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
-    # '')
+    (writeScriptBin "davinci" ''
+      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+    '')
 
     ### Gaming
     steam
     gamescope # micro compositor by steam
 
     # Latex stuff
-    inputs.stable.legacyPackages.x86_64-linux.pandoc
+    pandoc
 
     ### Basic utilities
     ripgrep # better grep

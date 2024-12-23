@@ -178,7 +178,6 @@ in
       nixfmt-rfc-style
       python310Packages.gevent  # Never got this to work!
       bash-language-server
-      # inputs.basedpyright_stable.legacyPackages.x86_64-linux.basedpyright
       basedpyright
       hyprls
 

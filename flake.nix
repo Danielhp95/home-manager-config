@@ -3,15 +3,15 @@
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    stable.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     basedpyright_stable.url =
       "github:nixos/nixpkgs?rev=2893f56de08021cffd9b6b6dfc70fd9ccd51eb60";
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.45.2 + a few commits
-      rev = "71dc9f6128b8d2e382b2a574d2d5f15e2d907f3a";
+      # version 0.46.2 + a few commits
+      rev = "5f7ad767dbf0bac9ddd6bf6c825fb9ed7921308a";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -19,7 +19,7 @@
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
       # 0.45
-      rev = "f8a8458663fe2b61796a2f10264aa09e362fa6a5";
+      rev = "f94c5d75ae90ce738dfaae43fdb7254ce3074523";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -37,7 +37,7 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    home-manager.url = "github:nix-community/home-manager/";
+    home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     haumea.url = "github:nix-community/haumea";
@@ -125,7 +125,7 @@
               # Inlining an attribute set
               nix.registry = {
                 nixos.flake = inputs.nixpkgs;
-                stable.flake = inputs.stable;
+                unstable.flake = inputs.unstable;
               };
             }
           ];

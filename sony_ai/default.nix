@@ -5,7 +5,7 @@ in
 {
   home.packages = with pkgs; [
     git
-    inputs.stable.legacyPackages.x86_64-linux.awscli2
+    awscli2
     amazon-ecr-credential-helper
 
     docker

@@ -6,7 +6,7 @@
     # Let's have each window manager launch this on its own
     # Otherwise this only kicks in upon boot, and not upon loging in-out
     systemd.enable = true;
-    package = inputs.stable.legacyPackages.x86_64-linux.waybar;
+    package = pkgs.waybar;
     # TODO: style
     style = ./waybar_style.css;
     settings = {
