@@ -42,7 +42,6 @@ let
   plugins = with pkgs.vimPlugins; {
     ## Core
     "lazy.nvim" = lazy-nvim;
-    "vim-rhubarb" = vim-rhubarb;
     "nvim-autopairs" = nvim-autopairs;
     "nvim-surround" = nvim-surround;
     "Comment.nvim" = comment-nvim;
@@ -170,7 +169,7 @@ in
     enable = lib.mkForce true;
     extraPackages = with pkgs; [
       lua-language-server
-      # nil  # older nix lsp
+
       nixd
       gopls
       stylua
@@ -179,7 +178,6 @@ in
       python310Packages.gevent  # Never got this to work!
       bash-language-server
       basedpyright
-      hyprls
 
       nodejs_22  # for sourcegraph
       nodePackages.yaml-language-server

@@ -95,6 +95,12 @@ local markview = {
 		"nvim-treesitter/nvim-treesitter",
 		"nvim-tree/nvim-web-devicons",
 	},
+	opts = {
+		list_items = {
+			indent_size = 1,
+			shift_width = 1,
+		},
+	},
 }
 
 return {

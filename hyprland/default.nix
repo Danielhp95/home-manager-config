@@ -1,22 +1,46 @@
-{ pkgs, inputs, ... }:
-let cursor-theme-name = "Bibata-Modern-Amber";
-in {
+{
+  pkgs,
+  inputs,
+  lib,
+  ...
+}:
+let
+  cursor-theme-name = "Bibata-Modern-Amber";
+  # use OCR and copy to clipboard
+  ocrScript =
+    let
+      inherit (pkgs)
+        grim
+        libnotify
+        slurp
+        tesseract5
+        wl-clipboard
+        ;
+      _ = lib.getExe;
+    in
+    pkgs.writeShellScriptBin "wl-ocr" ''
+      ${_ grim} -g "$(${_ slurp})" -t ppm - | ${_ tesseract5} - - | ${wl-clipboard}/bin/wl-copy
+      ${_ libnotify} "$(${wl-clipboard}/bin/wl-paste)"
+    '';
+in
+{
+  programs.hyprlock = {
+    enable = true;
+    extraConfig = builtins.readFile ./hyprlock.conf;
+  };
   wayland.windowManager.hyprland = {
     enable = true;
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
-      hy3 # make sure we are targetting the same version of hyprland and hy3
-      inputs.hyprland-plugins.packages.${pkgs.system}.hyprexpo
-      # inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion
-      inputs.hyprspace.packages.x86_64-linux.Hyprspace
+      hy3
+      inputs.hyprtasking.packages.${pkgs.system}.hyprtasking
+      # To lock after idling for too long
+      # https://github.com/hyprwm/hypridle
     ];
     settings = {
       exec-once = [
         "${pkgs.dbus}/bin/dbus-update-activation-environment --all"
         "${pkgs.dbus}/bin/dbus-update-activation-environment --systemd DISPLAY HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME"
-
-        # TODO(1) Commenting scenario, not working
-        # "${pkgs.kdePackages.polkit-kde-agent-1}/bin/polkit-kde-agent-1"
       ];
     };
     systemd = {
@@ -32,13 +56,13 @@ in {
     };
     xwayland.enable = true;
   };
-  khome.desktop.pyprland = { enable = true; };
-  home.file.".config/wal/templates/colors-hyprland.conf".source =
-    ./colors-hyprland.conf;
+  khome.desktop.pyprland = {
+    enable = true;
+  };
+  home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
 
   home.packages = with pkgs; [
-    hyprlock
-    hyprpolkitagent  # Authenticator
+    hyprpolkitagent # Authenticator
 
     # For screenshots
     hyprshot
@@ -49,16 +73,17 @@ in {
 
     pw-volume
 
+    hyprpicker
+
     libnotify
 
     wdisplays # manage display positioning
     wl-clipboard # wayland clipboard utilities
     wl-mirror # For mirroring screens
 
-    # polkit
-    # polkit_gnome # Authenticator
-
     lxde.lxsession # Authenticator
+
+    ocrScript
   ];
 
   # Cursor. This might not be necessary with hyprland 0.41
@@ -73,7 +98,7 @@ in {
 
     # TODO: this was introduced in November 2024, can we remove this at some point?
     # To surpress error: GSK-message Error 71 (Protocol error) dispatching to Wayland display.
-    QT_QPA_PLATFORMTHEME="gtk4";
+    QT_QPA_PLATFORMTHEME = "gtk4";
     GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
     # TODO(1) Commenting scenario, not working
     # POLKIT_AUTH_AGENT =
@@ -88,8 +113,7 @@ in {
     };
     gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     theme = {
-      package =
-        pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
+      package = pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
       name = "WhiteSur-Dark-orange";
     };
 
@@ -108,4 +132,3 @@ in {
     "org/gnome/desktop/interface".color-scheme = "prefer-dark";
   };
 }
-

@@ -1,15 +1,25 @@
-{ inputs, stableWithUnfree, config, pkgs, environment, ... }:
+{
+  inputs,
+  stableWithUnfree,
+  unstableWithUnfree,
+  config,
+  pkgs,
+  environment,
+  ...
+}:
 
 let
-  nvidiaZoom =
-    pkgs.zoom-us.override { meta.mainProgram = "nvidia-offload zoom"; };
-in {
+  nvidiaZoom = pkgs.zoom-us.override { meta.mainProgram = "nvidia-offload zoom"; };
+in
+{
 
   home.username = "daniel";
   home.homeDirectory = "/home/daniel";
   home.stateVersion = "24.05";
 
-  home.sessionVariables = { BROWSER = "firefox"; };
+  home.sessionVariables = {
+    BROWSER = "firefox";
+  };
 
   imports = [
     ./starship
@@ -26,7 +36,7 @@ in {
     # Gestures
     ./fusuma
 
-    ./neovim
+    # ./neovim
     ./terminal
     ./kitty
     ./atuin.nix
@@ -37,9 +47,8 @@ in {
 
     ./sony_ai
 
-    # ./ags
     # ./anyrun
-    ./notifications # TODO: remove
+    ./notifications
   ];
 
   khome.desktop.swww = {
@@ -49,20 +58,40 @@ in {
     ]; # TODO: create an env variable based on this and use that everywhere else
   };
 
-  programs.eww-hyprland.enable = true;
-
   programs.firefox.enable = true;
-  # programs.rio.enable = true;
-  # services.flameshot.enable = true;
   services.clipmenu.enable = true;
+
+  # Why do I have this
+  home.file = {
+    ".nv/nvidia-application-profiles-rc".text = ''
+      {
+          "rules": [
+              {
+                  "pattern": {
+                      "feature": "dso",
+                      "matches": "libGL.so.1"
+                  },
+                  "profile": "openGL_fix"
+              }
+          ],
+          "profiles": [
+              {
+                  "name": "openGL_fix",
+                  "settings": [
+                      {
+                          "key": "GLThreadedOptimizations",
+                          "value": false
+                      }
+                  ]
+              }
+          ]
+      }
+    '';
+  };
 
   home.packages = with pkgs; [
     ### Browsers
     chromium
-
-    (flameshot.overrideAttrs
-      (old: { cmakeFlags = [ "-DUSE_WAYLAND_GRIM=true" ]; }))
-
     nvd # Nix version diff tool
     nushell
 
@@ -82,12 +111,8 @@ in {
 
     ### Videography
     (writeScriptBin "davinci" ''
-      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+      QT_QPA_PLATFORM=xcb ${unstableWithUnfree.davinci-resolve}/bin/davinci-resolve
     '')
-
-    ### Gaming
-    steam
-    gamescope # micro compositor by steam
 
     # Latex stuff
     pandoc
@@ -113,7 +138,7 @@ in {
     vlc
     mpv
     # music
-    spotify
+    unstableWithUnfree.spotify
     # Images
     imv
 
@@ -135,6 +160,7 @@ in {
 
     xfce.thunar
 
+    inputs.danvim.packages.x86_64-linux.nvimStable
 
     # Weather app
     mousam
@@ -149,6 +175,9 @@ in {
 
     gparted
     bottom
+
+    # nix cli helper, useful for switching etc
+    nh
   ];
 
   # Let Home Manager install and manage itself.

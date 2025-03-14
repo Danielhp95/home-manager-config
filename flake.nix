@@ -5,21 +5,22 @@
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
     basedpyright_stable.url =
       "github:nixos/nixpkgs?rev=2893f56de08021cffd9b6b6dfc70fd9ccd51eb60";
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.46.2 + a few commits
-      rev = "5f7ad767dbf0bac9ddd6bf6c825fb9ed7921308a";
+      # version 0.47.2
+      rev = "7753e8ea686ba0aeaa825502f27e5b3f813faade";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.45
-      rev = "f94c5d75ae90ce738dfaae43fdb7254ce3074523";
+      # 0.47
+      rev = "833c52e642afbf6a5a95a078580a0fbce118848f";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -32,6 +33,13 @@
       inputs.hyprland.follows = "hyprland";
     };
 
+    # https://github.com/raybbian/hyprtasking
+    # Better workspace plugin to try!
+    hyprtasking = {
+      url = "github:raybbian/hyprtasking";
+      inputs.hyprland.follows = "hyprland";
+    };
+
     hyprspace = {
       url = "github:KZDKM/Hyprspace";
       inputs.hyprland.follows = "hyprland";
@@ -39,6 +47,9 @@
 
     home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    danvim.url = "path:/home/daniel/nix_config/danvim";
+    danvim.inputs.nixpkgs.follows = "unstable";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";
@@ -48,6 +59,10 @@
     let
       system = "x86_64-linux";
       stableWithUnfree = import stable {
+        config = { allowUnfree = true; };
+        inherit system;
+      };
+      unstableWithUnfree = import inputs.unstable {
         config = { allowUnfree = true; };
         inherit system;
       };
@@ -65,14 +80,18 @@
             ./hardwares/fell_omen.nix
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/gestures.nix
+            ./non_home_manager_config/ollama.nix
             ./pipewire.nix
+
+            # Specialisations
+            ./specialisations/roadwarrior.nix
             {
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 sharedModules =
-                  [ ./swww/swww.nix ./eww ./hyprland/pyprland.nix ];
-                extraSpecialArgs = { inherit inputs stableWithUnfree; };
+                  [ ./swww/swww.nix ./hyprland/pyprland.nix ];
+                extraSpecialArgs = { inherit inputs stableWithUnfree unstableWithUnfree; };
                 users.daniel = { config, ... }: { imports = [ ./home.nix ]; };
               };
             }
@@ -86,7 +105,7 @@
                     (mapAttrs (_: c: c.legacyPackages.${prev.system}))
                   ];
                   # override specific packages from unstable
-                  # inherit (final.channels.unstable) ansel wezterm eww;
+                  # inherit (final.channels.unstable) ansel wezterm;
 
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;

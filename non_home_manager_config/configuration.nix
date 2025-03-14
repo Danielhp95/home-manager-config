@@ -16,6 +16,15 @@
     ../fcitx5
   ];
 
+    # Move to gaming folder
+  programs.gamescope = {
+    enable = true;
+    capSysNice = true;
+  };
+  programs.steam.enable = true;
+  programs.steam.gamescopeSession.enable = true;
+
+
   # Authenticator manager
   security.polkit.enable = true;
 
@@ -51,6 +60,10 @@
   programs.dconf.enable = true;
 
   # Enables docker
+  # From https://nixos.wiki/wiki/Nvidia
+  # virtualisation.docker.daemon.settings.features.cdi = true;
+  # Warning keeps telling me to:
+  # virtualisation.docker.enableNvidia
   virtualisation.docker = {
     enable = true;
     enableNvidia = true;
@@ -79,6 +92,7 @@
     babelstone-han # unicode font with loooads of Han characters
 
     nerdfonts
+    font-awesome
 
     fira-code
     fira-code-symbols
@@ -106,7 +120,7 @@
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
   # For manual timezones
-  time.timeZone = "Europe/Paris";
+  time.timeZone = "America/New_York";
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";

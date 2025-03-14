@@ -1,8 +1,8 @@
 {pkgs, lib, home, inputs, stableWithUnfree, ...}:
 {
   home.packages = with pkgs; [
-    i3bar-river
-    i3status-rust
+    inputs.unstable.legacyPackages.x86_64-linux.i3bar-river
+    inputs.unstable.legacyPackages.x86_64-linux.i3status-rust
   ];
 
   home.file.".config/i3bar-river/config.toml".text = ''

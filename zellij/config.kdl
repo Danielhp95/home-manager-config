@@ -11,6 +11,7 @@ keybinds {
         bind "Alt o" { SwitchToMode "session";}
         bind "Alt s" { SwitchToMode "search";}
         bind "Alt g" { SwitchToMode "search";}
+        bind "Ctrl b" { SwitchToMode "scroll";}
         // uncomment this and adjust key if using copy_on_select=false
         bind "Alt y" { Copy; }
     }
@@ -41,6 +42,7 @@ keybinds {
         bind "d" { NewPane "Down"; SwitchToMode "Normal"; }
         bind "r" { NewPane "Right"; SwitchToMode "Normal"; }
         bind "x" { CloseFocus; SwitchToMode "Normal"; }
+        bind "F" { Run "zsh" { floating true; x "12%"; y "12%"; width "75%"; height "75%"; }; SwitchToMode "normal"; }
         bind "f" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
         bind "z" { TogglePaneFrames; SwitchToMode "Normal"; }
         bind "w" { ToggleFloatingPanes; SwitchToMode "Normal"; }
@@ -153,9 +155,6 @@ keybinds {
     }
     shared_except "normal" "move" "locked" {
         bind "Ctrl h" { SwitchToMode "Move"; }
-    }
-    shared_except "normal" "tmux" "locked" {
-        bind "Ctrl b" { SwitchToMode "Tmux"; }
     }
 }
 

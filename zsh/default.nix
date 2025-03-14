@@ -33,6 +33,7 @@ in {
       enable = true;
       sessionVariables = {
         # Default from https://github.com/zsh-users/zsh-autosuggestions
+        EDITOR="nvimStable";
         ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE = "fg=8";
         ZSH_AUTOSUGGEST_STRATEGY="(history completion)";
         ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20;  # Only suggest up to 20 characters
@@ -81,6 +82,9 @@ in {
       shellAliases = {
         # nix
         whichnix = "readlink -f `which ";
+
+        # TODO: hack for danvim
+        nvim = "nvimStable";
 
         # git
         wow = "git status";
