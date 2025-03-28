@@ -244,13 +244,6 @@
   # accidentally delete configuration.nix.
   # system.copySystemConfiguration = true;
 
-  # Shows what closure differences from last generation
-  system.activationScripts.diff = ''
-    if [[ -e /run/current-system ]]; then
-      ${pkgs.nix}/bin/nix store diff-closures /run/current-system "$systemConfig"
-    fi
-  '';
-
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It's perfectly fine and recommended to leave
