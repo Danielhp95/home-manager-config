@@ -99,7 +99,9 @@ in
     pywal # Colorscheme generator
 
     ### Communication
-    slack
+    (writeScriptBin "slack" ''
+      ${unstableWithUnfree.slack}/bin/slack --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3
+    '')
     telegram-desktop
     element-desktop
     stableWithUnfree.zoom-us
