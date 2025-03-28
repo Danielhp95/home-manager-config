@@ -91,20 +91,12 @@
     noto-fonts-cjk-serif
     babelstone-han # unicode font with loooads of Han characters
 
-    nerdfonts
-    font-awesome
-
-    fira-code
-    fira-code-symbols
-    (nerdfonts.override {
-      fonts = [
-        "FiraCode"
-        "Iosevka"
-      ];
-    })
-
+    font-awesome  # NOTE do I need this?
     material-symbols
-    lexend
+
+    fira-code-symbols  # NOTE might not be needed with nord-fonts.firacode
+    nerd-fonts.fira-code
+    nerd-fonts.iosevka
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -169,11 +161,6 @@
 
   # Enable CUPS to print documents.
   # services.printing.enable = true;
-
-  hardware = {
-    pulseaudio.enable = true;
-    # nvidia-container-toolkit.enable = true;
-  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   programs.zsh.enable = true;

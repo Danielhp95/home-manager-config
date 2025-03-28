@@ -2,9 +2,7 @@
 { config, inputs, unstableWithUnfree, ... }:
 {
   services.ollama = {
-    package = unstableWithUnfree.ollama;
     enable = true;
-    # package = pkgs.ollama-rocm;
     host = "0.0.0.0";
     acceleration = "cuda";
     loadModels = [
@@ -14,7 +12,6 @@
   };
 
   services.open-webui = {
-    # package = inputs.unstable.legacyPackages.x86_64-linux.open-webui;
     enable = true;
     stateDir = "/var/lib/open-webui";
     host = "0.0.0.0";

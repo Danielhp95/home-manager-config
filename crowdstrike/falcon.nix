@@ -1,6 +1,6 @@
 { pkgs, unstableWithUnfree, ... }:
 let
-  falcon = pkgs.callPackage ./falcon-default.nix { dpkg=unstableWithUnfree.dpkg; };
+  falcon = pkgs.callPackage ./falcon-default.nix { };
   startPreScript = pkgs.writeScript "init-falcon" ''
     #! ${pkgs.bash}/bin/sh
     /run/current-system/sw/bin/mkdir -p /opt/CrowdStrike

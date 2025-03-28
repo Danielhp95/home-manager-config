@@ -23,7 +23,6 @@
       source-serif
       source-han-sans   # chinese fonts
       source-han-serif  # chinese fonts
-      fira-code-nerdfont
     ];
     fontconfig.defaultFonts = {
       serif = ["Source Han Serif SC" "Source Han Serif TC" "Noto Color Emoji"];

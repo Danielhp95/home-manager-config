@@ -2,15 +2,10 @@
   inputs,
   stableWithUnfree,
   unstableWithUnfree,
-  config,
   pkgs,
-  environment,
   ...
 }:
 
-let
-  nvidiaZoom = pkgs.zoom-us.override { meta.mainProgram = "nvidia-offload zoom"; };
-in
 {
 
   home.username = "daniel";
@@ -33,21 +28,15 @@ in
     ./git
     ./menu_launchers
 
-    # Gestures
-    ./fusuma
-
-    # ./neovim
     ./terminal
     ./kitty
     ./atuin.nix
 
     ./hyprland
-    # ./sway/waybar.nix # It will be outdated
     ./status_bars
 
     ./sony_ai
 
-    # ./anyrun
     ./notifications
   ];
 
@@ -100,7 +89,7 @@ in
 
     ### Communication
     (writeScriptBin "slack" ''
-      ${unstableWithUnfree.slack}/bin/slack --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3
+      ${slack}/bin/slack --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3
     '')
     telegram-desktop
     element-desktop
@@ -113,7 +102,7 @@ in
 
     ### Videography
     (writeScriptBin "davinci" ''
-      QT_QPA_PLATFORM=xcb ${unstableWithUnfree.davinci-resolve}/bin/davinci-resolve
+      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
     '')
 
     # Latex stuff

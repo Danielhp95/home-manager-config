@@ -48,8 +48,6 @@ local lspconfig_toplevel = {
 
 		lspconfig.basedpyright.setup({
 			root_dir = lspconfig.util.find_git_ancestor,
-			-- version 1.12 works (the hardcoded path), but not the current one in nixpkgs-unstable (as of july 3rd 2024). So hardcoding path here
-			-- cmd = {"/nix/store/mv7f38kfxs0ry59zr0fw6p2kw7bk944r-basedpyright-1.12.6/bin/basedpyright-langserver --stdio"},
 			settings = {
 				basedpyright = {
 					analysis = {

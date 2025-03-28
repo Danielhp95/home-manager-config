@@ -3,22 +3,23 @@
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    # nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.47.2
-      rev = "7753e8ea686ba0aeaa825502f27e5b3f813faade";
+      # version 0.48.1
+      rev = "a46576afc32d7fbad6c358cc72ead7f4489d8ea8";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.47
-      rev = "833c52e642afbf6a5a95a078580a0fbce118848f";
+      # 0.48
+      rev = "4014433d1c3d1bf36c6684cff14c23d538337070";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -38,7 +39,9 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
+    # For a specific release
+    # home-manager.url = "github:nix-community/home-manager/release-24.11";
+    home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     danvim.url = "path:/home/daniel/nix_config/danvim";
@@ -126,8 +129,6 @@
                     ))
                     (mapAttrs (_: c: c.legacyPackages.${prev.system}))
                   ];
-                  # override specific packages from unstable
-                  # inherit (final.channels.unstable) ansel wezterm;
 
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;

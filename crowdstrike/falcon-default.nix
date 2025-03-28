@@ -13,7 +13,7 @@
   libnl,
   zlib,
   autoPatchelfHook,
-  buildFHSUserEnv,
+  buildFHSEnv,
   ...
 }:
 let
@@ -25,9 +25,7 @@ let
     inherit version arch src;
     name = pname;
 
-    nativrBuildInputs = [ dpkg ];
     buildInputs = [
-      # inputs.unstable.legacyPackages.x86_64-linux.dpkg
       dpkg
       zlib
       autoPatchelfHook
@@ -52,7 +50,7 @@ let
     };
   };
 in
-buildFHSUserEnv {
+buildFHSEnv {
   name = "fs-bash";
   targetPkgs = pkgs: [
     libnl
