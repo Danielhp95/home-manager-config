@@ -91,6 +91,8 @@
             ./non_home_manager_config/ollama.nix
             ./pipewire.nix
 
+            ./crowdstrike/falcon.nix
+
             # Specialisations
             ./specialisations/roadwarrior.nix
             {
