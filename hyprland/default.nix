@@ -84,6 +84,10 @@ in
     lxde.lxsession # Authenticator
 
     ocrScript
+
+    # This should really live on its own package
+    slurp
+    wf-recorder
   ];
 
   # Cursor. This might not be necessary with hyprland 0.41
