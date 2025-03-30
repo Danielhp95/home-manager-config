@@ -45,8 +45,7 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     danvim.url = "path:/home/daniel/nix_config/danvim";
-    # Try soon if we can go back to following unstable
-    # danvim.inputs.nixpkgs.follows = "unstable";
+    danvim.inputs.nixpkgs.follows = "unstable";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";
