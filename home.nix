@@ -1,6 +1,7 @@
 {
   inputs,
   stableWithUnfree,
+  zoomStableWithUnfree,
   unstableWithUnfree,
   pkgs,
   ...
@@ -88,12 +89,14 @@
     pywal # Colorscheme generator
 
     ### Communication
-    (writeScriptBin "slack" ''
-      ${slack}/bin/slack --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3
-    '')
+    # (writeScriptBin "slack" ''
+    #   ${slack}/bin/slack --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3
+    # '')
+    slack
     telegram-desktop
     element-desktop
-    stableWithUnfree.zoom-us
+
+    zoomStableWithUnfree.zoom-us
 
     openconnect
 
@@ -133,7 +136,8 @@
     # Images
     imv
 
-    texlive.combined.scheme-full
+    # let's have this added WHEN we need it
+    # texlive.combined.scheme-full
 
     ### debugging utils
     lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
@@ -169,6 +173,8 @@
 
     # nix cli helper, useful for switching etc
     nh
+
+    gotop
   ];
 
   # Let Home Manager install and manage itself.
