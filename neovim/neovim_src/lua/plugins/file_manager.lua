@@ -16,6 +16,6 @@ return {
 		"stevearc/oil.nvim",
 		opts = {},
 		-- Optional dependencies
-		dependencies = { "nvim-tree/nvim-web-devicons" },
+		dependencies = { "nvim-tree/nvim-web-devicons", "folke/snacks.nvim" },
 	},
 }
