@@ -13,7 +13,6 @@
 
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    # ./disable_nvidia.nix
   ];
 
   boot.initrd.availableKernelModules = [
@@ -28,12 +27,12 @@
     "dm-snapshot"
     "amdgpu"
   ];
-  # boot.initrd.luks.devices.root.device = "/dev/disk/by-uuid/dacb058a-cf2e-4646-93a5-c2efe21de50b";
   boot.kernelModules = [ "kvm-amd" ];
   # This line is needed to fix suspend/wakeup issues in Hyprland
   # https://wiki.hyprland.org/Nvidia/#fixing-suspendwakeup-issues
   boot.kernelParams = [
     "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # To prevent nvidia from crashing on suspend. DOES NOT WORK when other monitors are connected
+    "nvidia.NVreg_EnableS0ixPowerManagement=0" # From https://github.com/NVIDIA/open-gpu-kernel-modules/issues/472
     "nvidia-drm.modeset=1" # Needed for `gamescope`
   ];
   boot.extraModulePackages = [ ];
@@ -58,7 +57,7 @@
       enable32Bit = true;
     };
     nvidia = {
-      # package = config.boot.kernelPackages.nvidiaPackages.stable;
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
       # package =
       #   let
       #     rcu_patch = pkgs.fetchpatch {
