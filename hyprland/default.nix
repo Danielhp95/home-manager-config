@@ -61,6 +61,7 @@ in
   };
   home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
 
+
   home.packages = with pkgs; [
     hyprpolkitagent # Authenticator
 
@@ -134,5 +135,22 @@ in
   dconf.settings = {
     "org/gnome/desktop/interface".cursor-theme = cursor-theme-name;
     "org/gnome/desktop/interface".color-scheme = "prefer-dark";
+  };
+
+  # Battery notifications
+  services.batsignal = {
+    # TODO: This is not working
+    enable = true;
+    extraArgs = [
+      "-c 10 -w 30 -f 97"
+      "-C 'Running out of Stormlight!'"
+      "-W 'Draining Stormlight at an alarming rate'"
+      "-F 'Stormlight reserves maxed'"
+      "-e" # Cause notifications to expire
+      "-p -P 'Charging Stormlight'"
+      "-u -U 'Discharging Stormlight'"
+      "-i" # Ignore missing battery notifications, for desktops
+      "-I 🔋" # Icon
+    ];
   };
 }
