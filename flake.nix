@@ -3,15 +3,17 @@
 
   inputs = {
     # Nixpkgs
-    # nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    stable.url = "github:nixos/nixpkgs/nixos-24.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    zoomStable.url = "github:nixos/nixpkgs?rev=ba60e197b7dd7dd88b498bce0cc712952ccdbaf1";
 
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.48.1
-      rev = "a46576afc32d7fbad6c358cc72ead7f4489d8ea8";
+      rev = "d775686380c348efe3a2044a5ca8626505249e38";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -66,6 +68,12 @@
         };
         inherit system;
       };
+      zoomStableWithUnfree = import inputs.zoomStable {
+        config = {
+          allowUnfree = true;
+        };
+        inherit system;
+      };
       unstableWithUnfree = import inputs.unstable {
         config = {
           allowUnfree = true;
@@ -80,8 +88,7 @@
         fell-omen = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs;
-            unstableWithUnfree = unstableWithUnfree;
+            inherit inputs unstableWithUnfree;
           }; # Pass flake inputs to our config
           # > Our main nixos configuration file <
           modules = [
@@ -93,19 +100,27 @@
             ./non_home_manager_config/ollama.nix
             ./pipewire.nix
 
-            ./crowdstrike/falcon.nix
+            # ./crowdstrike/falcon.nix
 
             # Specialisations
             ./specialisations/roadwarrior.nix
             {
               home-manager = {
+                backupFileExtension = "backup";
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 sharedModules = [
                   ./swww/swww.nix
                   ./hyprland/pyprland.nix
                 ];
-                extraSpecialArgs = { inherit inputs stableWithUnfree unstableWithUnfree; };
+                extraSpecialArgs = {
+                  inherit
+                    inputs
+                    stableWithUnfree
+                    unstableWithUnfree
+                    zoomStableWithUnfree
+                    ;
+                };
                 users.daniel =
                   { config, ... }:
                   {
