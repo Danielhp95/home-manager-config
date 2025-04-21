@@ -31,7 +31,7 @@
     };
     theme = ./rofi/spotlight_dark.rasi;  # Personal theme
     # theme = "~/.cache/wal/colors-rofi-dark.rasi";
-    terminal = "wezterm";
+    terminal = "kitty";
     plugins = with pkgs; [
       rofi-file-browser
       pywal
