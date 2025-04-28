@@ -7,8 +7,8 @@ let
   officialPlugins = pkgs.fetchFromGitHub {
     owner = "yazi-rs";
     repo = "plugins";
-    rev = "273019910c1111a388dd20e057606016f4bd0d17";
-    hash = "sha256-80mR86UWgD11XuzpVNn56fmGRkvj0af2cFaZkU8M31I=";
+    rev = "4b027c79371af963d4ae3a8b69e42177aa3fa6ee";
+    sha256 = "sha256-auGNSn6tX72go7kYaH16hxRng+iZWw99dKTTUN91Cow=";
   };
 in
 {
@@ -21,6 +21,7 @@ in
       # todo: https://github.com/boydaihungst/simple-mtpfs.yazi
       toggle-pane = "${officialPlugins}/toggle-pane.yazi";
       mount = "${officialPlugins}/mount.yazi";
+      vcs-files = "${officialPlugins}/vcs-files.yazi";
       fg = pkgs.fetchFromGitHub {
         owner = "DreamMaoMao";
         repo = "fg.yazi";
@@ -29,6 +30,14 @@ in
       };
     };
     keymap.manager.prepend_keymap = lib.flatten [
+      {
+        on = [
+          "g"
+          "c"
+        ];
+        run = "plugin vcs-files";
+        desc = "Show Git file changes";
+      }
       {
         desc = "Mount tools";
         on = [ "M" ];
