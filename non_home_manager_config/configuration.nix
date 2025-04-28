@@ -16,7 +16,7 @@
     ../fcitx5
   ];
 
-    # Move to gaming folder
+  # Move to gaming folder
   programs.gamescope = {
     enable = true;
     capSysNice = true;
@@ -61,13 +61,12 @@
 
   # Enables docker
   # From https://nixos.wiki/wiki/Nvidia
-  # virtualisation.docker.daemon.settings.features.cdi = true;
   # Warning keeps telling me to:
-  # virtualisation.docker.enableNvidia
   virtualisation.docker = {
+    daemon.settings.features.cdi = true;
     enable = true;
-    enableNvidia = true;
   };
+  hardware.nvidia-container-toolkit.enable = true;
 
   xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
 
