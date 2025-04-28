@@ -2,7 +2,6 @@ ENV_VARS:
   PS4_ADDR: 10.42.0.250  # In Playstation, go to Settings -> Network -> Network status. THIS CHANGES OFTEN
   TF_USE_LEGACY_KERAS: 1  # TODO: change this to be added elsewhere
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE: "fg=8"  # to have completion suggestions look gray
-# IMAGE_PREFIX: 'dev-proton8'
 ADDITIONAL_MOUNTS:
   # Nix things
   - "/nix/store/:/nix/store:ro"
@@ -33,3 +32,6 @@ ADDITIONAL_MOUNTS:
 
   # Firefox profiles DOESN'T work
   - "/home/daniel/.mozilla/firefox/:/home/dev/.mozilla/firefox/"
+
+  # IPython
+  - "/home/daniel/nix_config/sony_ai/0_fzf_history.py:/home/dev/.ipython/profile_default/startup"
