@@ -44,8 +44,8 @@
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1745805360,
-        "narHash": "sha256-nfiABTi7TDgfisCGQY+yR9BN9PpgE2X1edvwLSa1wYs=",
+        "lastModified": 1745853820,
+        "narHash": "sha256-SLYkE3mYdO5MiNy4oSXqL2obDupfUWow8Hs0Ubrtwc4=",
         "path": "/home/daniel/nix_config/danvim",
         "type": "path"
       },

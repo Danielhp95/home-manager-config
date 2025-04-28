@@ -18,6 +18,7 @@
       enable = true;
       settings = {
         ui = {
+          use_nerd_font_icons = true;
           show_preview_panel = false;
           input_bar_position = "bottom";
         };
