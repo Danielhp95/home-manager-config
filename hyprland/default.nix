@@ -33,7 +33,7 @@ in
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
       hy3
-      inputs.hyprtasking.packages.${pkgs.system}.hyprtasking
+      # inputs.hyprtasking.packages.${pkgs.system}.hyprtasking
       # To lock after idling for too long
       # https://github.com/hyprwm/hypridle
     ];
@@ -60,7 +60,6 @@ in
     enable = true;
   };
   home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
-
 
   home.packages = with pkgs; [
     hyprpolkitagent # Authenticator
