@@ -13,7 +13,7 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.48.1
-      rev = "9b4060f09be06250e859b27d6dd3ded5349f5546";
+      rev = "0302bfdc2207f9b5482fb07aa6052e7f6cb237ca";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -21,7 +21,7 @@
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
       # 0.48
-      rev = "64f87bef77073fb3fabe2636e2fc72294eba7d04";
+      rev = "2350428f71c3ed32081cd84164a5a6b043e82b5a";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
