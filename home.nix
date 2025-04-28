@@ -31,7 +31,6 @@
 
     ./terminal
     ./kitty
-    ./atuin.nix
 
     ./hyprland
     ./status_bars
@@ -101,12 +100,12 @@
     openconnect
 
     ### Photography
-    ansel
+    # ansel
 
     ### Videography
-    (writeScriptBin "davinci" ''
-      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
-    '')
+    # (writeScriptBin "davinci" ''
+    #   QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+    # '')
 
     # Latex stuff
     pandoc
@@ -133,8 +132,11 @@
     mpv
     # music
     unstableWithUnfree.spotify
+    unstableWithUnfree.grayjay
+
     # Images
-    imv
+    imv  # Lightweight
+    gthumb # Looking many images
 
     # let's have this added WHEN we need it
     # texlive.combined.scheme-full
@@ -175,6 +177,8 @@
     nh
 
     gotop
+
+    nvidia-docker
   ];
 
   # Let Home Manager install and manage itself.
