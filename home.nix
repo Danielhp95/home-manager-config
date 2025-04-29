@@ -95,7 +95,8 @@
     telegram-desktop
     element-desktop
 
-    zoomStableWithUnfree.zoom-us
+    # zoomStableWithUnfree.zoom-us
+    zoom-us
 
     openconnect
 
