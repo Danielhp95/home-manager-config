@@ -14,8 +14,6 @@
 
     extraConfig = {
       pull.rebase = false;
-      # diff.external = "${pkgs.difftastic}/bin/difft";
-       # Use saner diff prefixes than a/ and b/.
       diff.mnemonicPrefix = true;
       diff.algorithm = "patience";
     };
