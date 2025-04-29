@@ -34,4 +34,4 @@ ADDITIONAL_MOUNTS:
   - "/home/daniel/.mozilla/firefox/:/home/dev/.mozilla/firefox/"
 
   # IPython
-  - "/home/daniel/nix_config/sony_ai/0_fzf_history.py:/home/dev/.ipython/profile_default/startup"
+  - "/home/daniel/nix_config/sony_ai/1_fzf_history.py:/home/dev/.ipython/profile_default/startup/1_fzf_history.py"
