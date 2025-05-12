@@ -33,9 +33,7 @@ in
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
       hy3
-      # inputs.hyprtasking.packages.${pkgs.system}.hyprtasking
-      # To lock after idling for too long
-      # https://github.com/hyprwm/hypridle
+      inputs.hyprtasking.packages.${pkgs.system}.hyprtasking
     ];
     settings = {
       exec-once = [
