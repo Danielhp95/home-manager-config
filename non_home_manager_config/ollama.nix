@@ -13,7 +13,6 @@
 
   services.open-webui = {
     enable = true;
-    stateDir = "/var/lib/open-webui";
     host = "0.0.0.0";
     # options: https://docs.openwebui.com/getting-started/advanced-topics/env-configuration
     environment = {
