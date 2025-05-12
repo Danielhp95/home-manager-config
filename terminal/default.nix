@@ -5,6 +5,7 @@
     fira-code
     powerline-fonts
     nix-search-tv
+    rsync
   ];
   home.sessionVariables.TERM = "wezterm";
   programs = {

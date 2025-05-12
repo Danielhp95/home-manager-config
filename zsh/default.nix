@@ -59,9 +59,6 @@ in
           --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
           "
 
-         # Activate ZSH shell completion for televsion
-         eval "$(tv init zsh)"
-
         	# ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
       '';
     autocd = true;
