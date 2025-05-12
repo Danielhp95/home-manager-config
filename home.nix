@@ -17,6 +17,9 @@
     BROWSER = "firefox";
   };
 
+  # To allow bluetooth devices buttons to control media things (like stop / play)
+  services.mpris-proxy.enable = true;
+
   imports = [
     ./starship
     ./zsh
@@ -39,7 +42,9 @@
 
     ./notifications
 
-    ./writting.nix
+    ./flameshot
+
+    ./writing.nix
   ];
 
   khome.desktop.swww = {
@@ -51,6 +56,14 @@
 
   programs.firefox.enable = true;
   services.clipmenu.enable = true;
+  programs.mpv = {
+    enable = true;
+    config = {
+      ytdl-format = "bestvideo+bestaudio";
+      keep-open = true;  # Don't close mpv when video is done
+    };
+  };
+
 
   # Why do I have this
   home.file = {
@@ -110,9 +123,6 @@
     #   QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
     # '')
 
-    # Latex stuff
-    pandoc
-
     ### Basic utilities
     ripgrep # better grep
     bat # Better cat
@@ -141,9 +151,6 @@
     imv  # Lightweight
     gthumb # Looking many images
 
-    # let's have this added WHEN we need it
-    # texlive.combined.scheme-full
-
     ### debugging utils
     lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
     pciutils # For `lspci` command.
@@ -168,7 +175,7 @@
     # Best youtube downloader
     yt-dlp
 
-    obsidian
+    # obsidian
 
     # Audio recording
     asak
