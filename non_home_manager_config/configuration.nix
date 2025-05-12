@@ -105,24 +105,18 @@
     grub.configurationLimit = 42;
   };
 
-  networking.hostName = "fell-omen"; # Define your hostname.
-  networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
-
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
   # For manual timezones
   time.timeZone = "America/New_York";
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
   # Select internationalisation properties.
-  console = lib.mkForce {
-    font = "Lat2-Terminus16";
-    keyMap = "us";
-    useXkbConfig = true; # use xkbOptions in tty.
-  };
+  # TODO(dani): what is this
+  # console = lib.mkForce {
+  #   font = "Lat2-Terminus16";
+  #   keyMap = "us";
+  #   useXkbConfig = true; # use xkbOptions in tty.
+  # };
 
   # Enable the GNOME Desktop Environment.
   services.xserver = {
