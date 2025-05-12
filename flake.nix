@@ -12,16 +12,17 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.48.1
-      rev = "0302bfdc2207f9b5482fb07aa6052e7f6cb237ca";
+      # version 0.49
+      rev = "da3583fd5e86044d02af9fcfac84724e02545336";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.48
-      rev = "2350428f71c3ed32081cd84164a5a6b043e82b5a";
+      # 0.49
+      rev = "567dc9dd20e15d95a56a81c516a70dba30bc2c9c";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -29,30 +30,26 @@
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
-    hyprland-easymotion = {
-      url = "github:BowlBird/hyprland-easymotion";
-      inputs.hyprland.follows = "hyprland";
-    };
-
     # https://github.com/raybbian/hyprtasking
-    # Better workspace plugin to try!
     hyprtasking = {
       url = "github:raybbian/hyprtasking";
       inputs.hyprland.follows = "hyprland";
     };
-
+    television = {
+      url = "github:alexpasmantier/television";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # For a specific release
     # home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     danvim.url = "path:/home/daniel/nix_config/danvim";
-    danvim.inputs.nixpkgs.follows = "unstable";
+    # danvim.inputs.nixpkgs.follows = "nixpkgs";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";
   };
-
   outputs =
     {
       nixpkgs,
@@ -98,6 +95,7 @@
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/gestures.nix
             ./non_home_manager_config/ollama.nix
+            ./non_home_manager_config/network.nix
             ./pipewire.nix
 
             # ./crowdstrike/falcon.nix
@@ -144,6 +142,7 @@
                     (mapAttrs (_: c: c.legacyPackages.${prev.system}))
                   ];
 
+                  television = inputs.television.packages.${prev.system}.default;
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;
                   inherit (inputs.hyprland.packages.${prev.system})
@@ -184,7 +183,6 @@
             {
               # Inlining an attribute set
               nix.registry = {
-                nixos.flake = inputs.nixpkgs;
                 unstable.flake = inputs.unstable;
               };
             }
