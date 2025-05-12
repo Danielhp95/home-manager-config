@@ -38,6 +38,8 @@
     ./sony_ai
 
     ./notifications
+
+    ./writting.nix
   ];
 
   khome.desktop.swww = {
