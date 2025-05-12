@@ -4,6 +4,7 @@
     gh
     fira-code
     powerline-fonts
+    nix-search-tv
   ];
   home.sessionVariables.TERM = "wezterm";
   programs = {
@@ -16,12 +17,19 @@
     # Telescope inspired fzf for shell
     television = {
       enable = true;
+      enableZshIntegration = true;
       settings = {
         ui = {
           use_nerd_font_icons = true;
           show_preview_panel = false;
           input_bar_position = "bottom";
         };
+        # shell_ingetratrion = {
+        #   channel_triggers = {
+        #     files = [ "nvim" "cat" "less" "head" "tail" "vim" "nano" "bat" "cp" "mv" "rm" "touch" "chmod" "chown" "ln" "tar" "zip" "unzip" "gzip" "gunzip" "xz"];
+        #     git-repos = ["git clone"];
+        #   };
+        # };
       };
     };
     # Really nice shell history

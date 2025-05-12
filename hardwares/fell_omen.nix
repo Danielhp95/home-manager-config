@@ -108,19 +108,6 @@
     ];
   };
 
-  # Use headphone buttons to control media player: https://nixos.wiki/wiki/Bluetooth#Using_Bluetooth_headsets_with_PulseAudio
-  systemd.user.services = {
-    mpris-proxy = {
-      description = "Mpris proxy";
-      after = [
-        "network.target"
-        "sound.target"
-      ];
-      wantedBy = [ "default.target" ];
-      serviceConfig.ExecStart = "${pkgs.bluez}/bin/mpris-proxy";
-    };
-  };
-
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/9198a171-af25-4994-adc0-29dfebf18890";
     fsType = "ext4";
