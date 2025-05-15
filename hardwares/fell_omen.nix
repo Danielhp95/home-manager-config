@@ -15,6 +15,7 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
+  boot.loader.systemd-boot.configurationLimit = 5;  # Empirically tested so that we don't run out of space in '/boot'
   boot.initrd.availableKernelModules = [
     "nvme"
     "xhci_pci"
@@ -121,14 +122,6 @@
   swapDevices = [
     { device = "/dev/disk/by-uuid/a7497916-c6b3-4da5-b587-ff8b0ce3ce20"; }
   ];
-
-  # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
-  # (the default) this is the recommended approach. When using systemd-networkd it's
-  # still possible to use this option, but it's recommended to use it in conjunction
-  # with expliciv per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
-  networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.eno1.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 }
