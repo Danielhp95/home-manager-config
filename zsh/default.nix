@@ -8,6 +8,9 @@ let
 
     # Completions for specific programs
     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+
+    # Activate ZSH shell completion for televsion
+    eval "$(tv init zsh)"
   '';
   fileManager = "yazi";
 in
