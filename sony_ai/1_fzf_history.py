@@ -10,7 +10,6 @@ except:
     print("pyfzf is not installed. Please install to enable fzf Ctrl-R search")
 
     exit()
-
 ipython = get_ipython()
 fzf = pyfzf.FzfPrompt()
 
