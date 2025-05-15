@@ -164,60 +164,9 @@
       "wheel"
       "docker"
     ]; # group "wheel" -> sudo access
-    packages = with pkgs; [
-      firefox
-      tree
-      vim
-      git
-    ];
+    packages = [ ];
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
-
-  # Does this work?
-  # This was meant to fix
-  systemd.services.suspend-hyprland = {
-    description = "Suspend hyprland";
-    before = [
-      "systemd-suspend.service"
-      "systemd-hibernate.service"
-      "nvidia-suspend.service"
-      "nvidia-hibernate.service"
-    ];
-    wantedBy = [
-      "systemd-suspend.service"
-      "systemd-hibernate.service"
-    ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "killall -STOP Hyprland";
-    };
-  };
-
-  systemd.services.resume-hyprland = {
-    description = "Resume hyprland";
-    after = [
-      "systemd-suspend.service"
-      "systemd-hibernate.service"
-      "nvidia-resume.service"
-    ];
-    wantedBy = [
-      "systemd-suspend.service"
-      "systemd-hibernate.service"
-    ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "killall -CONT Hyprland";
-    };
-  };
-
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
