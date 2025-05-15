@@ -189,6 +189,8 @@
     gotop
 
     nvidia-docker
+
+    bluetui
   ];
 
   # Let Home Manager install and manage itself.
