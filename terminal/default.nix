@@ -18,7 +18,23 @@
     # Telescope inspired fzf for shell
     television = {
       enable = true;
-      enableZshIntegration = true;
+      # enableZshIntegration = true;  # Not working
+      channels = {
+        my_custom = {
+          cable_channel = [
+            {
+              name = "dart";
+              source_command = "dart search --username-substrings daniel.hernandez";
+              preview_command = "dart run get --config {0}";
+            }
+            {
+              name = "nixpkgs";
+              source_command = "nix-search-tv print";
+              preview_command = "nix-search-tv preview {}";
+            }
+          ];
+        };
+      };
       settings = {
         ui = {
           use_nerd_font_icons = true;
