@@ -9,6 +9,8 @@
 
     zoomStable.url = "github:nixos/nixpkgs?rev=ba60e197b7dd7dd88b498bce0cc712952ccdbaf1";
 
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
@@ -91,7 +93,9 @@
           modules = [
             # ./fcitx5
             home-manager.nixosModules.default # Otherwise home-manager isn't imported
+            inputs.nixos-hardware.nixosModules.omen-16-n0005ne
             ./hardwares/fell_omen.nix
+
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/gestures.nix
             ./non_home_manager_config/ollama.nix
@@ -145,6 +149,7 @@
                   television = inputs.television.packages.${prev.system}.default;
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;
+                  inherit (inputs.hyprtasking.packages.${prev.system}) hyprtasking;
                   inherit (inputs.hyprland.packages.${prev.system})
                     hyprland
                     xdg-desktop-portal-hyprland
@@ -183,6 +188,7 @@
             {
               # Inlining an attribute set
               nix.registry = {
+                nixos.flake = inputs.nixpkgs;
                 unstable.flake = inputs.unstable;
               };
             }
