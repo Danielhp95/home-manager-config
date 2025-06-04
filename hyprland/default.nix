@@ -1,11 +1,9 @@
 {
   pkgs,
-  inputs,
   lib,
   ...
 }:
 let
-  cursor-theme-name = "Bibata-Modern-Amber";
   # use OCR and copy to clipboard
   ocrScript =
     let
@@ -24,6 +22,7 @@ let
     '';
 in
 {
+  imports = [ ./theming.nix ];
   programs.hyprlock = {
     enable = true;
     extraConfig = builtins.readFile ./hyprlock.conf;
@@ -96,42 +95,13 @@ in
     name = cursor-theme-name;
     size = 20;
   };
+
   home.sessionVariables = {
 
     # TODO: this was introduced in November 2024, can we remove this at some point?
     # To surpress error: GSK-message Error 71 (Protocol error) dispatching to Wayland display.
     QT_QPA_PLATFORMTHEME = "gtk4";
     GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
-    # TODO(1) Commenting scenario, not working
-    # POLKIT_AUTH_AGENT =
-    #   "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
-  };
-
-  gtk = {
-    enable = true;
-    gtk4.extraConfig = {
-      # TODO: This still places things under [Settings] and we want this to be placed under [AdwStyleManager]. How do we do it?
-      AdwStyleManager = "color-scheme=ADW_COLOR_SCHEME_PREFER_DARK";
-    };
-    gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
-    theme = {
-      package = pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
-      name = "WhiteSur-Dark-orange";
-    };
-
-    iconTheme = {
-      package = pkgs.morewaita-icon-theme;
-      name = "MoreWaita";
-    };
-
-    font = {
-      name = "Fira Code";
-      size = 11;
-    };
-  };
-  dconf.settings = {
-    "org/gnome/desktop/interface".cursor-theme = cursor-theme-name;
-    "org/gnome/desktop/interface".color-scheme = "prefer-dark";
   };
 
   # Battery notifications
@@ -139,15 +109,19 @@ in
     # TODO: This is not working
     enable = true;
     extraArgs = [
-      "-c 10 -w 30 -f 97"
-      "-C 'Running out of Stormlight!'"
-      "-W 'Draining Stormlight at an alarming rate'"
-      "-F 'Stormlight reserves maxed'"
-      "-e" # Cause notifications to expire
-      "-p -P 'Charging Stormlight'"
-      "-u -U 'Discharging Stormlight'"
-      "-i" # Ignore missing battery notifications, for desktops
-      "-I 🔋" # Icon
+      "-d 5"
+      "-c 10"
+      "-w 30"
+      "-f 97"
+      "-D ${pkgs.systemd}/bin/systemctl suspend"  # Suspend at danger level
+      # "-C" "Running out of Stormlight"
+      # "-W" "Draining Stormlight at an alarming rate"
+      # "-F" "Stormlight reserves full"
+      # "-e" # Cause notifications to expire
+      # "-p -P Charging Stormlight"
+      # "-U Discharging Stormlight"
+      # "-i" # Ignore missing battery notifications, for desktops
+      # "-I 🔋" # Icon
     ];
   };
 }
