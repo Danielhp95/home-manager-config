@@ -11,6 +11,10 @@
     command = "i3status-rs"
   '';
   home.file.".config/i3status-rust/config.toml".text = ''
+
+[icons]
+icons = "emoji"
+
 [theme]
 theme = "slick"
 
