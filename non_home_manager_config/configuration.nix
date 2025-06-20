@@ -76,6 +76,7 @@
       enableWaylandEnvs = true;
       sessions = {
         hyprland.enable = true;
+        niri.enable = true;
         sway.enable = true;
         zsh.enable = true; # Doesn't work!
       };
