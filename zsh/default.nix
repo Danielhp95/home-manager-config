@@ -89,6 +89,7 @@ in
       ls = "eza -lahF --git";
       # TODO: Check if this prints the last branch from which the current branch forked
       git-parent = "git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'";
+      nixos-switch = "sudo -s eval $(fd 'system-' /nix/var/nix/profiles/ | tv --preview 'nvd diff /nix/var/nix/profiles/system {0}')/bin/switch-to-configuration switch";
     };
     plugins = [
       {
