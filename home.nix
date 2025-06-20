@@ -45,6 +45,7 @@
     ./flameshot
 
     ./writing.nix
+    ./default_applications.nix
   ];
 
   khome.desktop.swww = {
@@ -61,37 +62,37 @@
     config = {
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true;  # Don't close mpv when video is done
+      "Ctrl+r" = "cycle-values video-rotate 0 90 180 270";
     };
   };
 
-
   # Why do I have this
-  home.file = {
-    ".nv/nvidia-application-profiles-rc".text = ''
-      {
-          "rules": [
-              {
-                  "pattern": {
-                      "feature": "dso",
-                      "matches": "libGL.so.1"
-                  },
-                  "profile": "openGL_fix"
-              }
-          ],
-          "profiles": [
-              {
-                  "name": "openGL_fix",
-                  "settings": [
-                      {
-                          "key": "GLThreadedOptimizations",
-                          "value": false
-                      }
-                  ]
-              }
-          ]
-      }
-    '';
-  };
+  # home.file = {
+  #   ".nv/nvidia-application-profiles-rc".text = ''
+  #     {
+  #         "rules": [
+  #             {
+  #                 "pattern": {
+  #                     "feature": "dso",
+  #                     "matches": "libGL.so.1"
+  #                 },
+  #                 "profile": "openGL_fix"
+  #             }
+  #         ],
+  #         "profiles": [
+  #             {
+  #                 "name": "openGL_fix",
+  #                 "settings": [
+  #                     {
+  #                         "key": "GLThreadedOptimizations",
+  #                         "value": false
+  #                     }
+  #                 ]
+  #             }
+  #         ]
+  #     }
+  #   '';
+  # };
 
   home.packages = with pkgs; [
     ### Browsers
@@ -143,13 +144,15 @@
     # video
     vlc
     mpv
+
     # music
-    unstableWithUnfree.spotify
-    unstableWithUnfree.grayjay
+    spotify
+    grayjay
+
 
     # Images
     imv  # Lightweight
-    gthumb # Looking many images
+    gthumb # Viewer for multiple images
 
     ### debugging utils
     lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
@@ -165,32 +168,32 @@
 
     translate-shell
 
-    xfce.thunar
-
     inputs.danvim.packages.x86_64-linux.nvimStable
 
     # Weather app
     mousam
+    gnome-weather
+
+    gnome-calendar
+    gparted
+    decibels  # audio playing with nice weave form graphics
+
+    nautilus
+    nautilus-open-any-terminal
+    lingot  # Instrument tuner
 
     # Best youtube downloader
     yt-dlp
 
-    # obsidian
-
-    # Audio recording
-    asak
-
-    gparted
     bottom
 
     # nix cli helper, useful for switching etc
     nh
-
-    gotop
+    nixos-rebuild-ng  # Python re-implementation of `nixos-rebuild` command
 
     nvidia-docker
 
-    bluetui
+    bluetui  # Bluetooth tui
   ];
 
   # Let Home Manager install and manage itself.
