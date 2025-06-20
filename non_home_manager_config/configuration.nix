@@ -108,25 +108,41 @@
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
   # For manual timezones
-  time.timeZone = "America/New_York";
+  # time.timeZone = "America/New_York";
+  time.timeZone = "Europe/Paris";
 
-  # Select internationalisation properties.
-  # TODO(dani): what is this
-  # console = lib.mkForce {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  #   useXkbConfig = true; # use xkbOptions in tty.
-  # };
+  # From https://wiki.nixos.org/wiki/Locales
+  i18n = {
+      defaultLocale = "en_US.UTF-8";
+      supportedLocales = [
+        "C.UTF-8/UTF-8"  # What is this
+        "en_US.UTF-8/UTF-8"
+        "en_GB.UTF-8/UTF-8"
+        "es_ES.UTF-8/UTF-8"
+      ];
+      extraLocaleSettings = {
+        LC_ADDRESS = "en_US.UTF-8";
+        LC_IDENTIFICATION = "en_US.UTF-8";
+        LC_MEASUREMENT = "es_ES.UTF-8";
+        LC_MONETARY = "en_US.UTF-8";
+        LC_NAME = "en_US.UTF-8";
+        LC_NUMERIC = "en_US.UTF-8";
+        LC_PAPER = "en_US.UTF-8";
+        LC_TELEPHONE = "en_US.UTF-8";
+        LC_TIME = "en_GB.UTF-8";
+      };
+  };
 
-  # Enable the GNOME Desktop Environment.
+  # Enable / Disable the GNOME Desktop Environment.
+  services.desktopManager.gnome.enable = true;
+  services.displayManager.gdm.enable = true;
+
   services.xserver = {
     # Enable the X11 windowing system.
     enable = true;
     excludePackages = [ pkgs.xterm ];
     # TODO: remove these two, as gnome leaves breadcrumbs of programs around!
     # Figure out how to get these features without gnome
-    desktopManager.gnome.enable = true;
-    displayManager.gdm.enable = true;
 
     desktopManager.runXdgAutostartIfNone = true;
     desktopManager.session = [
