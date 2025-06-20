@@ -15,28 +15,33 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
-  boot.loader.systemd-boot.configurationLimit = 5;  # Empirically tested so that we don't run out of space in '/boot'
-  boot.initrd.availableKernelModules = [
-    "nvme"
-    "xhci_pci"
-    "usbhid"
-    "usb_storage"
-    "sd_mod"
-    "rtsx_pci_sdmmc"
-  ];
-  boot.initrd.kernelModules = [
-    "dm-snapshot"
-    "amdgpu"
-  ];
-  boot.kernelModules = [ "kvm-amd" ];
-  # This line is needed to fix suspend/wakeup issues in Hyprland
-  # https://wiki.hyprland.org/Nvidia/#fixing-suspendwakeup-issues
-  boot.kernelParams = [
-    "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # To prevent nvidia from crashing on suspend. DOES NOT WORK when other monitors are connected
-    "nvidia.NVreg_EnableS0ixPowerManagement=0" # From https://github.com/NVIDIA/open-gpu-kernel-modules/issues/472
-    "nvidia-drm.modeset=1" # Needed for `gamescope`
-  ];
-  boot.extraModulePackages = [ ];
+  # For theming
+  programs.dconf.enable = true;
+
+  boot = {
+    loader.systemd-boot.configurationLimit = 10; # Empirically tested so that we don't run out of space in '/boot'
+    initrd.availableKernelModules = [
+      "nvme"
+      "xhci_pci"
+      "usbhid"
+      "usb_storage"
+      "sd_mod"
+      "rtsx_pci_sdmmc"
+    ];
+    initrd.kernelModules = [
+      "dm-snapshot"
+      "amdgpu"
+    ];
+    kernelPackages = pkgs.linuxPackages_xanmod_latest; # Use latest kernel packages
+    kernelModules = [ "kvm-amd" ];
+    # This line is needed to fix suspend/wakeup issues in Hyprland
+    # https://wiki.hyprland.org/Nvidia/#fixing-suspendwakeup-issues
+    kernelParams = [
+      "nvidia.NVreg_PreserveVideoMemoryAllocations=1" # To prevent nvidia from crashing on suspend. DOES NOT WORK when other monitors are connected
+      "nvidia.NVreg_EnableS0ixPowerManagement=0" # From https://github.com/NVIDIA/open-gpu-kernel-modules/issues/472
+      "nvidia-drm.modeset=1" # Needed for `gamescope`
+    ];
+  };
 
   services = {
     xserver.videoDrivers = [
@@ -44,6 +49,7 @@
       "amdgpu"
     ]; # Have nvidia and amd GPUs active
     logind.lidSwitchDocked = "suspend"; # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
+    logind.lidSwitch = "suspend"; # Specifies what to do when the laptop lid is closed.
   };
 
   hardware = {
