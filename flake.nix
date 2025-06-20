@@ -4,7 +4,7 @@
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    stable.url = "github:nixos/nixpkgs/nixos-24.11";
+    stable.url = "github:nixos/nixpkgs/nixos-25.05";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     zoomStable.url = "github:nixos/nixpkgs?rev=ba60e197b7dd7dd88b498bce0cc712952ccdbaf1";
@@ -15,7 +15,7 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.49
-      rev = "da3583fd5e86044d02af9fcfac84724e02545336";
+      rev = "0ac3bef72473c619194514d01ca55f2ed8c617c3";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -28,10 +28,6 @@
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
-    hyprland-plugins = {
-      url = "github:hyprwm/hyprland-plugins";
-      inputs.hyprland.follows = "hyprland";
-    };
     # https://github.com/raybbian/hyprtasking
     hyprtasking = {
       url = "github:raybbian/hyprtasking";
@@ -41,13 +37,17 @@
       url = "github:alexpasmantier/television";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    yazi = {
+      url = "github:sxyazi/yazi";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # For a specific release
     # home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     danvim.url = "path:/home/daniel/nix_config/danvim";
-    # danvim.inputs.nixpkgs.follows = "nixpkgs";
+    danvim.inputs.nixpkgs.follows = "nixpkgs";
 
     haumea.url = "github:nix-community/haumea";
     haumea.inputs.nixpkgs.follows = "nixpkgs";
@@ -147,6 +147,7 @@
                   ];
 
                   television = inputs.television.packages.${prev.system}.default;
+                  inherit (inputs.yazi.packages.${prev.system}) yazi;
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;
                   inherit (inputs.hyprtasking.packages.${prev.system}) hyprtasking;
@@ -178,7 +179,7 @@
       # Standalone home-manager configuration entrypoint
       # Available through 'home-manager --flake .#your-username@your-hostname'
       homeConfigurations = {
-        "dani@fell-omen" = home-manager.lib.homeManagerConfiguration {
+        "daniel@fell-omen" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
           extraSpecialArgs = {
             inherit inputs;
