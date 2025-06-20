@@ -87,23 +87,6 @@ in
     wf-recorder
   ];
 
-  # Cursor. This might not be necessary with hyprland 0.41
-  home.pointerCursor = {
-    gtk.enable = true;
-    # x11.enable = true;
-    package = pkgs.bibata-cursors;
-    name = cursor-theme-name;
-    size = 20;
-  };
-
-  home.sessionVariables = {
-
-    # TODO: this was introduced in November 2024, can we remove this at some point?
-    # To surpress error: GSK-message Error 71 (Protocol error) dispatching to Wayland display.
-    QT_QPA_PLATFORMTHEME = "gtk4";
-    GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
-  };
-
   # Battery notifications
   services.batsignal = {
     # TODO: This is not working
