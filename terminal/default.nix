@@ -7,14 +7,14 @@
     nix-search-tv
     rsync
   ];
-  home.sessionVariables.TERM = "wezterm";
+  home.sessionVariables.TERM = "kitty";
   programs = {
     # Terminal, ofc
-    wezterm = {
-      enable = true;
-      extraConfig = builtins.readFile ./wezterm.lua;
-      enableZshIntegration = true;
-    };
+    # wezterm = {
+    #   enable = true;
+    #   extraConfig = builtins.readFile ./wezterm.lua;
+    #   enableZshIntegration = true;
+    # };
     # Telescope inspired fzf for shell
     television = {
       enable = true;
