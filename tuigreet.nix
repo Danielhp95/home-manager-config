@@ -168,7 +168,6 @@ in
         environment = {
           XDG_SESSION_DESKTOP = "sway";
           XDG_CURRENT_DESKTOP = "sway";
-          # To get fcitx to work. DOES NOT WORK
           GLFW_IM_MODULE = "fcitx";
           GTK_IM_MODULE = "fcitx";
           INPUT_METHOD = "fcitx";
