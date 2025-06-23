@@ -184,7 +184,22 @@ in
           XDG_SESSION_DESKTOP = "Hyprland";
           XDG_SESSION_TYPE = "wayland";
           XDG_CURRENT_DESKTOP = "Hyprland";
-          # To get fcitx to work. DOES NOT WORK
+          GLFW_IM_MODULE = "fcitx";
+          GTK_IM_MODULE = "fcitx";
+          INPUT_METHOD = "fcitx";
+          XMODIFIERS = "@im=fcitx";
+          IMSETTINGS_MODULE = "fcitx";
+          QT_IM_MODULE = "fcitx";
+          SDL_IM_MODULE = "fcitx";
+          GSK_RENDERER = "gl";  # For GSK applications
+        };
+      };
+      niri = {
+        enable = mkDefault false;
+        command = "niri";
+        environment = {
+          LIBVA_DRIVER_NAME = "nvidia";
+          __GLX_VENDOR_LIBRARY_NAME = "nvidia";
           GLFW_IM_MODULE = "fcitx";
           GTK_IM_MODULE = "fcitx";
           INPUT_METHOD = "fcitx";

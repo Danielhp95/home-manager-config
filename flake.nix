@@ -19,7 +19,6 @@
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
@@ -28,11 +27,13 @@
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
-    # https://github.com/raybbian/hyprtasking
     hyprtasking = {
       url = "github:raybbian/hyprtasking";
       inputs.hyprland.follows = "hyprland";
     };
+		###
+
+		### tools
     television = {
       url = "github:alexpasmantier/television";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -41,16 +42,15 @@
       url = "github:sxyazi/yazi";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    danvim.url = "path:/home/daniel/nix_config/danvim";
+    danvim.inputs.nixpkgs.follows = "nixpkgs";
+		### tools
+
     # For a specific release
     # home-manager.url = "github:nix-community/home-manager/release-24.11";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-    danvim.url = "path:/home/daniel/nix_config/danvim";
-    danvim.inputs.nixpkgs.follows = "nixpkgs";
-
-    haumea.url = "github:nix-community/haumea";
-    haumea.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs =
     {
@@ -95,6 +95,7 @@
             home-manager.nixosModules.default # Otherwise home-manager isn't imported
             inputs.nixos-hardware.nixosModules.omen-16-n0005ne
             ./hardwares/fell_omen.nix
+            ./niri/default.nix
 
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/gestures.nix

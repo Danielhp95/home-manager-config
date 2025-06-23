@@ -158,7 +158,7 @@
     lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
     pciutils # For `lspci` command.
     lshw # list hardware. For instance `lshw -c display` shows all graphics cards
-    nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
+    # nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
     powertop # Analyze power consumption for intel based processors
 
     ### Audio

@@ -24,7 +24,6 @@
   programs.steam.enable = true;
   programs.steam.gamescopeSession.enable = true;
 
-
   # Authenticator manager
   security.polkit.enable = true;
 
@@ -68,7 +67,10 @@
   };
   hardware.nvidia-container-toolkit.enable = true;
 
-  xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
+  xdg.portal.configPackages = with pkgs; [
+    xdg-desktop-portal-hyprland
+    xdg-desktop-portal-gnome  # For niri
+  ];
 
   khome = {
     tuigreet = {
@@ -91,10 +93,10 @@
     noto-fonts-cjk-serif
     babelstone-han # unicode font with loooads of Han characters
 
-    font-awesome  # NOTE do I need this?
+    font-awesome # NOTE do I need this?
     material-symbols
 
-    fira-code-symbols  # NOTE might not be needed with nord-fonts.firacode
+    fira-code-symbols # NOTE might not be needed with nord-fonts.firacode
     nerd-fonts.fira-code
     nerd-fonts.iosevka
   ];
@@ -114,24 +116,24 @@
 
   # From https://wiki.nixos.org/wiki/Locales
   i18n = {
-      defaultLocale = "en_US.UTF-8";
-      supportedLocales = [
-        "C.UTF-8/UTF-8"  # What is this
-        "en_US.UTF-8/UTF-8"
-        "en_GB.UTF-8/UTF-8"
-        "es_ES.UTF-8/UTF-8"
-      ];
-      extraLocaleSettings = {
-        LC_ADDRESS = "en_US.UTF-8";
-        LC_IDENTIFICATION = "en_US.UTF-8";
-        LC_MEASUREMENT = "es_ES.UTF-8";
-        LC_MONETARY = "en_US.UTF-8";
-        LC_NAME = "en_US.UTF-8";
-        LC_NUMERIC = "en_US.UTF-8";
-        LC_PAPER = "en_US.UTF-8";
-        LC_TELEPHONE = "en_US.UTF-8";
-        LC_TIME = "en_GB.UTF-8";
-      };
+    defaultLocale = "en_US.UTF-8";
+    supportedLocales = [
+      "C.UTF-8/UTF-8" # What is this
+      "en_US.UTF-8/UTF-8"
+      "en_GB.UTF-8/UTF-8"
+      "es_ES.UTF-8/UTF-8"
+    ];
+    extraLocaleSettings = {
+      LC_ADDRESS = "en_US.UTF-8";
+      LC_IDENTIFICATION = "en_US.UTF-8";
+      LC_MEASUREMENT = "es_ES.UTF-8";
+      LC_MONETARY = "en_US.UTF-8";
+      LC_NAME = "en_US.UTF-8";
+      LC_NUMERIC = "en_US.UTF-8";
+      LC_PAPER = "en_US.UTF-8";
+      LC_TELEPHONE = "en_US.UTF-8";
+      LC_TIME = "en_GB.UTF-8";
+    };
   };
 
   # Enable / Disable the GNOME Desktop Environment.
