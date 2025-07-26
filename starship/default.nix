@@ -19,7 +19,13 @@ in
     enable = true;
     settings = {
       add_newline = false;
-      format = "$all";
+      format = "$all\$fill\$time\$line_break\$character";
+      time = {
+        disabled = false;
+        format = "[$time]($style)";
+        # time_format = "<%Y-%m-%d> 📅 <%T> ⏰";
+        time_format = "<%T> ⏰";
+      };
       username = {
         show_always = true;
         format = theme.username;
@@ -30,6 +36,13 @@ in
       };
       directory = {
         format = theme.directory;
+      };
+      status = {
+        symbol = "🎆{($status)}@";
+        # success_symbol = "✔️ ";
+        format = "[➜](bold) [$symbol$common_meaning$signal_name$maybe_int]($style) ";
+        map_symbol = true;
+        disabled = false;
       };
     };
   };

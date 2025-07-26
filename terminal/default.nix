@@ -9,16 +9,27 @@
   ];
   home.sessionVariables.TERM = "kitty";
   programs = {
-    # Terminal, ofc
-    # wezterm = {
-    #   enable = true;
-    #   extraConfig = builtins.readFile ./wezterm.lua;
-    #   enableZshIntegration = true;
-    # };
-    # Telescope inspired fzf for shell
+    wezterm = {
+      enable = true;
+      extraConfig = builtins.readFile ./wezterm.lua;
+      enableZshIntegration = true;
+    };
+    pay-respects = {
+      enable = true;
+      enableZshIntegration = true;
+    };
+    btop = {
+    	package = pkgs.btop-cuda;
+    	enable = true;
+    	settings = {
+				shown_boxes = "cpu proc";
+				vim_keys = true;
+				rounded_corners = true;
+			};
+		};
     television = {
       enable = true;
-      # enableZshIntegration = true;  # Not working
+      enableZshIntegration = true;
       channels = {
         my_custom = {
           cable_channel = [
@@ -34,19 +45,6 @@
             }
           ];
         };
-      };
-      settings = {
-        ui = {
-          use_nerd_font_icons = true;
-          show_preview_panel = false;
-          input_bar_position = "bottom";
-        };
-        # shell_ingetratrion = {
-        #   channel_triggers = {
-        #     files = [ "nvim" "cat" "less" "head" "tail" "vim" "nano" "bat" "cp" "mv" "rm" "touch" "chmod" "chown" "ln" "tar" "zip" "unzip" "gzip" "gunzip" "xz"];
-        #     git-repos = ["git clone"];
-        #   };
-        # };
       };
     };
     # Really nice shell history
