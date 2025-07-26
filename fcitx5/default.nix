@@ -7,6 +7,11 @@
     type = "fcitx5";
     fcitx5 = {
       waylandFrontend = true;
+      settings = {
+        globalOptions = {
+          "Hotkey/TriggerKeys"."0" = "Alt+space";  # Trigger fcitx5
+        };
+      };
       addons = with pkgs; [
           rime-data
           fcitx5-gtk  # Does help with making fcitx5 work in QT apps
