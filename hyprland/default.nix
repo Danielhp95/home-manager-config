@@ -32,7 +32,7 @@ in
     extraConfig = builtins.readFile ./hyprland.conf;
     plugins = with pkgs; [
       hy3
-      hyprtasking
+      # hyprtasking
     ];
     settings = {
       exec-once = [
