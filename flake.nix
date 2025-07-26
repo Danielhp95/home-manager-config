@@ -11,19 +11,28 @@
 
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
+    niri = {
+      type = "git";
+      url = "https://github.com/sodiboo/niri-flake";
+      rev = "21a26d38e174b418a2649db76505041b8b4eccbb";
+      submodules = true;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    ### hyprlad
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.49
-      rev = "0ac3bef72473c619194514d01ca55f2ed8c617c3";
+      # version 0.50
+      rev = "31cc7f3b87d1d9670b66e73e3720da2e2da49acd";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.49
-      rev = "567dc9dd20e15d95a56a81c516a70dba30bc2c9c";
+      # 0.50
+      rev = "b813c13a10cc39c60eada511f6e6a7947d941aab";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -31,9 +40,9 @@
       url = "github:raybbian/hyprtasking";
       inputs.hyprland.follows = "hyprland";
     };
-		###
+    ###
 
-		### tools
+    ### tools
     television = {
       url = "github:alexpasmantier/television";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -45,7 +54,7 @@
 
     danvim.url = "path:/home/daniel/nix_config/danvim";
     danvim.inputs.nixpkgs.follows = "nixpkgs";
-		### tools
+    ### tools
 
     # For a specific release
     # home-manager.url = "github:nix-community/home-manager/release-24.11";
