@@ -145,20 +145,23 @@
     vlc
     mpv
 
-    # music
+    # music / video
     spotify
     grayjay
-
 
     # Images
     imv  # Lightweight
     gthumb # Viewer for multiple images
 
+    # Best youtube downloader
+    yt-dlp
+    ###
+
     ### debugging utils
     lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
     pciutils # For `lspci` command.
     lshw # list hardware. For instance `lshw -c display` shows all graphics cards
-    # nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
+    nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
     powertop # Analyze power consumption for intel based processors
 
     ### Audio
@@ -168,6 +171,7 @@
 
     translate-shell
 
+    # THE nvim
     inputs.danvim.packages.x86_64-linux.nvimStable
 
     # Weather app
@@ -176,21 +180,16 @@
 
     gnome-calendar
     gparted
-    decibels  # audio playing with nice weave form graphics
+    decibels  # audio playing with nice waveform graphics
 
     nautilus
     nautilus-open-any-terminal
     lingot  # Instrument tuner
 
-    # Best youtube downloader
-    yt-dlp
-
     bottom
 
     # nix cli helper, useful for switching etc
     nh
-    nixos-rebuild-ng  # Python re-implementation of `nixos-rebuild` command
-
     nvidia-docker
 
     bluetui  # Bluetooth tui
