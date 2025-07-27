@@ -7,7 +7,7 @@
     stable.url = "github:nixos/nixpkgs/nixos-25.05";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    zoomStable.url = "github:nixos/nixpkgs?rev=ba60e197b7dd7dd88b498bce0cc712952ccdbaf1";
+    grayjayStable.url = "github:nixos/nixpkgs?rev=fc02ee70efb805d3b2865908a13ddd4474557ecf";
 
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
@@ -76,7 +76,7 @@
         };
         inherit system;
       };
-      zoomStableWithUnfree = import inputs.zoomStable {
+      grayjayStable = import inputs.grayjayStable {
         config = {
           allowUnfree = true;
         };
@@ -130,7 +130,7 @@
                     inputs
                     stableWithUnfree
                     unstableWithUnfree
-                    zoomStableWithUnfree
+                    grayjayStable
                     ;
                 };
                 users.daniel =

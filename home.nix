@@ -1,7 +1,7 @@
 {
   inputs,
   stableWithUnfree,
-  zoomStableWithUnfree,
+  grayjayStable,
   unstableWithUnfree,
   pkgs,
   ...
@@ -111,7 +111,6 @@
     telegram-desktop
     element-desktop
 
-    # zoomStableWithUnfree.zoom-us
     zoom-us
 
     openconnect
@@ -147,7 +146,7 @@
 
     # music / video
     spotify
-    grayjay
+    grayjayStable.grayjay
 
     # Images
     imv  # Lightweight
