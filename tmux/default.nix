@@ -3,7 +3,7 @@
 # TODO:
 # - images on yazi don't show up (they do in wezterm!)
 {
-  home.packages = [ pkgs.gitmux ];
+  home.packages = with pkgs; [ serpl ];
   programs.tmux = {
     enable = true;
     keyMode = "vi";
