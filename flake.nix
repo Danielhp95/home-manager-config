@@ -3,9 +3,16 @@
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs?rev=4d6ec9108313f0564cabb57a865d805e482af507";
     stable.url = "github:nixos/nixpkgs/nixos-25.05";
-    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    unstable.url = "github:nixos/nixpkgs?rev=4d6ec9108313f0564cabb57a865d805e482af507";
+
+    # For a specific release
+    # home-manager.url = "github:nix-community/home-manager/release-24.11";
+    home-manager.url = "github:nix-community/home-manager?rev=2d55a52963d8a3856792e2fd6604f307176026bc";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     grayjayStable.url = "github:nixos/nixpkgs?rev=fc02ee70efb805d3b2865908a13ddd4474557ecf";
 
@@ -23,16 +30,16 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.50
-      rev = "31cc7f3b87d1d9670b66e73e3720da2e2da49acd";
+      # version 0.51
+      rev = "b619f39555b96c70330f4a933dedde7e897e0d81";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.50
-      rev = "b813c13a10cc39c60eada511f6e6a7947d941aab";
+      # 0.51
+      rev = "4c9b9bf72274fe2ce61c84e4d6223cf7d99a0654";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -55,11 +62,6 @@
     danvim.url = "path:/home/daniel/nix_config/danvim";
     danvim.inputs.nixpkgs.follows = "nixpkgs";
     ### tools
-
-    # For a specific release
-    # home-manager.url = "github:nix-community/home-manager/release-24.11";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs =
     {

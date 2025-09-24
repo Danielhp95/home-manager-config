@@ -1,3 +1,13 @@
+# I honestly never use history sububstitutions
+# (!! for last command, !$ for last argument, !n for nth last command, !<string> for command that matches string)
+bindkey ' ' magic-space  # magic-space` expands valid history substitutions or inserts a space if none were found
+
+# Edit the current command line in $EDITOR with control+alt+e
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^[^E' edit-command-line
+
+
 # Make sure that the terminal is in application mode when zle is active, since
 # only then values from $terminfo are valid
 if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
@@ -9,19 +19,6 @@ if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
   }
   zle -N zle-line-init
   zle -N zle-line-finish
-fi
-
-# [PageUp] - Up a line of history
-if [[ -n "${terminfo[kpp]}" ]]; then
-  bindkey -M emacs "${terminfo[kpp]}" up-line-or-history
-  bindkey -M viins "${terminfo[kpp]}" up-line-or-history
-  bindkey -M vicmd "${terminfo[kpp]}" up-line-or-history
-fi
-# [PageDown] - Down a line of history
-if [[ -n "${terminfo[knp]}" ]]; then
-  bindkey -M emacs "${terminfo[knp]}" down-line-or-history
-  bindkey -M viins "${terminfo[knp]}" down-line-or-history
-  bindkey -M vicmd "${terminfo[knp]}" down-line-or-history
 fi
 
 # Start typing + [Up-Arrow] - fuzzy find history forward
@@ -72,11 +69,6 @@ else
   bindkey -M viins "^[3;5~" delete-char
   bindkey -M vicmd "^[3;5~" delete-char
 fi
-
-# [Ctrl-Delete] - delete whole forward-word
-bindkey -M emacs '^[[3;5~' kill-word
-bindkey -M viins '^[[3;5~' kill-word
-bindkey -M vicmd '^[[3;5~' kill-word
 
 # [Ctrl-RightArrow] - move forward one word
 bindkey -M emacs '^[[1;5C' forward-word

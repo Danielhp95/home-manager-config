@@ -42,13 +42,6 @@ in
           autoload -U select-word-style
           select-word-style bash
 
-          bindkey ' ' magic-space          # [Space] - don't do history expansion
-
-          # Edit the current command line in $EDITOR
-          autoload -U edit-command-line
-          zle -N edit-command-line
-          bindkey '\C-e\C-e' edit-command-line
-
           # Base16 Shell colors!
           BASE16_SHELL="$HOME/.config/base16-shell/"
           [ -n "$PS1" ] && \
