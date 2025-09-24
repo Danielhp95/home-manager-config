@@ -1,4 +1,11 @@
-{pkgs, lib, home, inputs, stableWithUnfree, ...}:
+{
+  pkgs,
+  lib,
+  home,
+  inputs,
+  stableWithUnfree,
+  ...
+}:
 let
   pathToSaiRepo = "$HOME/Projects/sai";
 in
@@ -9,13 +16,13 @@ in
     amazon-ecr-credential-helper
 
     docker
+    cudaPackages.cudatoolkit
 
-    # stableWithUnfree.steam-run
-    steam-run  # To run proton via Steam's FHS
+    steam-run # To run proton via Steam's FHS
 
     (writeShellScriptBin "sie-vpn-connect" ''
-    sudo ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
-  '')
+      sudo ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
+    '')
   ];
 
   # Ensure that credentials are stored in `.netrc`
@@ -26,9 +33,9 @@ in
   home.file.".config/sai_docker/config.yaml".source = ./sai_docker_config.yaml;
 
   # environment.etc."fixuid/config.yml".source = ./fixuid_config.yml
-  home.activation.cloneRepo = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.cloneRepo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ ! -d "${pathToSaiRepo}" ]; then
       git clone https://github.com/user/repo.git ${pathToSaiRepo}
     fi
- '';
+  '';
 }
