@@ -19,32 +19,12 @@
       enableZshIntegration = true;
     };
     btop = {
-    	package = pkgs.btop-cuda;
-    	enable = true;
-    	settings = {
-				shown_boxes = "cpu proc";
-				vim_keys = true;
-				rounded_corners = true;
-			};
-		};
-    television = {
+      package = pkgs.btop-cuda;
       enable = true;
-      enableZshIntegration = true;
-      channels = {
-        my_custom = {
-          cable_channel = [
-            {
-              name = "dart";
-              source_command = "dart search --username-substrings daniel.hernandez";
-              preview_command = "dart run get --config {0}";
-            }
-            {
-              name = "nixpkgs";
-              source_command = "nix-search-tv print";
-              preview_command = "nix-search-tv preview {}";
-            }
-          ];
-        };
+      settings = {
+        shown_boxes = "cpu proc";
+        vim_keys = true;
+        rounded_corners = true;
       };
     };
     # Really nice shell history
