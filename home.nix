@@ -33,6 +33,7 @@
     ./menu_launchers
 
     ./terminal
+    ./terminal/television.nix
     ./kitty
 
     ./hyprland
@@ -185,7 +186,11 @@
     nautilus-open-any-terminal
     lingot  # Instrument tuner
 
+    # Process management
     bottom
+
+    # File sharing (Like AirDrop)
+    localsend
 
     # nix cli helper, useful for switching etc
     nh

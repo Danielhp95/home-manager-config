@@ -85,6 +85,9 @@ in
     # This should really live on its own package
     slurp
     wf-recorder
+
+    wl-kbptr  # Mouse control with keyboard in wayland
+    wlrctl  # Command line utility for miscellaneous wlroots Wayland extensions
   ];
 
   # Battery notifications
