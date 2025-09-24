@@ -83,6 +83,7 @@ let
       (sortSessionList cfg.defaultSession sessions)
     )
   );
+  greetdTheme = "--theme border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red";
 in
 {
   options.khome.tuigreet = {
@@ -117,7 +118,7 @@ in
     };
 
     greetdBin = mkOption {
-      default = "${pkgs.greetd.tuigreet}/bin/tuigreet";
+      default = "${pkgs.tuigreet}/bin/tuigreet";
       description = mdDoc "greetd binary to run";
       type = types.str;
     };
@@ -230,7 +231,7 @@ in
       enable = true;
       settings = {
         default_session = {
-          command = "${cfg.greetdBin} --sessions ${sessionDirs cfg.sessions} ${concatStringsSep " " cfg.extraArgs}";
+          command = "${cfg.greetdBin} --sessions ${sessionDirs cfg.sessions} ${concatStringsSep " " cfg.extraArgs} ${greetdTheme}";
           user = cfg.greeterUser;
         };
         terminal.vt = 1;
