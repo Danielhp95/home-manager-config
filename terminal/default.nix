@@ -14,10 +14,6 @@
       extraConfig = builtins.readFile ./wezterm.lua;
       enableZshIntegration = true;
     };
-    pay-respects = {
-      enable = true;
-      enableZshIntegration = true;
-    };
     btop = {
       package = pkgs.btop-cuda;
       enable = true;

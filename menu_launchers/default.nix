@@ -3,7 +3,6 @@
 {
   programs.rofi = {
     enable = true;
-    package = pkgs.rofi-wayland;
     font = "Fira Code 30";
     extraConfig = {
       width = 100;

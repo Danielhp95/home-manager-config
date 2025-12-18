@@ -80,6 +80,7 @@
         hyprland.enable = true;
         niri.enable = true;
         sway.enable = true;
+        gdm.enable = true;
         zsh.enable = true; # Doesn't work!
       };
     };
@@ -88,9 +89,6 @@
   fonts.packages = with pkgs; [
     # Noto: means no tofu. Tofu is the colloquial term for errors in rendering chinese characters
     noto-fonts
-    noto-fonts-extra
-    noto-fonts-cjk-sans
-    noto-fonts-cjk-serif
     babelstone-han # unicode font with loooads of Han characters
 
     font-awesome # NOTE do I need this?

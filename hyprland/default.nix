@@ -78,7 +78,7 @@ in
     wl-clipboard # wayland clipboard utilities
     wl-mirror # For mirroring screens
 
-    lxde.lxsession # Authenticator
+    lxsession # Authenticator
 
     ocrScript
 

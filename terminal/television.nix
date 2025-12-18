@@ -7,10 +7,10 @@
     requirements = ["dart"]
 
     [source]
-    command = ["dart search --username-substrings daniel.hernandez"]
+    command = ["dart run filter | sed -e '1d' -e '$d' | sed -e 's/\"//g' -e 's/,$//'"]
 
     [preview]
-    command = "dart run get --config {0}"
+    command = "dart run get --tags {}"
   '';
   programs = {
     television = {

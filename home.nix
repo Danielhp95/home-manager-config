@@ -4,13 +4,12 @@
   grayjayStable,
   unstableWithUnfree,
   pkgs,
+  lib,
   ...
 }:
 
 {
 
-  home.username = "daniel";
-  home.homeDirectory = "/home/daniel";
   home.stateVersion = "24.05";
 
   home.sessionVariables = {
@@ -56,44 +55,14 @@
     ]; # TODO: create an env variable based on this and use that everywhere else
   };
 
-  programs.firefox.enable = true;
   services.clipmenu.enable = true;
   programs.mpv = {
     enable = true;
     config = {
       ytdl-format = "bestvideo+bestaudio";
-      keep-open = true;  # Don't close mpv when video is done
-      "Ctrl+r" = "cycle-values video-rotate 0 90 180 270";
+      keep-open = true; # Don't close mpv when video is done
     };
   };
-
-  # Why do I have this
-  # home.file = {
-  #   ".nv/nvidia-application-profiles-rc".text = ''
-  #     {
-  #         "rules": [
-  #             {
-  #                 "pattern": {
-  #                     "feature": "dso",
-  #                     "matches": "libGL.so.1"
-  #                 },
-  #                 "profile": "openGL_fix"
-  #             }
-  #         ],
-  #         "profiles": [
-  #             {
-  #                 "name": "openGL_fix",
-  #                 "settings": [
-  #                     {
-  #                         "key": "GLThreadedOptimizations",
-  #                         "value": false
-  #                     }
-  #                 ]
-  #             }
-  #         ]
-  #     }
-  #   '';
-  # };
 
   home.packages = with pkgs; [
     ### Browsers
@@ -119,10 +88,10 @@
     ### Photography
     # ansel
 
-    ### Videography
-    # (writeScriptBin "davinci" ''
-    #   QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
-    # '')
+    ## Videography
+    (writeScriptBin "davinci" ''
+      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+    '')
 
     ### Basic utilities
     ripgrep # better grep
@@ -147,10 +116,10 @@
 
     # music / video
     spotify
-    grayjayStable.grayjay
+    grayjay
 
     # Images
-    imv  # Lightweight
+    imv # Lightweight
     gthumb # Viewer for multiple images
 
     # Best youtube downloader
@@ -180,11 +149,11 @@
 
     gnome-calendar
     gparted
-    decibels  # audio playing with nice waveform graphics
+    decibels # audio playing with nice waveform graphics
 
     nautilus
     nautilus-open-any-terminal
-    lingot  # Instrument tuner
+    lingot # Instrument tuner
 
     # Process management
     bottom
@@ -196,7 +165,11 @@
     nh
     nvidia-docker
 
-    bluetui  # Bluetooth tui
+    bluetui # Bluetooth tui
+
+    gnome-session
+
+    unstableWithUnfree.firefox
   ];
 
   # Let Home Manager install and manage itself.

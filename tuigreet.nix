@@ -195,6 +195,24 @@ in
           GSK_RENDERER = "gl";  # For GSK applications
         };
       };
+      gdm = {
+        enable = mkDefault false;
+        command = "gnome-session";
+        environment = {
+          XDG_SESSION_DESKTOP = "Hyprland";
+          XDG_SESSION_TYPE = "wayland";
+          XDG_CURRENT_DESKTOP = "Hyprland";
+          GLFW_IM_MODULE = "fcitx";
+          GTK_IM_MODULE = "fcitx";
+          INPUT_METHOD = "fcitx";
+          XMODIFIERS = "@im=fcitx";
+          IMSETTINGS_MODULE = "fcitx";
+          QT_IM_MODULE = "fcitx";
+          SDL_IM_MODULE = "fcitx";
+          GSK_RENDERER = "gl";  # For GSK applications
+        };
+
+      };
       niri = {
         enable = mkDefault false;
         command = "niri";
@@ -223,6 +241,7 @@ in
 
     systemd.services.display-manager.enable = false;
     services.xserver.displayManager.lightdm.enable = lib.mkForce false;
+    services.displayManager.gdm.enable = true;
     services.displayManager.execCmd = "";
 
     security.pam.services.greetd.enableGnomeKeyring = cfg.enableGnomeKeyring;

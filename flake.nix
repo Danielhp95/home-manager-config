@@ -3,15 +3,13 @@
 
   inputs = {
     # Nixpkgs
-    # nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs.url = "github:nixos/nixpkgs?rev=4d6ec9108313f0564cabb57a865d805e482af507";
-    stable.url = "github:nixos/nixpkgs/nixos-25.05";
-    # unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    unstable.url = "github:nixos/nixpkgs?rev=4d6ec9108313f0564cabb57a865d805e482af507";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    stable.url = "github:nixos/nixpkgs/nixos-25.11";
+    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # For a specific release
-    # home-manager.url = "github:nix-community/home-manager/release-24.11";
-    home-manager.url = "github:nix-community/home-manager?rev=2d55a52963d8a3856792e2fd6604f307176026bc";
+    # home-manager.url = "github:nix-community/home-manager/release-25.11";
+    home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     grayjayStable.url = "github:nixos/nixpkgs?rev=fc02ee70efb805d3b2865908a13ddd4474557ecf";
@@ -21,7 +19,7 @@
     niri = {
       type = "git";
       url = "https://github.com/sodiboo/niri-flake";
-      rev = "21a26d38e174b418a2649db76505041b8b4eccbb";
+      rev = "77a07f5d3b775fba67550c38122ebb8d3ee3ba1c";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -31,7 +29,9 @@
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
       # version 0.51
-      rev = "b619f39555b96c70330f4a933dedde7e897e0d81";
+      rev = "71a1216abcc7031776630a6d88f105605c4dc1c9";
+      # version 0.52
+      # rev = "69db0bcae640410b6c587cb0ffd0c89bc8166ff0";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -40,14 +40,11 @@
       url = "https://github.com/outfoxxed/hy3/";
       # 0.51
       rev = "4c9b9bf72274fe2ce61c84e4d6223cf7d99a0654";
+      # 0.52
+      # rev = "33fb5c01f192c0b1b6c1ab29f4a38e4bdfc85427";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
-    hyprtasking = {
-      url = "github:raybbian/hyprtasking";
-      inputs.hyprland.follows = "hyprland";
-    };
-    ###
 
     ### tools
     television = {
@@ -60,7 +57,7 @@
     };
 
     danvim.url = "path:/home/daniel/nix_config/danvim";
-    danvim.inputs.nixpkgs.follows = "nixpkgs";
+    # danvim.inputs.nixpkgs.follows = "nixpkgs";
     ### tools
   };
   outputs =
@@ -109,7 +106,6 @@
             ./niri/default.nix
 
             ./non_home_manager_config/configuration.nix
-            ./non_home_manager_config/gestures.nix
             ./non_home_manager_config/ollama.nix
             ./non_home_manager_config/network.nix
             ./pipewire.nix
@@ -119,6 +115,9 @@
             # Specialisations
             ./specialisations/roadwarrior.nix
             {
+              users.users.dev = {
+                isNormalUser=true;
+              };
               home-manager = {
                 backupFileExtension = "backup";
                 useGlobalPkgs = true;
@@ -136,6 +135,11 @@
                     ;
                 };
                 users.daniel =
+                  { config, ... }:
+                  {
+                    imports = [ ./home.nix ];
+                  };
+                users.dev =
                   { config, ... }:
                   {
                     imports = [ ./home.nix ];
@@ -162,7 +166,7 @@
                   inherit (inputs.yazi.packages.${prev.system}) yazi;
                   # Hyprland specifics
                   inherit (inputs.hy3.packages.${prev.system}) hy3;
-                  inherit (inputs.hyprtasking.packages.${prev.system}) hyprtasking;
+                  # inherit (inputs.hyprtasking.packages.${prev.system}) hyprtasking;
                   inherit (inputs.hyprland.packages.${prev.system})
                     hyprland
                     xdg-desktop-portal-hyprland

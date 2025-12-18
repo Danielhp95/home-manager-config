@@ -15,7 +15,7 @@ in
   home.packages = with pkgs; [
     fd # find alternative
     bat # cat alternative
-    du-dust # du alternative. Pretty crazy
+    dust # du alternative. Pretty crazy
     duf # like du, but for free space
   ];
 

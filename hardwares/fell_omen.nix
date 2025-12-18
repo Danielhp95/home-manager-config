@@ -57,28 +57,23 @@
     graphics = {
       enable = true;
       extraPackages = with pkgs; [
-        vaapiVdpau
+        libva-vdpau-driver
+        # vaapiVdpau  old version, stuck cuz of manager rev=2d55a52963d8a3856792e2fd6604f307176026bc
         libvdpau-va-gl
         intel-compute-runtime
       ];
       enable32Bit = true;
     };
     nvidia = {
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
-      # package =
-      #   let
-      #     rcu_patch = pkgs.fetchpatch {
-      #       url = "https://github.com/gentoo/gentoo/raw/c64caf53/x11-drivers/nvidia-drivers/files/nvidia-drivers-470.223.02-gpl-pfn_valid.patch";
-      #       hash = "sha256-eZiQQp2S/asE7MfGvfe6dA/kdCvek9SYa/FFGp24dVg=";
-      #     };
-      #   in
-      #   config.boot.kernelPackages.nvidiaPackages.mkDriver {
-      #     version = "555.42.02";
-      #     sha256_64bit = "sha256-k7cI3ZDlKp4mT46jMkLaIrc2YUx1lh1wj/J4SVSHWyk=";
-      #     sha256_aarch64 = "sha256-rtDxQjClJ+gyrCLvdZlT56YyHQ4sbaL+d5tL4L4VfkA=";
-      #     openSha256 = "sha256-rtDxQjClJ+gyrCLvdZlT56YyHQ4sbaL+d5tL4L4VfkA=";
-      #     settingsSha256 = "sha256-rtDxQjClJ+gyrCLvdZlT56YyHQ4sbaL+d5tL4L4VfkA=";
-      #     persistencedSha256 = "sha256-3ae31/egyMKpqtGEqgtikWcwMwfcqMv2K4MVFa70Bqs=";
+      # package = config.boot.kernelPackages.nvidiaPackages.stable;
+      # Check values in ~/playground/nix/nixpkgs/pkgs/os-specific/linux/nvidia-x11/default.nix
+      # package = config.boot.kernelPackages.nvidiaPackages.mkDriver {
+      #   version = "580.95.05";
+      #   sha256_64bit = "sha256-hJ7w746EK5gGss3p8RwTA9VPGpp2lGfk5dlhsv4Rgqc=";
+      #   sha256_aarch64 = "sha256-zLRCbpiik2fGDa+d80wqV3ZV1U1b4lRjzNQJsLLlICk=";
+      #   openSha256 = "sha256-RFwDGQOi9jVngVONCOB5m/IYKZIeGEle7h0+0yGnBEI=";
+      #   settingsSha256 = "sha256-F2wmUEaRrpR1Vz0TQSwVK4Fv13f3J9NJLtBe4UP2f14=";
+      #   persistencedSha256 = "sha256-QCwxXQfG/Pa7jSTBB0xD3lsIofcerAWWAHKvWjWGQtg=";
       # };
       modesetting.enable = true;
       powerManagement = {

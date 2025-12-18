@@ -22,28 +22,19 @@ ADDITIONAL_MOUNTS:
   - "/etc/profiles/per-user/daniel/bin/starship:/etc/profiles/per-user/daniel/bin/starship"
   - "/home/daniel/.config/starship.toml:/home/dev/.config/starship.toml"
   # zsh
+  - "/home/dev/.zshenv:/home/dev/.zshenv"
+  - "/home/dev/.config/zsh:/home/dev/.config/zsh"
   - "/home/daniel/.zsh_history:/home/dev/.zsh_history"
-  - "/home/daniel/.zshenv:/home/dev/.zshenv"
-  - "/home/daniel/.config/zsh:/home/dev/.config/zsh/"
-
   # WE DO NOT WANT THIS FILE, because this sets env variables to point to user "daniel" (host), and that's bad
   # - "/etc/profiles/per-user/daniel/etc/profile.d/hm-session-vars.sh:/etc/profiles/per-user/daniel/etc/profile.d/hm-session-vars.sh"
 
   # Television
   - "/home/daniel/.config/television:/home/dev/.config/television"
-  # Silk
-  # - "/home/daniel/Projects/silk/inso_builds/:/inso_builds/"
-  # - "/home/daniel/Projects/silk/proton_7.0.4:/proton7_build"
-
-  # Mirror Pond
-  # - "/home/daniel/Projects/MirrorPond:/home/dev/MirrorPond"
 
   # Sparkle
   - "/home/daniel/Projects/sparkle:/home/dev/sparkle"
-
   # Nvim
   - "/home/daniel/.local/share/nvim/:/home/daniel/.local/share/nvim/"
-  # Firefox profiles DOES NOT WORK
-  - "/home/daniel/.mozilla/firefox/:/home/dev/.mozilla/firefox/"
+ 
   # IPython: DOES NOT WORK
-  - "/home/daniel/nix_config/sony_ai/1_fzf_history.py:/home/dev/.ipython/profile_default/startup/1_fzf_history.py"
+  # - "/home/daniel/nix_config/sony_ai/1_fzf_history.py:/home/dev/.ipython/profile_default/startup/1_fzf_history.py"
