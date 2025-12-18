@@ -7,6 +7,7 @@
     package = pkgs.ollama-cuda;
     loadModels = [
       "phi4:14b"  # Good model that fits in 8GB of VRAM
+      "qwen3-coder:30b"
     ];
   };
 
