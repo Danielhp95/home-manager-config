@@ -23,6 +23,12 @@ in
     (writeShellScriptBin "sie-vpn-connect" ''
       sudo ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
     '')
+
+
+    # gtc demo
+    goose-cli
+    libxcb-cursor
+
   ];
 
   # Ensure that credentials are stored in `.netrc`
@@ -33,9 +39,9 @@ in
   home.file.".config/sai_docker/config.yaml".source = ./sai_docker_config.yaml;
 
   # environment.etc."fixuid/config.yml".source = ./fixuid_config.yml
-  home.activation.cloneRepo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [ ! -d "${pathToSaiRepo}" ]; then
-      git clone https://github.com/user/repo.git ${pathToSaiRepo}
-    fi
-  '';
+  # home.activation.cloneRepo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  #   if [ ! -d "${pathToSaiRepo}" ]; then
+  #     ${pkgs.git}/bin/git clone https://github.com/user/repo.git ${pathToSaiRepo}
+  #   fi
+  # '';
 }

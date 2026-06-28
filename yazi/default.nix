@@ -7,14 +7,16 @@ let
   officialPlugins = pkgs.fetchFromGitHub {
     owner = "yazi-rs";
     repo = "plugins";
-    rev = "c648526665f6fb466150e9ee41aa0431b87cb041";
-    sha256 = "sha256-auGNSn6tX72go7kYaH16hxRng+iZWw99dKTTUN91Cow=";
+    rev = "88990a6cf1d31afd9d8db1a0d74bf37ef50d6786";
+    sha256 = "sha256-0K6qGgbGt8N6HgGNEmn2FDLar6hCPiPBbvOsrTjSubM=";
   };
 in
 {
 
   programs.yazi = {
     enable = true;
+    # Pin legacy wrapper name (26.05 changed the default from "yy" to "y").
+    shellWrapperName = "yy";
     # initLua = ./init.lua;
     enableZshIntegration = true;
     plugins = {
@@ -27,18 +29,39 @@ in
         owner = "DreamMaoMao";
         repo = "fg.yazi";
         rev = "46a5c16f62f415f691319f984b9548249b0edc96";
-        hash = "sha256-/GApLVDpGcH2drwSNluEvoQdnjgE8AsPHdci/9eg7Lg=";
+        hash = "sha256-B6Feg8icshHQYv04Ee/Bo9PPaiDPRyt1HwpirI/yXj8=";
+      };
+      tv = pkgs.fetchFromGitHub {
+        owner = "cap153";
+        repo = "tv.yazi";
+        rev = "b6b1f123bec3e0db59bc2e4dce929e116a5465a3";
+        hash = "sha256-VIs8BYbXbXVSrlKpmYAhuahIiWR4PWzjKZvOm+J6TBk=";
       };
       # TODO: add https://github.com/KKV9/compress.yazi
     };
-    keymap.manager.prepend_keymap = lib.flatten [
+    keymap.mgr.prepend_keymap = lib.flatten [
       {
+        desc = "Show Git file changes";
         on = [
           "g"
           "c"
         ];
         run = "plugin vcs-files";
-        desc = "Show Git file changes";
+      }
+      {
+        desc = "Jump to a file via television";
+        on = [ "<c-f>" ];
+        run = "plugin tv";
+      }
+      {
+        desc = "Jump to a directory via television";
+        on = [ "<c-d>" ];
+        run = "plugin tv dirs";
+      }
+      {
+        desc = "Open files using neovim and jump to where the string is located";
+        on = [ "<C-g>" ];
+        run = "plugin tv text";
       }
       {
         desc = "Mount tools";
@@ -75,22 +98,6 @@ in
         run = "plugin toggle-pane max-preview";
       }
       {
-        desc = "Fuzzy search file contents";
-        on = [
-          "f"
-          "g"
-        ];
-        run = "plugin fg rg";
-      }
-      {
-        desc = "Fuzzy search file names";
-        on = [
-          "f"
-          "f"
-        ];
-        run = "plugin fg fd";
-      }
-      {
         on = "+";
         run = "plugin zoom 1";
         desc = "Zoom in hovered file";
@@ -117,6 +124,6 @@ in
   home.packages = with pkgs; [
     exiftool # Tool to read, write and edit EXIF meta information
     simple-mtpfs
-    imagemagick  # For resizing preview images
+    imagemagick # For resizing preview images
   ];
 }
