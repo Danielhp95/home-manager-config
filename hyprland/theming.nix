@@ -1,10 +1,13 @@
-{pkgs, ...}:
+{pkgs, config, ...}:
 let
   cursor-theme-name = "Bibata-Modern-Amber";
 in
 {
   gtk = {
     enable = true;
+    # Pin legacy default: 26.05 changed gtk4.theme default from config.gtk.theme to null,
+    # which would stop theming GTK4 apps with WhiteSur.
+    gtk4.theme = config.gtk.theme;
     gtk4.extraConfig = {
       # TODO: This still places things under [Settings] and we want this to be placed under [AdwStyleManager]. How do we do it?
       AdwStyleManager = "color-scheme=ADW_COLOR_SCHEME_PREFER_DARK";
