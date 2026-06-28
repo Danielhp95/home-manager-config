@@ -2,7 +2,7 @@
 {
   # Hopefully this will work at some point
   services.flameshot = {
-    enable = true;
+    enable = false;
     package = (pkgs.flameshot.override { enableWlrSupport = true;});
     settings.General = {
       showStartupLaunchMessage = false;
