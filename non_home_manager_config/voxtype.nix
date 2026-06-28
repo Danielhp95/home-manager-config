@@ -1,24 +1,10 @@
 { config, pkgs, ... }:
 
 {
+  # https://sourcegraph.com/r/github.com/knoopx/nix/-/blob/modules/home-manager/programs/voxtype.nix?L32-34
   ########################################
   # Packages
   ########################################
-  environment.systemPackages = with pkgs; [
-    voxtype
-    whisper-cpp
-    wl-clipboard
-    libnotify
-    sox
-  ];
-
-  ########################################
-  # Voxtype configuration (env vars)
-  ########################################
-  environment.variables = {
-    VOXTYPE_BACKEND = "whisper.cpp";
-    VOXTYPE_MODEL = "base.en"; # change to small.en if you want better accuracy
-  };
 
   ########################################
   # uinput (required for typing on Wayland)
