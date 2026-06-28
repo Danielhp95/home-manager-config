@@ -2,6 +2,9 @@
 {
   # To enable pipewire we need to remove pulseaudio
   # hardware.pulseaudio.enable = lib.mkForce false;
+  environment.defaultPackages = with pkgs; [
+    pulseaudio
+  ];
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
