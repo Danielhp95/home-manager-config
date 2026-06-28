@@ -7,21 +7,20 @@
     type = "fcitx5";
     fcitx5 = {
       waylandFrontend = true;
+      addons = with pkgs; [
+        rime-data
+        fcitx5-gtk # Does help with making fcitx5 work in QT apps
+        fcitx5-rime
+        qt6Packages.fcitx5-configtool
+        qt6Packages.fcitx5-chinese-addons
+        fcitx5-rose-pine
+        (import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib; })
+      ];
       settings = {
         globalOptions = {
           "Hotkey/TriggerKeys"."0" = "Alt+space"; # Trigger fcitx5
         };
       };
-      addons = with pkgs; [
-        rime-data
-        fcitx5-gtk # Does help with making fcitx5 work in QT apps
-        fcitx5-rime
-        # kdePackages.fcitx5-configtool
-        # kdePackages.fcitx5-chinese-addons
-        qt6Packages.fcitx5-configtool
-        qt6Packages.fcitx5-chinese-addons
-        fcitx5-rose-pine
-      ];
     };
   };
   fonts = {
