@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
 let
   keyBindings = builtins.readFile ./key-bindings.zsh;
   fzf-tab-conf = ''
@@ -14,9 +14,12 @@ in
 {
   home.packages = with pkgs; [
     fd # find alternative
-    bat # cat alternative
     dust # du alternative. Pretty crazy
     duf # like du, but for free space
+
+    # `, <cmd>` runs any program from nixpkgs without installing it, resolving
+    # the command through the nix-index database configured below.
+    comma
   ];
 
   # If command is not present, it tells us where it can be found
@@ -25,37 +28,49 @@ in
     enableZshIntegration = true;
   };
 
+  # `bat`: cat clone with syntax highlighting + git integration.
+  # theme = "base16" renders through the terminal's live ANSI palette, so bat
+  # tracks the active Ember / base16-shell colors automatically.
+  programs.bat = {
+    enable = true;
+    config = {
+      theme = "base16";
+      style = "numbers,changes,header";
+    };
+  };
+
   programs.zsh = {
     enable = true;
     sessionVariables = {
       # Default from https://github.com/zsh-users/zsh-autosuggestions
-      EDITOR = "nvimStable";
+      EDITOR = "nvim";
       ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE = "fg=8";
       ZSH_AUTOSUGGEST_STRATEGY = "(history completion)";
       ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE = 20; # Only suggest up to 20 characters
     };
-    initContent =
-      keyBindings
-      + fzf-tab-conf
-      + ''
-          # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
-          autoload -U select-word-style
-          select-word-style bash
+    initContent = lib.mkMerge [
+      (keyBindings
+        + fzf-tab-conf
+        + ''
+            # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
+            autoload -U select-word-style
+            select-word-style bash
 
-          # Base16 Shell colors!
-          BASE16_SHELL="$HOME/.config/base16-shell/"
-          [ -n "$PS1" ] && \
-              [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-                  source "$BASE16_SHELL/profile_helper.sh"
+            # Base16 Shell colors!
+            BASE16_SHELL="$HOME/.config/base16-shell/"
+            [ -n "$PS1" ] && \
+                [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
+                    source "$BASE16_SHELL/profile_helper.sh"
 
-          export FZF_DEFAULT_OPTS="
-          --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
-          "
+            export FZF_DEFAULT_OPTS="
+            --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
+            "
 
-        	# ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
-      '';
+          	# ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
+        '')
+    ];
     autocd = true;
-    dotDir = ".config/zsh";
+    dotDir = "${config.xdg.configHome}/zsh";
     defaultKeymap = "emacs"; # this is the default, don't get scared
     autosuggestion.enable = true;
     enableCompletion = true;
@@ -68,20 +83,29 @@ in
     };
     # TODO: integrate better (this silently ignores if config.themes.extraShellAliases is not set)
     shellAliases = {
-      # TODO: hack for danvim
-      nvim = "nvimStable";
       fm = fileManager;
       # nix
       whichnix = "readlink -f `which ";
       # git
-      wow = "git status";
+      wow = "git status --untracked-files=no";
       # eza
       ls = "eza -lahF --git";
       # TODO: Check if this prints the last branch from which the current branch forked
       git-parent = "git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'";
-      nixos-switch = "sudo -s eval $(fd 'system-' /nix/var/nix/profiles/ | tv --show-preview 'nvd diff /nix/var/nix/profiles/system {0}')/bin/switch-to-configuration switch";
+
     };
     plugins = [
+      {
+        # Must be first: carapace registers compdef handlers that fzf-tab then
+        # wraps. Loading after fzf-tab means fzf-tab never sees the carapace
+        # completions. initContent (where enableZshIntegration would write) loads
+        # after plugins, so we synthesize a plugin entry here instead.
+        name = "carapace-init";
+        src = pkgs.writeTextDir "carapace-init.plugin.zsh" ''
+          source <(${pkgs.carapace}/bin/carapace _carapace zsh)
+        '';
+        file = "carapace-init.plugin.zsh";
+      }
       {
         name = "fzf-tab";
         src = "${pkgs.zsh-fzf-tab}/share/fzf-tab";
