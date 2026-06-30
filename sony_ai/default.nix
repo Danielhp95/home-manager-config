@@ -21,9 +21,11 @@ in
     steam-run # To run proton via Steam's FHS
 
     (writeShellScriptBin "sie-vpn-connect" ''
-      sudo ${pkgs.openconnect}/bin/openconnect --protocol nc la.vpn.sie.sony.com/cgei
+      sudo -E ${pkgs.gpclient}/bin/gpclient connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER portal.global-vpn.sie.sony.com --hip
     '')
-
+    (writeShellScriptBin "sie-vpn-disconnect" ''
+      sudo -E ${pkgs.gpclient}/bin/gpclient disconnect
+    '')
 
     # gtc demo
     goose-cli
