@@ -28,4 +28,10 @@
     "nvidia_drm"
     "nvidia_modeset"
   ];
+
+  # The nvidia kernel modules are blacklisted above, so don't tell X/wayland
+  # to load the nvidia driver (the main config sets videoDrivers = ["nvidia"]),
+  # and drop the container toolkit that asserts on that driver being present.
+  services.xserver.videoDrivers = lib.mkForce [ "modesetting" ];
+  hardware.nvidia-container-toolkit.enable = lib.mkForce false;
 }
