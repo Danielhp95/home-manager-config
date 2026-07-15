@@ -1,4 +1,4 @@
-{ pkgs, unstableWithUnfree, ... }:
+{ pkgs, ... }:
 let
   falcon = pkgs.callPackage ./falcon-default.nix { };
   startPreScript = pkgs.writeScript "init-falcon" ''
