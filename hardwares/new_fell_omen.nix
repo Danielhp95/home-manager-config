@@ -13,14 +13,21 @@
 
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
+    ../bluetooth.nix
   ];
 
   # For theming
   programs.dconf.enable = true;
 
-  boot.loader = {
+  boot = {
+    kernelModules = [ "kvm-intel" ];
+    # The internal panel is driven by the Intel iGPU (card1-eDP-1 / i915), but on this
+    # hardware the kernel registered the EC/WMI device `nvidia_wmi_ec_backlight` as the
+    # backlight instead of `intel_backlight`. brightnessctl then writes to that EC device,
+    # which doesn't drive the panel's PWM, so brightness never visibly changes. Forcing
+    # native backlight makes i915 register `intel_backlight` (the device that works).
+    kernelParams = [ "acpi_backlight=native" ];
     initrd = {
-      kernelModules = [ ];
       availableKernelModules = [
         "xhci_pci"
         "thunderbolt"
@@ -32,32 +39,34 @@
       luks.devices."luks-cf747f68-c4d1-4a72-8589-e8ca20b09a74".device =
         "/dev/disk/by-uuid/cf747f68-c4d1-4a72-8589-e8ca20b09a74";
     };
-    kernelModules = [ "kvm-intel" ];
-    extraModulePackages = [ ];
+    loader = {
+      # systemd-boot = {
+      #   configurationLimit = 10; # Empirically tested so that we don't run out of space in '/boot'
+      #   enable = true;  # NOTE: hopefully this doesn't fuck things up
+      # };
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot";
+      };
+      grub = {
+        enable = true;
+        device = "nodev";
+        efiSupport = true;
+        useOSProber = false;
+        configurationLimit = 10;
 
-    loader.systemd-boot.configurationLimit = 10; # Empirically tested so that we don't run out of space in '/boot'
-    efi = {
-      canTouchEfiVariables = true;
-      efiSysMountPoint = "/boot";
-    };
-    grub = {
-      enable = true;
-      device = "nodev";
-      efiSupport = true;
-      useOSProber = false;
-      configurationLimit = 10;
+        extraEntries = ''
+          # Chainload to Ubuntu's GRUB config file
+          menuentry "Ubuntu" {
+            insmod part_gpt
+            insmod fat
+            insmod search_fs_uuid
+            search --set=root --fs-uuid 701C-C166
+            chainloader /EFI/ubuntu/grubx64.efi.backup
+          }
 
-      extraEntries = ''
-        # Chainload to Ubuntu's GRUB config file
-        menuentry "Ubuntu" {
-          insmod part_gpt
-          insmod fat
-          insmod search_fs_uuid
-          search --set=root --fs-uuid 701C-C166
-          chainloader /EFI/ubuntu/grubx64.efi.backup
-        }
-
-      '';
+        '';
+      };
     };
   };
 
@@ -86,10 +95,10 @@
   services = {
     xserver.videoDrivers = [
       "nvidia"
-      "amdgpu"
-    ]; # Have nvidia and amd GPUs active
-    logind.lidSwitchDocked = "suspend"; # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
-    logind.lidSwitch = "suspend"; # Specifies what to do when the laptop lid is closed.
+      # "intelgpu"  # No longer working!
+    ]; # Have nvidia and intel GPUs active
+    logind.settings.Login.HandleLidSwitchDocked = "suspend"; # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
+    logind.settings.Login.HandleLidSwitch = "suspend"; # Specifies what to do when the laptop lid is closed.
   };
 
   hardware = {
@@ -98,19 +107,21 @@
       enable = true;
       extraPackages = with pkgs; [
         libva-vdpau-driver
-        # vaapiVdpau  old version, stuck cuz of manager rev=2d55a52963d8a3856792e2fd6604f307176026bc
         libvdpau-va-gl
         intel-compute-runtime
+        # intel-media-driver # iHD VA-API driver: video decode on the iGPU instead of the dGPU
       ];
       enable32Bit = true;
     };
     nvidia = {
+      # package = config.boot.kernelPackages.nvidiaPackages.stable;
+      package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
       modesetting.enable = true;
       powerManagement = {
         enable = true;
         finegrained = true;
       };
-      open = false; # Don't use open source drivers (use closed-source)
+      open = true; # Use the open-source NVIDIA kernel modules (required on newer GPUs)
       nvidiaSettings = true;
       prime = {
         offload = {
@@ -118,16 +129,14 @@
           enableOffloadCmd = true;
         };
         # Make sure to use the correct Bus ID values for your system!
-        # This can be retrieved by running: sudo lshw -c display
-        # amdgpuBusId = "PCI:06:00:0";
-        # nvidiaBusId = "PCI:01:00:0";
+        # This can be retrieved by running: sudo pciutils -c lspci -d ::03xx
+        # Follow instructions in https://wiki.nixos.org/wiki/NVIDIA
+        intelBusId = lib.mkForce "PCI:00:02:0";
+        nvidiaBusId = lib.mkForce "PCI:02:00:0";
       };
     };
 
     # Bluetooth
-    bluetooth = {
-      enable = true;
-    };
   };
 
   # Cache for CUDA things
