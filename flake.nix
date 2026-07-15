@@ -1,64 +1,64 @@
 {
-  description = "Sony AI developmenet setup home-manager flake";
+  description = "Personal system flake";
 
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    stable.url = "github:nixos/nixpkgs/nixos-26.05";
+    # Alias of nixpkgs kept for `pkgs.channels.unstable` / `nix run unstable#...`
+    unstable.follows = "nixpkgs";
 
-    # For a specific release
-    # home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-    grayjayStable.url = "github:nixos/nixpkgs?rev=fc02ee70efb805d3b2865908a13ddd4474557ecf";
-
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-
-    niri = {
-      type = "git";
-      url = "https://github.com/sodiboo/niri-flake";
-      rev = "77a07f5d3b775fba67550c38122ebb8d3ee3ba1c";
-      submodules = true;
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     ### hyprlad
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # version 0.51
-      rev = "71a1216abcc7031776630a6d88f105605c4dc1c9";
-      # version 0.52
-      # rev = "69db0bcae640410b6c587cb0ffd0c89bc8166ff0";
+      # v0.55.0 tag. Pinned because hyprland main regularly breaks hy3's
+      # compile; when bumping, keep in sync with what hy3 supports.
+      rev = "30983d6ff0ed5fc614daf3178ad311aa45f8d9e1";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.51
-      rev = "4c9b9bf72274fe2ce61c84e4d6223cf7d99a0654";
-      # 0.52
-      # rev = "33fb5c01f192c0b1b6c1ab29f4a38e4bdfc85427";
+      # 0.55.0
+      rev = "aeaf7669607952bbcf25ca33433966b6a1b4563d";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
 
-    ### tools
-    television = {
-      url = "github:alexpasmantier/television";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    yazi = {
-      url = "github:sxyazi/yazi";
+    noctalia = {
+      type = "git";
+      url = "https://github.com/noctalia-dev/noctalia";
+      submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    danvim.url = "path:/home/daniel/nix_config/danvim";
-    # danvim.inputs.nixpkgs.follows = "nixpkgs";
-    ### tools
+    hyprland-preview-share-picker = {
+      type = "git";
+      url = "https://github.com/WhySoBad/hyprland-preview-share-picker";
+      rev = "344394a8669fb82ff2744d2780327dd402ffb76a";
+      submodules = true;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    claude-code.url = "github:sadjow/claude-code-nix";
+    claude-code.inputs.nixpkgs.follows = "nixpkgs";
+
+    danvim.url = "path:/home/dani/nix_config/danvim";
+    danvim.inputs.nixpkgs.follows = "nixpkgs";
+
+    voxtype.url = "github:peteonrails/voxtype";
+    voxtype.inputs.nixpkgs.follows = "nixpkgs";
+
+    # CloudBrink BrinkAgent VPN packaging (kept out of git; pulled in as source).
+    brinkagentSrc = {
+      url = "path:/home/dani/Projects/brinkagent";
+      flake = false;
+    };
   };
   outputs =
     {
@@ -68,24 +68,37 @@
       ...
     }@inputs:
     let
-      system = "x86_64-linux";
-      stableWithUnfree = import stable {
-        config = {
-          allowUnfree = true;
-        };
-        inherit system;
-      };
-      grayjayStable = import inputs.grayjayStable {
-        config = {
-          allowUnfree = true;
-        };
-        inherit system;
-      };
-      unstableWithUnfree = import inputs.unstable {
-        config = {
-          allowUnfree = true;
-        };
-        inherit system;
+      # Shared between the NixOS-managed home-manager and the standalone entrypoint
+      overlays = with nixpkgs.lib; [
+        inputs.claude-code.overlays.default
+        (final: prev: {
+          # load in inputs and provide as `channels` attribute in `pkgs.channels`
+          channels = pipe inputs [
+            (filterAttrs (
+              name: _:
+              elem name [
+                "nixpkgs"
+                "unstable"
+              ]
+            ))
+            (mapAttrs (_: c: c.legacyPackages.${prev.stdenv.hostPlatform.system}))
+          ];
+
+          # Hyprland specifics
+          inherit (inputs.hy3.packages.${prev.stdenv.hostPlatform.system}) hy3;
+          inherit (inputs.hyprland.packages.${prev.stdenv.hostPlatform.system})
+            hyprland
+            xdg-desktop-portal-hyprland
+            ;
+        })
+        (import ./overlays.nix)
+      ];
+      hmSharedModules = [
+        inputs.noctalia.homeModules.default
+        ./hyprland/pyprland.nix
+      ];
+      hmExtraSpecialArgs = {
+        inherit inputs;
       };
     in
     {
@@ -93,51 +106,46 @@
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {
         fell-omen = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
           specialArgs = {
-            inherit inputs unstableWithUnfree;
+            inherit inputs;
           }; # Pass flake inputs to our config
           # > Our main nixos configuration file <
           modules = [
-            # ./fcitx5
             home-manager.nixosModules.default # Otherwise home-manager isn't imported
-            inputs.nixos-hardware.nixosModules.omen-16-n0005ne
-            ./hardwares/fell_omen.nix
-            ./niri/default.nix
+            ./hardwares/new_fell_omen.nix
 
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/ollama.nix
             ./non_home_manager_config/network.nix
+            ./non_home_manager_config/salt.nix
             ./pipewire.nix
 
-            # ./crowdstrike/falcon.nix
+            # CloudBrink BrinkAgent VPN (daemons + GUI). See /home/dani/Projects/brinkagent.
+            (inputs.brinkagentSrc + "/module.nix")
+            { services.brinkagent.enable = true; }
 
             # Specialisations
             ./specialisations/roadwarrior.nix
             {
               users.users.dev = {
-                isNormalUser=true;
+                isNormalUser = true;
               };
               home-manager = {
                 backupFileExtension = "backup";
+                # Something (likely Hyprland's lua config reload) re-copies
+                # hyprland.lua out of the store after each switch, leaving a stale
+                # .backup that would otherwise abort the next activation.
+                overwriteBackup = true;
                 useGlobalPkgs = true;
                 useUserPackages = true;
-                sharedModules = [
-                  ./swww/swww.nix
-                  ./hyprland/pyprland.nix
-                ];
-                extraSpecialArgs = {
-                  inherit
-                    inputs
-                    stableWithUnfree
-                    unstableWithUnfree
-                    grayjayStable
-                    ;
-                };
-                users.daniel =
+                sharedModules = hmSharedModules;
+                extraSpecialArgs = hmExtraSpecialArgs;
+                users.dani =
                   { config, ... }:
                   {
-                    imports = [ ./home.nix ];
+                    imports = [
+                      ./home.nix
+                    ];
                   };
                 users.dev =
                   { config, ... }:
@@ -148,39 +156,9 @@
             }
             # overlays
             {
-              nixpkgs.overlays = with nixpkgs.lib; [
-                (final: prev: {
-                  # load in inputs and provide as `channels` attribute in `pkgs.channels`
-                  channels = pipe inputs [
-                    (filterAttrs (
-                      name: _:
-                      elem name [
-                        "nixpkgs"
-                        "unstable"
-                      ]
-                    ))
-                    (mapAttrs (_: c: c.legacyPackages.${prev.system}))
-                  ];
-
-                  television = inputs.television.packages.${prev.system}.default;
-                  inherit (inputs.yazi.packages.${prev.system}) yazi;
-                  # Hyprland specifics
-                  inherit (inputs.hy3.packages.${prev.system}) hy3;
-                  # inherit (inputs.hyprtasking.packages.${prev.system}) hyprtasking;
-                  inherit (inputs.hyprland.packages.${prev.system})
-                    hyprland
-                    xdg-desktop-portal-hyprland
-                    hyprland-share-picker
-                    ;
-                })
-                (import ./overlays.nix)
-              ];
+              nixpkgs.overlays = overlays;
               nixpkgs.config.allowUnfree = true;
               nixpkgs.config.nvidia.acceptLicense = true;
-              nixpkgs.config.permittedInsecurePackages = [
-                "electron-25.9.0"
-                "zoom"
-              ];
               # allows running packages from `nix run unstable#ansel`
               # `nix run nixos#lsd` is very fast as it uses local cache
               nix.registry = {
@@ -195,15 +173,20 @@
       # Standalone home-manager configuration entrypoint
       # Available through 'home-manager --flake .#your-username@your-hostname'
       homeConfigurations = {
-        "daniel@fell-omen" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-          extraSpecialArgs = {
-            inherit inputs;
-          }; # Pass flake inputs to our config
-          modules = [
+        "dani@fell-omen" = home-manager.lib.homeManagerConfiguration {
+          # Same overlays/config as the NixOS-managed pkgs instance
+          pkgs = import nixpkgs {
+            system = "x86_64-linux";
+            config.allowUnfree = true;
+            inherit overlays;
+          };
+          extraSpecialArgs = hmExtraSpecialArgs;
+          modules = hmSharedModules ++ [
             ./home.nix
             {
-              # Inlining an attribute set
+              # Set automatically by the NixOS module, needed here in standalone mode
+              home.username = "dani";
+              home.homeDirectory = "/home/dani";
               nix.registry = {
                 nixos.flake = inputs.nixpkgs;
                 unstable.flake = inputs.unstable;
