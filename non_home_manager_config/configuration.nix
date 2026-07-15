@@ -14,7 +14,10 @@
   imports = [
     ../tuigreet.nix
     ../fcitx5
+    ./voxtype.nix
   ];
+
+  programs.ydotool.enable = true;
 
   # Move to gaming folder
   programs.gamescope = {
@@ -33,16 +36,71 @@
       "nix-command"
     ];
     optimise.automatic = true; # periodically run `nix store optimise`
-    gc = {
-      automatic = true;
-      randomizedDelaySec = "14m"; # What does this do?
-      options = "--delete-older-than 15d";
+    # Garbage collection is handled by `programs.nh.clean` below (the NixOS nh
+    # module asserts that nix.gc.automatic and nh.clean must not both be on).
+  };
+
+  # nh: ergonomic `nixos-rebuild` frontend. `nh os switch` builds with
+  # nix-output-monitor output and a generation diff; `nh clean` replaces nix.gc.
+  programs.nh = {
+    enable = true;
+    flake = "/home/dani/nix_config";
+    clean = {
+      enable = true;
+      extraArgs = "--keep-since 15d --keep 5";
     };
   };
 
   services.dbus.packages = [ pkgs.gcr ]; # Why do I want this?
 
-  services.power-profiles-daemon.enable = true;
+  # TLP replaces power-profiles-daemon (the two conflict; the NixOS module
+  # asserts they're not both enabled). TLP applies the *_ON_AC settings when
+  # plugged in and *_ON_BAT when on battery automatically on plug/unplug.
+  services.power-profiles-daemon.enable = false;
+  services.tlp = {
+    enable = true;
+    settings = {
+      # Plugged in: full performance
+      CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
+      PLATFORM_PROFILE_ON_AC = "performance";
+      CPU_BOOST_ON_AC = 1;
+
+      # On battery: low power
+      CPU_ENERGY_PERF_POLICY_ON_BAT = "power";
+      PLATFORM_PROFILE_ON_BAT = "low-power";
+      CPU_BOOST_ON_BAT = 0;
+      PCIE_ASPM_ON_BAT = "powersupersave";
+      RUNTIME_PM_ON_BAT = "auto";
+      USB_AUTOSUSPEND = 1;
+    };
+  };
+  # Intel thermal management: keeps the CPU in efficient thermal envelopes.
+  services.thermald.enable = true;
+
+  # Let the tlp-mode bar widget force/unforce battery mode without a password.
+  security.sudo.extraRules = [
+    {
+      users = [ "dani" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/tlp";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/tlp-stat";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
+  services.upower = {
+    enable = true;
+    percentageLow = 20;
+    percentageCritical = 10;
+    percentageAction = 5;
+    criticalPowerAction = "Hibernate";
+  };
 
   # To get PS5 controller working in proton
   services.udev.packages = [
@@ -57,29 +115,40 @@
   ];
 
   programs.dconf.enable = true;
+  programs.nix-ld.enable = true;
 
   # Enables docker
   # From https://nixos.wiki/wiki/Nvidia
   # Warning keeps telling me to:
   virtualisation.docker = {
-    daemon.settings.features.cdi = true;
     enable = true;
+    daemon.settings = {
+      features.cdi = true;
+      # Clean up on restart
+      live-restore = false; # Don't try to restore containers on restart
+    };
+    # Auto-prune old containers
+    autoPrune = {
+      enable = true;
+      dates = "weekly";
+      flags = [ "--all" ];
+    };
   };
   hardware.nvidia-container-toolkit.enable = true;
 
   xdg.portal.configPackages = with pkgs; [
     xdg-desktop-portal-hyprland
-    xdg-desktop-portal-gnome  # For niri
+    xdg-desktop-portal-gnome # For the GNOME session
   ];
 
   khome = {
     tuigreet = {
       enable = true;
       enableWaylandEnvs = true;
+      # Pre-select hyprland instead of the alphabetical first session (gdm)
+      defaultSession = "hyprland";
       sessions = {
         hyprland.enable = true;
-        niri.enable = true;
-        sway.enable = true;
         gdm.enable = true;
         zsh.enable = true; # Doesn't work!
       };
@@ -95,22 +164,17 @@
     material-symbols
 
     fira-code-symbols # NOTE might not be needed with nord-fonts.firacode
+    nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
     nerd-fonts.iosevka
+    nerd-fonts.symbols-only # full "Symbols Nerd Font Mono" — complete icon set, used as kitty fallback
   ];
-
-  # Use the systemd-boot EFI boot loader.
-  boot.loader = {
-    systemd-boot.enable = true;
-    efi.canTouchEfiVariables = true;
-    grub.configurationLimit = 42;
-  };
 
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
   # For manual timezones
-  time.timeZone = "America/New_York";
-  # time.timeZone = "Europe/Paris";
+  # time.timeZone = "America/New_York";
+  time.timeZone = "Europe/Madrid";
 
   # From https://wiki.nixos.org/wiki/Locales
   i18n = {
@@ -152,11 +216,6 @@
         name = "Hyprland";
         start = "Hyprland";
       }
-      {
-        manage = "window";
-        name = "sway";
-        start = "sway";
-      }
     ];
   };
 
@@ -174,12 +233,13 @@
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   programs.zsh.enable = true;
-  users.users.daniel = {
+  users.users.dani = {
     shell = pkgs.zsh;
     isNormalUser = true;
     extraGroups = [
       "wheel"
       "docker"
+      "ydotool" # access to the ydotoold socket (keyboard-driven scrolling)
     ]; # group "wheel" -> sudo access
     packages = [ ];
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";

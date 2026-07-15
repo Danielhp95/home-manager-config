@@ -71,6 +71,11 @@ let
         '';
   };
 
+  # Only sessions with enable = true reach the greeter; a disabled session
+  # would otherwise still get a desktop entry, with an empty Exec (its
+  # __finalStartCmd is only set under mkIf config.enable).
+  enabledSessions = filterAttrs (_: s: s.enable) cfg.sessions;
+
   # First session is used by default
   sortSessionList = defaultSessionName: sessions:
     [
@@ -130,8 +135,8 @@ in
     };
 
     defaultSession = mkOption {
-      default = lib.head (lib.attrNames cfg.sessions);
-      description = mdDoc "default session for tuigreet, selects first alphabetical of defined sessions if not set";
+      default = lib.head (lib.attrNames enabledSessions);
+      description = mdDoc "default session for tuigreet, selects first alphabetical of enabled sessions if not set";
       type = types.str;
     };
 
@@ -163,24 +168,9 @@ in
       # XMODIFIERS = "@im=fcitx";
     };
     khome.tuigreet.sessions = {
-      sway = {
-        enable = mkDefault false;
-        command = "sway";
-        environment = {
-          XDG_SESSION_DESKTOP = "sway";
-          XDG_CURRENT_DESKTOP = "sway";
-          GLFW_IM_MODULE = "fcitx";
-          GTK_IM_MODULE = "fcitx";
-          INPUT_METHOD = "fcitx";
-          XMODIFIERS = "@im=fcitx";
-          IMSETTINGS_MODULE = "fcitx";
-          QT_IM_MODULE = "fcitx";
-          SDL_IM_MODULE = "fcitx";
-        };
-      };
       hyprland = {
         enable = mkDefault false;
-        command = "Hyprland";
+        command = "start-hyprland";
         environment = {
           XDG_SESSION_DESKTOP = "Hyprland";
           XDG_SESSION_TYPE = "wayland";
@@ -242,7 +232,6 @@ in
     systemd.services.display-manager.enable = false;
     services.xserver.displayManager.lightdm.enable = lib.mkForce false;
     services.displayManager.gdm.enable = true;
-    services.displayManager.execCmd = "";
 
     security.pam.services.greetd.enableGnomeKeyring = cfg.enableGnomeKeyring;
 
@@ -250,7 +239,7 @@ in
       enable = true;
       settings = {
         default_session = {
-          command = "${cfg.greetdBin} --sessions ${sessionDirs cfg.sessions} ${concatStringsSep " " cfg.extraArgs} ${greetdTheme}";
+          command = "${cfg.greetdBin} --sessions ${sessionDirs enabledSessions} ${concatStringsSep " " cfg.extraArgs} ${greetdTheme}";
           user = cfg.greeterUser;
         };
         terminal.vt = 1;
