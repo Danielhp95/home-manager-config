@@ -6,6 +6,19 @@
   ];
   networking.hostName = "fell-omen"; # Define your hostname.
 
+  # Unblock wifi + bluetooth on every boot. systemd-rfkill persists the rfkill
+  # state under /var/lib/systemd/rfkill/ and restores it at boot; if it was ever
+  # saved "blocked" you'd otherwise need a manual `rfkill unblock wlan bluetooth`
+  # after each start. This oneshot clears those soft blocks automatically.
+  systemd.services.rfkill-unblock = {
+    description = "Unblock wlan and bluetooth via rfkill";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-rfkill.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.util-linux}/bin/rfkill unblock wlan bluetooth";
+    };
+  };
   # NOTE(dani): If things fail, enable this and disable below
   # networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
 
@@ -16,6 +29,14 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
+  # mDNS / `.local` resolution. Silences the boot warning
+  # "No NSS support for mDNS detected, consider installing nss-mdns!".
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
@@ -25,8 +46,9 @@
   # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 53317 ];  # for localsend
+  networking.firewall.allowedUDPPorts = [ 53317 ];  # for localsend
+
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 }

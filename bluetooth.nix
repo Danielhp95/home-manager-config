@@ -5,8 +5,13 @@
     powerOnBoot = true;
     settings = {
       General = {
-        Enable = "Source,Sink,Media,Socket";
+        # Source/Sink/Media (A2DP) are enabled by default in modern BlueZ; the old
+        # `Enable = "..."` key is audio.conf-era syntax and is rejected by BlueZ 5.86
+        # ("Unknown key Enable for group General").
         Experimental = true;
+        # Enables kernel experimental features incl. the BlueZ ISO socket, which the
+        # BAP/LE-Audio plugin needs ("BAP requires ISO Socket which is not enabled").
+        KernelExperimental = true;
       };
     };
   };
