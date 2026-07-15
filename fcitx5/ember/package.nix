@@ -12,8 +12,10 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
 
+    # classicui only loads themes/<name>/theme.conf — any other filename
+    # (e.g. Ember.conf) is invisible to fcitx5.
     mkdir -pv $out/share/fcitx5/themes/Ember
-    cp -v Ember.conf $out/share/fcitx5/themes/Ember/Ember.conf
+    cp -v Ember.conf $out/share/fcitx5/themes/Ember/theme.conf
 
     runHook postInstall
   '';
