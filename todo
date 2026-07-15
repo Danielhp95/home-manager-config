@@ -1,0 +1,68 @@
+
+evaluation warning: 'system' has been renamed to/replaced by 'stdenv.hostPlatform.system'
+evaluation warning: 'makeOverridable' has been removed from pkgs, use `lib.makeOverridable` instead
+evaluation warning: 'system' has been renamed to/replaced by 'stdenv.hostPlatform.system'
+evaluation warning: 'system' has been renamed to/replaced by 'stdenv.hostPlatform.system'
+evaluation warning: dani profile: The option `programs.git.aliases' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.alias'.
+evaluation warning: dani profile: The option `programs.git.userEmail' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.email'.
+evaluation warning: dani profile: The option `programs.git.userName' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.name'.
+evaluation warning: dani profile: The option `programs.git.extraConfig' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings'.
+evaluation warning: dani profile: The option `programs.git.difftastic.enable' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.difftastic.enable'.
+evaluation warning: dani profile: Using relative paths in programs.zsh.dotDir is deprecated and will be removed in a future release.
+                    Current dotDir: .config/zsh
+                    Consider using absolute paths or home-manager config options instead.
+                    You can replace relative paths or environment variables with options like:
+                    - config.home.homeDirectory (user's home directory)
+                    - config.xdg.configHome (XDG config directory)
+                    - config.xdg.dataHome (XDG data directory)
+                    - config.xdg.cacheHome (XDG cache directory)
+evaluation warning: dani profile: `programs.difftastic.git.enable` automatic enablement is deprecated. Please explicitly set `programs.difftastic.git.enable = true`.
+evaluation warning: dev profile: The option `programs.git.aliases' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.alias'.
+evaluation warning: dev profile: The option `programs.git.userEmail' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.email'.
+evaluation warning: dev profile: The option `programs.git.userName' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.name'.
+evaluation warning: dev profile: The option `programs.git.extraConfig' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings'.
+evaluation warning: dev profile: The option `programs.git.difftastic.enable' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.difftastic.enable
+evaluation warning: dev profile: Using relative paths in programs.zsh.dotDir is deprecated and will be removed in a future release.
+                    Current dotDir: .config/zsh
+                    Consider using absolute paths or home-manager config options instead.
+                    You can replace relative paths or environment variables with options like:
+                    - config.home.homeDirectory (user's home directory)
+                    - config.xdg.configHome (XDG config directory)
+                    - config.xdg.dataHome (XDG data directory)
+                    - config.xdg.cacheHome (XDG cache directory)
+evaluation warning: dev profile: `programs.difftastic.git.enable` automatic enablement is deprecated. Please explicitly set `programs.difftastic.git.enable = true`.
+evaluation warning: The option `services.logind.lidSwitchDocked' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/hardwares/new_fell_omen.nix' has been renamed to `services.logind.settings.Login.HandleLidSwitchDocked'.
+evaluation warning: The option `services.logind.lidSwitch' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/hardwares/new_fell_omen.nix' has been renamed to `services.logind.settings.Login.HandleLidSwitch'.
+evaluation warning: 'system' has been renamed to/replaced by 'stdenv.hostPlatform.system'
+evaluation warning: dani profile: The option `programs.git.aliases' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.alias'.
+evaluation warning: dani profile: The option `programs.git.userEmail' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.email'.
+evaluation warning: dani profile: The option `programs.git.userName' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.name'.
+evaluation warning: dani profile: The option `programs.git.extraConfig' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings'.
+evaluation warning: dani profile: The option `programs.git.difftastic.enable' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.difftastic.enable'.
+evaluation warning: dani profile: Using relative paths in programs.zsh.dotDir is deprecated and will be removed in a future release.
+                    Current dotDir: .config/zsh
+                    Consider using absolute paths or home-manager config options instead.
+                    You can replace relative paths or environment variables with options like:
+                    - config.home.homeDirectory (user's home directory)
+                    - config.xdg.configHome (XDG config directory)
+                    - config.xdg.dataHome (XDG data directory)
+                    - config.xdg.cacheHome (XDG cache directory)
+evaluation warning: dani profile: `programs.difftastic.git.enable` automatic enablement is deprecated. Please explicitly set `programs.difftastic.git.enable = true`.
+evaluation warning: dev profile: The option `programs.git.aliases' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.alias'.
+evaluation warning: dev profile: The option `programs.git.userEmail' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.email'.
+evaluation warning: dev profile: The option `programs.git.userName' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings.user.name'.
+evaluation warning: dev profile: The option `programs.git.extraConfig' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.git.settings'.
+evaluation warning: dev profile: The option `programs.git.difftastic.enable' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/git' has been renamed to `programs.difftastic.enable'.
+evaluation warning: dev profile: Using relative paths in programs.zsh.dotDir is deprecated and will be removed in a future release.
+                    Current dotDir: .config/zsh
+                    Consider using absolute paths or home-manager config options instead.
+                    You can replace relative paths or environment variables with options like:
+                    - config.home.homeDirectory (user's home directory)
+                    - config.xdg.configHome (XDG config directory)
+                    - config.xdg.dataHome (XDG data directory)
+                    - config.xdg.cacheHome (XDG cache directory)
+evaluation warning: dev profile: `programs.difftastic.git.enable` automatic enablement is deprecated. Please explicitly set `programs.difftastic.git.enable = true`.
+evaluation warning: The option `services.logind.lidSwitchDocked' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/hardwares/new_fell_omen.nix' has been renamed to `services.logind.settings.Login.HandleLidSwitchDocked'.
+evaluation warning: The option `services.logind.lidSwitch' defined in `/nix/store/d32824a7lx6rjsjfxpdfli616jbhi65i-source/hardwares/new_fell_omen.nix' has been renamed to `services.logind.settings.Login.HandleLidSwitch'.
+[23/74/1242 built, 16/29/968 copied (662.1/10396.3 MiB), 125.7/2006.0 MiB DL] building unpack-getrandom-0.3.4^[
+[16/512/689 built, 1/949/968 copied (10190.2/10396.3 MiB), 1973.2/2006.0 MiB DL] building MSTest.TestFramework-3.0.4 (fixupPhase): Patching package mstest.testframework/3.0.4

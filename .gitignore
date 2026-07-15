@@ -1,0 +1,9 @@
+# File-manager trash (this repo lives on its own mount, so Trash lands here)
+.Trash-1000/
+
+# Separate git repo, consumed as a path: flake input (danvim.url)
+danvim/
+
+# nix build outputs
+result
+result-*
