@@ -28,9 +28,9 @@
       kb-row-up = "Up,Control+p,Shift+Tab,Shift+ISO_Left_Tab,Alt+k";
       kb-row-down = "Down,Control+n,Alt+j";
     };
-    theme = ./rofi/spotlight_dark.rasi;  # Personal theme
+    theme = ./rofi/spotlight_dark.rasi; # Personal theme
     # theme = "~/.cache/wal/colors-rofi-dark.rasi";
-    terminal = "kitty";
+    terminal = "xterm-kitty";
     plugins = with pkgs; [
       rofi-file-browser
       pywal
@@ -39,4 +39,99 @@
   home.packages = with pkgs; [
     papirus-icon-theme
   ];
+
+  programs.vicinae = {
+    enable = true;
+    systemd.enable = true;
+    settings = {
+      theme = {
+        dark = {
+          name = "ember";
+          icon_theme = "auto";
+        };
+        light = {
+          name = "ember-light";
+          icon_theme = "auto";
+        };
+      };
+      launcher_window = {
+        size = {
+          width = 1536;
+          height = 864;
+        };
+      };
+      font = {
+        normal = {
+          size = 15;
+          family = "Iosevka";
+        };
+      };
+    };
+    themes = {
+      ember = {
+        meta = {
+          version = 1;
+          name = "Ember";
+          description = "Warm graphite monochrome with a single coral spark";
+          variant = "dark";
+          icon = "icons/ember.png";
+          inherits = "vicinae-dark";
+        };
+
+        colors = {
+          core = {
+            background = "#1c1b19";
+            foreground = "#d8d0c0";
+            secondary_background = "#242320";
+            border = "#3a342d";
+            accent = "#e08060";
+          };
+
+          accents = {
+            blue = "#7890a0"; # steel
+            green = "#8a9868"; # olive
+            magenta = "#988090"; # mauve
+            orange = "#c09058";
+            purple = "#988090";
+            red = "#e08060"; # coral
+            yellow = "#c8b468"; # gold
+            cyan = "#80a090"; # sage
+          };
+        };
+      };
+
+      ember-light = {
+        meta = {
+          version = 1;
+          name = "Ember Light";
+          description = "Soft parchment tones with restrained earthy accents";
+          variant = "light";
+          icon = "icons/ember-light.png";
+          inherits = "vicinae-light";
+        };
+
+        colors = {
+          core = {
+            background = "#e6dac4";
+            foreground = "#282418";
+            secondary_background = "#d8ccb6";
+            border = "#b8ac96";
+            accent = "#b84c30";
+          };
+
+          accents = {
+            blue = "#3a6080"; # steel
+            green = "#4a6830"; # olive
+            magenta = "#706070"; # mauve
+            orange = "#946030";
+            purple = "#706070";
+            red = "#b84c30"; # coral
+            yellow = "#7a6820"; # gold
+            cyan = "#386858"; # sage
+          };
+        };
+      };
+    };
+  };
+
 }
