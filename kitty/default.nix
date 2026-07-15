@@ -4,6 +4,6 @@
   programs.kitty = {
     enable = true;
     extraConfig = builtins.readFile ./kitty.conf;
-    themeFile = "Dracula";
+    # themeFile = "Dracula";
   };
 }
