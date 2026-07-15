@@ -1,40 +1,50 @@
 ENV_VARS:
+  IPYTHONDIR: "ipython_temp"
+  # SAI_HOOK: fix-and-check git commit # To run on each git commit
   PS4_ADDR: 10.42.0.250 # In Playstation, go to Settings -> Network -> Network status. THIS CHANGES OFTEN
   TF_USE_LEGACY_KERAS: 1 # TODO: change this to be added elsewhere
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE: "fg=8" # to have completion suggestions look gray
-  # I don't like this, since some home-manager update I have to do this, otherwise the user "daniel" is not modified
+  # I don't like this, since some home-manager update I have to do this, otherwise the user "dani" is not modified
   STARSHIP_CONFIG: "/home/dev/.config/starship.toml"
   XDG_STATE_HOME: "/home/dev/.local/state"
   XDG_DATA_HOME: "/home/dev/.local/share"
   GTK2_RC_FILES: "/home/dev/.gtkrc-2.0"
   XDG_CONFIG_HOME: "/home/dev/.config"
   XDG_CACHE_HOME: "/home/dev/.cache"
-  NIX_XDG_DESKTOP_PORTAL_DIR: "/etc/profiles/per-user/daniel/share/xdg-desktop-portal/portals"
-  XCURSOR_PATH: "/etc/profiles/per-user/daniel/share/icons"
+  NIX_XDG_DESKTOP_PORTAL_DIR: "/etc/profiles/per-user/dani/share/xdg-desktop-portal/portals"
+  XCURSOR_PATH: "/etc/profiles/per-user/dani/share/icons"
+  # Trying to fix terminal visual artifacts
+  TERMINFO_DIRS: "/usr/share/terminfo"
 ADDITIONAL_MOUNTS:
   # Nix things
   - "/nix/store/:/nix/store:ro"
-  - "/etc/profiles/per-user/daniel/bin/:/home/dev/.nix-profile/bin/:ro"
-  - "/home/daniel/nix_config:/home/dev/nix_config"
+  - "/etc/profiles/per-user/dani/bin/:/home/dev/.nix-profile/bin/:ro"
+  - "/home/dani/nix_config:/home/dev/nix_config"
   # Obsidian
-  - "/home/daniel/vaults:/home/dev/vaults"
+  - "/home/dani/vaults:/home/dev/vaults"
   # Starship: is this needed?
-  - "/etc/profiles/per-user/daniel/bin/starship:/etc/profiles/per-user/daniel/bin/starship"
-  - "/home/daniel/.config/starship.toml:/home/dev/.config/starship.toml"
-  # zsh
-  - "/home/dev/.zshenv:/home/dev/.zshenv"
-  - "/home/dev/.config/zsh:/home/dev/.config/zsh"
-  - "/home/daniel/.zsh_history:/home/dev/.zsh_history"
-  # WE DO NOT WANT THIS FILE, because this sets env variables to point to user "daniel" (host), and that's bad
-  # - "/etc/profiles/per-user/daniel/etc/profile.d/hm-session-vars.sh:/etc/profiles/per-user/daniel/etc/profile.d/hm-session-vars.sh"
+  - "/etc/profiles/per-user/dani/bin/starship:/etc/profiles/per-user/dani/bin/starship"
+  - "/home/dani/.config/starship.toml:/home/dev/.config/starship.toml"
+  # zsh (host side is dani's home; /home/dev only exists inside the container)
+  - "/home/dani/.zshenv:/home/dev/.zshenv"
+  - "/home/dani/.config/zsh:/home/dev/.config/zsh"
+  - "/home/dani/.zsh_history:/home/dev/.zsh_history"
+  # WE DO NOT WANT THIS FILE, because this sets env variables to point to user "dani" (host), and that's bad
+  # - "/etc/profiles/per-user/dani/etc/profile.d/hm-session-vars.sh:/etc/profiles/per-user/dani/etc/profile.d/hm-session-vars.sh"
 
   # Television
-  - "/home/daniel/.config/television:/home/dev/.config/television"
+  - "/home/dani/.config/television:/home/dev/.config/television"
 
   # Sparkle
-  - "/home/daniel/Projects/sparkle:/home/dev/sparkle"
-  # Nvim
-  - "/home/daniel/.local/share/nvim/:/home/daniel/.local/share/nvim/"
+  - "/home/dani/Projects/sparkle:/home/dev/sparkle"
+  # Horizon
+  - "/home/dani/Projects/horizon:/Game"
+
+  # Nvim (container user is dev, XDG_DATA_HOME=/home/dev/.local/share)
+  - "/home/dani/.local/share/nvim/:/home/dev/.local/share/nvim/"
  
   # IPython: DOES NOT WORK
-  # - "/home/daniel/nix_config/sony_ai/1_fzf_history.py:/home/dev/.ipython/profile_default/startup/1_fzf_history.py"
+  - "/home/dani/nix_config/sony_ai/1_fzf_history.py:/home/dev/sai/ipython_temp/profile_default/startup/1_fzf_history.py"
+
+  # Trying to fix terminal visual artifacts
+  - "/run/current-system/sw/share/terminfo:/usr/share/terminfo"
