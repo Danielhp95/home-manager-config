@@ -39,9 +39,11 @@ in
   };
 
   home.sessionVariables = {
-    # TODO: this was introduced in November 2024, can we remove this at some point?
-    # To surpress error: GSK-message Error 71 (Protocol error) dispatching to Wayland display.
-    QT_QPA_PLATFORMTHEME = "gtk4";
+    # Make Qt apps follow the GTK theme. Only a "gtk3" platform-theme plugin
+    # exists (libqgtk3.so) — "gtk4" is not a valid value and Qt silently fell
+    # back to its default look. (The GSK "Error 71" this used to be blamed on
+    # is a GTK renderer issue, handled by GSK_RENDERER=gl in tuigreet.nix.)
+    QT_QPA_PLATFORMTHEME = "gtk3";
     GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
   };
 

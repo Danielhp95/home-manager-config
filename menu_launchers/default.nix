@@ -63,7 +63,10 @@
       font = {
         normal = {
           size = 15;
-          family = "Iosevka";
+          # The installed package is nerd-fonts.iosevka, whose family name is
+          # "Iosevka Nerd Font" — plain "Iosevka" doesn't resolve and fc-match
+          # falls back to a CJK font.
+          family = "Iosevka Nerd Font";
         };
       };
     };
