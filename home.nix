@@ -1,8 +1,5 @@
 {
   inputs,
-  stableWithUnfree,
-  grayjayStable,
-  unstableWithUnfree,
   pkgs,
   lib,
   ...
@@ -19,11 +16,31 @@
   # To allow bluetooth devices buttons to control media things (like stop / play)
   services.mpris-proxy.enable = true;
 
+  programs.gpg.enable = true;
+  services.gpg-agent = {
+    enable = true;
+    enableScDaemon = true;
+    enableExtraSocket = true;
+    defaultCacheTtl = 1800;
+    enableSshSupport = true;
+    pinentry = {
+      package = pkgs.pinentry-all;
+      # Use pinentry-gnome3 for GUI environments instead of curses
+      program = "pinentry-curses";
+    };
+  };
+
+  # Ensure GPG agent starts with systemd user session
+  systemd.user.sockets.gpg-agent = {
+    Unit.PartOf = [ "graphical-session.target" ];
+    Socket.SocketMode = "0600";
+    Install.WantedBy = [ "sockets.target" ];
+  };
+
   imports = [
     ./starship
     ./zsh
     ./tmux
-    ./zellij
 
     ./yazi
 
@@ -33,27 +50,26 @@
 
     ./terminal
     ./terminal/television.nix
+    ./terminal/nushell.nix
     ./kitty
+    ./ghostty
 
     ./hyprland
     ./status_bars
+    ./noctalia
 
     ./sony_ai
-
-    ./notifications
 
     ./flameshot
 
     ./writing.nix
     ./default_applications.nix
+    # Import voxtype HM module
+    inputs.voxtype.homeManagerModules.default
   ];
 
-  khome.desktop.swww = {
-    enable = true;
-    wallpaperDirs = [
-      "~/nix_config/wallpapers"
-    ]; # TODO: create an env variable based on this and use that everywhere else
-  };
+  # Wallpaper managaer
+  services.awww.enable = true;
 
   services.clipmenu.enable = true;
   programs.mpv = {
@@ -68,25 +84,20 @@
     ### Browsers
     chromium
     nvd # Nix version diff tool
-    nushell
 
     ### Style
     pywal # Colorscheme generator
 
     ### Communication
-    # (writeScriptBin "slack" ''
-    #   ${slack}/bin/slack --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3
-    # '')
     slack
     telegram-desktop
     element-desktop
 
-    zoom-us
+    # zoom-us
+
+    # grayjay # video platform aggregator
 
     openconnect
-
-    ### Photography
-    # ansel
 
     ## Videography
     (writeScriptBin "davinci" ''
@@ -95,7 +106,6 @@
 
     ### Basic utilities
     ripgrep # better grep
-    bat # Better cat
     zenith # better top
     tldr # succint command explanations
     acpi # To meassure laptop battery levels
@@ -110,13 +120,11 @@
     zip
 
     ### Media viewing
-    # video
+    # video (mpv comes via programs.mpv above)
     vlc
-    mpv
 
     # music / video
     spotify
-    grayjay
 
     # Images
     imv # Lightweight
@@ -134,14 +142,15 @@
     powertop # Analyze power consumption for intel based processors
 
     ### Audio
-    helvum # visual audio mixer
+    crosspipe # visual audio mixer
     pamixer # cli for pulseaudio
     pavucontrol # not working!
+    playerctl # MPRIS media control, used by hyprland media-key binds
 
     translate-shell
 
     # THE nvim
-    inputs.danvim.packages.x86_64-linux.nvimStable
+    inputs.danvim.packages.x86_64-linux.nvim
 
     # Weather app
     mousam
@@ -161,17 +170,39 @@
     # File sharing (Like AirDrop)
     localsend
 
-    # nix cli helper, useful for switching etc
-    nh
     nvidia-docker
 
     bluetui # Bluetooth tui
 
     gnome-session
 
-    unstableWithUnfree.firefox
+    firefox
   ];
+
+  programs.claude-code = {
+    enable = true;
+    # settings = {
+    #   # Strip Anthropic/Claude attribution from git commits and PRs
+    #   # (no "🤖 Generated with Claude Code" footer, no Co-Authored-By trailer).
+    #   includeCoAuthoredBy = false;
+    # };
+  };
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
+
+  # Voxtype Home Manager configuration
+  programs.voxtype = {
+    enable = false;
+    package = inputs.voxtype.packages.x86_64-linux.vulkan;
+    model.name = "large-v3-turbo";
+    service.enable = true;
+    settings = {
+      hotkey.enabled = false;
+      whisper.language = "en";
+      backend = "vulkan";
+      # find the name via `pactl list sources` and look for the microphone you want to use
+      device = "alsa_input.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__Mic1__source";
+    };
+  };
 }
