@@ -66,6 +66,30 @@ in
             --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
             "
 
+            # Resolve a command through the nix store (the old alias version
+            # had an unclosed backtick and just hung the prompt).
+            whichnix () {
+              readlink -f "$(which "$1")"
+            }
+
+            # System generation switcher with television preview (same as
+            # nushell's ng, see terminal/nushell.nix for the why of each part).
+            ng () {
+              local gen num link
+              gen=$(
+                for link in /nix/var/nix/profiles/system-*-link; do
+                  num="''${link##*system-}"
+                  num="''${num%-link}"
+                  # stat the link itself: its target's mtime is nix-normalized to 1970
+                  printf '%s %s\n' "$num" "$(stat -c '%.16y' "$link")"
+                done | sort -rn \
+                  | tv --preview-command "nvd diff '/nix/var/nix/profiles/system-{split: :0}-link' /nix/var/nix/profiles/system"
+              )
+              if [[ -n "$gen" ]]; then
+                nh os switch "/nix/var/nix/profiles/system-''${gen%% *}-link"
+              fi
+            }
+
           	# ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
         '')
     ];
@@ -84,8 +108,6 @@ in
     # TODO: integrate better (this silently ignores if config.themes.extraShellAliases is not set)
     shellAliases = {
       fm = fileManager;
-      # nix
-      whichnix = "readlink -f `which ";
       # git
       wow = "git status --untracked-files=no";
       # eza
@@ -95,17 +117,6 @@ in
 
     };
     plugins = [
-      {
-        # Must be first: carapace registers compdef handlers that fzf-tab then
-        # wraps. Loading after fzf-tab means fzf-tab never sees the carapace
-        # completions. initContent (where enableZshIntegration would write) loads
-        # after plugins, so we synthesize a plugin entry here instead.
-        name = "carapace-init";
-        src = pkgs.writeTextDir "carapace-init.plugin.zsh" ''
-          source <(${pkgs.carapace}/bin/carapace _carapace zsh)
-        '';
-        file = "carapace-init.plugin.zsh";
-      }
       {
         name = "fzf-tab";
         src = "${pkgs.zsh-fzf-tab}/share/fzf-tab";

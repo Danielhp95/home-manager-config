@@ -80,4 +80,8 @@ bindkey -M viins '^[[1;5D' backward-word
 bindkey -M vicmd '^[[1;5D' backward-word
 
 # NOTE: this requires television!
+# Single tab is a prefix of this binding, so zsh waits KEYTIMEOUT (in 10ms
+# units, default 40 = 400ms) before falling through to fzf-tab completion.
+# 12 = 120ms: single-tab completion feels instant, double-tab needs a quick tap.
+KEYTIMEOUT=12
 bindkey '\t\t' tv-smart-autocomplete
