@@ -1,8 +1,10 @@
 {pkgs, lib, ...}:
 {
-  environment.defaultPackages = with pkgs; [
+  # systemPackages, not defaultPackages: the latter is the NixOS default set
+  # (perl/rsync/strace) and assigning to it removes those from the system.
+  environment.systemPackages = with pkgs; [
     impala # iwd TUI. needs conman
-    iwgtk  # iwd GUI
+    iwgtk # iwd GUI
   ];
   networking.hostName = "fell-omen"; # Define your hostname.
 
