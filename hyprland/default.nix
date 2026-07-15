@@ -21,6 +21,40 @@ let
       ${_ grim} -g "$(${_ slurp})" -t ppm - | ${_ tesseract5} - - | ${wl-clipboard}/bin/wl-copy
       ${_ libnotify} "$(${wl-clipboard}/bin/wl-paste)"
     '';
+
+  # Toggle whether Hyprland opens the NVIDIA dGPU on its next start (marker
+  # file read by hyprland.lua). "on" enables the HDMI port (dGPU stays awake,
+  # ~8W); "off" lets the dGPU runtime-suspend for battery life. Note: CUDA /
+  # `nvidia-offload <game>` work in EITHER mode — the GPU wakes on demand for
+  # compute/offload; this toggle only matters for driving displays over HDMI.
+  dgpuScript = pkgs.writeShellScriptBin "dgpu" ''
+    marker="$HOME/.config/hypr/dgpu-mode"
+    notify=${lib.getExe pkgs.libnotify}
+    case "''${1:-status}" in
+      on)
+        mkdir -p "$(dirname "$marker")" && touch "$marker"
+        msg="dGPU mode ON pending — log out/in to enable the HDMI port"
+        echo "$msg"; $notify -a dgpu "dGPU" "$msg"
+        ;;
+      off)
+        rm -f "$marker"
+        msg="dGPU mode OFF pending — log out/in to let the GPU sleep"
+        echo "$msg"; $notify -a dgpu "dGPU" "$msg"
+        ;;
+      toggle)
+        if [ -e "$marker" ]; then exec "$0" off; else exec "$0" on; fi
+        ;;
+      status)
+        [ -e "$marker" ] && echo "next session: dGPU ON (HDMI enabled)" \
+                         || echo "next session: dGPU OFF (battery mode)"
+        rt=$(cat /sys/bus/pci/devices/0000:02:00.0/power/runtime_status 2>/dev/null)
+        echo "right now: GPU is ''${rt:-unknown}"
+        ;;
+      *)
+        echo "usage: dgpu [on|off|toggle|status]" >&2; exit 1
+        ;;
+    esac
+  '';
 in
 {
   imports = [ ./theming.nix ];
@@ -78,6 +112,7 @@ in
     lxsession # Authenticator
 
     ocrScript
+    dgpuScript
 
     # This should really live on its own package
     slurp

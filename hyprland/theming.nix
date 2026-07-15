@@ -8,12 +8,12 @@ in
     # Pin legacy default: 26.05 changed gtk4.theme default from config.gtk.theme to null,
     # which would stop theming GTK4 apps with WhiteSur.
     gtk4.theme = config.gtk.theme;
-    gtk4.extraConfig = {
-      # TODO: This still places things under [Settings] and we want this to be placed under [AdwStyleManager]. How do we do it?
-      AdwStyleManager = "color-scheme=ADW_COLOR_SCHEME_PREFER_DARK";
-    };
+    # GTK4/libadwaita dark mode is driven by the `color-scheme = prefer-dark` dconf
+    # key below — that is the supported mechanism. The old `gtk-application-prefer-dark-theme`
+    # GTK4 setting is rejected by libadwaita ("...is unsupported. Please use
+    # AdwStyleManager:color-scheme instead"), and an `AdwStyleManager` settings.ini key
+    # is not real ("Unknown key AdwStyleManager"). Keep the hint only for legacy GTK3 apps.
     gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
-    gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;
     theme = {
       package = pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
       name = "WhiteSur-Dark-orange";
@@ -30,8 +30,8 @@ in
     };
   };
 
-  # Cursor. This might not be necessary with hyprland 0.41
   home.pointerCursor = {
+    enable = true;
     gtk.enable = true;
     package = pkgs.bibata-cursors;
     name = cursor-theme-name;
