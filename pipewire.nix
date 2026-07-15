@@ -1,8 +1,12 @@
 { lib, pkgs, ... }:
 {
-  # To enable pipewire we need to remove pulseaudio
-  # hardware.pulseaudio.enable = lib.mkForce false;
-  environment.defaultPackages = with pkgs; [
+  # The pulseaudio *package* is only here for its CLI tools (pactl & co) —
+  # the server itself is pipewire-pulse below.
+  # NOTE: this must be systemPackages. defaultPackages is the small curated
+  # NixOS default set (perl, rsync, strace) meant to be *overridden to remove*
+  # those; assigning extra packages to it silently dropped strace and perl
+  # from the system.
+  environment.systemPackages = with pkgs; [
     pulseaudio
   ];
   security.rtkit.enable = true;
