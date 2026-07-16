@@ -1,0 +1,71 @@
+# DART run manager for noctalia v5 (Luau plugin).
+# Bar widget: dart logo + running-run count; click opens the run-list panel.
+# Panel: active runs with state/tags, expandable description, and
+# cancel/suspend/resume/delete actions (two-step confirm on destructive ones).
+# A singleton [[service]] owns all `dart run filter` polling and publishes the
+# parsed run list over noctalia.state; widget and panel just watch and render.
+id = "dani/dart"
+name = "DART Runs"
+version = "0.1.0"
+min_noctalia = "5.0.0"
+author = "dani"
+license = "MIT"
+icon = "target-arrow" # catalog glyph only; the bar shows assets/dart-logo.png
+description = "DART training runs: badge in the bar, run list with actions in a panel."
+
+[[setting]]
+key = "dart_path"
+type = "string"
+label_key = "settings.dart_path.label"
+description_key = "settings.dart_path.description"
+default = "/home/dani/Projects/sai/.venv/bin/dart"
+
+[[setting]]
+key = "nu_path"
+type = "string"
+label_key = "settings.nu_path.label"
+description_key = "settings.nu_path.description"
+# Profile symlink, not a store path: survives rebuilds and GC.
+default = "/etc/profiles/per-user/dani/bin/nu"
+advanced = true
+
+[[setting]]
+key = "username"
+type = "string"
+label_key = "settings.username.label"
+description_key = "settings.username.description"
+default = "daniel.hernandez"
+
+[[setting]]
+key = "limit"
+type = "int"
+label_key = "settings.limit.label"
+description_key = "settings.limit.description"
+default = 30
+min = 1
+max = 100
+
+[[setting]]
+key = "poll_seconds"
+type = "int"
+label_key = "settings.poll_seconds.label"
+description_key = "settings.poll_seconds.description"
+default = 120
+min = 15
+max = 3600
+
+[[widget]]
+id = "widget"
+entry = "widget.luau"
+
+[[panel]]
+id = "panel"
+entry = "panel.luau"
+width = 1200
+height = 640
+placement = "floating" # centered dropdown under the top bar
+position = "top_center"
+
+[[service]]
+id = "poller"
+entry = "service.luau"
