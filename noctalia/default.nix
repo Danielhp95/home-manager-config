@@ -1,4 +1,9 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  pkgs,
+  config,
+  ...
+}:
 let
   # Cycle TLP's power mode: auto (follows AC/battery) -> forced battery (low
   # power) -> forced AC (performance) -> auto. TLP records a forced mode in
@@ -23,7 +28,23 @@ let
   '';
 in
 {
-  home.packages = [ tlp-mode ];
+  home.packages = [
+    tlp-mode
+    # logcli for `dart logs` (the dart-plugin Logs button and terminal use).
+    # Until the switch lands, the plugin falls back to the sai FHS env's store
+    # path (see dart-plugin/panel.luau openLogs).
+    pkgs.grafana-loki
+  ];
+
+  # dart-plugin: noctalia v5 Luau plugin showing DART training runs in the bar
+  # (dart logo + running count; panel with per-run cancel/suspend/resume/delete).
+  # Linked out-of-store so edits to ./dart-plugin hot-reload the running shell
+  # (noctalia file-watches .luau files) without a rebuild. Swap to
+  # `.source = ./dart-plugin;` for a pure store copy once it stabilises.
+  # NOTE first switch: if `~/.local/share/noctalia/plugins/dart` already exists
+  # from the pre-nix dev install, `rm` it first or activation fails.
+  xdg.dataFile."noctalia/plugins/dart".source =
+    config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/dart-plugin";
 
   programs.noctalia = {
     enable = true;
@@ -90,6 +111,13 @@ in
           auto_update = true;
         }
       ];
+      # Plugins are opt-in per id even when present on disk. dani/dart is the
+      # local dart run-manager plugin linked into ~/.local/share/noctalia/plugins
+      # (see xdg.dataFile above). NB: `noctalia msg plugins enable/disable` and
+      # the GUI write this same key into the runtime overrides file
+      # (~/.local/state/noctalia/settings.toml), which replaces this array
+      # wholesale — delete the [plugins] block there if this list stops applying.
+      plugins.enabled = [ "dani/dart" ];
 
       wallpaper = {
         enabled = true;
@@ -128,6 +156,7 @@ in
         end = [
           "tray"
           "notifications"
+          "dart"
           "battery"
           "volume"
           "brightness"
@@ -182,6 +211,13 @@ in
           glyph = "wifi";
           tooltip = "Wi-Fi (impala)";
           command = "kitty -e impala";
+        };
+
+        # DART run manager (local Luau plugin, see dart-plugin/). Same alias
+        # idiom as the custom_buttons above: bare "dart" in the bar list
+        # resolves through this table to the plugin widget entry.
+        dart = {
+          type = "dani/dart:widget";
         };
       };
 

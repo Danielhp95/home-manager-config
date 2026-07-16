@@ -1,0 +1,24 @@
+{
+  "settings": {
+    "dart_path": {
+      "label": "dart CLI path",
+      "description": "Absolute path to the dart CLI (sai venv)."
+    },
+    "nu_path": {
+      "label": "nushell for slimming",
+      "description": "nu used to slim dart's JSON output before parsing."
+    },
+    "username": {
+      "label": "Username filter",
+      "description": "Substring matched against run owners (dart --username-ss)."
+    },
+    "limit": {
+      "label": "Max runs listed",
+      "description": "Upper bound passed to dart run filter --limit."
+    },
+    "poll_seconds": {
+      "label": "Poll interval (s)",
+      "description": "Background refresh cadence for the run list."
+    }
+  }
+}
