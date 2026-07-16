@@ -22,7 +22,6 @@ in
     initLua = ./init.lua;
     enableZshIntegration = true;
     plugins = {
-      # todo: https://github.com/boydaihungst/simple-mtpfs.yazi
       toggle-pane = "${officialPlugins}/toggle-pane.yazi";
       mount = "${officialPlugins}/mount.yazi";
       vcs-files = "${officialPlugins}/vcs-files.yazi";
@@ -63,6 +62,24 @@ in
         rev = "0e0870460b9b74c5ae98b7f96c7c26a9a274ce6d";
         hash = "sha256-rDsyMF5IEBHx+fJ0oYTCCQAlTSquUcOkFLC4Lmbuz6k=";
       };
+      # Thumbnail + metadata (ISO, aperture, codec, bitrate, ...) preview for
+      # images/videos/audio. Needs mediainfo, ffmpeg and imagemagick.
+      mediainfo = pkgs.fetchFromGitHub {
+        owner = "boydaihungst";
+        repo = "mediainfo.yazi";
+        rev = "e079a001f4fefd69007e515bbede4e16b95a811e";
+        hash = "sha256-RIVcKJO89R4oaE6sJuFcV8pFK4nvWtq6ILAXehu4FIY=";
+      };
+      # Mount Android phones (MTP), cameras and network shares via GVfs
+      # (successor of simple-mtpfs.yazi). The system side — gvfsd, gvfsd-mtp,
+      # libmtp udev rules, udisks2 — is already provided by services.gvfs,
+      # pulled in by the GNOME module in configuration.nix.
+      gvfs = pkgs.fetchFromGitHub {
+        owner = "boydaihungst";
+        repo = "gvfs.yazi";
+        rev = "c5a0bb924eceeeb8b44bfc00aba0a97ba0287fa3";
+        hash = "sha256-hSHEN/F4uc1FFScB5lLRAKryLwP+O7I9vgEgobGbQyw=";
+      };
     };
     keymap.mgr.prepend_keymap = lib.flatten [
       {
@@ -88,10 +105,78 @@ in
         on = [ "<C-g>" ];
         run = "plugin tv text";
       }
+      # Mounting: everything lives under the M prefix (which-key menu).
       {
-        desc = "Mount tools";
-        on = [ "M" ];
+        desc = "Mount disks/partitions (udisks)";
+        on = [
+          "M"
+          "d"
+        ];
         run = "plugin mount";
+      }
+      {
+        desc = "Mount phone/device (MTP) and jump to it";
+        on = [
+          "M"
+          "m"
+        ];
+        run = "plugin gvfs -- select-then-mount --jump";
+      }
+      {
+        desc = "Unmount/eject device";
+        on = [
+          "M"
+          "u"
+        ];
+        run = "plugin gvfs -- select-then-unmount --eject";
+      }
+      {
+        desc = "Force unmount/eject device";
+        on = [
+          "M"
+          "U"
+        ];
+        run = "plugin gvfs -- select-then-unmount --eject --force";
+      }
+      {
+        desc = "Add a GVfs mount URI (smb, sftp, ftp, ...)";
+        on = [
+          "M"
+          "a"
+        ];
+        run = "plugin gvfs -- add-mount";
+      }
+      {
+        desc = "Edit a GVfs mount URI";
+        on = [
+          "M"
+          "e"
+        ];
+        run = "plugin gvfs -- edit-mount";
+      }
+      {
+        desc = "Remove a GVfs mount URI";
+        on = [
+          "M"
+          "r"
+        ];
+        run = "plugin gvfs -- remove-mount";
+      }
+      {
+        desc = "Jump to a mounted device";
+        on = [
+          "g"
+          "m"
+        ];
+        run = "plugin gvfs -- jump-to-device";
+      }
+      {
+        desc = "Jump back to where you were before the device";
+        on = [
+          "`"
+          "`"
+        ];
+        run = "plugin gvfs -- jump-back-prev-cwd";
       }
       {
         desc = "show help";
@@ -252,14 +337,44 @@ in
             group = "git";
           }
         ];
+        # mediainfo.yazi: thumbnail + metadata preview; replaces the built-in
+        # image/video previewers (it renders the image itself, then the info).
+        # GVfs mounts (MTP phones, network shares) are too slow to preload or
+        # preview files from — noop them first (first match wins). Absolute
+        # path because env vars don't expand here; 1000 = dani's uid.
+        prepend_preloaders = [
+          {
+            url = "/run/user/1000/gvfs/**/*";
+            run = "noop";
+          }
+          {
+            mime = "{audio,video,image}/*";
+            run = "mediainfo";
+          }
+        ];
+        prepend_previewers = [
+          # Keep folder listings working everywhere, incl. GVfs mounts
+          {
+            url = "*/";
+            run = "folder";
+          }
+          {
+            url = "/run/user/1000/gvfs/**/*";
+            run = "noop";
+          }
+          {
+            mime = "{audio,video,image}/*";
+            run = "mediainfo";
+          }
+        ];
       };
     };
   };
   home.packages = with pkgs; [
     exiftool # Tool to read, write and edit EXIF meta information
-    simple-mtpfs
     imagemagick # For resizing preview images
     lazygit # g l binding
     trash-cli # required by restore.yazi
+    mediainfo # required by mediainfo.yazi (ffmpeg comes from home.nix)
   ];
 }
