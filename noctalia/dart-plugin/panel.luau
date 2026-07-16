@@ -3,10 +3,10 @@
 Run-list panel (entry "panel" of dani/dart).
 
 Layout: header (title, counts, refresh, close) -> filter bar -> scrollable
-run cards. Each card collapses to [state dot | id | copy | project | created |
-state pill | chevron] plus one row of tag chips; expanding it adds the full
-wrapped tag rows, an info line (commit / clusters / updated), the description,
-a tag editor, and state-gated action buttons.
+run cards. Each card collapses to [state dot | id | open | copy | commit |
+project | created | state pill | chevron] plus one row of tag chips; expanding
+it adds the full wrapped tag rows, an info line (clusters / updated), the
+description, a tag editor, and state-gated action buttons.
 
 Data flow: this panel never talks to `dart run filter` itself — service.luau
 polls and publishes "runs"/"error"/"busy" via noctalia.state, and the panel
@@ -388,15 +388,41 @@ local function chipRowNodes(run, i, expanded)
 	return rows
 end
 
--- Card header: state dot | run id (opens browser) | copy | ... | project |
+-- Copyable commit chip; nil when the run carries no commit. The chip shows the
+-- usual 12-char prefix, the clipboard gets the full hash.
+local function commitButton(run, i)
+	if not run.git_commit or run.git_commit == "" then
+		return nil
+	end
+	return ui.button({
+		glyph = "git-commit",
+		glyphSize = 13,
+		text = run.git_commit:sub(1, 12),
+		fontSize = 11,
+		height = 22,
+		variant = "ghost",
+		tooltip = "Copy full commit hash",
+		onClick = cbn("copycommit", i, function()
+			copyToClipboard("Copied commit", run.git_commit)
+		end),
+	})
+end
+
+-- Card header: state dot | run id | open | copy | ... | commit | project |
 -- created | state pill | expand chevron.
+--
+-- The id is a label, not a button, because bold and clickable are mutually
+-- exclusive in this UI API: only ui.button carries onClick alongside text, and
+-- it has no fontWeight prop (an unknown prop warns on every reconcile pass);
+-- ui.label takes fontWeight but no onClick, and boxes - the other clickable
+-- node - cannot hold children. Hence the separate open-in-browser button.
 local function cardHeader(run, i, expanded, color)
 	local bits = {
 		ui.glyph({ name = "point-filled", size = 16, color = color }),
+		ui.label({ text = run.id, color = "on_surface", fontWeight = "bold", fontSize = 13, maxLines = 1 }),
 		ui.button({
-			text = run.id,
+			glyph = "external-link",
 			variant = "ghost",
-			contentAlign = "start",
 			controlSize = "sm",
 			tooltip = "Open in browser",
 			onClick = cbn("open", i, function()
@@ -414,6 +440,10 @@ local function cardHeader(run, i, expanded, color)
 		}),
 		ui.spacer({ flexGrow = 1 }),
 	}
+	local commit = commitButton(run, i)
+	if commit then
+		bits[#bits + 1] = commit
+	end
 	if run.project and run.project ~= "" then
 		bits[#bits + 1] = chip(run.project, "tertiary/0.18", "tertiary")
 	end
@@ -447,24 +477,11 @@ local function cardHeader(run, i, expanded, color)
 	return ui.row({ gap = 8, align = "center" }, bits)
 end
 
--- Info line of an expanded card: copyable commit | clusters | last update.
--- All fields come from the slimmed filter payload - no extra CLI calls.
-local function infoLine(run, i)
+-- Info line of an expanded card: clusters | last update. (The commit lives in
+-- the header now, on every card.) All fields come from the slimmed filter
+-- payload - no extra CLI calls.
+local function infoLine(run, _i)
 	local info = {}
-	if run.git_commit and run.git_commit ~= "" then
-		info[#info + 1] = ui.button({
-			glyph = "git-commit",
-			glyphSize = 13,
-			text = run.git_commit:sub(1, 12),
-			fontSize = 11,
-			height = 22,
-			variant = "ghost",
-			tooltip = "Copy full commit hash",
-			onClick = cbn("copycommit", i, function()
-				copyToClipboard("Copied commit", run.git_commit)
-			end),
-		})
-	end
 	local clusters = {}
 	for name, st in pairs(run.clusters or {}) do
 		clusters[#clusters + 1] = st and (name .. " (" .. st .. ")") or name
