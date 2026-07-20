@@ -233,6 +233,10 @@
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   programs.zsh.enable = true;
+  # Home-manager runs compinit with the full fpath (plugins included); running
+  # it here too makes the two fight over ~/.config/zsh/.zcompdump, rebuilding
+  # it twice on every shell launch (~1s of terminal startup time).
+  programs.zsh.enableCompletion = false;
   users.users.dani = {
     shell = pkgs.zsh;
     isNormalUser = true;
