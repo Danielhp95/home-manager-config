@@ -41,9 +41,9 @@ key = "limit"
 type = "int"
 label_key = "settings.limit.label"
 description_key = "settings.limit.description"
-default = 30
+default = 100
 min = 1
-max = 100
+max = 500
 
 [[setting]]
 key = "poll_seconds"
