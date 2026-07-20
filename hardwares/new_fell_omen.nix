@@ -61,6 +61,12 @@
         useOSProber = false;
         configurationLimit = 10;
 
+        # Undertale mirror-scene theme: the boot menu renders inside the
+        # "Despite everything, it's still you." dialogue box.
+        theme = pkgs.callPackage ../grub_theme { };
+        # Panel-native 16:10 mode; the theme background is authored at 1920x1200.
+        gfxmodeEfi = "1920x1200,auto";
+
         extraEntries = ''
           # Chainload to Ubuntu's GRUB config file
           menuentry "Ubuntu" {
