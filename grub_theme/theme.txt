@@ -32,7 +32,7 @@ terminal-font: "Determination Mono Web Regular 32"
     top = 67%
     width = 84%
     height = 20%
-    item_font = "Determination Mono Web Regular 40"
+    item_font = "Determination Mono Web Regular 48"
     item_color = "#ffffff"
     selected_item_color = "#ffff00"
     item_height = 56
@@ -50,6 +50,6 @@ terminal-font: "Determination Mono Web Regular 32"
     left = 8%
     top = 89%
     color = "#ffffff"
-    font = "Determination Mono Web Regular 28"
+    font = "Determination Mono Web Regular 32"
     text = "* (It boots by itself in %d seconds.)"
 }
