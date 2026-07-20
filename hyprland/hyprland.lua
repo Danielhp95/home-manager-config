@@ -183,7 +183,9 @@ hl.gesture({ fingers = 4, direction = "horizontal", scale = 0.5, action = "works
 local mod = "SUPER"
 local hy3 = hl.plugin.hy3
 
-hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty"))
+-- -1 = single-instance: after the first window, new ones reuse the running
+-- process and open in ~5ms instead of ~400ms (fonts/GPU already initialized).
+hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"))
 
 -- Hacky script for plotting metrics from runs
 hl.bind(mod .. " + CTRL + p", hl.dsp.exec_cmd("bash /home/dani/Projects/sai/rofi_wrapper.sh"))
