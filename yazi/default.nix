@@ -106,11 +106,14 @@ in
         run = "plugin tv text";
       }
       # Mounting: everything lives under the M prefix (which-key menu).
+      # M m opens the classic mount.yazi UI (udisks disks/partitions), so the
+      # pre-gvfs muscle memory of "M then m" still lands there; phones and
+      # other GVfs devices are on M p.
       {
         desc = "Mount disks/partitions (udisks)";
         on = [
           "M"
-          "d"
+          "m"
         ];
         run = "plugin mount";
       }
@@ -118,7 +121,7 @@ in
         desc = "Mount phone/device (MTP) and jump to it";
         on = [
           "M"
-          "m"
+          "p"
         ];
         run = "plugin gvfs -- select-then-mount --jump";
       }
