@@ -98,6 +98,17 @@ in
     defaultKeymap = "emacs"; # this is the default, don't get scared
     autosuggestion.enable = true;
     enableCompletion = true;
+    # `compinit -C` trusts the cached .zcompdump and skips the compaudit
+    # security scan; do the full (slow) init only when the dump is >24h old,
+    # so newly installed completions still get picked up within a day.
+    completionInit = ''
+      autoload -U compinit
+      if [[ -n ''${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then
+        compinit
+      else
+        compinit -C
+      fi
+    '';
     history = {
       ignoreDups = true;
       extended = true;
