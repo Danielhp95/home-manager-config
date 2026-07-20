@@ -58,11 +58,11 @@ in
     gpclient
     # Split tunnel: only corp networks go through the VPN (see sieVpncSplit above).
     (writeShellScriptBin "sie-vpn-connect" ''
-      sudo -E ${pkgs.gpclient}/bin/gpclient connect --fix-openssl --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER --script ${sieVpncSplit} portal.global-vpn.sie.sony.com --hip
+      sudo -E ${pkgs.gpclient}/bin/gpclient connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER --script ${sieVpncSplit} portal.global-vpn.sie.sony.com --hip
     '')
     # Original full-tunnel behavior, kept as a fallback.
     (writeShellScriptBin "sie-vpn-connect-full" ''
-      sudo -E ${pkgs.gpclient}/bin/gpclient connect --fix-openssl --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER portal.global-vpn.sie.sony.com --hip
+      sudo -E ${pkgs.gpclient}/bin/gpclient connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER portal.global-vpn.sie.sony.com --hip
     '')
     (writeShellScriptBin "sie-vpn-disconnect" ''
       sudo -E ${pkgs.gpclient}/bin/gpclient disconnect
