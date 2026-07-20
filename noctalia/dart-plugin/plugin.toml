@@ -7,7 +7,7 @@
 id = "dani/dart"
 name = "DART Runs"
 version = "0.1.0"
-min_noctalia = "5.0.0"
+plugin_api = 3
 author = "dani"
 license = "MIT"
 icon = "target-arrow" # catalog glyph only; the bar shows assets/dart-logo.png
