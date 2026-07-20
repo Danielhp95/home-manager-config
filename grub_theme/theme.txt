@@ -1,0 +1,55 @@
+# Undertale mirror-scene GRUB theme.
+#
+# The boot menu is drawn inside the dialogue box of the "Despite everything,
+# it's still you." screen. The dialogue text was erased from background.png;
+# GRUB re-renders it below with the real game font, so the label, the menu
+# entries and the countdown all share the same typeface.
+#
+# background.png is authored at 1920x1200 (the 1920x1080 screenshot with
+# 60px black bars top/bottom to match the laptop panel's 16:10 aspect).
+# All coordinates are percentages so other modes of the same aspect line up.
+# Dialogue box interior on that canvas: x 116-1787, y 700-1114.
+
+desktop-image: "background.png"
+desktop-color: "#000000"
+title-text: ""
+terminal-font: "Determination Mono Web Regular 32"
+
+# The iconic line, re-rendered where the original screenshot had it.
++ label {
+    left = 8%
+    top = 59%
+    width = 84%
+    align = "left"
+    color = "#ffffff"
+    font = "Determination Mono Web Regular 72"
+    text = "* Despite everything, it's still you."
+}
+
+# Boot entries as dialogue choices: white text, Undertale-yellow selection.
++ boot_menu {
+    left = 8%
+    top = 67%
+    width = 84%
+    height = 20%
+    item_font = "Determination Mono Web Regular 40"
+    item_color = "#ffffff"
+    selected_item_color = "#ffff00"
+    item_height = 56
+    item_spacing = 4
+    item_padding = 0
+    icon_width = 0
+    icon_height = 0
+    item_icon_space = 0
+    scrollbar = false
+}
+
+# Countdown, shown only while the timeout is running.
++ label {
+    id = "__timeout__"
+    left = 8%
+    top = 89%
+    color = "#ffffff"
+    font = "Determination Mono Web Regular 28"
+    text = "* (It boots by itself in %d seconds.)"
+}
