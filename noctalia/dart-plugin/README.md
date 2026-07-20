@@ -7,8 +7,10 @@ dropdown panel to inspect, search, and manage runs — a shell-native sibling of
 
 ## Features
 
-**Bar widget** — dart logo + count of `running` runs; per-state counts in the
-tooltip; `!` on CLI errors. Click toggles the panel.
+**Bar widget** — dart logo + per-group counts: `▶` running, `⏳` queued
+(pre-run states), `⏸` suspended (suspend-family states); zero groups are
+hidden. Per-state counts in the tooltip; `!` on CLI errors. Click toggles the
+panel.
 
 **Panel** (1200×640, floating, centered under the bar)
 
@@ -59,7 +61,7 @@ panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 | `dart_path`    | `/home/dani/Projects/sai/.venv/bin/dart` | dart CLI (works outside the FHS shell) |
 | `nu_path`      | `/etc/profiles/per-user/dani/bin/nu`     | nushell for `slim.nu`            |
 | `username`     | `daniel.hernandez`                       | `--username-ss` scope            |
-| `limit`        | 30                                       | `--limit` for every query        |
+| `limit`        | 100                                      | `--limit` for every query        |
 | `poll_seconds` | 120                                      | background poll cadence          |
 
 ## Install / dev loop

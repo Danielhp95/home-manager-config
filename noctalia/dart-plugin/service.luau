@@ -20,7 +20,7 @@ Listens on:
 local DART = noctalia.getConfig("dart_path")
 local NU = noctalia.getConfig("nu_path")
 local USER = noctalia.getConfig("username")
-local LIMIT = noctalia.getConfig("limit") or 30
+local LIMIT = noctalia.getConfig("limit") or 100
 local POLL = math.max(15, noctalia.getConfig("poll_seconds") or 120)
 
 -- Default query states: dart.nvim's active set, extended with the manual
