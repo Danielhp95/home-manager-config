@@ -48,7 +48,6 @@
   # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 53317 ];  # for localsend
   networking.firewall.allowedUDPPorts = [ 53317 ];  # for localsend
 
   # Or disable the firewall altogether.
