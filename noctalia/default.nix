@@ -34,6 +34,10 @@ in
     # Until the switch lands, the plugin falls back to the sai FHS env's store
     # path (see dart-plugin/panel.luau openLogs).
     pkgs.grafana-loki
+    # python3 for the claude-companion plugin (community repo): its lifecycle
+    # hooks (hooks/pulse.py, wired into ~/.claude/settings.json) and MCP shim
+    # (shim/noctalia-mcp.py) are stdlib-only Python.
+    pkgs.python3
   ];
 
   # dart-plugin: noctalia v5 Luau plugin showing DART training runs in the bar
@@ -97,18 +101,19 @@ in
         { type = "dark_mode"; }
       ];
 
+      # auto_update is plugins-wide since the 2026-07 noctalia bump (it used to
+      # be a per-source key).
+      plugins.auto_update = true;
       plugins.source = [
         {
           name = "official";
           kind = "git";
           location = "https://github.com/noctalia-dev/official-plugins";
-          auto_update = true;
         }
         {
           name = "community";
           kind = "git";
           location = "https://github.com/noctalia-dev/community-plugins";
-          auto_update = true;
         }
       ];
       # Plugins are opt-in per id even when present on disk. dani/dart is the
@@ -157,6 +162,7 @@ in
           "tray"
           "notifications"
           "dart"
+          "pulse"
           "battery"
           "volume"
           "brightness"
@@ -218,6 +224,12 @@ in
         # resolves through this table to the plugin widget entry.
         dart = {
           type = "dani/dart:widget";
+        };
+
+        # Claude Code attention pulse (community claude-companion plugin).
+        # Driven by Claude Code lifecycle hooks in ~/.claude/settings.json.
+        pulse = {
+          type = "lowcache/claude-companion:pulse";
         };
       };
 
