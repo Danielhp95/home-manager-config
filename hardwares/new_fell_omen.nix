@@ -21,6 +21,12 @@
 
   boot = {
     kernelModules = [ "kvm-intel" ];
+    # spd5118 (DDR5 RAM temperature sensor) fails to resume from suspend on this
+    # machine (-ENXIO: the chip stops responding on the SMBus after S3), flooding
+    # the console with "failed to resume async: error -6" and sometimes wedging
+    # resume entirely. It's a diagnostics-only hwmon driver; blacklisting it only
+    # costs the RAM temperature reading in `sensors`.
+    blacklistedKernelModules = [ "spd5118" ];
     # The internal panel is driven by the Intel iGPU (card1-eDP-1 / i915), but on this
     # hardware the kernel registered the EC/WMI device `nvidia_wmi_ec_backlight` as the
     # backlight instead of `intel_backlight`. brightnessctl then writes to that EC device,
