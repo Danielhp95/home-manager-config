@@ -64,6 +64,14 @@
         # Undertale mirror-scene theme: the boot menu renders inside the
         # "Despite everything, it's still you." dialogue box.
         theme = pkgs.callPackage ../grub_theme { };
+        # After choosing an entry GRUB tears the menu down and shows its
+        # terminal background while loading the kernel — by default a gray
+        # NixOS-logo wallpaper. Show the theme scene with the SOUL heart in
+        # the bottom-left of the dialogue box instead: together with the
+        # heart cursor in the menu this reads as the soul jumping to the
+        # corner when you choose an entry.
+        splashImage = "${config.boot.loader.grub.theme}/background-selected.png";
+        splashMode = "stretch";
         # Panel-native 16:10 mode; the theme background is authored at 1920x1200.
         gfxmodeEfi = "1920x1200,auto";
 

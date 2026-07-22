@@ -26,7 +26,11 @@ terminal-font: "Determination Mono Web Regular 32"
     text = "* Despite everything, it's still you."
 }
 
-# Boot entries as dialogue choices: white text, Undertale-yellow selection.
+# Boot entries as dialogue choices: white text, Undertale-yellow selection,
+# and the SOUL heart as the selection cursor. The heart lives in the west
+# slice of the selected-item pixmap (select_w.png, 48x56 — width must equal
+# icon_width and height must equal item_height so it renders 1:1); the icon
+# column reserves that space on every row so text never overlaps it.
 + boot_menu {
     left = 8%
     top = 67%
@@ -35,12 +39,13 @@ terminal-font: "Determination Mono Web Regular 32"
     item_font = "Determination Mono Web Regular 48"
     item_color = "#ffffff"
     selected_item_color = "#ffff00"
+    selected_item_pixmap_style = "select_*.png"
     item_height = 56
     item_spacing = 4
     item_padding = 0
-    icon_width = 0
-    icon_height = 0
-    item_icon_space = 0
+    icon_width = 48
+    icon_height = 48
+    item_icon_space = 8
     scrollbar = false
 }
 

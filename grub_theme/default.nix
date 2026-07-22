@@ -22,7 +22,7 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out
-    cp theme.txt background.png $out/
+    cp theme.txt background.png background-selected.png select_w.png $out/
     for size in 32 48 72; do
       grub-mkfont -s $size -o $out/determination-mono-$size.pf2 DeterminationMonoWeb.woff
     done
