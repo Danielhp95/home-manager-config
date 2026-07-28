@@ -1,5 +1,20 @@
 { pkgs, inputs, ... }:
 {
+  # Mime-dispatching previewer backing the files channel's preview (and usable
+  # anywhere else a single preview command is wanted: fzf, lf, ...).
+  home.packages = with pkgs; [
+    pistol
+    chafa # images -> ANSI art in the preview pane
+  ];
+
+  # First matching line wins. Anything not matched here falls through to
+  # pistol's built-ins: chroma-highlighted text, archive/dir listings,
+  # libmagic descriptions for binaries.
+  home.file.".config/pistol/pistol.conf".text = ''
+    text/* sh: BAT_THEME=ansi bat -n --color=always --paging=never %pistol-filename%
+    image/* chafa -f symbols --animate off %pistol-filename%
+  '';
+
   home.file.".config/television/cable/dart.toml".text = ''
     [metadata]
     name = "dart"
@@ -11,6 +26,45 @@
 
     [preview]
     command = "dart run get --tags {}"
+  '';
+
+  # Pin the files channel (from television 0.15.9's cable repo) so the
+  # default source lists ALL files (hidden + gitignored, minus .git) instead
+  # of fd's default gitignore-respecting listing. <C-s> cycles to a
+  # gitignore-filtered source. `tv update-channels` won't touch this.
+  home.file.".config/television/cable/files.toml".text = ''
+    [metadata]
+    name = "files"
+    description = "A channel to select files and directories"
+    requirements = ["fd", "pistol"]
+
+    [source]
+    command = [
+      { name = "All",      run = "fd -t f -H -I -E .git" },
+      { name = "Filtered", run = "fd -t f" },
+    ]
+
+    [preview]
+    # pistol dispatches by mime type (config below): bat for text, chafa for
+    # images, built-in listings for archives/dirs, libmagic for the rest
+    command = "pistol '{}'"
+
+    [keybindings]
+    shortcut = "f1"
+    f12 = "actions:edit"
+    ctrl-up = "actions:goto_parent_dir"
+
+    [actions.edit]
+    description = "Opens the selected entries with the default editor (falls back to vim)"
+    command = "''${EDITOR:-vim} {}"
+    shell = "bash"
+    # use `mode = "fork"` if you want to return to tv afterwards
+    mode = "execute"
+
+    [actions.goto_parent_dir]
+    description = "Re-opens tv in the parent directory"
+    command = "tv files .."
+    mode = "execute"
   '';
 
   # Pin the text channel (from television 0.15.9's cable repo): its
@@ -46,6 +100,81 @@
     command = "''${EDITOR:-vim} '+{strip_ansi|split:\\::1}' '{strip_ansi|split:\\::0}'"
     shell = "bash"
     mode = "execute"
+  '';
+
+  # Frecency-ranked directory jumps. Wired into shell_integration's
+  # channel_triggers below so `z `/`cd ` + smart-autocomplete (ctrl-t / zsh
+  # Tab-Tab) pops this instead of the fd-based dirs channel.
+  home.file.".config/television/cable/zoxide.toml".text = ''
+    [metadata]
+    name = "zoxide"
+    description = "A channel to select directories ranked by zoxide frecency"
+    requirements = ["zoxide", "eza"]
+
+    [source]
+    command = "zoxide query --list"
+
+    [preview]
+    # Multi-column grid + recent commits when the dir is (in) a repo. tv gives
+    # the preview command no size info and stdout is a pipe (eza would assume
+    # 80 cols), but the command inherits the terminal's tty — stty reads the
+    # real width, which the portrait preview pane spans fully. --icons takes
+    # an optional [<WHEN>] value, so it must be =always or it swallows the
+    # next argument.
+    command = "w=$(stty size </dev/tty 2>/dev/null | cut -d' ' -f2); w=$((''${w:-100} - 6)); eza --grid --across --icons=always --color=always -w $w '{}'; echo; git -C '{}' log --oneline -5 2>/dev/null || true"
+
+    # Stacked layout: preview below the results, full path as its header
+    [ui]
+    orientation = "portrait"
+    preview_panel = { size = 60, header = "{}" }
+
+    [keybindings]
+    shortcut = "f2"
+  '';
+
+  # System generation switcher backing the `ng` alias in zsh and nushell.
+  # Reads the generation links from /nix/var/nix/profiles directly: `nix-env
+  # --list-generations` without -p lists the *user* profile, and with -p the
+  # system profile it needs root (system.lock). Enter hands the selected
+  # generation link to `nh os switch` as a path installable
+  # (`-- --switch-generation N` would hand the flag to nix build).
+  home.file.".config/television/cable/nix-generations.toml".text = ''
+    [metadata]
+    name = "nix-generations"
+    description = "A channel to inspect and switch NixOS system generations"
+    requirements = ["nvd", "nh"]
+
+    [source]
+    # stat the link itself: its target's mtime is nix-normalized to 1970
+    command = "for link in /nix/var/nix/profiles/system-*-link; do num=\"''${link##*system-}\"; num=\"''${num%-link}\"; printf '%s %s\\n' \"$num\" \"$(stat -c '%.16y' \"$link\")\"; done | sort -rn"
+
+    [preview]
+    command = "nvd diff '/nix/var/nix/profiles/system-{split: :0}-link' /nix/var/nix/profiles/system"
+
+    [keybindings]
+    enter = "actions:switch"
+
+    [actions.switch]
+    description = "Switch the system to the selected generation"
+    command = "nh os switch '/nix/var/nix/profiles/system-{split: :0}-link'"
+    shell = "bash"
+    mode = "execute"
+  '';
+
+  # NixOS / home-manager option search via manix (installed in home.nix).
+  # manix lists matches as "# option.path (source)"; the sed strips that down
+  # to the bare option path (manix's own README fzf recipe, tv-ified).
+  home.file.".config/television/cable/nix-options.toml".text = ''
+    [metadata]
+    name = "nix-options"
+    description = "A channel to search NixOS/home-manager options and nixpkgs docs"
+    requirements = ["manix"]
+
+    [source]
+    command = "manix \"\" | grep '^# ' | sed 's/^# \\(.*\\) (.*/\\1/;s/ (.*//'"
+
+    [preview]
+    command = "manix '{}'"
   '';
 
   # Ember theme configuration for television
@@ -153,6 +282,9 @@
     ctrl-down = "select_next_history"
     tab = "select_next_entry"
     backtab = "select_prev_entry"
+    # tab is remapped to navigation above (tv's default is toggle_selection),
+    # so multi-select lives here instead
+    ctrl-space = "toggle_selection"
     enter = "confirm_selection"
     pagedown = "scroll_preview_half_page_down"
     pageup = "scroll_preview_half_page_up"
@@ -185,7 +317,8 @@
     [shell_integration.channel_triggers]
     "alias" = ["alias", "unalias"]
     "env" = ["export", "unset"]
-    "dirs" = ["cd", "ls", "rmdir", "z"]
+    "dirs" = ["ls", "rmdir"]
+    "zoxide" = ["cd", "z", "zz"]
     "files" = ["cat", "less", "head", "tail", "vim", "nano", "bat", "cp", "mv", "rm", "touch", "chmod", "chown", "ln", "tar", "zip", "unzip", "gzip", "gunzip", "xz"]
     "git-diff" = ["git add", "git restore"]
     "git-branch" = ["git checkout", "git branch", "git merge", "git rebase", "git pull", "git push"]

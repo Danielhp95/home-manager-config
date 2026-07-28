@@ -92,6 +92,7 @@
     # chromium and firefox are installed by their own modules (./chromium.nix,
     # ./firefox), which also carry their theming.
     nvd # Nix version diff tool
+    manix # NixOS/home-manager options search (backs `tv nix-options`)
 
     ### Style
     pywal # Colorscheme generator

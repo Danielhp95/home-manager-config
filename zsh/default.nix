@@ -30,7 +30,7 @@ in
 
   # `bat`: cat clone with syntax highlighting + git integration.
   # theme = "base16" renders through the terminal's live ANSI palette, so bat
-  # tracks the active Ember / base16-shell colors automatically.
+  # tracks the active Ember colors automatically.
   programs.bat = {
     enable = true;
     config = {
@@ -56,15 +56,28 @@ in
             autoload -U select-word-style
             select-word-style bash
 
-            # Base16 Shell colors!
-            BASE16_SHELL="$HOME/.config/base16-shell/"
-            [ -n "$PS1" ] && \
-                [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-                    source "$BASE16_SHELL/profile_helper.sh"
-
-            export FZF_DEFAULT_OPTS="
+            # Append (the fzf module already fills FZF_DEFAULT_OPTS with the
+            # Ember colors via sessionVariables; plain export clobbered them)
+            export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
             --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
             "
+
+            # zi / `z foo<Space><Tab>` picker: zoxide replaces
+            # FZF_DEFAULT_OPTS with this when it spawns fzf, so re-seed it
+            # with the ambient opts. Lines are "score path" -> {2..} is path.
+            # (--icons needs =always: with a bare --icons eza parses the
+            # following path as the flag's optional WHEN value)
+            # --tmux renders the picker in a tmux popup (styled by tmux.conf's
+            # popup-border settings); --height is the fallback outside tmux
+            export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --height 40% --tmux center,70%,60% --preview-window=down --preview 'eza -1 --color=always --icons=always {2..}'"
+
+            # Run any command with an interactively-picked frecent dir as the
+            # last argument: `zz nvim`, `zz eza -la`, ...
+            zz () {
+              local dir
+              dir="$(zoxide query -i)" || return
+              "$@" "$dir"
+            }
 
             # Resolve a command through the nix store (the old alias version
             # had an unclosed backtick and just hung the prompt).
@@ -72,25 +85,9 @@ in
               readlink -f "$(which "$1")"
             }
 
-            # System generation switcher with television preview (same as
-            # nushell's ng, see terminal/nushell.nix for the why of each part).
-            ng () {
-              local gen num link
-              gen=$(
-                for link in /nix/var/nix/profiles/system-*-link; do
-                  num="''${link##*system-}"
-                  num="''${num%-link}"
-                  # stat the link itself: its target's mtime is nix-normalized to 1970
-                  printf '%s %s\n' "$num" "$(stat -c '%.16y' "$link")"
-                done | sort -rn \
-                  | tv --preview-command "nvd diff '/nix/var/nix/profiles/system-{split: :0}-link' /nix/var/nix/profiles/system"
-              )
-              if [[ -n "$gen" ]]; then
-                nh os switch "/nix/var/nix/profiles/system-''${gen%% *}-link"
-              fi
-            }
-
-          	# ${pkgs.pywal}/bin/wal -i $(cat ~/.cache/swww/eDP-1) -q -n
+            # System generation switcher (cable channel in
+            # terminal/television.nix; enter runs `nh os switch`)
+            alias ng="tv nix-generations"
         '')
     ];
     autocd = true;

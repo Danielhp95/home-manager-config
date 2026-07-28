@@ -52,28 +52,25 @@
         + " --bind='ctrl-e:execute(nvim {} > /dev/tty)+abort'"
       )
 
-      # System generation switcher with television preview. Reads the
-      # generation links from /nix/var/nix/profiles directly: `nix-env
-      # --list-generations` without -p lists the *user* profile, and with
-      # -p the system profile it needs root (system.lock). The selected
-      # generation link is passed to `nh os switch` as a path installable
-      # (`-- --switch-generation N` would hand the flag to nix build).
-      def ng [] {
-        let gen = (
-          ls /nix/var/nix/profiles
-          | where name =~ 'system-\d+-link'
-          | insert num { |it| $it.name | parse --regex 'system-(?<n>\d+)-link' | get 0.n | into int }
-          | sort-by -r num
-          | each { |it| $"($it.num) ($it.modified | format date '%Y-%m-%d %H:%M')" }
-          | to text
-          | tv --preview-command "nvd diff '/nix/var/nix/profiles/system-{split: :0}-link' /nix/var/nix/profiles/system"
-        )
+      # zi picker: zoxide replaces FZF_DEFAULT_OPTS with _ZO_FZF_OPTS when it
+      # spawns fzf, so re-seed it with the ambient opts (same as zsh).
+      # Picker lines are "score path" -> {2..} is the path.
+      $env._ZO_FZF_OPTS = (
+        ($env.FZF_DEFAULT_OPTS? | default "")
+        + " --height 40% --tmux center,70%,60% --preview-window=down --preview 'eza -1 --color=always --icons=always {2..}'"
+      )
 
-        if ($gen | is-not-empty) {
-          let num = ($gen | str trim | split row " " | first)
-          nh os switch $"/nix/var/nix/profiles/system-($num)-link"
-        }
+      # Run any command with an interactively-picked frecent dir as the last
+      # argument: `zz nvim`, `zz eza -la`, ... (zsh's `zz`)
+      def --wrapped zz [...cmd: string] {
+        let picked = (zoxide query -i | complete)
+        if $picked.exit_code != 0 { return }
+        run-external ...$cmd ($picked.stdout | str trim)
       }
+
+      # System generation switcher (cable channel in terminal/television.nix;
+      # enter runs `nh os switch`)
+      alias ng = tv nix-generations
 
       # Resolve a command through the nix store (zsh's `whichnix`)
       def whichnix [cmd: string] {

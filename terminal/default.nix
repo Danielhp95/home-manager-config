@@ -1,5 +1,14 @@
-{ pkgs, inputs, ... }:
+{ pkgs, inputs, config, ... }:
 {
+  # Zoxide database hygiene. Literal paths (not $HOME) because the nushell
+  # module loads sessionVariables without shell expansion.
+  home.sessionVariables = {
+    # Skip ~ itself (jumping "home" is trivial), the store, and .git internals
+    _ZO_EXCLUDE_DIRS = "${config.home.homeDirectory}:/nix/store/*:*/.git/*";
+    # Dedupe symlinked paths before scoring — most things are symlinks on NixOS
+    _ZO_RESOLVE_SYMLINKS = "1";
+  };
+
   home.packages = with pkgs; [
     gh
     fira-code
