@@ -1,0 +1,97 @@
+# LocalSend sender for noctalia v5 (Luau plugin).
+# Bar widget: send glyph + staged-file count, or live % during a transfer.
+# Panel: staged files, discovered devices, and the transfer strip.
+# A singleton [[service]] owns everything that touches the network or spawns a
+# process; widget and panel only watch noctalia.state and render.
+#
+# The protocol itself lives in localsend.nu — noctalia has no UDP sockets (so
+# no discovery) and no way to stream a file body or watch an upload in flight.
+id = "dani/localsend"
+name = "LocalSend"
+version = "0.1.0"
+plugin_api = 3
+author = "dani"
+license = "MIT"
+icon = "send"
+description = "Send files over LocalSend: drag-and-drop or pick, then choose a device — without opening the LocalSend app."
+
+[[setting]]
+key = "alias"
+type = "string"
+label_key = "settings.alias.label"
+description_key = "settings.alias.description"
+default = "noctalia"
+
+[[setting]]
+key = "nu_path"
+type = "string"
+label_key = "settings.nu_path.label"
+description_key = "settings.nu_path.description"
+# Profile symlinks, not store paths: these survive rebuilds and GC, and
+# noctalia's PATH is not the user's shell PATH.
+default = "/etc/profiles/per-user/dani/bin/nu"
+advanced = true
+
+[[setting]]
+key = "socat_path"
+type = "string"
+label_key = "settings.socat_path.label"
+description_key = "settings.socat_path.description"
+default = "/etc/profiles/per-user/dani/bin/socat"
+advanced = true
+
+[[setting]]
+key = "curl_path"
+type = "string"
+label_key = "settings.curl_path.label"
+description_key = "settings.curl_path.description"
+default = "/run/current-system/sw/bin/curl"
+advanced = true
+
+[[setting]]
+key = "ripdrag_path"
+type = "string"
+label_key = "settings.ripdrag_path.label"
+description_key = "settings.ripdrag_path.description"
+default = "/etc/profiles/per-user/dani/bin/ripdrag"
+advanced = true
+
+[[setting]]
+key = "zenity_path"
+type = "string"
+label_key = "settings.zenity_path.label"
+description_key = "settings.zenity_path.description"
+default = "/etc/profiles/per-user/dani/bin/zenity"
+advanced = true
+
+[[setting]]
+key = "discover_ms"
+type = "int"
+label_key = "settings.discover_ms.label"
+description_key = "settings.discover_ms.description"
+default = 2000
+min = 500
+max = 10000
+
+[[setting]]
+key = "clear_after_send"
+type = "bool"
+label_key = "settings.clear_after_send.label"
+description_key = "settings.clear_after_send.description"
+default = true
+
+[[widget]]
+id = "widget"
+entry = "widget.luau"
+
+[[panel]]
+id = "panel"
+entry = "panel.luau"
+width = 760
+height = 560
+placement = "floating"
+position = "top_center"
+
+[[service]]
+id = "agent"
+entry = "service.luau"

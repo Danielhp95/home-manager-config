@@ -1,0 +1,36 @@
+{
+  "settings": {
+    "alias": {
+      "label": "Device alias",
+      "description": "Name other LocalSend devices see when this machine sends."
+    },
+    "nu_path": {
+      "label": "nushell path",
+      "description": "nu that runs localsend.nu (the protocol client)."
+    },
+    "socat_path": {
+      "label": "socat path",
+      "description": "socat used for UDP multicast discovery."
+    },
+    "curl_path": {
+      "label": "curl path",
+      "description": "curl used for the upload requests."
+    },
+    "ripdrag_path": {
+      "label": "ripdrag path",
+      "description": "ripdrag provides the drag-and-drop target window."
+    },
+    "zenity_path": {
+      "label": "zenity path",
+      "description": "zenity provides the file and folder picker dialogs."
+    },
+    "discover_ms": {
+      "label": "Discovery window (ms)",
+      "description": "How long to listen for device replies after announcing."
+    },
+    "clear_after_send": {
+      "label": "Clear after sending",
+      "description": "Empty the staged file list once a transfer completes."
+    }
+  }
+}

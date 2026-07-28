@@ -34,10 +34,14 @@ in
     # Until the switch lands, the plugin falls back to the sai FHS env's store
     # path (see dart-plugin/panel.luau openLogs).
     pkgs.grafana-loki
-    # python3 for the claude-companion plugin (community repo): its lifecycle
-    # hooks (hooks/pulse.py, wired into ~/.claude/settings.json) and MCP shim
-    # (shim/noctalia-mcp.py) are stdlib-only Python.
-    pkgs.python3
+
+    # localsend-plugin's three helpers. noctalia itself cannot do any of this:
+    # it has no UDP sockets (socat carries multicast discovery), it cannot be a
+    # Wayland drop target (ripdrag provides the drop window), and it has no
+    # file dialog (zenity provides the pickers).
+    pkgs.socat
+    pkgs.ripdrag
+    pkgs.zenity
   ];
 
   # dart-plugin: noctalia v5 Luau plugin showing DART training runs in the bar
@@ -49,6 +53,15 @@ in
   # from the pre-nix dev install, `rm` it first or activation fails.
   xdg.dataFile."noctalia/plugins/dart".source =
     config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/dart-plugin";
+
+  # localsend-plugin: send files over LocalSend without opening the app —
+  # drop target / file picker / clipboard on one side, multicast device
+  # discovery and the v2 upload handshake on the other. Same out-of-store
+  # symlink so .luau edits hot-reload without a rebuild.
+  # NOTE same first-switch trap as above: if the path already exists as a
+  # hand-made symlink, `rm` it before switching or activation fails.
+  xdg.dataFile."noctalia/plugins/localsend".source =
+    config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/localsend-plugin";
 
   programs.noctalia = {
     enable = true;
@@ -122,7 +135,10 @@ in
       # the GUI write this same key into the runtime overrides file
       # (~/.local/state/noctalia/settings.toml), which replaces this array
       # wholesale — delete the [plugins] block there if this list stops applying.
-      plugins.enabled = [ "dani/dart" ];
+      plugins.enabled = [
+        "dani/dart"
+        "dani/localsend"
+      ];
 
       wallpaper = {
         enabled = true;
@@ -162,7 +178,7 @@ in
           "tray"
           "notifications"
           "dart"
-          "pulse"
+          "localsend"
           "battery"
           "volume"
           "brightness"
@@ -226,10 +242,10 @@ in
           type = "dani/dart:widget";
         };
 
-        # Claude Code attention pulse (community claude-companion plugin).
-        # Driven by Claude Code lifecycle hooks in ~/.claude/settings.json.
-        pulse = {
-          type = "lowcache/claude-companion:pulse";
+        # LocalSend sender (local Luau plugin, see localsend-plugin/).
+        # Left-click opens the send panel, right-click opens a drop target.
+        localsend = {
+          type = "dani/localsend:widget";
         };
       };
 
