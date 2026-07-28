@@ -107,7 +107,6 @@
       ];
       hmSharedModules = [
         inputs.noctalia.homeModules.default
-        ./hyprland/pyprland.nix
         inputs.spicetify-nix.homeManagerModules.default
       ];
       hmExtraSpecialArgs = {

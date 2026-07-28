@@ -162,7 +162,6 @@ hl.on("hyprland.start", function()
 	)
 
 	hl.exec_cmd("fcitx5")
-	hl.exec_cmd("pypr")
 	hl.exec_cmd("hyprctl dispatch workspace 2") -- start on the terminal workspace
 	-- noctalia is started via its systemd user service (see noctalia/default.nix)
 	hl.exec_cmd("vicinae server") -- launcher
@@ -322,10 +321,10 @@ hl.bind(mod .. " + XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"))
 hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record start"))
 hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record stop"), { release = true })
 
--- Pypr (magnify plugin)
-hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("pypr zoom --0.5"))
-hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("pypr zoom ++0.5"))
-hl.bind(mod .. " + Z", hl.dsp.exec_cmd("pypr zoom")) -- toggle zoom
+-- Magnifier (cursor:zoom_factor; `magnify` script, was pypr's magnify plugin)
+hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("magnify -0.5"), { repeating = true })
+hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("magnify +0.5"), { repeating = true })
+hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify")) -- toggle zoom
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Layout: hy3 (plugin) config

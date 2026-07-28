@@ -55,6 +55,55 @@ let
         ;;
     esac
   '';
+
+  # Screen magnifier — replaces pyprland's `magnify` plugin, which was only ever
+  # a wrapper around Hyprland's native cursor:zoom_factor. Animates the zoom in
+  # short eased steps so it doesn't snap the way a single jump would.
+  # NOTE: under configType = "lua" (Hyprland >= 0.55) `hyprctl keyword` answers
+  # "unknown request" — live config changes go through `hyprctl eval` instead.
+  magnifyScript = pkgs.writeShellScriptBin "magnify" ''
+    awk=${lib.getExe pkgs.gawk}
+    steps=10
+    frame=0.008
+    default=2.0   # zoom level a bare `magnify` toggles to
+    max=10.0
+
+    cur=$(hyprctl getoption cursor:zoom_factor | $awk '/^float/{print $2}')
+    [ -n "$cur" ] || cur=1.0
+
+    case "''${1:-toggle}" in
+      toggle)
+        # zooming out forgets the level we were at: the next toggle always comes
+        # back at $default rather than however far the +/- binds had crept up
+        if $awk -v c="$cur" 'BEGIN{exit !(c > 1.01)}'; then
+          target=1.0
+        else
+          target="$default"
+        fi
+        ;;
+      reset) target=1.0 ;;
+      status) echo "$cur"; exit 0 ;;
+      +*|-*) target=$($awk -v c="$cur" -v d="''${1}" 'BEGIN{print c + d}') ;;
+      *)
+        case "$1" in
+          *[!0-9.]*|"") echo "usage: magnify [toggle|reset|status|+N|-N|<factor>]" >&2; exit 1 ;;
+        esac
+        target="$1"
+        ;;
+    esac
+
+    # cursor:zoom_factor < 1.0 is invalid; clamp both ends
+    target=$($awk -v t="$target" -v m="$max" 'BEGIN{if(t<1)t=1; if(t>m)t=m; printf "%.3f", t}')
+
+    # all frames from one awk (eased out); a subshell per frame made the
+    # animation visibly laggy when a +/- bind is held down
+    $awk -v c="$cur" -v t="$target" -v n="$steps" \
+      'BEGIN{for(i=1;i<=n;i++){p=i/n; e=1-(1-p)*(1-p); printf "%.3f\n", c+(t-c)*e}}' |
+    while read -r v; do
+      hyprctl eval "hl.config({ cursor = { zoom_factor = $v } })" >/dev/null
+      sleep $frame
+    done
+  '';
 in
 {
   imports = [ ./theming.nix ];
@@ -85,9 +134,6 @@ in
     };
     xwayland.enable = true;
   };
-  khome.desktop.pyprland = {
-    enable = true;
-  };
   home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
 
   home.packages = with pkgs; [
@@ -113,6 +159,7 @@ in
 
     ocrScript
     dgpuScript
+    magnifyScript
 
     # This should really live on its own package
     slurp
