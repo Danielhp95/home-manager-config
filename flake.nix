@@ -45,6 +45,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Pinned Firefox add-on XPIs, exposed as `pkgs.firefox-addons.*` by its
+    # overlay below and consumed by firefox/default.nix.
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     claude-code.url = "github:sadjow/claude-code-nix";
     claude-code.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -71,6 +78,7 @@
       # Shared between the NixOS-managed home-manager and the standalone entrypoint
       overlays = with nixpkgs.lib; [
         inputs.claude-code.overlays.default
+        inputs.firefox-addons.overlays.default
         (final: prev: {
           # load in inputs and provide as `channels` attribute in `pkgs.channels`
           channels = pipe inputs [

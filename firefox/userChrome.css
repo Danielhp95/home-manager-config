@@ -1,0 +1,111 @@
+/* Firefox chrome in the Ember / WhiteSur-Dark-orange palette.
+ *
+ * The color values themselves are injected ahead of this file as `--ember-*`
+ * custom properties on :root (see ./default.nix, which reads them out of
+ * ../palette.nix) — this file only decides where each one is used.
+ *
+ * Requires toolkit.legacyUserProfileCustomizations.stylesheets = true, which
+ * default.nix sets. Firefox occasionally renames internal parts, so if a rule
+ * here stops applying after an update, check the element name in the Browser
+ * Toolbox (ctrl+shift+alt+i) rather than assuming the whole sheet broke.
+ */
+
+/* ── Lightweight-theme variables ─────────────────────────────────────────────
+ * Setting these is what actually recolors the browser: the built-in themes
+ * feed the same variables, so overriding them here keeps every dependent
+ * surface (tab strip, toolbars, sidebar headers) consistent for free.
+ */
+:root {
+  --lwt-accent-color: var(--ember-bg) !important;
+  --lwt-accent-color-inactive: var(--ember-bg) !important;
+  --lwt-text-color: var(--ember-fg) !important;
+
+  --toolbar-bgcolor: var(--ember-bg-alt) !important;
+  --toolbar-color: var(--ember-fg) !important;
+  --toolbar-field-background-color: var(--ember-bg-deep) !important;
+  --toolbar-field-color: var(--ember-fg) !important;
+  --toolbar-field-focus-background-color: var(--ember-bg-deep) !important;
+  --toolbar-field-focus-color: var(--ember-fg) !important;
+  --toolbar-field-border-color: transparent !important;
+  --toolbar-field-focus-border-color: var(--ember-accent) !important;
+
+  --tab-selected-bgcolor: var(--ember-surface) !important;
+  --tab-selected-textcolor: var(--ember-fg) !important;
+
+  --chrome-content-separator-color: var(--ember-border) !important;
+  --focus-outline-color: var(--ember-accent) !important;
+
+  --arrowpanel-background: var(--ember-bg-alt) !important;
+  --arrowpanel-color: var(--ember-fg) !important;
+  --arrowpanel-border-color: var(--ember-border) !important;
+
+  --panel-separator-color: var(--ember-border) !important;
+  --button-primary-bgcolor: var(--ember-accent) !important;
+  --button-primary-hover-bgcolor: var(--ember-accent-bright) !important;
+  --button-primary-color: var(--ember-bg) !important;
+}
+
+/* ── Tab strip ─────────────────────────────────────────────────────────────
+ * WhiteSur's tabs are rounded and the active one is marked by an accent line
+ * rather than by a hard color break.
+ */
+.tabbrowser-tab .tab-background {
+  border-radius: 8px 8px 0 0 !important;
+  margin-block: 2px 0 !important;
+}
+
+.tabbrowser-tab[selected] .tab-background {
+  box-shadow: inset 0 2px 0 0 var(--ember-accent) !important;
+}
+
+.tabbrowser-tab:not([selected]):hover .tab-background {
+  background-color: var(--ember-bg-alt) !important;
+}
+
+/* The thin line under the tab strip. */
+#navigator-toolbox {
+  border-bottom: 1px solid var(--ember-border) !important;
+}
+
+/* ── Address bar ──────────────────────────────────────────────────────────── */
+#urlbar[focused="true"] > #urlbar-background {
+  outline: 1px solid var(--ember-accent) !important;
+}
+
+#urlbar-background,
+#searchbar {
+  border-radius: 8px !important;
+  border-color: var(--ember-border) !important;
+}
+
+/* Autocomplete dropdown. */
+.urlbarView-row[selected],
+.urlbarView-row:hover {
+  background-color: var(--ember-surface) !important;
+}
+
+.urlbarView-row[selected] .urlbarView-title-separator,
+.urlbarView-row[selected] .urlbarView-url {
+  color: var(--ember-accent) !important;
+}
+
+/* ── Sidebar, findbar, panels ─────────────────────────────────────────────── */
+#sidebar-box,
+#sidebar-header {
+  background-color: var(--ember-bg-deep) !important;
+  color: var(--ember-fg) !important;
+  border-inline-end: 1px solid var(--ember-border) !important;
+}
+
+findbar {
+  background-color: var(--ember-bg-alt) !important;
+  color: var(--ember-fg) !important;
+  border-top: 1px solid var(--ember-border) !important;
+}
+
+/* Menu/panel hover, so context menus match the rest instead of falling back
+ * to the platform accent. */
+menupopup > menuitem:hover,
+menupopup > menu:hover {
+  background-color: var(--ember-surface) !important;
+}
