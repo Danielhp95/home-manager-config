@@ -32,12 +32,6 @@ in
       full-border = "${officialPlugins}/full-border.yazi";
       # Local plugin: cd to sibling dirs of the parent from anywhere (K/J on parent pane)
       parent-arrow = ./parent-arrow;
-      fg = pkgs.fetchFromGitHub {
-        owner = "DreamMaoMao";
-        repo = "fg.yazi";
-        rev = "46a5c16f62f415f691319f984b9548249b0edc96";
-        hash = "sha256-B6Feg8icshHQYv04Ee/Bo9PPaiDPRyt1HwpirI/yXj8=";
-      };
       tv = pkgs.fetchFromGitHub {
         owner = "cap153";
         repo = "tv.yazi";

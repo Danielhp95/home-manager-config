@@ -29,11 +29,9 @@
       kb-row-down = "Down,Control+n,Alt+j";
     };
     theme = ./rofi/spotlight_dark.rasi; # Personal theme
-    # theme = "~/.cache/wal/colors-rofi-dark.rasi";
     terminal = "xterm-kitty";
     plugins = with pkgs; [
       rofi-file-browser
-      pywal
     ];
   };
   home.packages = with pkgs; [

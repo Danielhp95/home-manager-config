@@ -134,8 +134,6 @@ in
     };
     xwayland.enable = true;
   };
-  home.file.".config/wal/templates/colors-hyprland.conf".source = ./colors-hyprland.conf;
-
   home.packages = with pkgs; [
     hyprpolkitagent # Authenticator
 
@@ -154,8 +152,6 @@ in
     wdisplays # manage display positioning
     wl-clipboard # wayland clipboard utilities
     wl-mirror # For mirroring screens
-
-    lxsession # Authenticator
 
     ocrScript
     dgpuScript

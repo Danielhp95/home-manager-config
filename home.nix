@@ -62,12 +62,9 @@
     ./ghostty
 
     ./hyprland
-    ./status_bars
     ./noctalia
 
     ./sony_ai
-
-    ./flameshot
 
     ./writing.nix
     ./default_applications.nix
@@ -94,13 +91,13 @@
     nvd # Nix version diff tool
     manix # NixOS/home-manager options search (backs `tv nix-options`)
 
-    ### Style
-    pywal # Colorscheme generator
+    python3
 
     ### Communication
     slack
     telegram-desktop
     element-desktop
+    nextcloud-client
 
     # zoom-us
 
@@ -179,8 +176,6 @@
 
     # File sharing (Like AirDrop)
     localsend
-
-    nvidia-docker
 
     bluetui # Bluetooth tui
 
