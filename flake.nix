@@ -17,7 +17,7 @@
       url = "https://github.com/hyprwm/Hyprland";
       # v0.55.0 tag. Pinned because hyprland main regularly breaks hy3's
       # compile; when bumping, keep in sync with what hy3 supports.
-      rev = "1a3606234c59842340ad9a42baeeffe44a9d6cda";
+      rev = "453d96e92739a2a0b865cf9166d48ba14ec14b7b";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -25,7 +25,7 @@
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
       # 0.56.0
-      rev = "8666c43f6ed3a86687fd585e110c48592ad4deb8";
+      rev = "42b7ed8fd9aefd3f36e5f617afd5071245c67853";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
