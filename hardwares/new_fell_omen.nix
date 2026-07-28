@@ -19,6 +19,27 @@
   # For theming
   programs.dconf.enable = true;
 
+  # Hide sinks that are never the intended output: the nvidia GB203's HDMI
+  # "pro-output" ports (no display audio is ever plugged into the dGPU) and
+  # the ACE controller's HDMI1-3 ports (unplugged monitor-audio outputs).
+  # Keeps the ACE "Speaker" (internal speakers) and any Bluetooth sink
+  # selectable in pavucontrol.
+  services.pipewire.wireplumber.extraConfig."51-hide-unwanted-sinks" = {
+    "monitor.alsa.rules" = [
+      {
+        matches = [
+          { "node.name" = "~alsa_output.pci-0000_02_00.1.pro-output-.*"; }
+          { "node.name" = "~alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__HDMI[0-9]__sink"; }
+        ];
+        actions = {
+          update-props = {
+            "node.disabled" = true;
+          };
+        };
+      }
+    ];
+  };
+
   boot = {
     kernelModules = [ "kvm-intel" ];
     # spd5118 (DDR5 RAM temperature sensor) fails to resume from suspend on this
