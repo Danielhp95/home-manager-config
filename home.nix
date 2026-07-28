@@ -48,6 +48,13 @@
     ./git
     ./menu_launchers
 
+    # Apps that draw their own UI and so need theming of their own, rather
+    # than picking up WhiteSur-Dark-orange from GTK/Qt.
+    ./firefox
+    ./chromium.nix
+    ./element.nix
+    ./spotify.nix
+
     ./terminal
     ./terminal/television.nix
     ./terminal/nushell.nix
@@ -82,7 +89,8 @@
 
   home.packages = with pkgs; [
     ### Browsers
-    chromium
+    # chromium and firefox are installed by their own modules (./chromium.nix,
+    # ./firefox), which also carry their theming.
     nvd # Nix version diff tool
 
     ### Style
@@ -124,7 +132,8 @@
     vlc
 
     # music / video
-    spotify
+    # spotify comes from ./spotify.nix (spicetify-wrapped); installing
+    # pkgs.spotify as well would shadow it.
 
     # Images
     imv # Lightweight
@@ -175,8 +184,6 @@
     bluetui # Bluetooth tui
 
     gnome-session
-
-    firefox
   ];
 
   programs.claude-code = {

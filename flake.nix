@@ -52,6 +52,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Patches Spotify's Electron bundle so it can be themed (see spotify.nix).
+    spicetify-nix.url = "github:Gerg-L/spicetify-nix";
+    spicetify-nix.inputs.nixpkgs.follows = "nixpkgs";
+
     claude-code.url = "github:sadjow/claude-code-nix";
     claude-code.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -104,6 +108,7 @@
       hmSharedModules = [
         inputs.noctalia.homeModules.default
         ./hyprland/pyprland.nix
+        inputs.spicetify-nix.homeManagerModules.default
       ];
       hmExtraSpecialArgs = {
         inherit inputs;
