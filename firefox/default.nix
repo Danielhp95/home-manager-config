@@ -41,6 +41,13 @@ in
   programs.firefox = {
     enable = true;
 
+    # Home Manager's default moved to $XDG_CONFIG_HOME/mozilla/firefox and it
+    # warns on every build while home.stateVersion < 26.05. Pinned to the legacy
+    # path rather than migrated: the profile below is an existing on-disk one,
+    # and the move is manual (Home Manager relocates neither the profile
+    # directory nor the native messaging hosts firenvim relies on).
+    configPath = ".mozilla/firefox";
+
     profiles.default = {
       id = 0;
       # Must match the existing directory name, otherwise Firefox starts on an
