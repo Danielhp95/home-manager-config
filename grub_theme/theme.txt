@@ -15,6 +15,16 @@ desktop-color: "#000000"
 title-text: ""
 terminal-font: "Determination Mono Web Regular 32"
 
+# After choosing an entry (or pressing Esc/c) GRUB swaps the menu for its
+# gfxterm terminal. Without these, the terminal defaults to a smaller
+# centered window, so the splashImage gets drawn shrunken in the middle of
+# the screen. Make the terminal cover the whole screen instead.
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+terminal-border: "0"
+
 # The iconic line, re-rendered where the original screenshot had it.
 + label {
     left = 8%
