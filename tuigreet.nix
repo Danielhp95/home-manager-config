@@ -88,7 +88,56 @@ let
       (sortSessionList cfg.defaultSession sessions)
     )
   );
-  greetdTheme = "--theme border=magenta;text=cyan;prompt=green;time=red;action=blue;button=yellow;container=black;input=red";
+  # Ember / WhiteSur-Dark-orange colors (see ./palette.nix). tuigreet parses
+  # these with ratatui's Color::from_str, which takes #rrggbb as well as the
+  # 16 ANSI color names.
+  #
+  # NOTE the greeter runs on VT1 (terminal.vt below) and the Linux console
+  # cannot display 24-bit color — the kernel approximates each value to the
+  # nearest of its 16 palette entries, so this degrades to "coral -> red,
+  # graphite -> black" there. The hex is still what we want written down: it is
+  # exact whenever the greeter runs inside a real terminal.
+  p = (import ./palette.nix).hash;
+  themeSpec = concatStringsSep ";" [
+    "container=${p.bg}"
+    "border=${p.accent}"
+    "title=${p.fg}"
+    "text=${p.fg}"
+    # `greet` styles the whole greeting, pixel art included — Flowey's petals.
+    "greet=${p.gold}"
+    "time=${p.accent}"
+    "prompt=${p.gold}"
+    "input=${p.fg}"
+    "action=${p.fgDim}"
+    "button=${p.accent}"
+  ];
+  # --greeting takes multi-line text, so it can carry half-block pixel art.
+  # greetd doesn't do shell expansion of its command string, so the $(cat ...)
+  # has to happen inside a wrapper script.
+  #
+  # The art must be PLAIN TEXT. tuigreet 0.9.1 — the latest release, and what
+  # nixpkgs ships — has no ANSI parser: the greeting goes straight into a
+  # ratatui Paragraph, which drops the ESC byte (zero display width) and then
+  # draws the rest of each sequence, "[0;30m" and friends, as literal text.
+  # ANSI greeting support exists only on upstream master (ansi-to-tui,
+  # `greeting.trim().into_text()` in src/ui/util.rs) and has never been
+  # released. So the greeting is monochrome, colored by `greet` above; see
+  # ./tuigreet_theme/flowey.py, which emits both the .txt we use and a colored
+  # .ansi for the day we pin that commit.
+  #
+  # The theme spec is shell-quoted on BOTH paths. greetd does not tokenize
+  # `command` itself — it hands the whole string to `/bin/sh -c` (greetd
+  # session/worker.rs: `execve("/bin/sh", ["-c", format!("exec {}", ...)])`), so
+  # an unquoted ';'-separated spec is chopped into separate commands by sh and
+  # only the first directive ever reaches tuigreet. That is why the old
+  # `border=magenta;text=cyan;...` only ever applied its border color.
+  greeterCommand =
+    if cfg.greetingFile == null then
+      "${cfg.greetdBin} --sessions ${sessionDirs enabledSessions} ${concatStringsSep " " cfg.extraArgs} --theme ${lib.escapeShellArg themeSpec}"
+    else
+      "${pkgs.writeShellScript "tuigreet-with-greeting" ''
+        exec ${cfg.greetdBin} --sessions ${sessionDirs enabledSessions} ${concatStringsSep " " cfg.extraArgs} --theme ${lib.escapeShellArg themeSpec} --greeting "$(${pkgs.coreutils}/bin/cat ${cfg.greetingFile})"
+      ''}";
 in
 {
   options.khome.tuigreet = {
@@ -120,6 +169,12 @@ in
       default = false;
       description = mdDoc "sets `defaultEnvironment` to wayland friendly env vars";
       type = types.bool;
+    };
+
+    greetingFile = mkOption {
+      default = null;
+      description = mdDoc "file whose contents are shown as the greeting above the login inputs; multi-line plain text (e.g. half-block pixel art), styled with the theme's `greet` color — ANSI escapes are NOT parsed, see the note on greeterCommand";
+      type = types.nullOr types.path;
     };
 
     greetdBin = mkOption {
@@ -239,7 +294,7 @@ in
       enable = true;
       settings = {
         default_session = {
-          command = "${cfg.greetdBin} --sessions ${sessionDirs enabledSessions} ${concatStringsSep " " cfg.extraArgs} ${greetdTheme}";
+          command = greeterCommand;
           user = cfg.greeterUser;
         };
         terminal.vt = 1;
