@@ -30,21 +30,21 @@
       inputs.hyprland.follows = "hyprland";
     };
 
+    hyprland-preview-share-picker = {
+      type = "git";
+      url = "https://github.com/WhySoBad/hyprland-preview-share-picker";
+      rev = "e2f30ff85486e557018523da45ccbc846e3a499c";
+      submodules = true;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+
     noctalia = {
       type = "git";
       url = "https://github.com/noctalia-dev/noctalia";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    hyprland-preview-share-picker = {
-      type = "git";
-      url = "https://github.com/WhySoBad/hyprland-preview-share-picker";
-      rev = "344394a8669fb82ff2744d2780327dd402ffb76a";
-      submodules = true;
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # Pinned Firefox add-on XPIs, exposed as `pkgs.firefox-addons.*` by its
     # overlay below and consumed by firefox/default.nix.
     firefox-addons = {
