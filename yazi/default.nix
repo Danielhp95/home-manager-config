@@ -4,6 +4,8 @@
   ...
 }:
 let
+  p = (import ../palette.nix).hash;
+
   # https://github.com/yazi-rs/plugins — keep this pin roughly in sync with the
   # yazi version from nixpkgs (currently 26.5.6).
   officialPlugins = pkgs.fetchFromGitHub {
@@ -305,6 +307,324 @@ in
         run = "plugin yamb -- delete_all";
       }
     ];
+    # Ember, straight from ../palette.nix — yazi ran on stock colors before.
+    # Key names are validated against yazi 26.5.6 by actually running it: yazi
+    # silently ignores unknown theme keys (no warning, no error), so a typo or
+    # a renamed key just quietly reverts that element to the preset. Notably
+    # v26 moved the hovered-row styles out of [mgr] (hovered/preview_hovered)
+    # into [indicator] (parent/current/preview) — the old names still "work"
+    # in the sense that nothing complains.
+    #
+    # No [app].overall bg: the terminal already paints the ember background
+    # (with its opacity), yazi shouldn't repaint it opaque.
+    theme = {
+      mgr = {
+        cwd = {
+          fg = p.gold;
+          bold = true;
+        };
+        find_keyword = {
+          fg = p.accent;
+          bold = true;
+          underline = true;
+        };
+        find_position = {
+          fg = p.mauve;
+          bg = "reset";
+          bold = true;
+        };
+        # Markers are drawn as empty cells, fg+bg the same color on purpose.
+        marker_copied = {
+          fg = p.olive;
+          bg = p.olive;
+        };
+        marker_cut = {
+          fg = p.error;
+          bg = p.error;
+        };
+        marker_marked = {
+          fg = p.sage;
+          bg = p.sage;
+        };
+        marker_selected = {
+          fg = p.accent;
+          bg = p.accent;
+        };
+        count_copied = {
+          fg = p.bg;
+          bg = p.olive;
+        };
+        count_cut = {
+          fg = p.bg;
+          bg = p.error;
+        };
+        count_selected = {
+          fg = p.bg;
+          bg = p.accent;
+        };
+        border_symbol = "│";
+        # accentDim, not p.border: same lesson as the nvim float borders — kitty
+        # rasterizes the border glyphs as antialiased shapes, and a border a few
+        # percent lightness above the background loses its partial-coverage
+        # pixels (worse here, through background_opacity). p.border reads as
+        # barely-there dashes; accentDim matches the danvim FloatBorder pick.
+        border_style.fg = p.accentDim;
+      };
+
+      # The hovered row: file's own filetype fg kept, surface bg behind it —
+      # same recipe as the fzf/television selected row. The preset default is
+      # reversed video, which turns every hover into a loud full-color pill.
+      indicator = {
+        parent.bg = p.surface;
+        current.bg = p.surface;
+        preview.underline = true;
+      };
+
+      tabs = {
+        active = {
+          fg = p.bg;
+          bg = p.accent;
+          bold = true;
+        };
+        inactive = {
+          fg = p.fgDim;
+          bg = p.bgAlt;
+        };
+      };
+
+      mode = {
+        normal_main = {
+          fg = p.bg;
+          bg = p.accent;
+          bold = true;
+        };
+        normal_alt = {
+          fg = p.accent;
+          bg = p.bgAlt;
+        };
+        select_main = {
+          fg = p.bg;
+          bg = p.olive;
+          bold = true;
+        };
+        select_alt = {
+          fg = p.olive;
+          bg = p.bgAlt;
+        };
+        unset_main = {
+          fg = p.bg;
+          bg = p.mauve;
+          bold = true;
+        };
+        unset_alt = {
+          fg = p.mauve;
+          bg = p.bgAlt;
+        };
+      };
+
+      status = {
+        progress_label.bold = true;
+        progress_normal = {
+          fg = p.accent;
+          bg = p.bgAlt;
+        };
+        progress_error = {
+          fg = p.error;
+          bg = p.bgAlt;
+        };
+        perm_type.fg = p.steel;
+        perm_read.fg = p.gold;
+        perm_write.fg = p.error;
+        perm_exec.fg = p.olive;
+        perm_sep.fg = p.muted;
+      };
+
+      which = {
+        mask.bg = p.bgDeep;
+        cand.fg = p.accent;
+        rest.fg = p.fgDim;
+        desc.fg = p.fg;
+        separator_style.fg = p.muted;
+      };
+
+      confirm = {
+        border.fg = p.accentDim;
+        title = {
+          fg = p.gold;
+          bold = true;
+        };
+        btn_yes = {
+          fg = p.olive;
+          bold = true;
+        };
+        btn_no.fg = p.error;
+      };
+
+      spot = {
+        border.fg = p.accentDim;
+        title = {
+          fg = p.gold;
+          bold = true;
+        };
+        tbl_col = {
+          fg = p.accent;
+          bold = true;
+        };
+        tbl_cell = {
+          fg = p.gold;
+          reversed = true;
+        };
+      };
+
+      notify = {
+        title_info.fg = p.sage;
+        title_warn.fg = p.gold;
+        title_error.fg = p.error;
+      };
+
+      pick = {
+        border.fg = p.accentDim;
+        active = {
+          fg = p.accent;
+          bold = true;
+        };
+        inactive.fg = p.fgDim;
+      };
+
+      input = {
+        border.fg = p.accentDim;
+        title.fg = p.gold;
+        value.fg = p.fg;
+        selected.bg = p.border;
+      };
+
+      cmp = {
+        border.fg = p.accentDim;
+        active = {
+          fg = p.accent;
+          bg = p.surface;
+        };
+        inactive.fg = p.fgDim;
+      };
+
+      tasks = {
+        border.fg = p.accentDim;
+        title.fg = p.gold;
+        hovered = {
+          bg = p.surface;
+          underline = true;
+        };
+      };
+
+      help = {
+        on.fg = p.accent;
+        run.fg = p.sage;
+        desc.fg = p.fgDim;
+        hovered = {
+          bg = p.surface;
+          bold = true;
+        };
+        footer.fg = p.fgDim;
+      };
+
+      # First match wins; `is` conditions go before the broad mime globs.
+      filetype.rules = [
+        {
+          url = "*/";
+          fg = p.steel;
+          bold = true;
+        }
+        {
+          is = "orphan";
+          url = "*";
+          fg = p.error;
+          crossed = true;
+        }
+        {
+          is = "link";
+          url = "*";
+          fg = p.sage;
+        }
+        {
+          is = "exec";
+          url = "*";
+          fg = p.olive;
+        }
+        {
+          mime = "image/*";
+          fg = p.gold;
+        }
+        {
+          mime = "{audio,video}/*";
+          fg = p.mauve;
+        }
+        {
+          mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}";
+          fg = p.accent;
+        }
+      ];
+
+      # Folder icons in burnt orange instead of the preset's blues. Two rules
+      # because the preset colors dirs in two places with different priority:
+      # a cond (`if = "dir"` → #03a9f4) for generic folders, and per-name
+      # `dirs` entries (Desktop, Downloads, ... → #00bcd4 cyan) that outrank
+      # any cond — so the XDG home set is re-pinned here with the preset's own
+      # glyphs. Named dev dirs (.git, .config, node_modules, ...) keep their
+      # distinctive preset icons and colors on purpose.
+      icon = {
+        # Icon rules don't merge — an entry without `text` would blank the
+        # glyph — so these carry the preset's own glyphs, recolored.
+        prepend_dirs =
+          map
+            (d: {
+              name = d.n;
+              text = d.t;
+              fg = p.accentDim;
+            })
+            [
+              {
+                n = "Desktop";
+                t = "";
+              }
+              {
+                n = "Documents";
+                t = "";
+              }
+              {
+                n = "Downloads";
+                t = "";
+              }
+              {
+                n = "Music";
+                t = "";
+              }
+              {
+                n = "Pictures";
+                t = "";
+              }
+              {
+                n = "Videos";
+                t = "";
+              }
+            ];
+        # Prepended, so these outrank the preset's own dir conds. Order matters
+        # within the pair: the specific "dir & hovered" (open folder) must
+        # precede plain "dir" (closed folder) or it would never match.
+        prepend_conds = [
+          {
+            "if" = "dir & hovered";
+            text = "";
+            fg = p.accentDim;
+          }
+          {
+            "if" = "dir";
+            text = "";
+            fg = p.accentDim;
+          }
+        ];
+      };
+    };
+
     settings = {
       mgr = {
         # Show file sizes in the listing
