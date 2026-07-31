@@ -408,16 +408,19 @@ hl.config({
 				text_height = 12,
 				text_padding = 0,
 				border_width = 1,
+				-- Mirrors the tmux window pills: the selected tab is a hot coral slab
+				-- with dark text, unselected tabs cool to a graphite slab with a
+				-- burnt-umber rim (they used to be olive green / invisible-on-black).
 				colors = {
-					active = color2,
-					active_border = color2,
+					active = ember,
+					active_border = ember,
 					active_text = background,
 					urgent = color3,
-					urgent_border = color3,
+					-- urgent_border = color3,
 					urgent_text = "rgb(000000)",
-					inactive = background,
-					inactive_border = background,
-					inactive_text = foreground,
+					inactive = surface,
+					inactive_border = surface,
+					inactive_text = fg_dim,
 				},
 			},
 
