@@ -148,6 +148,22 @@ in
 
       notification = {
         enable_daemon = true;
+
+        # batsignal fires its "full" notification (-f 97, see hyprland/default.nix)
+        # every time the charger blips, which on a flaky plug means a toast every
+        # few seconds. Drop anything it reports at 95% or above: the app name
+        # narrows it to batsignal, and match_content is an ECMAScript regex run
+        # (case-insensitively) over the summary and body — batsignal's body is
+        # always "Battery level: NN%". Low/critical warnings sit well under 95
+        # and still come through.
+        filter.batsignal-near-full = {
+          enabled = true;
+          match = "batsignal";
+          match_content = "Battery level: (9[5-9]|100)%";
+          show_toast = false;
+          save_history = false;
+          play_sound = false;
+        };
       };
 
       # Floating pill bar: inset from the screen edges, rounded, translucent,
