@@ -103,8 +103,8 @@ let
     "border=${p.accent}"
     "title=${p.fg}"
     "text=${p.fg}"
-    # `greet` styles the whole greeting, pixel art included — Flowey's petals.
-    "greet=${p.gold}"
+    # `greet` styles the whole greeting, pixel art included — Sans' bone.
+    "greet=${p.fg}"
     "time=${p.accent}"
     "prompt=${p.gold}"
     "input=${p.fg}"
@@ -121,9 +121,9 @@ let
   # draws the rest of each sequence, "[0;30m" and friends, as literal text.
   # ANSI greeting support exists only on upstream master (ansi-to-tui,
   # `greeting.trim().into_text()` in src/ui/util.rs) and has never been
-  # released. So the greeting is monochrome, colored by `greet` above; see
-  # ./tuigreet_theme/flowey.py, which emits both the .txt we use and a colored
-  # .ansi for the day we pin that commit.
+  # released. So the greeting is monochrome, colored by `greet` above — which
+  # costs nothing for the Sans battle sprite, itself white-on-black. See
+  # ./tuigreet_theme/sans.py, which emits the .txt we use.
   #
   # The theme spec is shell-quoted on BOTH paths. greetd does not tokenize
   # `command` itself — it hands the whole string to `/bin/sh -c` (greetd

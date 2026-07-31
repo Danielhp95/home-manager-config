@@ -147,8 +147,8 @@
       enableWaylandEnvs = true;
       # Pre-select hyprland instead of the alphabetical first session (gdm)
       defaultSession = "hyprland";
-      # Flowey pixel art (plain half-blocks, colored by the theme's `greet`)
-      greetingFile = ../tuigreet_theme/flowey.txt;
+      # Sans pixel art (plain half-blocks, colored by the theme's `greet`)
+      greetingFile = ../tuigreet_theme/sans.txt;
       sessions = {
         hyprland.enable = true;
         gdm.enable = true;
