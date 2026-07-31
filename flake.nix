@@ -144,6 +144,7 @@
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/ollama.nix
             ./non_home_manager_config/network.nix
+            ./non_home_manager_config/tailscale.nix
             ./non_home_manager_config/salt.nix
             ./pipewire.nix
 
