@@ -59,6 +59,18 @@
     claude-code.url = "github:sadjow/claude-code-nix";
     claude-code.inputs.nixpkgs.follows = "nixpkgs";
 
+    # IRIS: IntelliSense-style completion overlay. Its own flake exposes
+    # packages.<system>.iris (buildGoModule), re-exported as `pkgs.iris` by the
+    # overlay below. Upstream is beta and pins a vendorHash, so a `nix flake
+    # update iris` that lands a go.mod change without a matching vendorHash
+    # bump will fail the build — re-pin to the previous rev if that happens.
+    iris = {
+      type = "git";
+      url = "https://github.com/versenilvis/IRIS";
+      rev = "37182f72127b6ebf134edaae22c7d87b0a491b4c";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     danvim.url = "path:/home/dani/nix_config/danvim";
     danvim.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -95,6 +107,9 @@
             ))
             (mapAttrs (_: c: c.legacyPackages.${prev.stdenv.hostPlatform.system}))
           ];
+
+          # Shell completion overlay (terminal/iris.nix); not in nixpkgs
+          inherit (inputs.iris.packages.${prev.stdenv.hostPlatform.system}) iris;
 
           # Hyprland specifics
           inherit (inputs.hy3.packages.${prev.stdenv.hostPlatform.system}) hy3;

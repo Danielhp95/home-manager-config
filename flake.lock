@@ -78,8 +78,8 @@
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1785516636,
-        "narHash": "sha256-2MD2Y4lcIpuSgsMBthB758y1oJh3wTIQjet71oCz1Vw=",
+        "lastModified": 1785520936,
+        "narHash": "sha256-geO4n7qP5XPy/zdRa8qIqjNsQ5umZqvPBbt+lhlyZDU=",
         "path": "/home/dani/nix_config/danvim",
         "type": "path"
       },
@@ -590,6 +590,27 @@
         "type": "github"
       }
     },
+    "iris": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1785420694,
+        "narHash": "sha256-ICGZA3jp3Aqp6PJ6n9IRzxgKlC9Lmx/8dQnMS341EV8=",
+        "ref": "refs/heads/main",
+        "rev": "37182f72127b6ebf134edaae22c7d87b0a491b4c",
+        "revCount": 173,
+        "type": "git",
+        "url": "https://github.com/versenilvis/IRIS"
+      },
+      "original": {
+        "rev": "37182f72127b6ebf134edaae22c7d87b0a491b4c",
+        "type": "git",
+        "url": "https://github.com/versenilvis/IRIS"
+      }
+    },
     "neovim-nightly-overlay": {
       "inputs": {
         "flake-parts": "flake-parts",
@@ -714,6 +735,7 @@
         "hy3": "hy3",
         "hyprland": "hyprland",
         "hyprland-preview-share-picker": "hyprland-preview-share-picker",
+        "iris": "iris",
         "nixpkgs": "nixpkgs",
         "noctalia": "noctalia",
         "spicetify-nix": "spicetify-nix",

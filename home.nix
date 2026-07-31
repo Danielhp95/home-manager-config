@@ -58,6 +58,7 @@
     ./terminal
     ./terminal/television.nix
     ./terminal/nushell.nix
+    ./terminal/iris.nix
     ./kitty
     ./ghostty
 
