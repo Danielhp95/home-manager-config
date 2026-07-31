@@ -175,8 +175,8 @@
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
   # For manual timezones
-  # time.timeZone = "America/New_York";
-  time.timeZone = "Europe/Madrid";
+  time.timeZone = "America/New_York";
+  # time.timeZone = "Europe/Madrid";
 
   # From https://wiki.nixos.org/wiki/Locales
   i18n = {
