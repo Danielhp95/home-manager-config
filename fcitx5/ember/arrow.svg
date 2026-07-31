@@ -1,0 +1,16 @@
+<!-- Submenu arrow, rasterised to arrow.png (6x12) by package.nix.
+     Coral core + near-black outline: classicui has no highlighted variant of
+     this image, so the one glyph must read on the dark menu row (#242320,
+     where the coral does the work at 5.6:1) AND on the coral selected plate
+     (#e08060, where the outline does it at 6.6:1). See Ember.conf. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="6" height="12" viewBox="0 0 6 12">
+  <!-- The triangle is pushed out near the edges of the 6px box on purpose: at
+       this size the outline eats the coral core fast, and a thinner stroke
+       loses the outline to antialiasing on the coral plate. 0.7 is the point
+       where both states still hold. -->
+  <path d="M 0.9 1.8 L 5.2 6 L 0.9 10.2 Z"
+        fill="#e08060"
+        stroke="#141312"
+        stroke-width="0.7"
+        stroke-linejoin="round"/>
+</svg>

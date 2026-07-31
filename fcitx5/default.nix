@@ -16,7 +16,7 @@
         qt6Packages.fcitx5-configtool
         qt6Packages.fcitx5-chinese-addons
         fcitx5-rose-pine
-        (import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib; })
+        (import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg; })
       ];
       settings = {
         globalOptions = {

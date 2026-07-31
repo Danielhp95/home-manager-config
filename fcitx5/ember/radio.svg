@@ -1,0 +1,10 @@
+<!-- Active-item marker, rasterised to radio.png (24x24) by package.nix.
+     Same two-tone reasoning as arrow.svg: coral core for the dark menu row,
+     near-black ring so the dot survives the coral selected plate. Matches the
+     ~8px dot upstream's default theme draws in the same 24x24 box. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="4.3"
+          fill="#e08060"
+          stroke="#141312"
+          stroke-width="1.6"/>
+</svg>
