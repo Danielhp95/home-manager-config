@@ -21,9 +21,38 @@ local color5 = "rgb(988090)" -- magenta/ mauve
 local color6 = "rgb(80a090)" -- cyan   / sage
 local color7 = "rgb(d8d0c0)" -- white  / fg0
 
+-- Ember ramp, shared with the tmux status bar (tmux/tmux.conf). Cold to blazing:
+-- the focused thing sits at full coral, everything unfocused cools toward ash and
+-- graphite. Keep these in sync with the @color_ember* vars in tmux.conf.
+local ash = "rgb(8a5a3c)" -- burnt umber, the rim on a cooled tab
+local ember_dim = "rgb(b8654c)" -- banked coral
+local ember = "rgb(e08060)" -- coral (== color1)
+local ember_hot = "rgb(ff6b4a)" -- blazing coral
+local surface = "rgb(2c2b29)" -- graphite slab (tmux @color_bg1)
+local surface_hi = "rgb(3c3b39)" -- lifted graphite (tmux @color_bg2)
+local fg_dim = "rgb(b8b0a0)" -- secondary text (tmux @color_fg1)
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Monitors
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Desk layout: the two HP panels side by side on top, laptop tucked underneath
+-- straddling the seam between them.
+--
+--        0        2560      5120
+--   0    ┌─────────┬─────────┐
+--        │  DP-1   │ HDMI-A-1│   2× HP E27q G4, 2560x1440
+--   1440 └───┬─────┴───┬─────┘
+--            │  eDP-1  │           1920x1200@165, at 1774x1440
+--   2640     └─────────┘
+--
+-- The two HPs are the same model, so they're matched on `desc:` *including the
+-- serial* — that keeps each panel on its own side no matter which port it lands
+-- on. Only positions are pinned; `preferred` still picks each panel's native
+-- mode (165Hz on the laptop, 1440p60 on the HPs).
+--
+-- Rules are matched name > desc > "" (the wildcard is a fallback for any display
+-- not listed here, e.g. a projector), so this ordering is safe.
+
 -- monitor =,preferred,auto,1
 hl.monitor({
 	output = "",
@@ -48,8 +77,13 @@ hl.config({
 		resize_on_border = true,
 		border_size = 5,
 		col = {
-			active_border = { colors = { color1, color3, color1 }, angle = 90 },
-			inactive_border = color6,
+			-- Focused window gets the coral rim; unfocused borders stay the
+			-- background color, so the 5px border reads as invisible padding
+			-- between columns rather than a drawn rim. (This used to be
+			-- borderless on both — focus via the hy3 tab bar only — but the
+			-- active glow came back by request.)
+			active_border = ember,
+			inactive_border = background,
 		},
 		gaps_in = 0,
 		gaps_out = 0,
