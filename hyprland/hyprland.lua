@@ -61,6 +61,31 @@ hl.monitor({
 	scale = "1",
 })
 
+-- Left HP (serial ...JD)
+hl.monitor({
+	output = "desc:HP Inc. HP E27q G4 CNK22910JD",
+	mode = "preferred",
+	position = "0x0",
+	scale = "1",
+})
+
+-- Right HP (serial ...JM)
+hl.monitor({
+	output = "desc:HP Inc. HP E27q G4 CNK22910JM",
+	mode = "preferred",
+	position = "2560x0",
+	scale = "1",
+})
+
+-- Built-in panel, below and between the two HPs. 1774 rather than a dead-centre
+-- 1600 — it overlaps both HPs' bottom edges either way, so the cursor can cross.
+hl.monitor({
+	output = "eDP-1",
+	mode = "preferred",
+	position = "1774x1440",
+	scale = "1",
+})
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- General / Misc / Input / Cursor / Decoration / Animations / Binds / dwindle
 -- ─────────────────────────────────────────────────────────────────────────────
