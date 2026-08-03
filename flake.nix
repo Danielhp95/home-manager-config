@@ -5,8 +5,6 @@
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stable.url = "github:nixos/nixpkgs/nixos-26.05";
-    # Alias of nixpkgs kept for `pkgs.channels.unstable` / `nix run unstable#...`
-    unstable.follows = "nixpkgs";
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -92,22 +90,10 @@
     }@inputs:
     let
       # Shared between the NixOS-managed home-manager and the standalone entrypoint
-      overlays = with nixpkgs.lib; [
+      overlays = [
         inputs.claude-code.overlays.default
         inputs.firefox-addons.overlays.default
         (final: prev: {
-          # load in inputs and provide as `channels` attribute in `pkgs.channels`
-          channels = pipe inputs [
-            (filterAttrs (
-              name: _:
-              elem name [
-                "nixpkgs"
-                "unstable"
-              ]
-            ))
-            (mapAttrs (_: c: c.legacyPackages.${prev.stdenv.hostPlatform.system}))
-          ];
-
           # Shell completion overlay (terminal/iris.nix); not in nixpkgs
           inherit (inputs.iris.packages.${prev.stdenv.hostPlatform.system}) iris;
 
@@ -118,7 +104,6 @@
             xdg-desktop-portal-hyprland
             ;
         })
-        (import ./overlays.nix)
       ];
       hmSharedModules = [
         inputs.noctalia.homeModules.default
@@ -187,7 +172,6 @@
               nixpkgs.overlays = overlays;
               nixpkgs.config.allowUnfree = true;
               nixpkgs.config.nvidia.acceptLicense = true;
-              # allows running packages from `nix run unstable#ansel`
               # `nix run nixos#lsd` is very fast as it uses local cache
               nix.registry = {
                 nixos.flake = inputs.nixpkgs;
@@ -217,7 +201,7 @@
               home.homeDirectory = "/home/dani";
               nix.registry = {
                 nixos.flake = inputs.nixpkgs;
-                unstable.flake = inputs.unstable;
+                stable.flake = inputs.stable;
               };
             }
           ];
