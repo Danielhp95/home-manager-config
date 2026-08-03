@@ -13,16 +13,13 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      # v0.55.0 tag. Pinned because hyprland main regularly breaks hy3's
-      # compile; when bumping, keep in sync with what hy3 supports.
-      rev = "ab95888cd1d6961471f9e8df05f5e4a40dbb759d";
+      rev = "4d26628276de580c69be89e734ea89931b121f02";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      # 0.56.0
       rev = "42b7ed8fd9aefd3f36e5f617afd5071245c67853";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
