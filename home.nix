@@ -27,13 +27,6 @@
     };
   };
 
-  # Ensure GPG agent starts with systemd user session
-  systemd.user.sockets.gpg-agent = {
-    Unit.PartOf = [ "graphical-session.target" ];
-    Socket.SocketMode = "0600";
-    Install.WantedBy = [ "sockets.target" ];
-  };
-
   imports = [
     ./starship
     ./zsh
