@@ -127,16 +127,19 @@ in
       enable = true;
       variables = [ "--all" ];
       extraCommands = [
-        "systemctl --user start hyprpolkitagent"
         "systemctl --user stop graphical-session.target"
         "systemctl --user start hyprland-session.target"
       ];
     };
     xwayland.enable = true;
   };
-  home.packages = with pkgs; [
-    hyprpolkitagent # Authenticator
 
+  # Polkit auth prompts. The module's WantedBy=graphical-session.target wants-symlink
+  # survives the stop/start dance in extraCommands above; a manual `systemctl start`
+  # here would be killed by the target stop (PartOf= propagation).
+  services.hyprpolkitagent.enable = true;
+
+  home.packages = with pkgs; [
     inputs.hyprland-preview-share-picker.packages.${pkgs.stdenv.hostPlatform.system}.default # cooler screen picker
 
     # For screenshots
