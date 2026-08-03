@@ -10,6 +10,75 @@ let
     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
   '';
   fileManager = "yazi";
+  p = (import ../palette.nix).hash;
+  # Ember styling for zsh-syntax-highlighting. The plugin's defaults use
+  # named ANSI colors; overriding with palette.nix hex keeps the prompt in
+  # the same voice as starship: commands are the coral hero, strings olive
+  # (the editor convention — gold is rationed for attention states like
+  # sudo), paths/options steel, structure mauve, comments legible fgDim.
+  syntax-highlight-conf = ''
+    typeset -A ZSH_HIGHLIGHT_STYLES
+    ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+
+    # The command word — coral, where the eye lands
+    ZSH_HIGHLIGHT_STYLES[command]='fg=${p.accent}'
+    ZSH_HIGHLIGHT_STYLES[builtin]='fg=${p.accent}'
+    ZSH_HIGHLIGHT_STYLES[function]='fg=${p.accent}'
+    ZSH_HIGHLIGHT_STYLES[alias]='fg=${p.accent}'
+    ZSH_HIGHLIGHT_STYLES[suffix-alias]='fg=${p.accent}'
+    ZSH_HIGHLIGHT_STYLES[global-alias]='fg=${p.accent}'
+    ZSH_HIGHLIGHT_STYLES[precommand]='fg=${p.accentBright},italic'
+    ZSH_HIGHLIGHT_STYLES[autodirectory]='fg=${p.accentDim},italic'
+    # error is near-equiluminant with accent, so it never rides on hue alone
+    ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=${p.error},bold'
+
+    # Strings — olive, the editor convention
+    ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=${p.olive}'
+    ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=${p.olive}'
+    ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='fg=${p.olive}'
+    ZSH_HIGHLIGHT_STYLES[rc-quote]='fg=${p.olive}'
+
+    # Interpolation inside strings — steel, so it reads through the olive
+    ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[back-dollar-quoted-argument]='fg=${p.steel}'
+
+    # Injected/dynamic values — sage
+    ZSH_HIGHLIGHT_STYLES[assign]='fg=${p.sage}'
+    ZSH_HIGHLIGHT_STYLES[named-fd]='fg=${p.sage}'
+    ZSH_HIGHLIGHT_STYLES[numeric-fd]='fg=${p.sage}'
+
+    # Paths and options — steel
+    ZSH_HIGHLIGHT_STYLES[path]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[path_prefix]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[path_pathseparator]='fg=${p.muted}'
+    ZSH_HIGHLIGHT_STYLES[path_prefix_pathseparator]='fg=${p.muted}'
+    ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=${p.steel}'
+
+    # Shell structure — mauve
+    ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[globbing]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[history-expansion]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[redirection]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[process-substitution]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[process-substitution-delimiter]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[command-substitution-delimiter]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[commandseparator]='fg=${p.fgDim}'
+    # comments are read, not decoration: muted is 3.2:1 on bg, below AA
+    ZSH_HIGHLIGHT_STYLES[comment]='fg=${p.fgDim},italic'
+    ZSH_HIGHLIGHT_STYLES[arg0]='fg=${p.fg}'
+    ZSH_HIGHLIGHT_STYLES[default]='fg=${p.fg}'
+
+    # Nested brackets cycle through the secondary hues
+    ZSH_HIGHLIGHT_STYLES[bracket-level-1]='fg=${p.steel}'
+    ZSH_HIGHLIGHT_STYLES[bracket-level-2]='fg=${p.gold}'
+    ZSH_HIGHLIGHT_STYLES[bracket-level-3]='fg=${p.sage}'
+    ZSH_HIGHLIGHT_STYLES[bracket-level-4]='fg=${p.mauve}'
+    ZSH_HIGHLIGHT_STYLES[bracket-error]='fg=${p.error}'
+    ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]='fg=${p.accentBright},bold'
+  '';
 in
 {
   home.packages = with pkgs; [
@@ -51,6 +120,7 @@ in
     initContent = lib.mkMerge [
       (keyBindings
         + fzf-tab-conf
+        + syntax-highlight-conf
         + ''
             # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
             autoload -U select-word-style

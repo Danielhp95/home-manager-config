@@ -83,15 +83,17 @@ in
         # Required for userChrome.css to be read at all.
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 
-        # Dark chrome + dark built-in pages, regardless of what the desktop
-        # portal reports.
+        # Dark chrome + dark built-in pages (about:*), regardless of what the
+        # desktop portal reports. Websites are deliberately NOT forced:
+        # content-override = 2 lets pages follow the real system light/dark
+        # preference (0 shoved prefers-color-scheme: dark at every site), and
+        # browser.display.background_color is left at its default — it sets
+        # the document canvas itself, so unstyled pages rendered ember-on-
+        # black-text. The white pre-render flash is killed in userChrome.css
+        # by painting the tabpanel backdrop, which pages never see.
         "browser.theme.toolbar-theme" = 0;
         "browser.theme.content-theme" = 0;
-        "layout.css.prefers-color-scheme.content-override" = 0;
-
-        # Paint the pre-render background in our bg instead of white, which
-        # kills the white flash when a page is still loading.
-        "browser.display.background_color" = p.bg;
+        "layout.css.prefers-color-scheme.content-override" = 2;
 
         # Rounded bottom window corners, to match WhiteSur's window shape.
         "widget.gtk.rounded-bottom-corners.enabled" = true;

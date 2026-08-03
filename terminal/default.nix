@@ -1,4 +1,7 @@
 { pkgs, inputs, config, ... }:
+let
+  p = (import ../palette.nix).hash;
+in
 {
   # Zoxide database hygiene. Literal paths (not $HOME) because the nushell
   # module loads sessionVariables without shell expansion.
@@ -71,23 +74,25 @@
       # silence the HM Ctrl-R conflict warning without changing behavior.
       historyWidget.command = "";
       historyWidget.nushell.command = "";
-      # Ember theme colors
+      # Ember colors from palette.nix — coral for match highlights and the
+      # pointer, steel for neutral chrome (gold is rationed for
+      # needs-attention states, and at 8.4:1 it would outshine the coral)
       colors = {
-        bg = "#1c1b19";
-        "bg+" = "#2c2b29";
-        fg = "#d8d0c0";
-        "fg+" = "#d8d0c0";
-        hl = "#e08060";      # coral - highlights
-        "hl+" = "#e08060";   # coral - current line highlight
-        info = "#c8b468";    # gold - info text
-        marker = "#e08060";  # coral - markers
-        prompt = "#c09058";  # orange - prompt (changed from steel)
-        spinner = "#80a090"; # sage - spinner
-        pointer = "#e08060"; # coral - pointer
-        header = "#8a9868";  # olive - header
-        border = "#3c3b39";  # bg2 - border
-        label = "#c8b468";   # gold - labels
-        query = "#d8d0c0";   # fg0 - query text
+        bg = p.bg;
+        "bg+" = p.surface;
+        fg = p.fg;
+        "fg+" = p.fg;
+        hl = p.accent;
+        "hl+" = p.accentBright;
+        info = p.steel;
+        marker = p.accent;
+        prompt = p.accent;
+        spinner = p.sage;
+        pointer = p.accent;
+        header = p.olive;
+        border = p.border;
+        label = p.steel;
+        query = p.fg;
       };
     };
   };

@@ -109,3 +109,14 @@ menupopup > menuitem:hover,
 menupopup > menu:hover {
   background-color: var(--ember-surface) !important;
 }
+
+/* ── Pre-render backdrop ──────────────────────────────────────────────────
+ * The surface behind page content, visible only before a page's first paint.
+ * Painting it here kills the white loading flash without touching the
+ * document canvas itself (browser.display.background_color would recolor
+ * actual unstyled websites).
+ */
+#tabbrowser-tabpanels,
+#webextpanels-window {
+  background-color: var(--ember-bg) !important;
+}

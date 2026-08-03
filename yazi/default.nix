@@ -569,8 +569,9 @@ in
       # a cond (`if = "dir"` → #03a9f4) for generic folders, and per-name
       # `dirs` entries (Desktop, Downloads, ... → #00bcd4 cyan) that outrank
       # any cond — so the XDG home set is re-pinned here with the preset's own
-      # glyphs. Named dev dirs (.git, .config, node_modules, ...) keep their
-      # distinctive preset icons and colors on purpose.
+      # glyphs. .git and .config are re-pinned the same way (their preset
+      # colors were cyan and orange). Other named dev dirs (node_modules,
+      # .github, ...) keep their distinctive preset icons and colors.
       icon = {
         # Icon rules don't merge — an entry without `text` would blank the
         # glyph — so these carry the preset's own glyphs, recolored.
@@ -582,6 +583,14 @@ in
               fg = p.accentDim;
             })
             [
+              {
+                n = ".config";
+                t = "";
+              }
+              {
+                n = ".git";
+                t = "";
+              }
               {
                 n = "Desktop";
                 t = "";

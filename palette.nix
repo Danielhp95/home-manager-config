@@ -6,7 +6,7 @@
 #
 # Already-existing consumers that predate this file and still carry their own
 # copies of these values: kitty/kitty.conf, ghostty/default.nix,
-# hyprland/hyprland.lua, terminal/television.nix, menu_launchers (vicinae).
+# hyprland/hyprland.lua, menu_launchers (vicinae).
 #
 # Attributes are bare hex (no leading '#'); `hash` holds the same set prefixed
 # with '#' for config formats that require it.
@@ -25,16 +25,26 @@ let
     muted = "6e6a66"; # disabled text, bright-black
 
     # Accent — the coral that stands in for WhiteSur's orange.
+    # accentBright is a real lightness step above accent (7.5:1 vs 6.1:1 on
+    # bg), not just a saturation push: the old ff6b4a was equiluminant with
+    # accent, so the "hotter" variant vanished for red-green colour-blindness.
     accent = "e08060";
-    accentBright = "ff6b4a";
+    accentBright = "ff8f66";
     accentDim = "b8654c";
+    ash = "8a5a3c"; # burnt-umber ramp tail (tmux/starship flame trails); decorative only — 3:1 on bg
 
-    # Secondary hues, shared with the terminal palette.
+    # Secondary hues, shared with the terminal palette. One semantic slot
+    # each, kept perceptually distinct: olive = strings/success, gold =
+    # needs-attention-not-broken (ration it: at 8.4:1 it outshines accent),
+    # steel = neutral metadata (paths/options/info), mauve = language
+    # structure, sage = injected/dynamic values (env, interpolation),
+    # error = failures only — near-equiluminant with accent (1.35:1 mutual),
+    # so always pair it with a glyph or bold, never colour alone.
     olive = "8a9868";
     gold = "c8b468";
     steel = "7890a0";
     mauve = "988090";
-    sage = "80a090";
+    sage = "7aa88a";
     error = "e05252";
   };
 in

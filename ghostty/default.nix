@@ -36,7 +36,7 @@
         "0=#1c1b19" # black
         "8=#6e6a66"
         "1=#e08060" # red (coral)
-        "9=#ff6b4a"
+        "9=#ff8f66"
         "2=#8a9868" # green (olive)
         "10=#b8d8a3"
         "3=#c8b468" # yellow (gold)
@@ -45,7 +45,7 @@
         "12=#8ab4f8"
         "5=#988090" # magenta (mauve)
         "13=#d19a66"
-        "6=#80a090" # cyan (sage)
+        "6=#7aa88a" # cyan (sage)
         "14=#7fbbb3"
         "7=#d8d0c0" # white
         "15=#ffffff"

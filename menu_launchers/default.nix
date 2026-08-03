@@ -96,7 +96,7 @@
             purple = "#988090";
             red = "#e08060"; # coral
             yellow = "#c8b468"; # gold
-            cyan = "#80a090"; # sage
+            cyan = "#7aa88a"; # sage
           };
         };
       };

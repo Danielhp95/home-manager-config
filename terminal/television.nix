@@ -1,4 +1,7 @@
 { pkgs, inputs, ... }:
+let
+  p = (import ../palette.nix).hash;
+in
 {
   # Mime-dispatching previewer backing the files channel's preview (and usable
   # anywhere else a single preview command is wanted: fzf, lf, ...).
@@ -219,54 +222,56 @@
     show_channel_descriptions = true
     sort_alphabetically = true
 
-    # Ember Theme Color Overrides
+    # Ember colors from palette.nix (this block used to carry drifted local
+    # copies; coral = accent, the theme's orange stand-in)
     # ═══════════════════════════════════════════════════════════════════════════
     [ui.theme_overrides]
     # Base colors
-    background = "#1c1b19"           # bg0 - base background
-    text_fg = "#d8d0c0"              # fg0 - primary text
-    text_muted_fg = "#b8b0a0"        # fg1 - secondary text
+    background = "${p.bg}"
+    text_fg = "${p.fg}"
+    text_muted_fg = "${p.fgDim}"
 
     # Selection and highlights
-    selection_bg = "#2c2b29"         # bg1 - surface layer 1
-    selection_fg = "#d8d0c0"         # fg0 - primary text
-    match_fg = "#e08060"             # coral - matched text highlight
-    match_bg = "#1c1b19"             # bg0 - match background
+    selection_bg = "${p.surface}"
+    selection_fg = "${p.fg}"
+    match_fg = "${p.accentBright}"
+    match_bg = "${p.bg}"
 
     # UI elements
-    border_fg = "#3c3b39"            # bg2 - borders
-    border_active_fg = "#c09058"     # orange - active border (changed from steel)
-    scrollbar_fg = "#4c4b49"         # bg3 - scrollbar
+    border_fg = "${p.border}"
+    border_active_fg = "${p.accent}"
+    scrollbar_fg = "${p.border}"
 
     # Input and prompt
-    input_fg = "#d8d0c0"             # fg0 - input text
-    input_bg = "#1c1b19"             # bg0 - input background
-    prompt_fg = "#c09058"            # orange - prompt (changed from steel)
+    input_fg = "${p.fg}"
+    input_bg = "${p.bg}"
+    prompt_fg = "${p.accent}"
 
     # Preview panel
-    preview_fg = "#d8d0c0"           # fg0 - preview text
-    preview_bg = "#1c1b19"           # bg0 - preview background
-    preview_border_fg = "#3c3b39"    # bg2 - preview border
-    preview_title_fg = "#c8b468"     # gold - preview title
+    preview_fg = "${p.fg}"
+    preview_bg = "${p.bg}"
+    preview_border_fg = "${p.border}"
+    preview_title_fg = "${p.steel}"
 
-    # Status and info
-    status_fg = "#b8b0a0"            # fg1 - status text
-    status_bg = "#2c2b29"            # bg1 - status background
-    info_fg = "#c8b468"              # gold - info messages
-    success_fg = "#8a9868"           # olive - success messages
-    warning_fg = "#c09058"           # orange - warnings
-    error_fg = "#e08060"             # coral - errors
+    # Status and info — info is neutral (steel); gold is reserved for
+    # warnings so the two actually read differently
+    status_fg = "${p.fgDim}"
+    status_bg = "${p.bgAlt}"
+    info_fg = "${p.steel}"
+    success_fg = "${p.olive}"
+    warning_fg = "${p.gold}"
+    error_fg = "${p.error}"
 
     # Help panel
-    help_fg = "#d8d0c0"              # fg0 - help text
-    help_bg = "#1c1b19"              # bg0 - help background
-    help_title_fg = "#c09058"        # orange - help titles (changed from steel)
-    help_key_fg = "#e08060"          # coral - key bindings
+    help_fg = "${p.fg}"
+    help_bg = "${p.bg}"
+    help_title_fg = "${p.accent}"
+    help_key_fg = "${p.accent}"
 
     # Channel selector (remote control)
-    channel_fg = "#d8d0c0"           # fg0 - channel names
-    channel_selected_fg = "#e08060"  # coral - selected channel
-    channel_desc_fg = "#989088"      # fg2 - channel descriptions
+    channel_fg = "${p.fg}"
+    channel_selected_fg = "${p.accent}"
+    channel_desc_fg = "${p.fgDim}"
 
     # Keybindings
     [keybindings]

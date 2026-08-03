@@ -18,7 +18,7 @@ local color2 = "rgb(8a9868)" -- green  / olive
 local color3 = "rgb(c8b468)" -- yellow / gold
 local color4 = "rgb(7890a0)" -- blue   / steel
 local color5 = "rgb(988090)" -- magenta/ mauve
-local color6 = "rgb(80a090)" -- cyan   / sage
+local color6 = "rgb(7aa88a)" -- cyan   / sage
 local color7 = "rgb(d8d0c0)" -- white  / fg0
 
 -- Ember ramp, shared with the tmux status bar (tmux/tmux.conf). Cold to blazing:
@@ -27,7 +27,7 @@ local color7 = "rgb(d8d0c0)" -- white  / fg0
 local ash = "rgb(8a5a3c)" -- burnt umber, the rim on a cooled tab
 local ember_dim = "rgb(b8654c)" -- banked coral
 local ember = "rgb(e08060)" -- coral (== color1)
-local ember_hot = "rgb(ff6b4a)" -- blazing coral
+local ember_hot = "rgb(ff8f66)" -- blazing coral
 local surface = "rgb(2c2b29)" -- graphite slab (tmux @color_bg1)
 local surface_hi = "rgb(3c3b39)" -- lifted graphite (tmux @color_bg2)
 local fg_dim = "rgb(b8b0a0)" -- secondary text (tmux @color_fg1)
