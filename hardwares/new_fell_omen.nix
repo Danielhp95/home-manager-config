@@ -16,9 +16,6 @@
     ../bluetooth.nix
   ];
 
-  # For theming
-  programs.dconf.enable = true;
-
   # Hide sinks that are never the intended output: the nvidia GB203's HDMI
   # "pro-output" ports (no display audio is ever plugged into the dGPU) and
   # the ACE controller's HDMI1-3 ports (unplugged monitor-audio outputs).

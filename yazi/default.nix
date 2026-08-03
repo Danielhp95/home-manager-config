@@ -68,8 +68,8 @@ in
       };
       # Mount Android phones (MTP), cameras and network shares via GVfs
       # (successor of simple-mtpfs.yazi). The system side — gvfsd, gvfsd-mtp,
-      # libmtp udev rules, udisks2 — is already provided by services.gvfs,
-      # pulled in by the GNOME module in configuration.nix.
+      # libmtp udev rules, udisks2 — comes from services.gvfs and
+      # services.udisks2, enabled explicitly in configuration.nix.
       gvfs = pkgs.fetchFromGitHub {
         owner = "boydaihungst";
         repo = "gvfs.yazi";

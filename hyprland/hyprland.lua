@@ -481,7 +481,7 @@ hl.window_rule({ name = "float-general-title", match = { title = "^(Weather|Main
 hl.window_rule({
 	name = "float-general",
 	match = {
-		class = "^(io\\.github\\.amit9838\\.mousam|Rofi|org\\.pulseaudio\\.pavucontrol|blueberry|mpv|imv|satty)$",
+		class = "^(Rofi|org\\.pulseaudio\\.pavucontrol|blueberry|mpv|imv|satty)$",
 	},
 	float = true,
 })

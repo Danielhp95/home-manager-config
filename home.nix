@@ -158,10 +158,10 @@
     inputs.danvim.packages.x86_64-linux.nvim
 
     # Weather app
-    mousam
     gnome-weather
 
     gnome-calendar
+    adwaita-icon-theme # symbolic-icon fallback for GNOME apps (MoreWaita expects it)
     gparted
     decibels # audio playing with nice waveform graphics
 
@@ -176,8 +176,6 @@
     localsend
 
     bluetui # Bluetooth tui
-
-    gnome-session
   ];
 
   programs.claude-code = {

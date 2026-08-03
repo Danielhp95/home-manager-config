@@ -136,23 +136,25 @@
   };
   hardware.nvidia-container-toolkit.enable = true;
 
-  xdg.portal.configPackages = with pkgs; [
-    xdg-desktop-portal-hyprland
-    xdg-desktop-portal-gnome # For the GNOME session
-  ];
+  xdg.portal = {
+    enable = true; # home-manager's portal module asserts on the pathsToLink this sets
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # FileChooser/Settings fallback ("hyprland;gtk")
+    config.common.default = [
+      "hyprland"
+      "gtk"
+    ];
+  };
 
   khome = {
     tuigreet = {
       enable = true;
       enableWaylandEnvs = true;
-      # Pre-select hyprland instead of the alphabetical first session (gdm)
       defaultSession = "hyprland";
       # Sans pixel art (plain half-blocks, colored by the theme's `greet`)
       greetingFile = ../tuigreet_theme/sans.txt;
       sessions = {
         hyprland.enable = true;
-        gdm.enable = true;
-        zsh.enable = true; # Doesn't work!
+        zsh.enable = true; # drop-to-tty login shell on the greeter's VT
       };
     };
   };
@@ -200,16 +202,20 @@
     };
   };
 
-  # Enable / Disable the GNOME Desktop Environment.
-  services.desktopManager.gnome.enable = true;
-  services.displayManager.gdm.enable = true;
+  # Services previously pulled in implicitly by services.desktopManager.gnome
+  services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
+  services.udisks2.enable = true; # yazi mount menu
+  services.gnome.evolution-data-server.enable = true; # gnome-calendar storage daemons (no mail client pulled in)
+  services.gnome.gnome-online-accounts.enable = true; # online calendars
+  services.gnome.gnome-keyring.enable = true; # GOA/EDS secrets; PAM unlock wired in tuigreet.nix
+  services.gnome.glib-networking.enable = true; # TLS for libsoup: map tiles, OAuth, https calendars
+  services.geoclue2.enable = true; # maps/weather location; demo agent replaces gnome-shell's
+  services.gnome.at-spi2-core.enable = true; # a11y bus; silences GTK warnings
 
   services.xserver = {
     # Enable the X11 windowing system.
     enable = true;
     excludePackages = [ pkgs.xterm ];
-    # TODO: remove these two, as gnome leaves breadcrumbs of programs around!
-    # Figure out how to get these features without gnome
 
     desktopManager.runXdgAutostartIfNone = true;
     desktopManager.session = [
