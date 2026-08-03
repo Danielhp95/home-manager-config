@@ -209,6 +209,50 @@
     };
   };
 
+  # Universal Wayland Session Manager. tuigreet's hyprland session runs
+  # `uwsm start -- Hyprland` (tuigreet.nix), which turns the session into
+  # systemd user units instead of a hand-managed process tree:
+  #
+  #   greetd session script (exports fcitx/wayland env)
+  #     -> uwsm start: pushes that env into the user manager + dbus,
+  #        then starts wayland-wm@Hyprland.service (Type=notify)
+  #     -> Hyprland runs `uwsm finalize` (hyprland.lua start hook):
+  #        exports WAYLAND_DISPLAY etc. and signals readiness
+  #     -> graphical-session.target goes active; every service WantedBy
+  #        it (fcitx5-daemon, hyprpolkitagent, vicinae, noctalia, awww,
+  #        gpg-agent.socket...) starts with the wayland env guaranteed.
+  #   Compositor exit stops the target and everything bound to it.
+  #
+  # Day-to-day:
+  #   - session health:  systemctl --user status wayland-wm@Hyprland
+  #   - session log:     journalctl --user -u wayland-wm@Hyprland
+  #   - graceful logout: `uwsm stop` (plain `hyprctl dispatch exit` also
+  #     works — uwsm notices the compositor died — but stop is the
+  #     intended path and what a power-menu logout should call)
+  #   - optional: launch GUI apps as `uwsm app -- <cmd>` to give each its
+  #     own scope (a crashing app can't drag the compositor cgroup down)
+  #
+  # Gotchas:
+  #   - `uwsm finalize` in hyprland.lua is load-bearing: wayland-wm@ is
+  #     Type=notify, so if the hook is removed the session times out and
+  #     gets torn down (~10s of Hyprland, then back to tuigreet).
+  #   - Session daemons must be systemd units WantedBy=graphical-session.
+  #     target. exec-once / manual `systemctl start` in the startup path
+  #     is how the polkit agent and gpg-agent silently died pre-uwsm.
+  #   - Keep home-manager's wayland.windowManager.hyprland.systemd.enable
+  #     = false (hyprland/default.nix): its generated hook stops/starts
+  #     graphical-session.target by hand and would fight uwsm.
+  #   - uwsm activates xdg-desktop-autostart.target, which the old setup
+  #     never did: /etc/xdg/autostart entries now run (keyring + at-spi
+  #     are idempotent, geoclue agent + evolution-alarm-notify are
+  #     wanted, iwgtk-indicator is new). Audit with
+  #     `systemctl --user list-units 'app-*'`.
+  #   - The service environment is a login-time snapshot (greetd exports
+  #     + finalize vars). Exporting vars in a shell later never reaches
+  #     services; change tuigreet.nix / hyprland.lua instead.
+  #   - One graphical session per user: uwsm start refuses a second one.
+  programs.uwsm.enable = true;
+
   # Services previously pulled in implicitly by services.desktopManager.gnome
   services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
   services.udisks2.enable = true; # yazi mount menu

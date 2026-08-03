@@ -1,9 +1,9 @@
 -- Welcome to my hyprland.lua!
 --
 -- Lua-equivalent of hyprland.conf (Hyprland >= 0.55, hy3 with lua support).
--- Home Manager prepends `hl.plugin.load(<hy3>)` and a `hl.on("hyprland.start", ...)`
--- systemd-activation hook before this file, so hl.plugin.hy3.* and the hy3 config
--- values are available below.
+-- Home Manager prepends `hl.plugin.load(<hy3>)` before this file, so
+-- hl.plugin.hy3.* and the hy3 config values are available below. Session/env
+-- systemd integration is UWSM's job now (see tuigreet.nix + hyprland/default.nix).
 --
 -- Reference: https://wiki.hypr.land/Configuring/Start/
 
@@ -215,6 +215,10 @@ hl.env("LIBVA_DRIVER_NAME", "iHD")
 -- --systemd --all` — no need to repeat any env propagation here.
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.on("hyprland.start", function()
+	-- Tell UWSM the compositor is up: exports WAYLAND_DISPLAY (+ the listed
+	-- vars) to the systemd user manager and sends readiness for the
+	-- Type=notify wayland-wm@ unit — without this the session times out.
+	hl.exec_cmd("uwsm finalize HYPRLAND_INSTANCE_SIGNATURE")
 	hl.exec_cmd("hyprctl dispatch workspace 2") -- start on the terminal workspace
 	-- fcitx5, noctalia and vicinae are started via their systemd user services
 	-- (fcitx5's lives in fcitx5/default.nix); execing a systemd-managed daemon

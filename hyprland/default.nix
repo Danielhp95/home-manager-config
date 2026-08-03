@@ -123,14 +123,12 @@ in
     # NOTE: the dbus-update-activation-environment exec-once entries that used to
     # live here are now in hyprland.lua's hl.on("hyprland.start", ...) hook, since
     # `settings` is serialized as hl.<name>(...) lua calls under configType = "lua".
-    systemd = {
-      enable = true;
-      variables = [ "--all" ];
-      extraCommands = [
-        "systemctl --user stop graphical-session.target"
-        "systemctl --user start hyprland-session.target"
-      ];
-    };
+    # UWSM owns the session lifecycle now (tuigreet launches `uwsm start`,
+    # see tuigreet.nix): it exports the env to the user manager and manages
+    # graphical-session.target canonically, so the old stop/start dance (and
+    # its PartOf= footguns) is gone. Hyprland reports back via `uwsm finalize`
+    # in hyprland.lua's start hook.
+    systemd.enable = false;
     xwayland.enable = true;
   };
 

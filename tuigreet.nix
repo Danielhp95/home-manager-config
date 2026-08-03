@@ -234,7 +234,11 @@ in
     khome.tuigreet.sessions = {
       hyprland = {
         enable = mkDefault false;
-        command = "start-hyprland";
+        # UWSM wraps the compositor in systemd units (wayland-wm@Hyprland
+        # bound to graphical-session.target). It exports this script's
+        # environment (the fcitx/wayland vars below) to the user manager
+        # before any session service starts.
+        command = "uwsm start -- Hyprland";
         environment = {
           XDG_SESSION_DESKTOP = "Hyprland";
           XDG_SESSION_TYPE = "wayland";
