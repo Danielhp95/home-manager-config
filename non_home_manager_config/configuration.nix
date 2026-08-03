@@ -13,7 +13,7 @@
 {
   imports = [
     ../tuigreet.nix
-    ../fcitx5
+    ../fcitx5/fonts.nix # the input method itself is home-manager config now
     ./voxtype.nix
   ];
 

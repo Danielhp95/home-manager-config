@@ -31,6 +31,8 @@
   services.mpris-proxy.enable = true;
 
   imports = [
+    ./fcitx5
+
     ./starship
     ./zsh
     ./tmux
