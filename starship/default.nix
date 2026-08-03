@@ -36,6 +36,9 @@ in
         bg1 = p.surface;
         fg0 = p.fg;
         fg1 = p.fgDim;
+        # tmux's @color_fg1, one step brighter than fgDim — kept so the git
+        # branch reads at the same weight as on the tmux bar
+        fg_soft = "#b8b0a0";
         muted = p.muted;
         ember = p.accent;
         ember_dim = p.accentDim;
@@ -81,7 +84,7 @@ in
       # git_branch and closes in git_status so the middle segments can come
       # and go without breaking the shape.
       git_branch = {
-        format = "[](fg:bg1)[$symbol](fg:ember_dim bg:bg1)[$branch](fg:fg1 bg:bg1)";
+        format = "[](fg:bg1)[$symbol](fg:ember_dim bg:bg1)[$branch](fg:fg_soft bg:bg1)";
         symbol = "󰊢 ";
       };
       git_state = {
