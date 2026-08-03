@@ -13,9 +13,6 @@
     BROWSER = "firefox";
   };
 
-  # To allow bluetooth devices buttons to control media things (like stop / play)
-  services.mpris-proxy.enable = true;
-
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;
