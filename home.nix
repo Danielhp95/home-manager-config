@@ -27,6 +27,9 @@
     };
   };
 
+  # To allow bluetooth devices buttons to control media things (like stop / play)
+  services.mpris-proxy.enable = true;
+
   imports = [
     ./starship
     ./zsh
