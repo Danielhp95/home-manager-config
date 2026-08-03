@@ -156,10 +156,11 @@ in
       # Non-zero exit — the one red pill; bold dark-on-red like the hot slabs
       status = {
         disabled = false;
-        format = "[](fg:error)[$symbol$status]($style)[](fg:error) ";
+        format = "[](fg:error)[$symbol$status( $common_meaning)( SIG$signal_name)]($style)[](fg:error) ";
         style = "bold fg:bg0 bg:error";
         symbol = "✘ ";
         map_symbol = false;
+        recognize_signal_code = true;
       };
 
       cmd_duration = {
