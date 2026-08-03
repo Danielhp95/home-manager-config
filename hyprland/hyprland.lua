@@ -210,20 +210,15 @@ hl.env("LIBVA_DRIVER_NAME", "iHD")
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Autostart (was: exec-once)
--- Home Manager already registers a hyprland.start hook for systemd activation;
--- hl.on appends, so this one runs alongside it.
+-- Home Manager already registers a hyprland.start hook (hl.on appends, so this
+-- one runs alongside it) which does `dbus-update-activation-environment
+-- --systemd --all` — no need to repeat any env propagation here.
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.on("hyprland.start", function()
-	-- propagate the wayland environment to the dbus/session daemons
-	hl.exec_cmd("dbus-update-activation-environment --all")
-	hl.exec_cmd(
-		"dbus-update-activation-environment --systemd DISPLAY HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY XDG_CURRENT_DESKTOP QT_QPA_PLATFORMTHEME"
-	)
-
-	hl.exec_cmd("fcitx5")
 	hl.exec_cmd("hyprctl dispatch workspace 2") -- start on the terminal workspace
-	-- noctalia is started via its systemd user service (see noctalia/default.nix)
-	hl.exec_cmd("vicinae server") -- launcher
+	-- fcitx5, noctalia and vicinae are started via their systemd user services
+	-- (fcitx5's lives in fcitx5/default.nix); execing a systemd-managed daemon
+	-- here too spawns a duplicate (vicinae did: locked db, broken extensions)
 end)
 
 -- ─────────────────────────────────────────────────────────────────────────────
