@@ -16,9 +16,13 @@ let
     types
     ;
 
-  mkScript = session: scfg: pkgs.writeScript "greetd-start-${session}" ''
+  # Console sessions must NOT go through systemd-cat: greetd hands the session
+  # the VT as stdin/stdout/stderr (the same thing a Ctrl+Alt+F<n> tty gives
+  # you), and systemd-cat replaces stdout/stderr with pipes to the journal —
+  # the shell then runs, invisibly, on a blank VT.
+  mkScript = session: scfg: pkgs.writeShellScript "greetd-start-${session}" ''
     ${concatStringsSep "\n" (mapAttrsToList (env: val: "export ${env}=${val}") scfg.environment)}
-    exec systemd-cat --identifier=${session} ${scfg.command} $@
+    exec ${lib.optionalString (!scfg.console) "systemd-cat --identifier=${session} "}${scfg.command} "$@"
   '';
 
   sessionModule = { name, config, ... }: {
@@ -41,6 +45,11 @@ let
       ignoreDefaultEnvironment = mkOption {
         default = false;
         description = mdDoc "ignore toplevel environment, often useful for shell or irregular sessions";
+        type = types.bool;
+      };
+      console = mkOption {
+        default = false;
+        description = mdDoc "interactive terminal session: keep the VT as stdio instead of logging stdout/stderr to the journal via systemd-cat";
         type = types.bool;
       };
       environment = mkOption {
@@ -240,53 +249,20 @@ in
           GSK_RENDERER = "gl";  # For GSK applications
         };
       };
-      gdm = {
-        enable = mkDefault false;
-        command = "gnome-session";
-        environment = {
-          XDG_SESSION_DESKTOP = "Hyprland";
-          XDG_SESSION_TYPE = "wayland";
-          XDG_CURRENT_DESKTOP = "Hyprland";
-          GLFW_IM_MODULE = "fcitx";
-          GTK_IM_MODULE = "fcitx";
-          INPUT_METHOD = "fcitx";
-          XMODIFIERS = "@im=fcitx";
-          IMSETTINGS_MODULE = "fcitx";
-          QT_IM_MODULE = "fcitx";
-          SDL_IM_MODULE = "fcitx";
-          GSK_RENDERER = "gl";  # For GSK applications
-        };
-
-      };
-      niri = {
-        enable = mkDefault false;
-        command = "niri";
-        environment = {
-          LIBVA_DRIVER_NAME = "nvidia";
-          __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-          GLFW_IM_MODULE = "fcitx";
-          GTK_IM_MODULE = "fcitx";
-          INPUT_METHOD = "fcitx";
-          XMODIFIERS = "@im=fcitx";
-          IMSETTINGS_MODULE = "fcitx";
-          QT_IM_MODULE = "fcitx";
-          SDL_IM_MODULE = "fcitx";
-          GSK_RENDERER = "gl";  # For GSK applications
-        };
-      };
       zsh = {
         enable = mkDefault true;
-        command = "zsh";
+        # Login shell, matching what agetty+login on a real tty would start.
+        command = "zsh -l";
+        console = true;
         ignoreDefaultEnvironment = true;
+        # greetd doesn't set TERM for the session; without it the shell and
+        # anything curses-based misbehaves on the VT.
+        environment.TERM = "linux";
       };
     };
 
     users.users.${cfg.greeterUser}.group = cfg.greeterUser;
     users.groups.${cfg.greeterUser} = { };
-
-    systemd.services.display-manager.enable = false;
-    services.xserver.displayManager.lightdm.enable = lib.mkForce false;
-    services.displayManager.gdm.enable = true;
 
     security.pam.services.greetd.enableGnomeKeyring = cfg.enableGnomeKeyring;
 
