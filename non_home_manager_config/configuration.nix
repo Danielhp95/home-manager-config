@@ -51,7 +51,14 @@
     };
   };
 
-  services.dbus.packages = [ pkgs.gcr ]; # Why do I want this?
+  # gcr provides the D-Bus prompter that gnome-keyring and gcr-ssh-agent use
+  # for unlock/PIN dialogs; without it keyring prompts silently fail.
+  services.dbus.packages = [ pkgs.gcr ];
+
+  # Compressed in-RAM swap. The machine had no swap at all: systemd-oomd
+  # degraded to pressure-only mode and nix-daemon died with SIGABRT during
+  # large rebuilds (30G+ peak on 2026-08-02).
+  zramSwap.enable = true;
 
   # TLP replaces power-profiles-daemon (the two conflict; the NixOS module
   # asserts they're not both enabled). TLP applies the *_ON_AC settings when
