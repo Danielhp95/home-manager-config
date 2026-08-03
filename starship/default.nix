@@ -26,10 +26,10 @@ in
         + "$git_branch$git_state$git_status"
         + "$nix_shell$direnv"
         + "$python$nodejs$rust$lua"
-        + "$jobs$sudo$status"
+        + "$status"
         + "\n$character";
 
-      right_format = "$cmd_duration$time";
+      right_format = "$jobs$sudo$battery$cmd_duration$time";
 
       palettes.ember = {
         bg0 = p.bg;
@@ -49,14 +49,26 @@ in
         error = p.error;
       };
 
-      # Directory — the hot coral pill, with the same ember→ember_dim→ash
-      # flame trail tapering out as tmux's session slab
+      # Directory — the campfire pill with the flame trail off the back.
+      # Inside a repo the pill heats along the full tmux ramp, hotter the
+      # deeper you are: ash parent path → banked repo root → coral path
+      # inside the repo. Outside a repo the whole pill burns full coral.
       directory = {
         format =
           "[](fg:ember)"
-          + "[$path]($style)[$read_only]($read_only_style)"
+          + "[ $path]($style)[$read_only]($read_only_style)[ ]($style)"
+          + "[](fg:ember bg:ember_dim)[](fg:ember_dim bg:ash)[](fg:ash) ";
+        repo_root_format =
+          "[](fg:ash)"
+          + "[ $before_root_path ]($before_repo_root_style)"
+          + "[](fg:ash bg:ember_dim)"
+          + "[ $repo_root ]($repo_root_style)"
+          + "[](fg:ember_dim bg:ember)"
+          + "[$path]($style)[$read_only]($read_only_style)[ ]($style)"
           + "[](fg:ember bg:ember_dim)[](fg:ember_dim bg:ash)[](fg:ash) ";
         style = "bold fg:bg0 bg:ember";
+        before_repo_root_style = "bold fg:bg0 bg:ash";
+        repo_root_style = "bold fg:bg0 bg:ember_dim";
         read_only = " 󰌾";
         read_only_style = "fg:bg0 bg:ember";
         truncation_length = 3;
@@ -115,7 +127,7 @@ in
         symbol = " ";
       };
 
-      # Background jobs and cached sudo — small mauve/gold glyphs on graphite
+      # Background jobs and cached sudo — small mauve/gold pills on the right
       jobs = {
         format = "[](fg:bg1)[$symbol$number](fg:mauve bg:bg1)[](fg:bg1) ";
         symbol = "󰒲 ";
@@ -124,6 +136,21 @@ in
         disabled = false;
         format = "[](fg:bg1)[$symbol](fg:gold bg:bg1)[](fg:bg1) ";
         symbol = "󰌋";
+      };
+
+      # Battery — a pill that cools olive → gold → red as it drains
+      battery = {
+        format = "[](fg:bg1)[$symbol$percentage]($style)[](fg:bg1) ";
+        full_symbol = "󰁹 ";
+        charging_symbol = "󰂄 ";
+        discharging_symbol = "󰁾 ";
+        unknown_symbol = "󰂑 ";
+        empty_symbol = "󰂎 ";
+        display = [
+          { threshold = 15; style = "bold fg:error bg:bg1"; }
+          { threshold = 40; style = "fg:gold bg:bg1"; }
+          { threshold = 100; style = "fg:olive bg:bg1"; }
+        ];
       };
 
       # Non-zero exit — the one red pill; bold dark-on-red like the hot slabs
