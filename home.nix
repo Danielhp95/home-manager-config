@@ -73,7 +73,6 @@
   # Wallpaper managaer
   services.awww.enable = true;
 
-  services.clipmenu.enable = true;
   programs.mpv = {
     enable = true;
     config = {

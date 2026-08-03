@@ -10,7 +10,6 @@
   };
 
   home.packages = with pkgs; [
-    gh
     fira-code
     powerline-fonts
     nix-search-tv
@@ -21,11 +20,6 @@
   # sequences through tmux, which corrupts rendering (e.g. scrolling one split
   # visually scrolls all windows).
   programs = {
-    wezterm = {
-      enable = true;
-      extraConfig = builtins.readFile ./wezterm.lua;
-      enableZshIntegration = false;
-    };
     btop = {
       package = pkgs.btop-cuda;
       enable = true;
