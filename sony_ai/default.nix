@@ -45,12 +45,12 @@ in
   # Salt minion: services.salt.minion.enable is a NixOS (system) option, so it
   # lives in ../non_home_manager_config/salt.nix, imported from flake.nix.
 
+  # git comes from programs.git.enable (../git), the docker CLI from the
+  # system-level virtualisation.docker.enable.
   home.packages = with pkgs; [
-    git
     awscli2
     amazon-ecr-credential-helper
 
-    docker
     cudaPackages.cudatoolkit
 
     steam-run # To run proton via Steam's FHS

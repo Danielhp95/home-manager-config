@@ -127,7 +127,8 @@
             ./non_home_manager_config/ollama.nix
             ./non_home_manager_config/network.nix
             ./non_home_manager_config/tailscale.nix
-            ./non_home_manager_config/salt.nix
+            # ./non_home_manager_config/salt.nix — Sony AI salt-minion; disabled
+            # 2026-08-03: it error-looped every 30s unable to resolve its master.
             ./pipewire.nix
 
             # CloudBrink BrinkAgent VPN (daemons + GUI). See /home/dani/Projects/brinkagent.
