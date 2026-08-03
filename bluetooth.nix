@@ -9,9 +9,10 @@
         # `Enable = "..."` key is audio.conf-era syntax and is rejected by BlueZ 5.86
         # ("Unknown key Enable for group General").
         Experimental = true;
-        # Enables kernel experimental features incl. the BlueZ ISO socket, which the
-        # BAP/LE-Audio plugin needs ("BAP requires ISO Socket which is not enabled").
-        KernelExperimental = true;
+        # KernelExperimental (BlueZ ISO socket for BAP/LE-Audio) removed
+        # 2026-08-03: the adapter rejected the resulting config on every boot
+        # ("Failed to set default system config for hci0"). Re-add if LE-Audio
+        # is ever needed.
       };
     };
   };
