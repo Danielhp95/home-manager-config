@@ -166,15 +166,24 @@ in
     autosuggestion.enable = true;
     enableCompletion = true;
     # `compinit -C` trusts the cached .zcompdump and skips the compaudit
-    # security scan; do the full (slow) init only when the dump is >24h old,
-    # so newly installed completions still get picked up within a day.
+    # security scan; do the full (slow: ~320ms vs ~5ms) init only when the
+    # dump is >24h old, so newly installed completions still get picked up
+    # within a day. Two gotchas this encodes: the (#q) glob qualifier
+    # silently never matches inside [[ ]] without EXTENDED_GLOB, and a full
+    # compinit leaves the dump's mtime untouched when nothing changed — so
+    # touch it, or once stale it stays on the slow path forever.
     completionInit = ''
       autoload -U compinit
-      if [[ -n ''${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then
-        compinit
-      else
-        compinit -C
-      fi
+      () {
+        setopt local_options extended_glob
+        local dump=''${ZDOTDIR:-$HOME}/.zcompdump
+        if [[ ! -e $dump || -n $dump(#qN.mh+24) ]]; then
+          compinit -d $dump
+          touch $dump
+        else
+          compinit -C -d $dump
+        fi
+      }
     '';
     history = {
       ignoreDups = true;
