@@ -58,12 +58,22 @@
     # writes silently succeed and change nothing. Every consumer must therefore name
     # the device explicitly (see `-d intel_backlight` in hyprland/hyprland.lua and
     # noctalia's monitor."eDP-1".backend in noctalia/default.nix).
-    kernelParams = [ "acpi_backlight=native" ];
+    kernelParams = [
+      "acpi_backlight=native"
+      # Serial console printk is synchronous and surprisingly slow during
+      # boot; errors still print (loglevel unaffected for warnings+).
+      "quiet"
+      # Deliberate security tradeoff (accepted 2026-08-06): disables Spectre-
+      # class speculative-execution mitigations for measurable syscall/IO
+      # speedup. Remove this line to restore full mitigation.
+      "mitigations=off"
+    ];
     initrd = {
       # systemd initrd: parallel device probing, the LUKS prompt comes up
       # sooner (systemd-ask-password), and initrd time finally decomposes in
       # `systemd-analyze blame --initrd` instead of one opaque number.
       systemd.enable = true;
+      verbose = false;
       availableKernelModules = [
         "xhci_pci"
         "thunderbolt"
