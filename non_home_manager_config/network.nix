@@ -8,22 +8,13 @@
   ];
   networking.hostName = "fell-omen"; # Define your hostname.
 
-  # Unblock wifi + bluetooth on every boot. systemd-rfkill persists the rfkill
-  # state under /var/lib/systemd/rfkill/ and restores it at boot; if it was ever
-  # saved "blocked" you'd otherwise need a manual `rfkill unblock wlan bluetooth`
-  # after each start. This oneshot clears those soft blocks automatically.
-  systemd.services.rfkill-unblock = {
-    description = "Unblock wlan and bluetooth via rfkill";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "systemd-rfkill.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.util-linux}/bin/rfkill unblock wlan bluetooth";
-    };
-  };
   # NOTE(dani): If things fail, enable this and disable below
   # networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
 
+  # Gotcha: connman soft-blocks (rfkill) any technology whose saved Enable=
+  # flag in /var/lib/connman/settings is off, on every boot. A manual
+  # `rfkill unblock` powers it back but is NOT persisted — if radios come up
+  # blocked again, fix it once with `connmanctl disable/enable <tech>`.
   services.connman.enable = true;
   services.connman.wifi.backend = "iwd";
   networking.wireless.iwd.enable = true;
