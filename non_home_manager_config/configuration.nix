@@ -47,7 +47,9 @@
     flake = "/home/dani/nix_config";
     clean = {
       enable = true;
-      extraArgs = "--keep-since 15d --keep 5";
+      # 15d/5 was retaining ~57 generations (~83 GB of store). A week of rollback
+      # targets plus the last 10 generations is plenty in practice.
+      extraArgs = "--keep-since 7d --keep 10";
     };
   };
 
