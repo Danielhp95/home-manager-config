@@ -2,85 +2,61 @@
 let
   p = (import ../palette.nix).hash;
 
-  # IRIS has no theming, no width setting and hardcodes Tab — the README's
-  # "2 basic styles" is the whole story. All three are one-file constants, so
-  # they get patched here, in the same spirit as the fzf override in
-  # ./default.nix. Every replacement is --replace-fail: if upstream moves a
-  # line, the build breaks loudly instead of silently reverting to purple.
+  # What used to be fifteen substitutions is now two. Upstream grew a theme
+  # file and a `ui.max-width` setting (v0.4.19-v0.4.22), so the colour and box
+  # width patches moved into config below; what is left are the two behaviours
+  # that still have no knob. Every replacement is --replace-fail: if upstream
+  # moves a line, the build breaks loudly instead of silently reverting.
   iris = pkgs.iris.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
-      ### Theme: Ember, straight from ../palette.nix ##########################
-      # Upstream ships the Aura palette (purple #a277ff / mint #61ffca) as
-      # lipgloss hex literals in integration/overlay.go. Border goes first and
-      # qualified by its field name: it shares #a277ff with the accent roles,
-      # and it's the one that should stay quiet rather than become gold.
-      substituteInPlace integration/overlay.go \
-        --replace-fail 'Border:     lipgloss.Color("#a277ff")' 'Border:     lipgloss.Color("${p.border}")'
-
-      # Remaining #a277ff: scroll counter, alias/system pills, footer keys.
-      substituteInPlace integration/overlay.go \
-        --replace-fail '"#a277ff"' '"${p.gold}"' \
-        --replace-fail '"#61ffca"' '"${p.accent}"' \
-        --replace-fail '"#6d6a7f"' '"${p.muted}"' \
-        --replace-fail '"#edecee"' '"${p.fg}"' \
-        --replace-fail '"#ffffff"' '"${p.fg}"' \
-        --replace-fail '"#9692a8"' '"${p.fgDim}"' \
-        --replace-fail '"#3d375e"' '"${p.surface}"' \
-        --replace-fail '"#4B4A4C"' '"${p.muted}"' \
-        --replace-fail '"#2a2342"' '"${p.bgAlt}"' \
-        --replace-fail '"#1a2d36"' '"${p.bgAlt}"' \
-        --replace-fail '"#1e1d28"' '"${p.bgAlt}"' \
-        --replace-fail '"#110f18"' '"${p.bg}"'
-
-      ### Width: fill the terminal instead of a fixed 76 columns #############
-      # boxWidth is `const boxWidth = 76`, and the command column derives from
-      # it as inner - marker - icon - padGap - descW, which left roughly 41
-      # characters before truncation. The const is only read in this one
-      # function, so a same-name local shadows it everywhere it matters (the
-      # RHS still sees the const: a short var decl's scope starts after it).
-      # 76 stays the floor, 200 caps it on ultrawide terminals. Narrower
-      # terminals behave exactly as before — targetCol is already clamped at 0
-      # and autowrap is off, so an oversized box clips rather than corrupts.
-      substituteInPlace integration/overlay.go \
-        --replace-fail 'if targetCol+boxWidth > width {' 'boxWidth := min(max(width-2, boxWidth), 200); if targetCol+boxWidth > width {'
-
-      # Let the description column grow with the box too, instead of a fixed
-      # 24, while still leaving the bulk of the extra room to the command.
+      ### Description column: grow it with the box #############################
+      # ui.max-width sizes the box, but descW is still `descW := 24` regardless
+      # of how wide the box ended up, so the extra room all goes to the command
+      # column. inner is in scope here (boxWidth - 2). 24 stays the floor.
       substituteInPlace integration/overlay.go \
         --replace-fail 'descW := 24' 'descW := max(24, inner/4)'
 
-      ### Tab: hand it back to the shell when no menu is open #################
-      # Upstream's Tab branch sets intercepted = true and returns without ever
-      # writing to the pty, so fzf-tab and the Tab-Tab television binding are
-      # unreachable inside a session. Forwarding Tab whenever IRIS has no menu
-      # open restores both; with the menu open Tab still accepts the
-      # suggestion. Deliberately does not set shouldOverlayDraw: IRIS must not
-      # redraw over fzf-tab's own output.
+      ### Select key: hand it back to the shell when no menu is open ###########
+      # keybindings.select is configurable now, but the swallow is not fixed:
+      # the matched-key branch ends in `i += consumed - 1; continue`, which sits
+      # *outside* the `if overlay.IsVisible()` block, so with the default
+      # select = "tab" the key is consumed and never written to the pty even
+      # when there is no menu to accept from — fzf-tab and the Tab-Tab
+      # television binding stay unreachable. Forwarding the raw bytes when the
+      # overlay is hidden restores both. Setting select = "" is not an
+      # alternative: config.Load() forces the empty string back to "tab".
+      #
+      # Deliberately does not set shouldOverlayDraw: IRIS must not redraw over
+      # fzf-tab's own output.
       substituteInPlace root/wrapper.go \
-        --replace-fail 'logger.Debugf("Intercepted Tab key, visible=%v", overlay.IsVisible())' 'logger.Debugf("Intercepted Tab key, visible=%v", overlay.IsVisible()); if !overlay.IsVisible() { _, _ = ptmx.Write([]byte{b}); continue }'
+        --replace-fail 'if matched, consumed := config.MatchKey(inputSlice[i:], config.Get().Keybindings.SelectSuggestion); matched && config.Get().Keybindings.SelectSuggestion != "" {' 'if matched, consumed := config.MatchKey(inputSlice[i:], config.Get().Keybindings.SelectSuggestion); matched && config.Get().Keybindings.SelectSuggestion != "" { if !overlay.IsVisible() { _, _ = ptmx.Write(inputSlice[i : i+consumed]); i += consumed - 1; continue }'
 
       ### Ctrl-J / Ctrl-K: move down/up the list, as in nvim, tv and fzf #######
-      # Menu navigation is Up/Down only, and both are matched deep inside the
-      # escape-sequence branch of the input pump, so there is no single key
-      # constant to repoint. Instead this rewrites the keystroke on the way in:
-      # while the menu is open, a lone Ctrl-K (0x0b) becomes ESC [ A and a lone
-      # Ctrl-J (0x0a) becomes ESC [ B, and every existing arrow path — cursor
-      # move, history-mode line replacement, ghost text, redraw — then runs
-      # unchanged. Bytes are spelled in hex because '[' cannot appear inside
-      # this single-quoted shell argument.
+      # keybindings.navigate-up/navigate-down exist now, but pointing them at
+      # ctrl+k/ctrl+j would be a downgrade on three counts, so the keys are
+      # still added here instead:
       #
+      #   1. There is one slot per direction, so config buys Ctrl-J/K only by
+      #      giving up the arrows. This adds them *alongside*.
+      #   2. handleNavKey's `else if suggestionsEnabled` branch opens the
+      #      history list when the overlay is hidden, and its caller's
+      #      `continue` swallows the byte either way — so Ctrl-J and Ctrl-K
+      #      would stop being zsh's accept-line and kill-line entirely.
+      #   3. The config path matches on every byte with no paste guard, so
+      #      newlines inside a pasted block would be eaten as navigate-down.
+      #
+      # Both guards below are load-bearing and cover exactly (2) and (3).
+      # `overlay.IsVisible()` keeps the keys as zsh's own when there is no list
+      # to move through; `!inBracketedPaste` keeps a pasted block intact.
       # Terminals send 0x0a for Ctrl-J and 0x0d for Enter, and IRIS puts stdin
       # in raw mode (no ICRNL), so the two stay distinct here even though the
-      # Enter branch below accepts either.
+      # enter branch further down accepts either.
       #
-      # Guards, both load-bearing. `overlay.IsVisible()` keeps the keys as zsh's
-      # own when there is no list to move through: Ctrl-J still accepts the line
-      # and Ctrl-K still kills to the end of it. `n == 1` limits the rewrite to a
-      # solitary keystroke, so newlines inside a pasted block are never turned
-      # into Down — the bracketed-paste markers arrive in the same read as the
-      # body, which means inBracketedPaste is not yet set when this runs.
+      # Falling through is what makes the hidden case correct: 0x0a reaches the
+      # enter branch and is forwarded as Enter, and 0x0b reaches the trailing
+      # `if !intercepted` write. Neither needs handling here.
       substituteInPlace root/wrapper.go \
-        --replace-fail 'logger.Debugf("Stdin raw input: bytes=%q, hex=%x", inputSlice[:n], inputSlice[:n])' 'logger.Debugf("Stdin raw input: bytes=%q, hex=%x", inputSlice[:n], inputSlice[:n]); if overlay.IsVisible() && n == 1 && !inBracketedPaste { if inputSlice[0] == 0x0b { inputSlice, n = []byte{0x1b, 0x5b, 0x41}, 3 } else if inputSlice[0] == 0x0a { inputSlice, n = []byte{0x1b, 0x5b, 0x42}, 3 } }'
+        --replace-fail 'var isNavUp, isNavDown bool' 'if overlay.IsVisible() && !inBracketedPaste && (b == 0x0b || b == 0x0a) { navDir := "down"; if b == 0x0b { navDir = "up" }; handleNavKey(navDir); continue }; var isNavUp, isNavDown bool'
     '';
   });
 in
@@ -95,15 +71,14 @@ in
 # consumed by IRIS and never reach zle; everything else is forwarded to the
 # child shell untouched.
 #
-# Upstream intercepts Tab unconditionally — its branch in root/wrapper.go sets
-# intercepted=true and returns without ever writing to the pty — which makes
-# fzf-tab and the Tab-Tab television binding unreachable inside a session.
-# The patch below forwards Tab whenever IRIS has no menu open, so both work
-# again. Note the remaining overlap: while the suggestion menu *is* up (which
-# is most of the time you're mid-word), Tab accepts IRIS's selection. Toggle
-# the menu off to hand the key back. To make Tab always defer to zsh instead,
-# drop the `if !overlay.IsVisible()` guard from that patch so it forwards
-# unconditionally — you'd then accept suggestions only with Right/ghost-text.
+# Upstream intercepts the select key (Tab by default) unconditionally, even
+# with no menu open, which makes fzf-tab and the Tab-Tab television binding
+# unreachable. The patch above forwards Tab whenever IRIS has no menu open, so
+# both work again. Note the remaining overlap: while the suggestion menu *is*
+# up (which is most of the time you're mid-word), Tab accepts IRIS's selection.
+# Toggle the menu off to hand the key back. To make Tab always defer to zsh
+# instead, set keybindings.select below to something else — ctrl+y, say — and
+# the patch stops mattering for Tab.
 #
 # Menu navigation is patched to accept Ctrl-J / Ctrl-K alongside the arrows, to
 # match nvim, television and fzf. They only navigate while the menu is open; the
@@ -115,12 +90,43 @@ in
 {
   home.packages = [ iris ];
 
-  # Managed declaratively, so never run `iris config init` / `iris setup`:
-  # setup prepends `eval "$(iris init zsh)"` to .zshrc, which is a read-only
-  # store symlink here. Runtime state (last-used mode) goes to
-  # $XDG_DATA_HOME/iris/state.toml, not this file, so read-only is safe.
-  # IRIS stats this path every second and hot-reloads, so a rebuild applies
-  # to running sessions without restarting them.
+  # Colours live in their own file since v0.4.22 — config.toml has no [theme]
+  # section, `LoadTheme` reads $XDG_CONFIG_HOME/iris/theme.toml directly. Every
+  # field is optional and falls back individually, but all nineteen are spelled
+  # out here so a palette change can never leave a stray Aura purple behind.
+  # The names map onto what upstream's own defaults coloured, which is why the
+  # four accent roles below (key, scroll_info, sys_sel, alias_sel) share gold:
+  # they were all #a277ff, and only the border wanted to stay quiet.
+  #
+  # IRIS stats this path every second alongside config.toml and hot-reloads, so
+  # a rebuild applies to running sessions without restarting them.
+  xdg.configFile."iris/theme.toml".text = ''
+    border = "${p.border}"
+    accent = "${p.accent}"
+    muted = "${p.muted}"
+    text = "${p.fg}"
+    text_sel = "${p.fg}"
+    key = "${p.gold}"
+    match = "${p.accent}"
+    desc = "${p.fgDim}"
+    desc_sel = "${p.fg}"
+    sel_bg = "${p.surface}"
+    sel_text = "${p.bg}"
+    scroll_info = "${p.gold}"
+    ghost_text = "${p.muted}"
+    sys = "${p.bgAlt}"
+    sys_sel = "${p.gold}"
+    hist = "${p.bgAlt}"
+    hist_sel = "${p.accent}"
+    alias = "${p.bgAlt}"
+    alias_sel = "${p.gold}"
+  '';
+
+  # Managed declaratively, so never run `iris config init` / `iris setup` /
+  # `iris theme init`: setup prepends `eval "$(iris init zsh)"` to .zshrc, which
+  # is a read-only store symlink here, and the init commands would try to write
+  # over the two store-managed files. Runtime state (last-used mode) goes to
+  # $XDG_DATA_HOME/iris/state.toml, not here, so read-only is safe.
   xdg.configFile."iris/config.toml".text = ''
     [core]
     version = 1
@@ -140,6 +146,11 @@ in
     # aliases for its suggestions either way.
     expand-alias = false
 
+    # On Enter, run what is typed rather than what is highlighted. True would
+    # execute the suggestion instead — so typing `nvim ~/.conf` and hitting
+    # Enter would run `nvim ~/.config`. Upstream's default, and the safe one.
+    auto-execute = false
+
     [ui]
     style = "modern"
     ghost-text = true
@@ -147,6 +158,14 @@ in
     max-suggestions = 100
     max-height = 12
     nerd-fonts = true
+
+    # Was a hardcoded `const boxWidth = 76`, which left roughly 41 columns for
+    # the command before truncation; configurable since v0.4.19. Upstream
+    # clamps this down to the terminal width (floor 40), so it reads as a cap
+    # rather than a size: 200 means "fill the terminal, but stop there on an
+    # ultrawide". Narrow terminals are unaffected. The description column does
+    # not follow this on its own — see the descW patch above.
+    max-width = 200
 
     [git]
     filter-active-branch = true
@@ -161,9 +180,9 @@ in
     check-interval = "24h"
 
     [keybindings]
-    # Only these two are configurable; Tab / Enter / arrows / Ctrl-A,E,L,U,W,C
-    # are hardcoded in the input pump — as is the Ctrl-J/Ctrl-K navigation
-    # patched in above, which is why it lives there and not here.
+    # Enter and Ctrl-A,E,L,U,W,C are still hardcoded in the input pump, as is
+    # the Ctrl-J/Ctrl-K navigation patched in above (see the note there for why
+    # it is not expressed as navigate-up/navigate-down here).
     #
     # toggle-mode is ctrl+r upstream, which would shadow atuin for the whole
     # session. Moved to ctrl+o (zsh's accept-line-and-down-history, unused
@@ -177,6 +196,22 @@ in
     # Set it to "ctrl+space" (zsh's set-mark-command) if you'd rather leave
     # every zsh completion key untouched; the footer hint follows the setting.
     toggle-menu = "shift+tab"
+
+    # Accept the highlighted suggestion. Kept on Tab, which the patch above
+    # makes safe: with no menu open Tab reaches zsh and fzf-tab. Point this at
+    # ctrl+y to give Tab back to zsh unconditionally.
+    select = "tab"
+
+    # Arrows. Note what these now do when *no* menu is open: rather than
+    # falling through to zsh, they open IRIS's own history list
+    # (handleNavKey's hidden-overlay branch, new in v0.4.19). Inside an IRIS
+    # session that displaces zsh's up-line-or-history — atuin is unaffected,
+    # it runs with --disable-up-arrow.
+    navigate-up = "up"
+    navigate-down = "down"
+
+    # Accept the ghost-text completion. Was hardcoded to Right until v0.4.21.
+    navigate-right = "right"
 
     [ai]
     # Off until a provider is actually reachable. Flipping this to true is the
@@ -246,17 +281,32 @@ in
         # `iris init zsh` (root/init.go) minus its autostart block, which we
         # deliberately don't want. Inlined rather than eval'd to keep a
         # subprocess out of every zsh startup. Re-check on upstream bumps.
+        #
         # line-pre-redraw feeds zle's authoritative buffer to IRIS, which
         # otherwise only has its own naive keystroke mirror — this is what
         # keeps the overlay honest when a widget rewrites the line.
+        #
+        # IRIS_CWD keeps IRIS's idea of the directory in sync: it resolves
+        # path completions itself, from its own cwd, which never moves because
+        # the `cd` happens in the child shell. chpwd covers interactive cds,
+        # precmd covers the rest (a script that cds, a subshell popping back).
+        # The exit code on IRIS_CMD_STOP feeds the rule-based "retry the last
+        # failure" suggestion, which runs with ai.enabled = false. The wrapper
+        # accepts a bare IRIS_CMD_STOP too, so both are additive.
         _iris_send_lbuffer() { print -u $IRIS_FD -N -r -- "$LBUFFER" 2>/dev/null }
-        _iris_precmd()       { print -u $IRIS_FD -N -r -- "IRIS_CMD_STOP" 2>/dev/null }
+        _iris_sync_cwd()     { print -u $IRIS_FD -N -r -- "IRIS_CWD:$PWD" 2>/dev/null }
+        _iris_precmd()       {
+          local iris_exit_code=$?
+          _iris_sync_cwd
+          print -u $IRIS_FD -N -r -- "IRIS_CMD_STOP:$iris_exit_code" 2>/dev/null
+        }
         _iris_preexec()      { print -u $IRIS_FD -N -r -- "IRIS_CMD_START" 2>/dev/null }
 
         autoload -Uz add-zle-hook-widget add-zsh-hook
         add-zle-hook-widget line-pre-redraw _iris_send_lbuffer
         add-zsh-hook precmd _iris_precmd
         add-zsh-hook preexec _iris_preexec
+        add-zsh-hook chpwd _iris_sync_cwd
       fi
     '';
   };
