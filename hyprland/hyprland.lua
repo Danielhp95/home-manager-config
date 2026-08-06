@@ -150,12 +150,11 @@ hl.config({
 		rounding = 5,
 		blur = {
 			enabled = true,
-			-- 4/2 instead of 8/4: with ignore_opacity + near-universal window
-			-- transparency, blur renders behind almost every window on every
-			-- damaged frame — halving size and passes is ~4x cheaper on the
-			-- iGPU for a very similar look.
-			size = 4,
-			passes = 2,
+			-- 8/4 is expensive on the iGPU (blur renders behind almost every
+			-- window given ignore_opacity + the transparency above), but the
+			-- lighter 4/2 look was tried and rejected — keep the perception.
+			size = 8,
+			passes = 4,
 			ignore_opacity = true,
 		},
 	},
