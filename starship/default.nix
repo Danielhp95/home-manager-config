@@ -23,22 +23,20 @@ in
       format =
         "$username$hostname"
         + "$directory"
-        + "$git_branch$git_state$git_status"
+        + "$git_branch$git_commit$git_state$git_status"
         + "$nix_shell$direnv"
         + "$python$nodejs$rust$lua"
         + "$status"
         + "\n$character";
 
-      right_format = "$jobs$sudo$battery$cmd_duration$time";
+      right_format = "$jobs$battery$cmd_duration$time";
 
       palettes.ember = {
         bg0 = p.bg;
         bg1 = p.surface;
         fg0 = p.fg;
         fg1 = p.fgDim;
-        # tmux's @color_fg1, one step brighter than fgDim — kept so the git
-        # branch reads at the same weight as on the tmux bar
-        fg_soft = "#b8b0a0";
+        fg_soft = p.fgSoft;
         muted = p.muted;
         ember = p.accent;
         ember_dim = p.accentDim;
@@ -73,7 +71,7 @@ in
         before_repo_root_style = "bold fg:bg0 bg:ash";
         repo_root_style = "bold fg:bg0 bg:ember_dim";
         read_only = " 󰌾";
-        read_only_style = "fg:bg0 bg:ember";
+        read_only_style = "bold fg:bg0 bg:ember";
         truncation_length = 3;
         truncation_symbol = "…/";
         home_symbol = "~";
@@ -86,12 +84,36 @@ in
       git_branch = {
         format = "[](fg:bg1)[$symbol](fg:ember_dim bg:bg1)[$branch](fg:fg_soft bg:bg1)";
         symbol = "󰊢 ";
+        only_attached = true;
+      };
+      git_commit = {
+        format = "[](fg:bg1)[󰜘 $hash](fg:fg_soft bg:bg1)";
+        only_detached = true;
       };
       git_state = {
         format = "[ $state( $progress_current/$progress_total)](fg:mauve bg:bg1)";
       };
       git_status = {
-        format = "([ $all_status$ahead_behind](fg:gold bg:bg1))[](fg:bg1) ";
+        # Counts with meaning-bearing glyphs instead of punctuation:
+        # 󰈸 modified  󰄬 staged  󰐕 untracked  󰆴 deleted  󰑕 renamed
+        # 󰅖 conflicted  󰆓 stashed  󰅧/󰅢 commits to push / to pull
+        format =
+          "([ ](bg:bg1)"
+          + "[$conflicted](fg:error bg:bg1)[$deleted](fg:error bg:bg1)"
+          + "[$renamed](fg:mauve bg:bg1)[$modified](fg:gold bg:bg1)"
+          + "[$staged](fg:sage bg:bg1)[$untracked](fg:fg1 bg:bg1)"
+          + "[$stashed](fg:steel bg:bg1)[$ahead_behind](fg:ember_hot bg:bg1))"
+          + "[](fg:bg1) ";
+        conflicted = "󰅖\${count} ";
+        deleted = "󰆴\${count} ";
+        renamed = "󰑕\${count} ";
+        modified = "󰈸\${count} ";
+        staged = "󰄬\${count} ";
+        untracked = "󰐕\${count} ";
+        stashed = "󰆓\${count} ";
+        ahead = "󰅧\${count} ";
+        behind = "󰅢\${count} ";
+        diverged = "󰅧\${ahead_count} 󰅢\${behind_count} ";
       };
 
       # Nix develop/shell indicator — steel-on-graphite pill, invaluable in
@@ -130,15 +152,12 @@ in
         symbol = " ";
       };
 
-      # Background jobs and cached sudo — small mauve/gold pills on the right
+      # Background jobs — small mauve pill on the right. (No sudo pill: the
+      # module's `sudo -n` check costs ~18ms on every prompt draw.)
       jobs = {
         format = "[](fg:bg1)[$symbol$number](fg:mauve bg:bg1)[](fg:bg1) ";
         symbol = "󰒲 ";
-      };
-      sudo = {
-        disabled = false;
-        format = "[](fg:bg1)[$symbol](fg:gold bg:bg1)[](fg:bg1) ";
-        symbol = "󰌋";
+        number_threshold = 1;
       };
 
       # Battery — a pill that cools olive → gold → red as it drains
@@ -149,10 +168,10 @@ in
         discharging_symbol = "󰁾 ";
         unknown_symbol = "󰂑 ";
         empty_symbol = "󰂎 ";
+        # hidden while healthy — appears gold at 30%, bold red at 15%
         display = [
           { threshold = 15; style = "bold fg:error bg:bg1"; }
-          { threshold = 40; style = "fg:gold bg:bg1"; }
-          { threshold = 100; style = "fg:olive bg:bg1"; }
+          { threshold = 30; style = "fg:gold bg:bg1"; }
         ];
       };
 
