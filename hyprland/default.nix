@@ -104,6 +104,100 @@ let
       sleep $frame
     done
   '';
+
+  # Projector mirroring. Hyprland's native mirror is the right tool here: its
+  # renderMirrored() scales by min(dstW/srcW, dstH/srcH) and centres, so a 16:10
+  # laptop on a 16:9 projector comes out pillarboxed rather than stretched or
+  # cropped (1920x1200 -> 1728x1080 with 96px bars either side).
+  #
+  # Two Hyprland quirks make this a two-step: `hyprctl keyword` is a no-op under
+  # configType = "lua" (use `hyprctl eval` instead, as magnify does above), AND
+  # eval alone only *registers* the monitor rule -- unlike hl.config values,
+  # which are read live each frame, monitor rules need an explicit re-apply.
+  # `dispatch forcerendererreload` re-fetches every monitor's rule and applies it.
+  #
+  # The rule this registers lives only in the running Hyprland: any config reload
+  # (`hyprctl reload`, or a home-manager switch) re-reads hyprland.lua and drops
+  # it, so mirroring silently reverts to extended. Fine as a default -- just don't
+  # rebuild mid-presentation, and re-run `present on` if you do.
+  #
+  # Escape hatch if that ever breaks: `wl-mirror --fullscreen-output DP-2 -s fit
+  # eDP-1` does the same letterboxed mirror out-of-process (wl-mirror is already
+  # in home.packages, and `wl-present` wraps it in a rofi menu).
+  presentScript =
+    let
+      jq = lib.getExe pkgs.jq;
+      notify = lib.getExe pkgs.libnotify;
+    in
+    pkgs.writeShellScriptBin "present" ''
+      set -u
+      builtin_panel="eDP-1"
+
+      say() { echo "$1"; ${notify} -a present "Present" "$1"; }
+
+      # `monitors all`, not `monitors`: a monitor that is currently mirroring is
+      # omitted from the plain listing entirely, so the plain one can see how to
+      # turn mirroring on but never how to turn it back off. `all` also includes
+      # disabled outputs, hence the .disabled filter below.
+      monitors=$(hyprctl monitors all -j) || { say "hyprctl unavailable"; exit 1; }
+
+      # The target is whatever external display is attached. Named explicitly as
+      # $2 when more than one is (at the desk both HPs are), since mirroring the
+      # wrong panel mid-talk is worse than refusing.
+      target="''${2:-}"
+      if [ -z "$target" ]; then
+        candidates=$(printf '%s' "$monitors" | ${jq} -r --arg b "$builtin_panel" \
+          '.[] | select(.name != $b and .disabled == false) | .name')
+        count=$(printf '%s' "$candidates" | grep -c . || true)
+        case "$count" in
+          0) say "No external display connected"; exit 1 ;;
+          1) target="$candidates" ;;
+          *) say "Several external displays -- pick one: $(echo "$candidates" | tr '\n' ' ')"; exit 1 ;;
+        esac
+      fi
+
+      mirror_of=$(printf '%s' "$monitors" | ${jq} -r --arg t "$target" \
+        '.[] | select(.name == $t) | .mirrorOf')
+      [ -n "$mirror_of" ] || { say "No such display: $target"; exit 1; }
+
+      # In the JSON, mirrorOf is the literal string "none" when the output stands
+      # alone, and the *id* of the source monitor (e.g. "0") when it is mirroring
+      # -- not the name the text output shows. Only the "none" test is meaningful.
+      case "''${1:-toggle}" in
+        on)     want=mirror ;;
+        off)    want=extend ;;
+        toggle) [ "$mirror_of" = "none" ] && want=mirror || want=extend ;;
+        status)
+          if [ "$mirror_of" = "none" ]; then
+            echo "$target: extended"
+          else
+            src=$(printf '%s' "$monitors" | ${jq} -r --arg m "$mirror_of" \
+              '.[] | select((.id | tostring) == $m) | .name')
+            echo "$target: mirroring ''${src:-monitor $mirror_of}"
+          fi
+          exit 0
+          ;;
+        *) echo "usage: present [toggle|on|off|status] [output]" >&2; exit 1 ;;
+      esac
+
+      if [ "$want" = mirror ]; then
+        source="$builtin_panel"
+      else
+        source=""  # empty string is how setMirror() is told to unmirror
+      fi
+
+      # mode/position/scale are restated because this creates a rule keyed on the
+      # output name, which outranks the "" wildcard in hyprland.lua -- leaving them
+      # off would silently fall back to the binding's own defaults (scale "auto").
+      hyprctl eval "hl.monitor({ output = \"$target\", mode = \"preferred\", position = \"auto\", scale = \"1\", mirror = \"$source\" })" >/dev/null
+      hyprctl dispatch forcerendererreload >/dev/null
+
+      if [ "$want" = mirror ]; then
+        say "Mirroring $builtin_panel to $target"
+      else
+        say "Mirror off -- $target extended"
+      fi
+    '';
 in
 {
   imports = [ ./theming.nix ];
@@ -157,6 +251,7 @@ in
     ocrScript
     dgpuScript
     magnifyScript
+    presentScript
 
     # This should really live on its own package
     slurp

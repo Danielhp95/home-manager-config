@@ -52,6 +52,10 @@ local fg_dim = "rgb(b8b0a0)" -- secondary text (tmux @color_fg1)
 --
 -- Rules are matched name > desc > "" (the wildcard is a fallback for any display
 -- not listed here, e.g. a projector), so this ordering is safe.
+--
+-- A projector therefore lands here as an *extended* display. There is no mirror
+-- rule on purpose: mirroring is on demand via the `present` script (SUPER+SHIFT+D),
+-- which registers a name-keyed rule at runtime that outranks the wildcard below.
 
 -- monitor =,preferred,auto,1
 hl.monitor({
@@ -383,6 +387,9 @@ hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record stop"), { release = true 
 hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("magnify -0.5"), { repeating = true })
 hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("magnify +0.5"), { repeating = true })
 hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify")) -- toggle zoom
+
+-- Projector: mirror this panel onto whatever external display is attached
+hl.bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("present toggle"))
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Layout: hy3 (plugin) config
