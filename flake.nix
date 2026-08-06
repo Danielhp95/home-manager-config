@@ -13,7 +13,7 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      rev = "4d26628276de580c69be89e734ea89931b121f02";
+      rev = "91f29f23bb691462f8aa6171b964069aebc37910";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -62,7 +62,7 @@
     iris = {
       type = "git";
       url = "https://github.com/versenilvis/IRIS";
-      rev = "37182f72127b6ebf134edaae22c7d87b0a491b4c";
+      rev = "994ff836752bf4c5246a3aec236dd597421dccf0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -90,17 +90,24 @@
       overlays = [
         inputs.claude-code.overlays.default
         inputs.firefox-addons.overlays.default
-        (final: prev: {
-          # Shell completion overlay (terminal/iris.nix); not in nixpkgs
-          inherit (inputs.iris.packages.${prev.stdenv.hostPlatform.system}) iris;
+        (
+          final: prev:
+          let
+            system = prev.stdenv.hostPlatform.system;
 
-          # Hyprland specifics
-          inherit (inputs.hy3.packages.${prev.stdenv.hostPlatform.system}) hy3;
-          inherit (inputs.hyprland.packages.${prev.stdenv.hostPlatform.system})
-            hyprland
-            xdg-desktop-portal-hyprland
-            ;
-        })
+            hyprland = inputs.hyprland.packages.${system}.hyprland;
+          in
+          {
+            # Shell completion overlay (terminal/iris.nix); not in nixpkgs
+            inherit (inputs.iris.packages.${system}) iris;
+
+            # Hyprland specifics. hy3 links against Hyprland's headers, so it has
+            # to get the exact same build we install.
+            inherit hyprland;
+            hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
+            inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
+          }
+        )
       ];
       hmSharedModules = [
         inputs.noctalia.homeModules.default
