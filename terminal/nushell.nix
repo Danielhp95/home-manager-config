@@ -45,13 +45,6 @@
     # television's binding) — both same as zsh. Television's smart
     # autocomplete lives on Tab-Tab instead, defined below.
     extraConfig = ''
-      # The fzf module already fills FZF_DEFAULT_OPTS with the Ember colors;
-      # append the ctrl-e "open in editor" bind from zsh on top of it.
-      $env.FZF_DEFAULT_OPTS = (
-        ($env.FZF_DEFAULT_OPTS? | default "")
-        + " --bind='ctrl-e:execute(nvim {} > /dev/tty)+abort'"
-      )
-
       # zi picker: zoxide replaces FZF_DEFAULT_OPTS with _ZO_FZF_OPTS when it
       # spawns fzf, so re-seed it with the ambient opts (same as zsh).
       # Picker lines are "score path" -> {2..} is the path.

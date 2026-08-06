@@ -126,12 +126,6 @@ in
             autoload -U select-word-style
             select-word-style bash
 
-            # Append (the fzf module already fills FZF_DEFAULT_OPTS with the
-            # Ember colors via sessionVariables; plain export clobbered them)
-            export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS
-            --bind='ctrl-e:execute($EDITOR {} > /dev/tty )+abort'
-            "
-
             # zi / `z foo<Space><Tab>` picker: zoxide replaces
             # FZF_DEFAULT_OPTS with this when it spawns fzf, so re-seed it
             # with the ambient opts. Lines are "score path" -> {2..} is path.

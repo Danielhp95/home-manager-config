@@ -74,6 +74,17 @@ in
       # silence the HM Ctrl-R conflict warning without changing behavior.
       historyWidget.command = "";
       historyWidget.nushell.command = "";
+      # Open the selection in an editor. This has to be set declaratively here
+      # rather than appended from shell init: FZF_DEFAULT_OPTS is exported, so
+      # an `export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --bind=..."` in zshrc
+      # re-appends at every nesting level and the binding accumulates (a shell
+      # three levels deep — terminal, tmux, subshell — carried three copies).
+      # home-manager writes this into the session vars for zsh and nushell
+      # alike, as a plain assignment, so it lands exactly once.
+      #
+      # Literal `nvim`, not `$EDITOR`: nushell loads these without shell
+      # expansion. Both shells set EDITOR = "nvim" anyway.
+      defaultOptions = [ "--bind='ctrl-e:execute(nvim {} > /dev/tty)+abort'" ];
       # Ember colors from palette.nix — coral for match highlights and the
       # pointer, steel for neutral chrome (gold is rationed for
       # needs-attention states, and at 8.4:1 it would outshine the coral)
