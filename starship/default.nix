@@ -12,6 +12,9 @@ in
 
     settings = {
       add_newline = false;
+      # Hard cap on any single module's command (git_status in a huge repo,
+      # a slow language probe): the prompt can degrade but never hang.
+      command_timeout = 500;
       palette = "ember";
 
       # Same design as the tmux status bar: everything is a pill on the
