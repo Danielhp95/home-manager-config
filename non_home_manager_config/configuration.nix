@@ -38,6 +38,11 @@
     optimise.automatic = true; # periodically run `nix store optimise`
     # Garbage collection is handled by `programs.nh.clean` below (the NixOS nh
     # module asserts that nix.gc.automatic and nh.clean must not both be on).
+
+    # Keep 24-core rebuilds from competing with the desktop: build processes
+    # yield CPU to interactive work and only use idle disk bandwidth.
+    daemonCPUSchedPolicy = "batch";
+    daemonIOSchedClass = "idle";
   };
 
   # nh: ergonomic `nixos-rebuild` frontend. `nh os switch` builds with
