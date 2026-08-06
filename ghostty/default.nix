@@ -68,7 +68,9 @@
       # ── Window ────────────────────────────────────────────────────────────────
       background-opacity = 0.87;
       window-save-state = "always"; # kitty `remember_window_size yes`
-      window-padding-x = 0;
+      # Nonzero x: the prompt's round pill caps need air or they look amputated
+      # against the window edge
+      window-padding-x = 10;
       window-padding-y = 0;
 
       # ── macOS (harmless on Linux) ──────────────────────────────────────────
