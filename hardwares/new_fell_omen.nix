@@ -38,6 +38,7 @@
   };
 
   boot = {
+    kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [ "kvm-intel" ];
     # spd5118 (DDR5 RAM temperature sensor) fails to resume from suspend on this
     # machine (-ENXIO: the chip stops responding on the SMBus after S3), flooding
