@@ -8,6 +8,11 @@
 # copies of these values: kitty/kitty.conf, ghostty/default.nix,
 # hyprland/hyprland.lua, menu_launchers (vicinae).
 #
+# danvim/lua/danvim/palette.lua is a hand-kept mirror by necessity rather than
+# by history: danvim is a standalone flake whose luaPath is its own directory,
+# so its lua cannot import a path above it. Attribute names there match the
+# ones below exactly.
+#
 # Attributes are bare hex (no leading '#'); `hash` holds the same set prefixed
 # with '#' for config formats that require it.
 let
@@ -18,9 +23,11 @@ let
     bgAlt = "242320"; # cards, status bars, secondary surfaces
     surface = "2a2825"; # hovered/selected rows
     border = "3a342d";
+    divider = "4c4b49"; # thin separators drawn on top of surface (tmux  dividers)
 
     # Text.
     fg = "d8d0c0";
+    fgSoft = "b8b0a0"; # secondary text one step above fgDim (branch names, window titles)
     fgDim = "9a9288";
     muted = "6e6a66"; # disabled text, bright-black
 
@@ -46,6 +53,15 @@ let
     mauve = "988090";
     sage = "7aa88a";
     error = "e05252";
+
+    # Bright ANSI companions (color9-14 in terminal palettes) — same hue as
+    # their normal counterpart above, lightened + saturated the way
+    # accentBright steps up from accent. Terminal-only; not used elsewhere.
+    oliveBright = "acc66d";
+    goldBright = "e3cc75";
+    steelBright = "80adcb";
+    mauveBright = "c586b0";
+    sageBright = "84d19f";
   };
 in
 colors

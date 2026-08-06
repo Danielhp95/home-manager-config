@@ -27,7 +27,8 @@
       # ── Colors: EMBER theme (ported from kitty.conf) ────────────────────────
       background = "#1c1b19";
       foreground = "#d8d0c0";
-      selection-background = "#3c3b39";
+      # palette.nix `border`; the old #3c3b39 matched no palette attribute.
+      selection-background = "#3a342d";
       selection-foreground = "#d8d0c0";
       cursor-color = "#e08060";
       cursor-text = "#1c1b19";
@@ -38,15 +39,15 @@
         "1=#e08060" # red (coral)
         "9=#ff8f66"
         "2=#8a9868" # green (olive)
-        "10=#b8d8a3"
+        "10=#acc66d"
         "3=#c8b468" # yellow (gold)
-        "11=#e5c07b"
+        "11=#e3cc75"
         "4=#7890a0" # blue (steel)
-        "12=#8ab4f8"
+        "12=#80adcb"
         "5=#988090" # magenta (mauve)
-        "13=#d19a66"
+        "13=#c586b0"
         "6=#7aa88a" # cyan (sage)
-        "14=#7fbbb3"
+        "14=#84d19f"
         "7=#d8d0c0" # white
         "15=#ffffff"
       ];
