@@ -77,6 +77,9 @@
     config = {
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true; # Don't close mpv when video is done
+      # Decode on the iGPU media block (iHD VA-API) instead of CPU cores.
+      # auto-safe only picks whitelisted-stable hwdec backends.
+      hwdec = "auto-safe";
     };
   };
 

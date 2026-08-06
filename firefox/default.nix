@@ -118,6 +118,10 @@ in
         # Widevine, for DRM'd video. Firefox still downloads the CDM blob into
         # the profile at runtime; only the switch is declarable.
         "media.eme.enabled" = true;
+        # Decode video through VA-API (iHD on the iGPU) instead of CPU.
+        # The driver is installed system-wide (intel-media-driver) and the
+        # session exports LIBVA_DRIVER_NAME=iHD; this pref is Firefox's gate.
+        "media.ffmpeg.vaapi.enabled" = true;
 
         # --- privacy -----------------------------------------------------
         "browser.contentblocking.category" = "standard";
