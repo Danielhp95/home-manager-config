@@ -159,6 +159,13 @@ in
     defaultKeymap = "emacs"; # this is the default, don't get scared
     autosuggestion.enable = true;
     enableCompletion = true;
+    localVariables = {
+      # Skip zsh-autosuggestions' per-prompt rebind of every zle widget (it
+      # re-wraps the whole widget table each precmd to catch late-defined
+      # widgets — all of ours exist by first prompt). Revert if suggestions
+      # ever stop updating for some widget.
+      ZSH_AUTOSUGGEST_MANUAL_REBIND = 1;
+    };
     # `compinit -C` trusts the cached .zcompdump and skips the compaudit
     # security scan; do the full (slow: ~320ms vs ~5ms) init only when the
     # dump is >24h old, so newly installed completions still get picked up
