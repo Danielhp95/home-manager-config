@@ -46,7 +46,7 @@ in
         # search_mode = "daemon-fuzzy";
         daemon = {
           autostart = true;
-          enabled = false;
+          enabled = true;
         };
         ai = {
           enabled = true;
