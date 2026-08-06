@@ -9,7 +9,7 @@
 id = "dani/localsend"
 name = "LocalSend"
 version = "0.1.0"
-plugin_api = 3
+plugin_api = 8
 author = "dani"
 license = "MIT"
 icon = "send"
@@ -91,6 +91,10 @@ width = 760
 height = 560
 placement = "floating"
 position = "top_center"
+# The Drop files button opens a separate ripdrag window to drag into; that
+# steals focus from this panel, and a normal outside-click dismissal would
+# close the panel out from under the transfer before you can drop anything.
+dismiss_on_outside_click = false
 
 [[service]]
 id = "agent"
