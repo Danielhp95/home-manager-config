@@ -155,7 +155,10 @@
         libva-vdpau-driver
         libvdpau-va-gl
         intel-compute-runtime
-        # intel-media-driver # iHD VA-API driver: video decode on the iGPU instead of the dGPU
+        # iHD VA-API driver: video decode on the iGPU media block. The session
+        # already forces LIBVA_DRIVER_NAME=iHD (hyprland/hyprland.lua), so
+        # without this package VA-API fails outright and video decodes on CPU.
+        intel-media-driver
       ];
       enable32Bit = true;
     };
