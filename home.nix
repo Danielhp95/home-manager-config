@@ -56,6 +56,7 @@
     ./terminal/iris.nix
     ./kitty
     ./ghostty
+    ./ipython
 
     ./hyprland
     ./noctalia

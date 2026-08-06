@@ -7,3 +7,6 @@ danvim/
 # nix build outputs
 result
 result-*
+
+# IPython byte-compiles the startup files it loads, next to the sources
+__pycache__/

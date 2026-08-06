@@ -44,7 +44,7 @@ ADDITIONAL_MOUNTS:
   - "/home/dani/.local/share/nvim/:/home/dev/.local/share/nvim/"
  
   # IPython: DOES NOT WORK
-  - "/home/dani/nix_config/sony_ai/1_fzf_history.py:/home/dev/sai/ipython_temp/profile_default/startup/1_fzf_history.py"
+  - "/home/dani/nix_config/ipython/startup-fzf-history.py:/home/dev/sai/ipython_temp/profile_default/startup/20-fzf-history.py"
 
   # Trying to fix terminal visual artifacts
   - "/run/current-system/sw/share/terminfo:/usr/share/terminfo"
