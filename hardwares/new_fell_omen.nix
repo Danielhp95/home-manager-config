@@ -68,8 +68,14 @@
         "usbhid"
         "sd_mod"
       ];
-      luks.devices."luks-cf747f68-c4d1-4a72-8589-e8ca20b09a74".device =
-        "/dev/disk/by-uuid/cf747f68-c4d1-4a72-8589-e8ca20b09a74";
+      luks.devices."luks-cf747f68-c4d1-4a72-8589-e8ca20b09a74" = {
+        device = "/dev/disk/by-uuid/cf747f68-c4d1-4a72-8589-e8ca20b09a74";
+        # Pass TRIM through dm-crypt so discard=async (and the weekly
+        # fstrim.timer) actually reach the SSD; without this the drive's FTL
+        # has never learned which blocks are free. Tradeoff: an attacker with
+        # the raw disk can see which blocks are unused.
+        allowDiscards = true;
+      };
     };
     loader = {
       # systemd-boot = {
@@ -116,15 +122,29 @@
     };
   };
 
+  # noatime: no metadata write per file read (store scans, builds, greps).
+  # compress=zstd:1: cheap transparent compression, new writes only.
+  # discard=async: batched TRIM (needs allowDiscards on the LUKS device).
+  # Mount options are per-device on btrfs — keep both subvol mounts identical.
   fileSystems."/" = {
     device = "/dev/mapper/luks-cf747f68-c4d1-4a72-8589-e8ca20b09a74";
     fsType = "btrfs";
-    options = [ "subvol=@" ];
+    options = [
+      "subvol=@"
+      "noatime"
+      "compress=zstd:1"
+      "discard=async"
+    ];
   };
   fileSystems."/home" = {
     device = "/dev/mapper/luks-cf747f68-c4d1-4a72-8589-e8ca20b09a74";
     fsType = "btrfs";
-    options = [ "subvol=@home" ];
+    options = [
+      "subvol=@home"
+      "noatime"
+      "compress=zstd:1"
+      "discard=async"
+    ];
   };
 
   fileSystems."/boot" = {
