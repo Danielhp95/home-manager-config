@@ -418,9 +418,14 @@ hl.config({
 					active = ember,
 					active_border = ember,
 					active_text = background,
+          -- TODO
+					active_alt_monitor = ember_dim,
+          active_alt_monitor_border = ember_dim,
+          active_alt_monitor_text = background,
+          -- TODO
 					urgent = color3,
-					-- urgent_border = color3,
-					urgent_text = "rgb(000000)",
+					urgent_border = color3,
+					urgent_text = color0,
 					inactive = surface,
 					inactive_border = surface,
 					inactive_text = fg_dim,
