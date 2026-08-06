@@ -71,6 +71,20 @@
   # The journal had grown to 3.9 GB with no cap on a 91%-full disk.
   services.journald.extraConfig = "SystemMaxUse=500M";
 
+  # Tune the VM for zram being the only swap. Mostly matters under the
+  # memory pressure of large rebuilds (the SIGABRT scenario above).
+  boot.kernel.sysctl = {
+    # Swap-in readahead is free on disk but pure waste on zram: decompressing
+    # 8 pages to service a 1-page fault. 0 = fault exactly what's needed.
+    "vm.page-cluster" = 0;
+    # Swapping to zram is nearly free compared to dropping page cache that
+    # must be re-read from disk; 180 is the upstream zram recommendation.
+    "vm.swappiness" = 180;
+    # Watermark boosting defends against fragmentation by reclaiming early —
+    # counterproductive here: it starts swapping under mild pressure.
+    "vm.watermark_boost_factor" = 0;
+  };
+
   # TLP replaces power-profiles-daemon (the two conflict; the NixOS module
   # asserts they're not both enabled). TLP applies the *_ON_AC settings when
   # plugged in and *_ON_BAT when on battery automatically on plug/unplug.
