@@ -224,9 +224,6 @@ hl.on("hyprland.start", function()
 	-- Type=notify wayland-wm@ unit — without this the session times out.
 	hl.exec_cmd("uwsm finalize HYPRLAND_INSTANCE_SIGNATURE")
 	hl.exec_cmd("hyprctl dispatch workspace 2") -- start on the terminal workspace
-	-- fcitx5, noctalia and vicinae are started via their systemd user services
-	-- (fcitx5's lives in fcitx5/default.nix); execing a systemd-managed daemon
-	-- here too spawns a duplicate (vicinae did: locked db, broken extensions)
 end)
 
 -- ─────────────────────────────────────────────────────────────────────────────

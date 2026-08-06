@@ -270,14 +270,23 @@ in
     }
   '';
   services.batsignal = {
-    # TODO: This is not working
     enable = true;
+    # Each list element becomes one argv entry, so a flag and its value have to
+    # be separate strings. "-d 5" survived only because atoi() skips the leading
+    # space; "-n BAT0" would not — batsignal looks for a battery literally named
+    # " BAT0" and exits 1.
     extraArgs = [
-      "-d 5"
-      "-c 10"
-      "-w 30"
-      "-f 97"
-      "-D ${pkgs.systemd}/bin/systemctl suspend" # Suspend at danger level
+      # Without -n, batsignal watches every /sys/class/power_supply entry —
+      # including the DualShock's `ps-controller-battery-*`, which exposes no
+      # charge_now. That read fails, batsignal exits 1, and systemd
+      # restart-loops it until the start limit: ~1.2s of every login, and no
+      # battery notifications at all (the old "this is not working" TODO).
+      "-n" "BAT0"
+      "-d" "5"
+      "-c" "10"
+      "-w" "30"
+      "-f" "97"
+      "-D" "${pkgs.systemd}/bin/systemctl suspend" # Suspend at danger level
       # "-C" "Running out of Stormlight"
       # "-W" "Draining Stormlight at an alarming rate"
       # "-F" "Stormlight reserves full"
