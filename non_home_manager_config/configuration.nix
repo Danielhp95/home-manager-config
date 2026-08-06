@@ -71,9 +71,16 @@
   # The journal had grown to 3.9 GB with no cap on a 91%-full disk.
   services.journald.extraConfig = "SystemMaxUse=500M";
 
+  # BBR keeps throughput up on lossy/high-latency paths where cubic backs
+  # off hard (substitution downloads, video calls on hotel wifi). fq is the
+  # pacing-aware qdisc BBR wants.
+  boot.kernelModules = [ "tcp_bbr" ];
+
   # Tune the VM for zram being the only swap. Mostly matters under the
   # memory pressure of large rebuilds (the SIGABRT scenario above).
   boot.kernel.sysctl = {
+    "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.default_qdisc" = "fq";
     # Swap-in readahead is free on disk but pure waste on zram: decompressing
     # 8 pages to service a 1-page fault. 0 = fault exactly what's needed.
     "vm.page-cluster" = 0;
