@@ -157,6 +157,10 @@
   # Warning keeps telling me to:
   virtualisation.docker = {
     enable = true;
+    # Socket activation instead of boot start: docker.service and the CDI
+    # generator below were ~4.8s of the chain greetd waits behind. The first
+    # `docker` command after boot pays that cost instead.
+    enableOnBoot = false;
     daemon.settings = {
       features.cdi = true;
       # Clean up on restart
@@ -170,6 +174,14 @@
     };
   };
   hardware.nvidia-container-toolkit.enable = true;
+  # The CDI generator probes the dGPU (waking it from D3cold) and sat on the
+  # boot critical chain via multi-user.target. Tie it to docker's actual
+  # start instead: it still always runs before dockerd needs the CDI spec.
+  systemd.services.nvidia-container-toolkit-cdi-generator = {
+    wantedBy = lib.mkForce [ ];
+    requiredBy = [ "docker.service" ];
+    before = [ "docker.service" ];
+  };
 
   xdg.portal = {
     enable = true; # home-manager's portal module asserts on the pathsToLink this sets
