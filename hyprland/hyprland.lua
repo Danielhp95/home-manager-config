@@ -150,8 +150,12 @@ hl.config({
 		rounding = 5,
 		blur = {
 			enabled = true,
-			size = 8,
-			passes = 4,
+			-- 4/2 instead of 8/4: with ignore_opacity + near-universal window
+			-- transparency, blur renders behind almost every window on every
+			-- damaged frame — halving size and passes is ~4x cheaper on the
+			-- iGPU for a very similar look.
+			size = 4,
+			passes = 2,
 			ignore_opacity = true,
 		},
 	},
@@ -176,7 +180,9 @@ hl.curve("myBezier", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.05 } 
 hl.animation({ leaf = "windows", enabled = true, speed = 7, bezier = "myBezier" })
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 7, bezier = "default", style = "popin 80%" })
 hl.animation({ leaf = "border", enabled = true, speed = 10, bezier = "default" })
-hl.animation({ leaf = "borderangle", enabled = true, speed = 8, bezier = "default" })
+-- borderangle animates the gradient forever: the compositor repaints even
+-- when fully idle, so the iGPU never rests. Static gradient instead.
+hl.animation({ leaf = "borderangle", enabled = false })
 hl.animation({ leaf = "fade", enabled = true, speed = 7, bezier = "default" })
 hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "default", style = "slidefadevert" })
