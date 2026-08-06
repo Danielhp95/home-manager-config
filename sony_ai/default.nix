@@ -51,7 +51,11 @@ in
     awscli2
     amazon-ecr-credential-helper
 
-    cudaPackages.cudatoolkit
+    # NOTE no cudaPackages.cudatoolkit here on purpose: it is ~3.3 GB of closure
+    # and nothing on the host links against it. CUDA reaches the workloads through
+    # the container images instead, via hardware.nvidia-container-toolkit
+    # (../non_home_manager_config/configuration.nix). Only add it back if you need
+    # to compile CUDA code directly on the host, outside Docker.
 
     steam-run # To run proton via Steam's FHS
 

@@ -177,7 +177,10 @@
     fira-code-symbols # NOTE might not be needed with nord-fonts.firacode
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
-    nerd-fonts.iosevka
+    # NOTE nerd-fonts.iosevka was dropped: ~1 GB of closure (it ships ~100 style
+    # variants) for two uses. Its consumers now point elsewhere — vicinae at
+    # ../menu_launchers/default.nix uses JetBrainsMono NF, and the media-control
+    # symbol_map in ../kitty/kitty.conf uses Noto Sans Symbols 2 + Unifont.
     nerd-fonts.symbols-only # full "Symbols Nerd Font Mono" — complete icon set, used as kitty fallback
   ];
 

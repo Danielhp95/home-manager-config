@@ -61,10 +61,11 @@
       font = {
         normal = {
           size = 15;
-          # The installed package is nerd-fonts.iosevka, whose family name is
-          # "Iosevka Nerd Font" — plain "Iosevka" doesn't resolve and fc-match
-          # falls back to a CJK font.
-          family = "Iosevka Nerd Font";
+          # The installed package is nerd-fonts.jetbrains-mono, whose family name
+          # is "JetBrainsMono Nerd Font" (no space after "JetBrains") — a plain or
+          # misspelled family doesn't resolve and fc-match falls back to a CJK
+          # font. Check with: fc-match "JetBrainsMono Nerd Font"
+          family = "JetBrainsMono Nerd Font";
         };
       };
     };

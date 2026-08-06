@@ -106,6 +106,11 @@
             inherit hyprland;
             hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
             inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
+
+            # espeak-ng pulls mbrola + mbrola-voices (~645 MB) by default. Nothing
+            # here uses the external voice corpus, and espeak keeps its own built-in
+            # voices, so speech-dispatcher/spd-say still work without it.
+            espeak-ng = prev.espeak-ng.override { mbrolaSupport = false; };
           }
         )
       ];
