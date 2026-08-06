@@ -60,6 +60,10 @@
     # noctalia's monitor."eDP-1".backend in noctalia/default.nix).
     kernelParams = [ "acpi_backlight=native" ];
     initrd = {
+      # systemd initrd: parallel device probing, the LUKS prompt comes up
+      # sooner (systemd-ask-password), and initrd time finally decomposes in
+      # `systemd-analyze blame --initrd` instead of one opaque number.
+      systemd.enable = true;
       availableKernelModules = [
         "xhci_pci"
         "thunderbolt"
