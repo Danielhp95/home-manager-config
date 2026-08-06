@@ -4,7 +4,8 @@ Run-list panel (entry "panel" of dani/dart).
 
 Layout: header (title, counts, refresh, close) -> filter bar -> scrollable
 run cards. Each card collapses to [state dot | id | open | copy | commit |
-project | created | state pill | chevron] plus one row of tag chips; expanding
+project | uptime | created (local tz) | state pill | chevron] plus one row of
+tag chips; expanding
 it adds the full wrapped tag rows, an info line (clusters / updated), the
 description, a tag editor, and state-gated action buttons.
 
@@ -160,6 +161,61 @@ local function shortTime(iso)
 		return ""
 	end
 	return mo .. "-" .. d .. " " .. h .. ":" .. mi
+end
+
+-- Days-since-epoch for a UTC civil date (Howard Hinnant's algorithm). Only
+-- ever called with a real calendar date pulled out of an ISO timestamp, so
+-- no need to handle y < 0.
+local function daysFromCivil(y, m, d)
+	y = m <= 2 and y - 1 or y
+	local era = y // 400
+	local yoe = y - era * 400
+	local doy = (153 * (m + (m > 2 and -3 or 9)) + 2) // 5 + d - 1
+	local doe = yoe * 365 + yoe // 4 - yoe // 100 + doy
+	return era * 146097 + doe - 719468
+end
+
+-- ISO UTC timestamp -> Unix epoch seconds. Doesn't use os.time({...}), which
+-- treats the table as *local* time and would skew by the machine's UTC
+-- offset - the same trap the shortTime() comment above warns about.
+local function epochFromIso(iso)
+	if type(iso) ~= "string" then
+		return nil
+	end
+	local y, mo, d, h, mi, s = iso:match("^(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)")
+	if not y then
+		return nil
+	end
+	local days = daysFromCivil(tonumber(y), tonumber(mo), tonumber(d))
+	return days * 86400 + tonumber(h) * 3600 + tonumber(mi) * 60 + tonumber(s)
+end
+
+-- ISO UTC timestamp -> "07-15 16:32" in the *local* system timezone. Unlike
+-- shortTime() (which regex-slices the UTC fields verbatim), this goes through
+-- epochFromIso() + os.date() so the displayed clock matches the machine's
+-- actual timezone, not the DART web UI's UTC display.
+local function localShortTime(iso)
+	local epoch = epochFromIso(iso)
+	if not epoch then
+		return ""
+	end
+	return os.date("%m-%d %H:%M", epoch)
+end
+
+-- Wall-clock time a run has been alive: created_at -> now, as "<d>d<h>h<m>m".
+local function uptime(iso)
+	local created = epochFromIso(iso)
+	if not created then
+		return ""
+	end
+	local elapsed = os.time() - created
+	if elapsed < 0 then
+		elapsed = 0
+	end
+	local days = elapsed // 86400
+	local hours = (elapsed % 86400) // 3600
+	local minutes = (elapsed % 3600) // 60
+	return days .. "d" .. hours .. "h" .. minutes .. "m"
 end
 
 local function validRunId(id)
@@ -409,7 +465,7 @@ local function commitButton(run, i)
 end
 
 -- Card header: state dot | run id | open | copy | ... | commit | project |
--- created | state pill | expand chevron.
+-- uptime | created (local tz) | state pill | expand chevron.
 --
 -- The id is a label, not a button, because bold and clickable are mutually
 -- exclusive in this UI API: only ui.button carries onClick alongside text, and
@@ -447,9 +503,14 @@ local function cardHeader(run, i, expanded, color)
 	if run.project and run.project ~= "" then
 		bits[#bits + 1] = chip(run.project, "tertiary/0.18", "tertiary")
 	end
-	local created = shortTime(run.created_at)
-	if created ~= "" then
+	local running = uptime(run.created_at)
+	if running ~= "" then
 		bits[#bits + 1] = ui.glyph({ name = "clock", size = 12, color = "on_surface_variant" })
+		bits[#bits + 1] = ui.label({ text = running, color = "on_surface_variant", fontSize = 11 })
+	end
+	local created = localShortTime(run.created_at)
+	if created ~= "" then
+		bits[#bits + 1] = ui.glyph({ name = "calendar", size = 12, color = "on_surface_variant" })
 		bits[#bits + 1] = ui.label({ text = created, color = "on_surface_variant", fontSize = 11 })
 	end
 	bits[#bits + 1] = ui.row({ fill = color .. "/0.15", radius = 9, paddingH = 8, paddingV = 2, align = "center" }, {
