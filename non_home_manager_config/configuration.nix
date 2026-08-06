@@ -47,9 +47,10 @@
     flake = "/home/dani/nix_config";
     clean = {
       enable = true;
-      # 15d/5 was retaining ~57 generations (~83 GB of store). A week of rollback
-      # targets plus the last 10 generations is plenty in practice.
-      extraArgs = "--keep-since 7d --keep 10";
+      # 15d/5 was retaining ~57 generations (~83 GB of store), and even 7d kept
+      # ~60 around with frequent switching on a 91%-full disk. Three days of
+      # rollback targets plus the last 10 generations is plenty in practice.
+      extraArgs = "--keep-since 3d --keep 10";
     };
   };
 
@@ -61,6 +62,9 @@
   # degraded to pressure-only mode and nix-daemon died with SIGABRT during
   # large rebuilds (30G+ peak on 2026-08-02).
   zramSwap.enable = true;
+
+  # The journal had grown to 3.9 GB with no cap on a 91%-full disk.
+  services.journald.extraConfig = "SystemMaxUse=500M";
 
   # TLP replaces power-profiles-daemon (the two conflict; the NixOS module
   # asserts they're not both enabled). TLP applies the *_ON_AC settings when
@@ -108,7 +112,10 @@
     percentageLow = 20;
     percentageCritical = 10;
     percentageAction = 5;
-    criticalPowerAction = "Hibernate";
+    # There is no swap device (only zram), so Hibernate has nowhere to write the
+    # image: the action fails and the battery drains to a hard power loss.
+    # PowerOff is the only action here that can't lose the filesystem state.
+    criticalPowerAction = "PowerOff";
   };
 
   # To get PS5 controller working in proton
