@@ -140,7 +140,11 @@ hl.config({
 
 	cursor = {
 		inactive_timeout = 5,
-		no_hardware_cursors = true,
+		-- Hardware cursor plane on the Intel iGPU: moving the cursor costs
+		-- zero compositor repaints. Software cursors (the old `true`) forced
+		-- a damage+repaint on every cursor move; they're only needed when
+		-- the NVIDIA card scans out — see the dgpu branch below.
+		no_hardware_cursors = false,
 	},
 
 	decoration = {
@@ -212,6 +216,9 @@ local dgpu_marker = io.open(os.getenv("HOME") .. "/.config/hypr/dgpu-mode", "r")
 if dgpu_marker then
 	dgpu_marker:close()
 	hl.env("AQ_DRM_DEVICES", intel_card .. ":" .. nvidia_card)
+	-- Hardware cursors glitch on NVIDIA scanout; fall back to software
+	-- rendering only in dgpu mode.
+	hl.config({ cursor = { no_hardware_cursors = true } })
 else
 	hl.env("AQ_DRM_DEVICES", intel_card)
 end
