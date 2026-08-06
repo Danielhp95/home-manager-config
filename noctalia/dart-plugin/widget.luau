@@ -2,7 +2,7 @@
 --[[
 Bar widget (entry "widget" of dani/dart).
 
-Shows the dart logo plus per-group counts (running / queued / suspended),
+Shows the dart logo plus per-group counts (running / building / queued / suspended),
 with a per-state count tooltip; clicking toggles the run-list panel. Purely event-driven off the
 poller service's published state - this entry never calls the dart CLI and
 has no update() tick. Note bar widgets get one VM per output, which is why
@@ -24,14 +24,15 @@ local function render()
 	end
 
 	barWidget.setColor("on_surface")
-	-- Group the poller's states into the three badge buckets. Pre-run states
-	-- count as queued; every suspend-family state (including the manual
-	-- request/in-flight ones) counts as suspended.
+	-- Group the poller's states into the four badge buckets. Building gets its
+	-- own bucket (it is the slow pre-run step worth watching); the remaining
+	-- pre-run states count as queued; every suspend-family state (including the
+	-- manual request/in-flight ones) counts as suspended.
 	local GROUP = {
 		running = "running",
+		building = "building",
 		submitting = "queued",
 		submitted = "queued",
-		building = "queued",
 		queued = "queued",
 		preparing = "queued",
 		scheduling = "queued",
@@ -42,7 +43,7 @@ local function render()
 		suspended_manual = "suspended",
 		resume_requested_manual = "suspended",
 	}
-	local counts, groups = {}, { running = 0, queued = 0, suspended = 0 }
+	local counts, groups = {}, { running = 0, building = 0, queued = 0, suspended = 0 }
 	for _, r in ipairs(runs) do
 		counts[r.state] = (counts[r.state] or 0) + 1
 		local g = GROUP[r.state]
@@ -50,16 +51,20 @@ local function render()
 			groups[g] += 1
 		end
 	end
-	-- One "<glyph><n>" segment per nonzero group, e.g. "▶2 ⏳1 ⏸3".
+	-- One "<glyph><n>" segment per nonzero group, e.g. "▶2 \u{1F527}1 ⏳1 \u{1F6CC}3"
+	-- (wrench = building, hourglass = queued, bed = suspended).
 	local segments = {}
 	if groups.running > 0 then
 		segments[#segments + 1] = "▶" .. groups.running
+	end
+	if groups.building > 0 then
+		segments[#segments + 1] = "\u{1F527}" .. groups.building
 	end
 	if groups.queued > 0 then
 		segments[#segments + 1] = "⏳" .. groups.queued
 	end
 	if groups.suspended > 0 then
-		segments[#segments + 1] = "⏸" .. groups.suspended
+		segments[#segments + 1] = "\u{1F6CC}" .. groups.suspended
 	end
 	barWidget.setText(table.concat(segments, " "))
 

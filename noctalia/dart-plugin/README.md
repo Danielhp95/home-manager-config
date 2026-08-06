@@ -7,9 +7,9 @@ dropdown panel to inspect, search, and manage runs — a shell-native sibling of
 
 ## Features
 
-**Bar widget** — dart logo + per-group counts: `▶` running, `⏳` queued
-(pre-run states), `⏸` suspended (suspend-family states); zero groups are
-hidden. Per-state counts in the tooltip; `!` on CLI errors. Click toggles the
+**Bar widget** — dart logo + per-group counts: `▶` running, `🔧` building,
+`⏳` queued (the other pre-run states), `🛌` suspended (suspend-family states);
+zero groups are hidden. Per-state counts in the tooltip; `!` on CLI errors. Click toggles the
 panel.
 
 **Panel** (1200×640, floating, centered under the bar)
