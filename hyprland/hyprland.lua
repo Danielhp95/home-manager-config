@@ -153,8 +153,8 @@ hl.config({
 			-- 8/4 is expensive on the iGPU (blur renders behind almost every
 			-- window given ignore_opacity + the transparency above), but the
 			-- lighter 4/2 look was tried and rejected — keep the perception.
-			size = 8,
-			passes = 4,
+			size = 12,
+			passes = 3,
 			ignore_opacity = true,
 		},
 	},
