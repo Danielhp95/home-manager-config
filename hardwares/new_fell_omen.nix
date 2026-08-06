@@ -45,11 +45,18 @@
     # resume entirely. It's a diagnostics-only hwmon driver; blacklisting it only
     # costs the RAM temperature reading in `sensors`.
     blacklistedKernelModules = [ "spd5118" ];
-    # The internal panel is driven by the Intel iGPU (card1-eDP-1 / i915), but on this
+    # The internal panel is driven by the Intel iGPU (card1-eDP-1 / xe), but on this
     # hardware the kernel registered the EC/WMI device `nvidia_wmi_ec_backlight` as the
-    # backlight instead of `intel_backlight`. brightnessctl then writes to that EC device,
-    # which doesn't drive the panel's PWM, so brightness never visibly changes. Forcing
-    # native backlight makes i915 register `intel_backlight` (the device that works).
+    # backlight instead of `intel_backlight`. Forcing native backlight makes the iGPU
+    # register `intel_backlight` (the device that actually drives the panel's PWM).
+    #
+    # This param does its job, but it is only half the fix: the nvidia driver still
+    # registers a phantom `nvidia_0` backlight under 0000:02:00.0 for its own
+    # card0-eDP-2 connector -- which is *disconnected*, since the panel hangs off the
+    # iGPU. Bare `brightnessctl` enumerates nvidia_0 first and writes there, where the
+    # writes silently succeed and change nothing. Every consumer must therefore name
+    # the device explicitly (see `-d intel_backlight` in hyprland/hyprland.lua and
+    # noctalia's monitor."eDP-1".backend in noctalia/default.nix).
     kernelParams = [ "acpi_backlight=native" ];
     initrd = {
       availableKernelModules = [

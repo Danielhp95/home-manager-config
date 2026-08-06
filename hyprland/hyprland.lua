@@ -365,10 +365,16 @@ hl.bind(
 	)
 )
 -- Volume / Brightness
-hl.bind(mod .. " + F2", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
-hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd("brightnessctl set 0%"), { repeating = true })
-hl.bind(mod .. " + F3", hl.dsp.exec_cmd("brightnessctl set +5%"), { repeating = true })
-hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd("brightnessctl set 100%"), { repeating = true })
+-- The nvidia driver registers a phantom `nvidia_0` backlight for its own
+-- (disconnected) card0-eDP-2, and bare `brightnessctl` picks it over
+-- `intel_backlight` -- which is the device actually wired to the panel
+-- (card1-eDP-1, on the iGPU). Writes to nvidia_0 succeed and do nothing, so
+-- the device has to be named explicitly.
+local backlight = "brightnessctl -d intel_backlight"
+hl.bind(mod .. " + F2", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true })
+hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd(backlight .. " set 1%"), { repeating = true })
+hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true })
+hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true })
 hl.bind(mod .. " + F6", hl.dsp.exec_cmd("pw-volume change -5%"), { repeating = true })
 hl.bind(mod .. " + F7", hl.dsp.exec_cmd("pw-volume change +5%"), { repeating = true })
 hl.bind(mod .. " + F5", hl.dsp.exec_cmd("pw-volume mute toggle"))
