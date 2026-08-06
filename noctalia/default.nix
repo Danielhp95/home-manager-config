@@ -115,8 +115,11 @@ in
       ];
 
       # auto_update is plugins-wide since the 2026-07 noctalia bump (it used to
-      # be a per-source key).
-      plugins.auto_update = true;
+      # be a per-source key). Off: it made the bar git-fetch both plugin
+      # sources at every session start — network-dependent login latency that
+      # stalled offline. Update deliberately from the plugin manager instead.
+      # The local dani/* plugins are out-of-store symlinks and unaffected.
+      plugins.auto_update = false;
       plugins.source = [
         {
           name = "official";
