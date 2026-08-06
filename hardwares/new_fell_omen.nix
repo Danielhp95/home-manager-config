@@ -82,6 +82,10 @@
       #   configurationLimit = 10; # Empirically tested so that we don't run out of space in '/boot'
       #   enable = true;  # NOTE: hopefully this doesn't fuck things up
       # };
+
+      # Any keypress during the 1s still opens the menu (older generations,
+      # the Ubuntu chainload); the unattended default was 5s of every boot.
+      timeout = 1;
       efi = {
         canTouchEfiVariables = true;
         efiSysMountPoint = "/boot";
