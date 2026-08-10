@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   keyBindings = builtins.readFile ./key-bindings.zsh;
   fzf-tab-conf = ''
@@ -118,41 +123,43 @@ in
       ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE = 20; # Only suggest up to 20 characters
     };
     initContent = lib.mkMerge [
-      (keyBindings
+      (
+        keyBindings
         + fzf-tab-conf
         + syntax-highlight-conf
         + ''
-            # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
-            autoload -U select-word-style
-            select-word-style bash
+          # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
+          autoload -U select-word-style
+          select-word-style bash
 
-            # zi / `z foo<Space><Tab>` picker: zoxide replaces
-            # FZF_DEFAULT_OPTS with this when it spawns fzf, so re-seed it
-            # with the ambient opts. Lines are "score path" -> {2..} is path.
-            # (--icons needs =always: with a bare --icons eza parses the
-            # following path as the flag's optional WHEN value)
-            # --tmux renders the picker in a tmux popup (styled by tmux.conf's
-            # popup-border settings); --height is the fallback outside tmux
-            export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --height 40% --tmux center,70%,60% --preview-window=down --preview 'eza -1 --color=always --icons=always {2..}'"
+          # zi / `z foo<Space><Tab>` picker: zoxide replaces
+          # FZF_DEFAULT_OPTS with this when it spawns fzf, so re-seed it
+          # with the ambient opts. Lines are "score path" -> {2..} is path.
+          # (--icons needs =always: with a bare --icons eza parses the
+          # following path as the flag's optional WHEN value)
+          # --tmux renders the picker in a tmux popup (styled by tmux.conf's
+          # popup-border settings); --height is the fallback outside tmux
+          export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --height 40% --tmux center,70%,60% --preview-window=down --preview 'eza -1 --color=always --icons=always {2..}'"
 
-            # Run any command with an interactively-picked frecent dir as the
-            # last argument: `zz nvim`, `zz eza -la`, ...
-            zz () {
-              local dir
-              dir="$(zoxide query -i)" || return
-              "$@" "$dir"
-            }
+          # Run any command with an interactively-picked frecent dir as the
+          # last argument: `zz nvim`, `zz eza -la`, ...
+          zz () {
+            local dir
+            dir="$(zoxide query -i)" || return
+            "$@" "$dir"
+          }
 
-            # Resolve a command through the nix store (the old alias version
-            # had an unclosed backtick and just hung the prompt).
-            whichnix () {
-              readlink -f "$(which "$1")"
-            }
+          # Resolve a command through the nix store (the old alias version
+          # had an unclosed backtick and just hung the prompt).
+          whichnix () {
+            readlink -f "$(which "$1")"
+          }
 
-            # System generation switcher (cable channel in
-            # terminal/television.nix; enter runs `nh os switch`)
-            alias ng="tv nix-generations"
-        '')
+          # System generation switcher (cable channel in
+          # terminal/television.nix; enter runs `nh os switch`)
+          alias ng="tv nix-generations"
+        ''
+      )
     ];
     autocd = true;
     dotDir = "${config.xdg.configHome}/zsh";
