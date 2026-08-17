@@ -260,8 +260,10 @@ hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"))
 -- Hacky script for plotting metrics from runs
 hl.bind(mod .. " + CTRL + p", hl.dsp.exec_cmd("bash /home/dani/Projects/sai/rofi_wrapper.sh"))
 
--- Lock screen when closing laptop lid
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprlock --immediate"), { locked = true })
+-- Lock screen when closing laptop lid. noctalia's lockscreen, not hyprlock:
+-- there is only one lockscreen on this system now (see hyprland/default.nix),
+-- and it is the same one noctalia's idle timers and suspend raise.
+hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("noctalia msg session lock"), { locked = true })
 
 -- Utilities
 hl.bind(mod .. " + D", hl.dsp.exec_cmd("vicinae toggle"))
@@ -277,7 +279,7 @@ hl.bind(
 	hl.dsp.exec_cmd("hyprshot --mode=region --raw --clipboard-only | satty -f - --copy-command wl-copy --early-exit")
 )
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"))
-hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"))
 
 -- Toggle bar
 hl.bind(mod .. " + b", hl.dsp.exec_cmd("noctalia msg bar-toggle"))

@@ -102,6 +102,34 @@ in
 
       nightlight.enabled = true;
 
+      # Idle locking. Nothing else on this system does it any more: hyprlock is
+      # gone (hyprland/default.nix) and there is no hypridle/swayidle, so these
+      # three behaviours are the whole story — before this, the screen locked on
+      # lid close and on suspend and at no other time.
+      #
+      # `lock-and-suspend` stays off on purpose: idling away from the machine
+      # must not take down the local q_landscape dashboards, a vizdoom client or
+      # an ssh session. Suspend when it does happen still locks first, via
+      # lockscreen.lock_before_suspend below.
+      idle = {
+        behavior.lock = {
+          enabled = true;
+          timeout = 600; # 10 min
+        };
+        behavior."screen-off" = {
+          enabled = true;
+          timeout = 660; # 11 min — a minute of locked screen before it blanks
+        };
+        behavior."lock-and-suspend".enabled = false;
+      };
+
+      # noctalia owns the lockscreen now that hyprlock is removed, so the
+      # suspend interlock is stated here rather than left to the default.
+      lockscreen = {
+        enabled = true;
+        lock_before_suspend = true;
+      };
+
       control_center.shortcuts = [
         # NOTE: like the bar widget, the wifi shortcut needs NetworkManager or
         # wpa_supplicant, so it's inert on this connman+iwd setup.

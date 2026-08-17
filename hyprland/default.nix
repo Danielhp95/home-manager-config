@@ -201,10 +201,11 @@ let
 in
 {
   imports = [ ./theming.nix ];
-  programs.hyprlock = {
-    enable = true;
-    extraConfig = builtins.readFile ./hyprlock.conf;
-  };
+  # NOTE: hyprlock is gone (and ./hyprlock.conf with it). noctalia's lockscreen
+  # is the only one now — it is what the lid switch and the lock keybind in
+  # hyprland.lua call, what noctalia's idle behaviours raise (noctalia/
+  # default.nix), and what suspend locks behind. Having both meant two
+  # lockscreens with two themes reachable by two different paths.
   wayland.windowManager.hyprland = {
     enable = true;
     # Hyprland >= 0.55 / nixpkgs 26.05 default: config is written in lua.
