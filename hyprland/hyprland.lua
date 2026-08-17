@@ -486,7 +486,16 @@ hl.config({
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.layer_rule({ name = "vicinae-blur", match = { namespace = "vicinae" }, blur = true, ignore_alpha = 0 })
 hl.layer_rule({ name = "vicinae-no-animation", match = { namespace = "vicinae" }, no_anim = true })
-hl.layer_rule({ name = "layer-no-anim", match = { namespace = "^(rofi|grim|hyprshot)$" }, no_anim = true })
+-- noctalia asks the compositor to blur the whole bar rect (ext-background-effect
+-- protocol) even where the bar paints nothing, which frosted the transparent gaps
+-- between the capsule islands. A protocol blur region bypasses layer-rule blur
+-- toggles entirely (Renderer::shouldBlur returns before consulting rules);
+-- ignore_alpha is the one rule still honored, and it confines the blur to pixels
+-- the bar actually draws. 0.1 rather than 0: a 0 threshold left the gaps blurred.
+hl.layer_rule({ name = "noctalia-bar-gap-noblur", match = { namespace = "noctalia-bar-default" }, ignore_alpha = 0.1 })
+-- rofi dropped out of this alternation with the package itself. vicinae is a
+-- layer-shell surface too and could be added here, but it animates on purpose.
+hl.layer_rule({ name = "layer-no-anim", match = { namespace = "^(grim|hyprshot)$" }, no_anim = true })
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Window rules
