@@ -5,6 +5,73 @@
   ...
 }:
 let
+  p = import ../palette.nix;
+
+  # One half (dark or light) of a noctalia custom palette. The file format is
+  # two of these under "dark"/"light": m* slots drive the whole shell, and the
+  # `terminal` block feeds the terminal templates. The slot mapping is straight
+  # off palette.nix's semantics — coral is the primary, gold and sage are the
+  # two secondaries, and the surface ramp supplies surface / surfaceVariant /
+  # outline. `hover` gets accentBright, which is the one place the hotter coral
+  # is meant to show up.
+  #
+  # ansiBlack/ansiWhite are passed in because they are the two ANSI slots whose
+  # dark and light halves genuinely swap: "black" is the darkest colour in the
+  # set and "white" the lightest, which is the background on dark and the
+  # foreground on light. The rest of the ANSI block mirrors kitty/kitty.conf.
+  emberHalf =
+    {
+      c,
+      ansiBlack,
+      ansiWhite,
+    }:
+    {
+      mPrimary = c.hash.accent;
+      mOnPrimary = c.hash.bg;
+      mSecondary = c.hash.gold;
+      mOnSecondary = c.hash.bg;
+      mTertiary = c.hash.sage;
+      mOnTertiary = c.hash.bg;
+      mError = c.hash.error;
+      mOnError = c.hash.bg;
+      mSurface = c.hash.bg;
+      mOnSurface = c.hash.fg;
+      mHover = c.hash.accentBright;
+      mOnHover = c.hash.bg;
+      mSurfaceVariant = c.hash.surface;
+      mOnSurfaceVariant = c.hash.fgSoft;
+      mOutline = c.hash.border;
+      mShadow = c.hash.bgDeep;
+      terminal = {
+        background = c.hash.bg;
+        foreground = c.hash.fg;
+        cursor = c.hash.accent;
+        cursorText = c.hash.bg;
+        selectionBg = c.hash.border;
+        selectionFg = c.hash.fg;
+        normal = {
+          black = ansiBlack;
+          red = c.hash.accent;
+          green = c.hash.olive;
+          yellow = c.hash.gold;
+          blue = c.hash.steel;
+          magenta = c.hash.mauve;
+          cyan = c.hash.sage;
+          white = ansiWhite;
+        };
+        bright = {
+          black = c.hash.muted;
+          red = c.hash.accentBright;
+          green = c.hash.oliveBright;
+          yellow = c.hash.goldBright;
+          blue = c.hash.steelBright;
+          magenta = c.hash.mauveBright;
+          cyan = c.hash.sageBright;
+          white = "#ffffff";
+        };
+      };
+    };
+
   # Cycle TLP's power mode: auto (follows AC/battery) -> forced battery (low
   # power) -> forced AC (performance) -> auto. TLP records a forced mode in
   # /run/tlp/manual_mode; absence means auto. sudo is passwordless for tlp
@@ -44,6 +111,24 @@ in
     pkgs.zenity
   ];
 
+  # The Ember palette as a noctalia custom palette. Custom palettes are read
+  # from ~/.config/noctalia/palettes/<name>.json (the settings UI lists the
+  # directory; `theme.custom_palette` below selects by file stem) — note it is
+  # *palettes*, not the stale `colorschemes` directory an older version made.
+  # Generated from palette.nix so the shell can never drift from the terminals.
+  xdg.configFile."noctalia/palettes/Ember.json".text = builtins.toJSON {
+    dark = emberHalf {
+      c = p;
+      ansiBlack = p.hash.bg;
+      ansiWhite = p.hash.fg;
+    };
+    light = emberHalf {
+      c = p.light;
+      ansiBlack = p.light.hash.fg;
+      ansiWhite = p.light.hash.bg;
+    };
+  };
+
   # dart-plugin: noctalia v5 Luau plugin showing DART training runs in the bar
   # (dart logo + running count; panel with per-run cancel/suspend/resume/delete).
   # Linked out-of-store so edits to ./dart-plugin hot-reload the running shell
@@ -82,8 +167,15 @@ in
 
       theme = {
         mode = "dark";
-        # Derive shell colors from the current wallpaper (matugen-style).
-        source = "wallpaper";
+        # Ember rather than wallpaper-derived colors (source = "wallpaper",
+        # matugen-style): the wallpaper rotates and the shell was the one
+        # surface in the system not speaking the palette every other app does.
+        # "custom" reads ~/.config/noctalia/palettes/Ember.json, written from
+        # palette.nix by the xdg.configFile above; it carries both halves, so
+        # the control-center dark_mode toggle has a real light theme to switch
+        # to instead of an auto-derived one.
+        source = "custom";
+        custom_palette = "Ember";
         # Propagate wallpaper colors to other apps' configs.
         templates = {
           builtin_ids = [
