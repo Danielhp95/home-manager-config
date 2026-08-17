@@ -1,6 +1,38 @@
-{ pkgs, inputs, config, ... }:
+{
+  pkgs,
+  inputs,
+  config,
+  lib,
+  ...
+}:
 let
   p = (import ../palette.nix).hash;
+
+  # Atuin's PTY proxy — the feature that shipped as `atuin hex` in v18.13 and
+  # was renamed to `atuin pty-proxy` before this version. It is a minimal
+  # tmux-alike: it proxies bytes between the terminal and the shell while
+  # keeping a shadow vt100, which is what lets the Ctrl-R popup draw *over*
+  # your previous output and then restore it. Without it atuin has to pick
+  # between clearing the scrollback (inline) or taking the whole screen (alt
+  # screen); inline_height = 40 above is the setting that trade-off comes from.
+  #
+  # There is no config.toml switch for it — activation is purely this shell
+  # snippet, which `exec`s the proxy and lets it respawn zsh underneath.
+  #
+  # Generated at build time rather than `eval "$(atuin pty-proxy init zsh)"`,
+  # for the same reason the IRIS hook in iris.nix is inlined: that eval is a
+  # subprocess on every single interactive zsh start. The cost of pinning it
+  # is that upstream changes to the snippet only land on rebuild — which is
+  # what we want, since a silent upstream change to an `exec` line in .zshrc
+  # is exactly the kind of thing that should be reviewed, not absorbed.
+  #
+  # The sed pins `atuin` to the store path. The snippet runs at the very top
+  # of .zshrc, before anything here has touched PATH, so a bare `atuin` would
+  # depend on the login environment having already exported it.
+  atuinPtyProxyZsh = pkgs.runCommand "atuin-pty-proxy-init.zsh" { } ''
+    ${config.programs.atuin.package}/bin/atuin pty-proxy init zsh > $out
+    sed -i 's|exec atuin pty-proxy|exec ${config.programs.atuin.package}/bin/atuin pty-proxy|g' $out
+  '';
 in
 {
   # Zoxide database hygiene. Literal paths (not $HOME) because the nushell
@@ -53,6 +85,32 @@ in
         };
       };
     };
+    # Activate the PTY proxy (see atuinPtyProxyZsh above for what it buys).
+    #
+    # mkOrder 100 puts this ahead of every other initContent block, including
+    # the mkBefore ones in iris.nix and zsh/default.nix. Ordering is about cost,
+    # not correctness: the snippet `exec`s a proxy that respawns zsh, so that
+    # second zsh re-reads .zshrc from the top. Everything sourced before the
+    # exec is therefore paid for twice and thrown away — compinit, the plugin
+    # sourcing, starship. First in the file means the wasted half is nothing.
+    #
+    # The re-exec is self-limiting: the snippet exports ATUIN_PTY_PROXY_ACTIVE
+    # and skips when it is already set. Two consequences worth knowing:
+    #
+    #   - IRIS is unaffected. `i` execs a wrapper that spawns its own child
+    #     zsh, and that child inherits the variable, so it does not stack a
+    #     second proxy inside the first. The chain is proxy -> zsh -> iris ->
+    #     zsh, with one shadow vt100 at the outside.
+    #   - tmux is deliberately *not* exempt. The snippet also re-execs when
+    #     $TMUX changes, so panes get their own proxy rather than inheriting
+    #     the outer one — that is what keeps the popup's redraw aligned with
+    #     the pane's scrollback rather than the outer terminal's.
+    #
+    # `source` rather than inlining the text with builtins.readFile: readFile
+    # on a derivation is import-from-derivation, which drags a build into
+    # every evaluation of this flake. Sourcing a store path costs one cached
+    # file read per shell and keeps eval pure.
+    zsh.initContent = lib.mkOrder 100 "source ${atuinPtyProxyZsh}";
     # `ls` replacement
     eza.enable = true;
     # Smart cd (also feeds yazi's builtin z/Z jumps)
