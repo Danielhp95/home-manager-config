@@ -256,11 +256,20 @@ in
 
     # This should really live on its own package
     slurp
-    wf-recorder
+    # wf-recorder
 
     wl-kbptr # Mouse control with keyboard in wayland
     wlrctl # Command line utility for miscellaneous wlroots Wayland extensions
   ];
+
+  # wl-present (in the wl-mirror package above) shells out to a dmenu for its
+  # `set-scaling` and `custom` subcommands, auto-detecting wofi/wmenu/fuzzel/
+  # rofi/dmenu in that order — none of which are installed since rofi went away,
+  # so it would have fallen through to a bare `dmenu` that does not exist. It
+  # calls `$DMENU -p "<prompt>"`, which is exactly vicinae's dmenu interface.
+  # Only reaches things launched from a shell; the `present` script above and
+  # plain `wl-mirror` need no picker either way.
+  home.sessionVariables.WL_PRESENT_DMENU = "vicinae dmenu";
 
   # Battery notifications
   xdg.configFile."wl-kbptr.yaml".source = ./wl-kbptr.yaml;
