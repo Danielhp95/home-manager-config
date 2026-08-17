@@ -20,6 +20,17 @@ in
 
     theme = spicePkgs.themes.sleek;
 
+    # Extensions patch behaviour, not looks — none of these fight Sleek's flat
+    # palette. spicyLyrics replaces Spotify's own lyrics pane with a
+    # word-synced one; the rest fill in gaps vanilla never had (vim-style
+    # navigation, a numeric volume readout, queue-top insertion).
+    enabledExtensions = with spicePkgs.extensions; [
+      keyboardShortcut
+      volumePercentage
+      playNext
+      spicyLyrics
+    ];
+
     # Sleek's color.ini keys. Values are bare hex — spicetify writes them into
     # an ini and adds the '#' itself.
     customColorScheme = {
