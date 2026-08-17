@@ -97,9 +97,10 @@
       #   enable = true;  # NOTE: hopefully this doesn't fuck things up
       # };
 
-      # Any keypress during the 1s still opens the menu (older generations,
-      # the Ubuntu chainload); the unattended default was 5s of every boot.
-      timeout = 1;
+      # Back to 5s: 1s was technically enough (any keypress opens the menu for
+      # older generations / the Ubuntu chainload) but left no room to actually
+      # read the entries, and the boot-speed win never justified the misses.
+      timeout = 5;
       efi = {
         canTouchEfiVariables = true;
         efiSysMountPoint = "/boot";
