@@ -413,12 +413,11 @@ in
           hide_when_no_connected_device = false;
         };
 
-        wifi_tui = {
-          type = "custom_button";
-          glyph = "wifi";
-          tooltip = "Wi-Fi (impala)";
-          command = "kitty -e impala";
-        };
+        # NOTE: there is deliberately no wifi widget here. noctalia's builtin
+        # network widget only speaks NetworkManager / wpa_supplicant and this
+        # setup is connman+iwd, and the impala custom_button that stood in for
+        # it was redundant with iwgtk's tray icon (iwgtk-indicator, autostarted
+        # via xdg-desktop-autostart — see configuration.nix).
 
         # DART run manager (local Luau plugin, see dart-plugin/). Same alias
         # idiom as the custom_buttons above: bare "dart" in the bar list
