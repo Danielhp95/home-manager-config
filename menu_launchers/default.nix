@@ -90,7 +90,7 @@
           };
 
           accents = {
-            blue = "#7890a0"; # steel
+            blue = "#ef7f38"; # steel (magma orange since 2026-08)
             green = "#8a9868"; # olive
             magenta = "#988090"; # mauve
             orange = "#c09058";
@@ -122,7 +122,7 @@
           };
 
           accents = {
-            blue = "#3a6080"; # steel
+            blue = "#a84e16"; # steel (light-mode magma since 2026-08)
             green = "#4a6830"; # olive
             magenta = "#706070"; # mauve
             orange = "#946030";

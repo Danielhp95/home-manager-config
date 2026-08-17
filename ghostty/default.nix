@@ -42,8 +42,8 @@
         "10=#acc66d"
         "3=#c8b468" # yellow (gold)
         "11=#e3cc75"
-        "4=#7890a0" # blue (steel)
-        "12=#80adcb"
+        "4=#ef7f38" # blue (palette.nix steel — magma orange since 2026-08)
+        "12=#fb9c5f"
         "5=#988090" # magenta (mauve)
         "13=#c586b0"
         "6=#7aa88a" # cyan (sage)
