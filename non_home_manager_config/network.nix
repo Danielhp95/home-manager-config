@@ -19,6 +19,33 @@
   services.connman.wifi.backend = "iwd";
   networking.wireless.iwd.enable = true;
 
+  # Disable connman's built-in DNS proxy (2026-08-12). By default connman runs a
+  # caching resolver on 127.0.0.1:53 + [::1]:53 and writes *those* into
+  # resolv.conf instead of the real nameservers. Two problems:
+  #
+  #   1. It's buggy. 251 dropped replies in the 7 days before this was written
+  #      ("Failed to send response N: Bad file descriptor", "Cannot send cached
+  #      DNS response"), on every single day. Each drop is a query the client
+  #      has to time out and retry.
+  #   2. It's a redundant hop. tailscaled owns /etc/resolv.conf and points
+  #      everything at 100.100.100.100; its upstream was connman's proxy, which
+  #      then forwarded to the router. Three hops for every non-tailnet lookup.
+  #
+  # With --nodnsproxy connman writes the router's real nameservers, so tailscale
+  # forwards straight to them. Drop this flag to get the proxy (and its cache)
+  # back. Note this only works out because tailscale learns its upstream by
+  # reading whatever connman put in /etc/resolv.conf — see the resolv.conf note
+  # below before touching either side.
+  services.connman.extraFlags = [ "--nodnsproxy" ];
+
+  # Do NOT "fix" the boot message
+  #   connmand: Cannot create /var/run/connman/resolv.conf falling back to /etc/resolv.conf
+  # by giving the unit a RuntimeDirectory. The fallback is load-bearing: writing
+  # /etc/resolv.conf directly is exactly how tailscaled (direct mode) discovers
+  # an upstream resolver before it takes the file over and backs the old one up
+  # to /etc/resolv.pre-tailscale-backup.conf. Divert connman's write to
+  # /run/connman and tailscale is left with no upstream at all.
+
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
