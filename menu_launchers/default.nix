@@ -1,43 +1,22 @@
 { pkgs, ... }:
 
 {
-  programs.rofi = {
-    enable = true;
-    font = "Fira Code 30";
-    extraConfig = {
-      width = 100;
-      lines = 10;
-      columns = 1;
-      icon-theme = "Papirus-Dark";
-      bw = 7;
-      location = 0;
-      padding = 5;
-      yoffset = 0;
-      xoffset = 0;
-      fixed-num-lines = true;
-      show-icons = true;
-      ssh-client = "ssh";
-      ssh-command = "{terminal} -e {ssh-client} {host}";
-      run-command = "{cmd}";
-      parse-hosts = true;
-      matching = "fuzzy";
-      separator-style = "none";
-      scrollbar-width = 0;
-      kb-mode-next = "Shift+Right,Control+Tab";
-      kb-mode-previous = "Shift+Left,Control+Shift+Tab,Alt+h";
-      kb-row-up = "Up,Control+p,Shift+Tab,Shift+ISO_Left_Tab,Alt+k";
-      kb-row-down = "Down,Control+n,Alt+j";
-    };
-    theme = ./rofi/spotlight_dark.rasi; # Personal theme
-    terminal = "xterm-kitty";
-    plugins = with pkgs; [
-      rofi-file-browser
-    ];
-  };
+  # rofi is gone, along with its spotlight_dark.rasi theme, the
+  # rofi-file-browser plugin and papirus-icon-theme (which existed only to feed
+  # rofi's icon-theme; GTK icons are MoreWaita, see hyprland/theming.nix).
+  #
+  # Everything it was still doing was dmenu-style list selection, and vicinae —
+  # already running as a session daemon below, already wearing the Ember theme —
+  # does that with `vicinae dmenu`. See scripts/open_paper.sh and
+  # scripts/choose_bluetooth_device_from_paired.sh. One toolkit fewer, and the
+  # menus now match everything else on screen.
+  #
+  # Behaviour note for anything else migrated later: vicinae dmenu writes the
+  # chosen line to stdout and exits 0 — and it also exits 0 when dismissed with
+  # nothing chosen. Test the output, never the exit status.
   home.packages = with pkgs; [
-    papirus-icon-theme
+      poppler-utils # pdftoppm: renders paper thumbnails for open_paper.sh's quick-look preview
   ];
-
   programs.vicinae = {
     enable = true;
     systemd.enable = true;
