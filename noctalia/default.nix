@@ -289,42 +289,70 @@ in
         };
       };
 
-      # Floating pill bar: inset from the screen edges, rounded, translucent,
-      # widgets in capsules. Named "default" to override noctalia's built-in
+      # Three-island bar: the bar's own background is fully transparent
+      # (its drop shadow is scaled by background_opacity, so no orphaned
+      # shadow strip) and each lane is one capsule_group, so what renders is
+      # three solid pills — start / workspaces / end — with wallpaper showing
+      # through between them. Named "default" to override noctalia's built-in
       # bar; any other name would spawn a second bar alongside it.
       bar.default = {
         position = "top";
         thickness = 36;
-        background_opacity = 0.85;
+        background_opacity = 0.0;
         radius = 18;
         margin_ends = 8; # inset from each end of the bar
-        margin_edge = 6; # gap to the screen edge -> floating bar
+        # Vertical air around the floating bar. `margin_edge` is the gap to the
+        # anchored edge (top), `margin_opposite_edge` the gap on the far side
+        # (bottom, taken out of the space the bar reserves). 5/1 rather than
+        # 6/0: the bar sat a pixel low against the screen edge.
+        margin_edge = 5;
+        margin_opposite_edge = 1;
         padding = 12;
         widget_spacing = 8;
         shadow = true;
         capsule = true;
         capsule_fill = "surface_variant";
-        capsule_opacity = 0.8;
+        capsule_opacity = 1.0;
+        # Capsule cross-size as a fraction of bar thickness (default 0.76).
+        # With the bar background gone the islands *are* the bar, so a bit
+        # thicker keeps them from reading skinnier than the old pill.
+        capsule_thickness = 0.88;
 
-        start = [
-          "clock"
-          "sysmon"
-          "active_window"
-          "media"
-        ];
-        center = [ "workspaces" ];
-        end = [
-          "tray"
-          "notifications"
-          "dart"
-          "localsend"
-          "battery"
-          "volume"
-          "brightness"
-          "tlp_mode"
-          "bluetooth"
-          "wifi_tui"
-          "control-center"
+        # Lanes hold "group:<id>" tokens; the groups' members are the old lane
+        # lists. Group capsules inherit capsule_fill/capsule_opacity from above.
+        start = [ "group:left" ];
+        center = [ "group:mid" ];
+        end = [ "group:right" ];
+        capsule_group = [
+          {
+            id = "left";
+            members = [
+              "home"
+              "clock"
+              "sysmon"
+              "active_window"
+              "media"
+            ];
+          }
+          {
+            id = "mid";
+            members = [ "workspaces" ];
+          }
+          {
+            id = "right";
+            members = [
+              "tray"
+              "notifications"
+              "dart"
+              "localsend"
+              "battery"
+              "volume"
+              "brightness"
+              "tlp_mode"
+              "bluetooth"
+              "control-center"
+            ];
+          }
         ];
       };
 
@@ -346,17 +374,32 @@ in
           tooltip_format = "{:%A, %B %d, %Y}";
         };
 
-        # noctalia's builtin network widget only speaks NetworkManager /
-        # wpa_supplicant; this setup uses connman+iwd, so open impala instead.
-        # TLP power mode, styled like wifi_tui: left-click cycles
+        # Leftmost button: drops the control centre's Home tab (avatar, uptime,
+        # weather, media, the control_center.shortcuts above) down from the bar.
+        # It has to be a custom_button rather than a second `control-center`
+        # widget because that widget type has no option for which tab to open —
+        # it reopens wherever you last were, and this button is specifically the
+        # home dropdown.
+        home = {
+          type = "custom_button";
+          glyph = "home";
+          tooltip = "Home";
+          actions.left = "exec noctalia msg panel-toggle control-center home";
+        };
+
+        # TLP power mode as a custom_button: left-click cycles
         # auto -> forced low power -> forced performance -> auto (with a
         # notification), right-click opens tlp-stat in a terminal.
+        #
+        # `actions.left`/`actions.right` rather than the old `command`/
+        # `right_command`: those are gesture bindings now, and noctalia was
+        # migrating them in memory on every load with a deprecation warning.
         tlp_mode = {
           type = "custom_button";
           glyph = "bolt";
           tooltip = "Power mode (TLP) — click: cycle, right-click: status";
-          command = "tlp-mode";
-          right_command = "kitty --hold -e sudo tlp-stat -s";
+          actions.left = "exec tlp-mode";
+          actions.right = "exec kitty --hold -e sudo tlp-stat -s";
         };
 
         # Icon + connected device name in the bar; hovering lists each
