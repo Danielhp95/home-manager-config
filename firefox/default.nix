@@ -83,16 +83,31 @@ in
         # Required for userChrome.css to be read at all.
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 
-        # Dark chrome + dark built-in pages (about:*), regardless of what the
-        # desktop portal reports. Websites are deliberately NOT forced:
-        # content-override = 2 lets pages follow the real system light/dark
-        # preference (0 shoved prefers-color-scheme: dark at every site), and
-        # browser.display.background_color is left at its default — it sets
-        # the document canvas itself, so unstyled pages rendered ember-on-
-        # black-text. The white pre-render flash is killed in userChrome.css
-        # by painting the tabpanel backdrop, which pages never see.
+        # Dark chrome only — websites are deliberately NOT forced to dark.
+        # browser.theme.toolbar-theme governs the chrome/toolbar stylesheet
+        # only (PreferenceSheet.cpp's aIsChrome branch), so forcing it to 0
+        # can't leak into page content.
+        #
+        # content-theme and content-override are a different story: per
+        # PreferenceSheet::Prefs::Load, content-override != {0,1} falls
+        # through to ThemeDerivedColorSchemeForContent(), which then reads
+        # content-theme — and *that* pref governs the color-scheme used for
+        # actual web content (prefers-color-scheme results, plus default
+        # scrollbar/form-widget rendering on unstyled pages), not just
+        # about:* pages as the naming suggests. Setting content-theme = 0
+        # here previously forced every site's content to dark unconditionally
+        # (a real leak — this contradicted the comment that used to be here).
+        # Both must be left at 2/non-0-1 so the fallback reaches
+        # LookAndFeel::SystemColorScheme(), i.e. the real OS light/dark
+        # preference. about:* pages still render dark in practice since the
+        # desktop is dark, but real websites now track the OS setting instead
+        # of being force-darkened. browser.display.background_color is left
+        # at its default too — it sets the document canvas itself, so setting
+        # it would recolor unstyled pages ember-on-black-text. The white
+        # pre-render flash is killed in userChrome.css by painting the
+        # tabpanel backdrop, which pages never see.
         "browser.theme.toolbar-theme" = 0;
-        "browser.theme.content-theme" = 0;
+        "browser.theme.content-theme" = 2;
         "layout.css.prefers-color-scheme.content-override" = 2;
 
         # Rounded bottom window corners, to match WhiteSur's window shape.
