@@ -304,12 +304,56 @@ hl.bind(mod .. " + TAB", hl.dsp.focus({ workspace = "previous" }))
 hl.bind(mod .. " + comma", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mod .. " + period", hl.dsp.focus({ workspace = "e+1" }))
 
--- Focus / move window (hy3), vim keys and arrows
+-- Layout toggle: hy3 <-> Hyprland's native scrolling (niri-style) layout,
+-- scoped to the active workspace via a per-workspace layout rule (Hyprland
+-- >= 0.54's layout rewrite). Runtime-only: resets on reload/relogin, same
+-- as the `present` script's monitor rule above. The hjkl movement binds
+-- below check this table to pick hy3's tree-aware dispatcher or
+-- Hyprland's native direction dispatcher (which scrolling implements and
+-- hy3 doesn't).
+local scrolling_workspaces = {} -- workspace id (number) -> true while toggled to scrolling
+
+local function active_ws_id()
+	local ws = hl.get_active_workspace()
+	return ws and ws.id or nil
+end
+
+hl.bind(mod .. " + N", function()
+	local id = active_ws_id()
+	if not id then
+		return
+	end
+	if scrolling_workspaces[id] then
+		scrolling_workspaces[id] = nil
+		hl.workspace_rule({ workspace = tostring(id), layout = "hy3" })
+	else
+		scrolling_workspaces[id] = true
+		hl.workspace_rule({ workspace = tostring(id), layout = "scrolling" })
+	end
+end)
+
+-- Focus / move window (hy3, or Hyprland's native dispatcher on a workspace
+-- toggled to scrolling), vim keys and arrows
 local directions = { h = "left", j = "down", k = "up", l = "right" }
 for key, dir in pairs(directions) do
-	hl.bind(mod .. " + " .. key, hy3.move_focus(dir))
-	hl.bind(mod .. " + " .. dir, hy3.move_focus(dir))
-	hl.bind(mod .. " + SHIFT + " .. key, hy3.move_window(dir))
+	local letter = dir:sub(1, 1) -- "left" -> "l", etc. — what hl.dsp.* direction params want
+	local function move_focus()
+		if scrolling_workspaces[active_ws_id()] then
+			hl.dispatch(hl.dsp.focus({ direction = letter }))
+		else
+			hl.dispatch(hy3.move_focus(dir))
+		end
+	end
+	local function move_window()
+		if scrolling_workspaces[active_ws_id()] then
+			hl.dispatch(hl.dsp.window.move({ direction = letter }))
+		else
+			hl.dispatch(hy3.move_window(dir))
+		end
+	end
+	hl.bind(mod .. " + " .. key, move_focus)
+	hl.bind(mod .. " + " .. dir, move_focus)
+	hl.bind(mod .. " + SHIFT + " .. key, move_window)
 end
 
 hl.bind(mod .. " + SHIFT + Space", hy3.toggle_focus_layer())
