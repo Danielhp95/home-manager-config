@@ -162,6 +162,25 @@ in
           alias ng="tv nix-generations"
         ''
       )
+      # starship's zsh init sets *both* PROMPT and RPROMPT to a
+      # `$(starship prompt …)` command substitution, and it does so
+      # unconditionally — emptying `right_format` in starship's settings
+      # still forks a second starship on every prompt, it just forks one
+      # that prints nothing. Clearing RPROMPT is what actually removes the
+      # fork (measured: 3.3ms of the ~29ms Enter-to-new-prompt round trip).
+      # Everything that used to live there now renders on the left; see the
+      # `format` comment in ../starship/default.nix.
+      #
+      # mkAfter (order 1500) is load-bearing: the home-manager starship
+      # module contributes its `eval` with no explicit order, i.e. at the
+      # default 1000, so an unordered block here would tie with it and the
+      # winner would be merge order — a coin flip that starship wins by
+      # re-setting RPROMPT afterwards. The assignment is one-shot (starship
+      # sets RPROMPT at init time, not from its precmd hook), so clearing
+      # it once sticks.
+      (lib.mkAfter ''
+        RPROMPT=""
+      '')
     ];
     autocd = true;
     dotDir = "${config.xdg.configHome}/zsh";

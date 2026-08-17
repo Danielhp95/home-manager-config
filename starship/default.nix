@@ -23,6 +23,20 @@ in
       # context modules sit in graphite pills so the coral stays the thing
       # your eye lands on. Line 2 is just the prompt character, so commands
       # always start at col 3.
+      #
+      # Everything lives on ONE line, with no right_format, because starship's
+      # zsh init renders the two halves in two SEPARATE processes: it sets both
+      # PROMPT and RPROMPT to `$(starship prompt …)` command substitutions, so a
+      # right prompt costs a second fork+exec of starship on every single
+      # prompt draw — measured at 3.3ms of the ~29ms it takes to get a new
+      # prompt back after Enter. One line, one process.
+      #
+      # Reading order is cool -> hot and back: the directory pill opens full
+      # coral and ramps down to ash, then the readouts sit in graphite, then
+      # the clock ramps ash -> coral again and caps round. Same bookending as
+      # the tmux status bar, where the session and the clock are the two hot
+      # ends. The clock is last so it lands as close to the right as the
+      # content allows, which is where the eye already looks for it.
       format =
         "$username$hostname"
         + "$directory"
@@ -30,9 +44,8 @@ in
         + "$nix_shell$direnv"
         + "$python$nodejs$rust$lua"
         + "$status"
+        + "$cmd_duration$jobs$battery$time"
         + "\n$character";
-
-      right_format = "$jobs$battery$cmd_duration$time";
 
       palettes.ember = {
         bg0 = p.bg;
@@ -155,7 +168,7 @@ in
         symbol = " ";
       };
 
-      # Background jobs — small mauve pill on the right. (No sudo pill: the
+      # Background jobs — small mauve pill. (No sudo pill: the
       # module's `sudo -n` check costs ~18ms on every prompt draw.)
       jobs = {
         format = "[](fg:bg1)[$symbol$number](fg:mauve bg:bg1)[](fg:bg1) ";
@@ -195,7 +208,8 @@ in
       };
 
       # Clock — the hot end of the ramp, capped round, same ash→ember ramp
-      # as tmux's status-right
+      # as tmux's status-right. Last module on the line: it closes the prompt
+      # the way the clock closes the tmux bar.
       time = {
         disabled = false;
         format =
