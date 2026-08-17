@@ -274,7 +274,14 @@ hl.bind(
 	hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/choose_bluetooth_device_from_paired.sh")
 )
 hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/open_paper.sh"))
-hl.bind(mod .. " + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"))
+-- Moved off SHIFT+o, which is the opacity toggle again (see below).
+hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"))
+-- Force the focused window fully opaque and back. Implemented as a tag rather
+-- than `setprop alpha`: a tag is per-window state the compositor already tracks
+-- and toggles for us, so each window remembers whether it is opaque without
+-- this config having to, and the actual opacity lives in one window rule down
+-- with the rest of them (opacity-opaque-tag). Global opacity is untouched.
+hl.bind(mod .. " + SHIFT + o", hl.dsp.window.tag({ tag = "opaque", action = "toggle" }))
 hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("bash /home/dani/nix_config/zsh/scripts/video/record_video.sh"))
 hl.bind(
 	mod .. " + SHIFT + S",
@@ -546,6 +553,14 @@ hl.window_rule({
 hl.window_rule({
 	name = "opacity-zoom-initial",
 	match = { initial_title = "zoom" },
+	opacity = "1.0 override 1.0 override",
+})
+-- The target of the Super+Shift+O toggle. Nothing carries this tag until that
+-- bind puts it there, so the rule is inert by default; `override` on both slots
+-- is what lets it beat the global active/inactive opacity in decoration above.
+hl.window_rule({
+	name = "opacity-opaque-tag",
+	match = { tag = "opaque" },
 	opacity = "1.0 override 1.0 override",
 })
 
