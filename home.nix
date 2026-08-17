@@ -80,6 +80,13 @@
       # Decode on the iGPU media block (iHD VA-API) instead of CPU cores.
       # auto-safe only picks whitelisted-stable hwdec backends.
       hwdec = "auto-safe";
+      # libplacebo's default Vulkan device pick is the discrete GPU, but on
+      # this PRIME-offload laptop only the Intel iGPU drives the physical
+      # displays. Rendering on the nvidia dGPU meant every frame crossed
+      # PCIe into the compositor (stutter/tearing) and device creation on
+      # the dGPU cold-started in >1s ("(slow!)" in -v output). Pin to the
+      # iGPU that's actually compositing.
+      vulkan-device = "Intel(R) Graphics (ARL)";
     };
   };
 
@@ -100,7 +107,10 @@
 
     # zoom-us
 
-    # grayjay # video platform aggregator
+    ((inputs.multiverse.lib.mkMultiverse {
+      system = "x86_64-linux";
+      config.allowUnfree = true;
+    }).at "26.05").grayjay # video platform aggregator
 
     openconnect
 
