@@ -54,6 +54,13 @@ default = 120
 min = 15
 max = 3600
 
+[[setting]]
+key = "notify_transitions"
+type = "bool"
+label_key = "settings.notify_transitions.label"
+description_key = "settings.notify_transitions.description"
+default = true
+
 [[widget]]
 id = "widget"
 entry = "widget.luau"

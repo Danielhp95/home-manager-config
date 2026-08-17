@@ -19,6 +19,10 @@
     "poll_seconds": {
       "label": "Poll interval (s)",
       "description": "Background refresh cadence for the run list."
+    },
+    "notify_transitions": {
+      "label": "Notify on state changes",
+      "description": "Raise a notification whenever a run moves between states, including when it leaves the active set."
     }
   }
 }

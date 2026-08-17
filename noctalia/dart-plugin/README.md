@@ -33,6 +33,18 @@ panel.
   tag to load it into the input (Enter runs `dart tag replace`), `×` deletes,
   typing into the empty input adds.
 
+**Transition toasts** (`notify_transitions`) — every state change between two
+polls raises a notification, the run id on its own line above the transition:
+
+```
+sk-260811-dh-afoot-pint
+queued → running
+```
+
+A run that leaves the active set is re-queried by id so the terminal state is
+reported rather than "gone". **Clicking the toast opens that run's page in
+`$BROWSER`.**
+
 ## Architecture
 
 ```
@@ -45,7 +57,8 @@ panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 
 - `plugin.toml` — manifest: entries, panel geometry, user settings.
 - `service.luau` — the only place `dart run filter` runs. Handles the
-  custom-filter query, queues refreshes requested mid-poll, publishes state.
+  custom-filter query, queues refreshes requested mid-poll, publishes state,
+  and raises the transition toasts.
 - `panel.luau` — all interactive UI. Mutations (`dart run cancel/…`,
   `dart tag …`) run here, toast their result, then request a re-poll.
 - `widget.luau` — bar badge; purely event-driven, no CLI calls, no tick.
@@ -98,3 +111,11 @@ hot-reload the running shell), `plugins.enabled = ["dani/dart"]`, and the
   or `bar.default.end` stop applying, delete the shadowing block there.
 - Tag values containing a single quote can't be safely shell-quoted; those
   operations are rejected with a toast rather than risking mangled commands.
+- A clickable transition toast is a detached `notify-send -A default=…` process
+  parked on the D-Bus reply, since only the sender is told the action fired and
+  `noctalia.notify` cannot carry actions. noctalia defers `NotificationClosed`
+  for actionable notifications that merely expired, so that process (and the
+  **Open run** button on the control-center history entry) outlives the toast
+  and is only reaped when the entry is dismissed, cleared, or pushed out of the
+  100-entry history. Without `notify-send` on PATH the toasts fall back to
+  plain `noctalia.notify` ones, which are not clickable.
