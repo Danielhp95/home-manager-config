@@ -19,8 +19,9 @@ let
   # Ember styling for zsh-syntax-highlighting. The plugin's defaults use
   # named ANSI colors; overriding with palette.nix hex keeps the prompt in
   # the same voice as starship: commands are the coral hero, strings olive
-  # (the editor convention — gold is rationed for attention states like
-  # sudo), paths/options steel, structure mauve, comments legible fgDim.
+  # (the editor convention), paths gold (by request — the thing you typed
+  # `cd` for deserves the emphasis color), options/interpolation steel
+  # (magma), structure mauve, comments legible fgDim.
   syntax-highlight-conf = ''
     typeset -A ZSH_HIGHLIGHT_STYLES
     ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
@@ -54,9 +55,10 @@ let
     ZSH_HIGHLIGHT_STYLES[named-fd]='fg=${p.sage}'
     ZSH_HIGHLIGHT_STYLES[numeric-fd]='fg=${p.sage}'
 
-    # Paths and options — steel
-    ZSH_HIGHLIGHT_STYLES[path]='fg=${p.steel}'
-    ZSH_HIGHLIGHT_STYLES[path_prefix]='fg=${p.steel}'
+    # Paths — gold (the cd argument is the point of the command); options
+    # stay on steel with the rest of the quiet metadata
+    ZSH_HIGHLIGHT_STYLES[path]='fg=${p.gold}'
+    ZSH_HIGHLIGHT_STYLES[path_prefix]='fg=${p.gold}'
     ZSH_HIGHLIGHT_STYLES[path_pathseparator]='fg=${p.muted}'
     ZSH_HIGHLIGHT_STYLES[path_prefix_pathseparator]='fg=${p.muted}'
     ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=${p.steel}'

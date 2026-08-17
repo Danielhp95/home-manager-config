@@ -529,9 +529,11 @@ in
 
       # First match wins; `is` conditions go before the broad mime globs.
       filetype.rules = [
+        # Gold, not steel: folders are what you navigate by, so they carry
+        # the emphasis color (same request as zsh paths).
         {
           url = "*/";
-          fg = p.steel;
+          fg = p.gold;
           bold = true;
         }
         {
