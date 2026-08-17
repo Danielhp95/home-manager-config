@@ -15,7 +15,10 @@ in
   # libmagic descriptions for binaries.
   home.file.".config/pistol/pistol.conf".text = ''
     text/* sh: BAT_THEME=ansi bat -n --color=always --paging=never %pistol-filename%
-    image/* chafa -f symbols --animate off %pistol-filename%
+    # --probe off: chafa's default terminal probe writes OSC 10/11 color queries
+    # to the tty; when tv owns the tty the replies land in its input box as
+    # literal "rgb:..." text. Symbols mode gains nothing from probing anyway.
+    image/* chafa -f symbols --animate off --probe off %pistol-filename%
   '';
 
   home.file.".config/television/cable/dart.toml".text = ''
