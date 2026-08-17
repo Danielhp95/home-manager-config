@@ -9,11 +9,13 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    ### hyprlad
+    multiverse.url = "github:fzakaria/nixpkgs-multiverse";
+
+    ### hyprland
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      rev = "91f29f23bb691462f8aa6171b964069aebc37910";
+      rev = "24e23ca4bb6041014c3b784fdf5012b2fdae89ac";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -32,7 +34,6 @@
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
 
     noctalia = {
       type = "git";
