@@ -257,8 +257,10 @@ local hy3 = hl.plugin.hy3
 -- process and open in ~5ms instead of ~400ms (fonts/GPU already initialized).
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"))
 
--- Hacky script for plotting metrics from runs
-hl.bind(mod .. " + CTRL + p", hl.dsp.exec_cmd("bash /home/dani/Projects/sai/rofi_wrapper.sh"))
+-- NOTE: Super+Ctrl+P used to run bash /home/dani/Projects/sai/rofi_wrapper.sh
+-- ("hacky script for plotting metrics from runs"). That file no longer exists,
+-- so the bind had been dead for a while; it went out with rofi. The chord is
+-- free if the script comes back.
 
 -- Lock screen when closing laptop lid. noctalia's lockscreen, not hyprlock:
 -- there is only one lockscreen on this system now (see hyprland/default.nix),
@@ -312,7 +314,7 @@ hl.bind(mod .. " + t", hy3.change_group("toggletab"))
 hl.bind(mod .. " + CONTROL + t", hy3.lock_tab()) -- lock a tab so it acts as a single node
 hl.bind(mod .. " + g", hy3.make_group("tab"))
 
-hl.bind(mod .. " + SHIFT + Q", hy3.kill_active())
+hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.close())
 
 hl.bind(mod .. " + E", hl.dsp.layout("togglesplit")) -- toggle horizontal/vertical split
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
