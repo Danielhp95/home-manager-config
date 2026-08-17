@@ -364,9 +364,12 @@ in
 
       widget = {
         # Show workspace names instead of numbers; names are set to nerdfont
-        # glyphs via workspace rules in hyprland.lua.
+        # glyphs via workspace rules in hyprland.lua. `display` was renamed to
+        # label_source + show_labels; the old key still worked but was migrated
+        # in memory with a deprecation warning on every load.
         workspaces = {
-          display = "name";
+          label_source = "name";
+          show_labels = true;
         };
 
         clock = {
