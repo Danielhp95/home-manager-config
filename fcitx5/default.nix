@@ -112,6 +112,17 @@
             EnableFractionalScale = "True";
           };
 
+          # The plain keyboard engine (keyboard-us) has a "hint" mode: spell
+          # completion that pops a candidate list while typing English. It is
+          # off by default but two global hotkeys switch it on, and they fire
+          # whenever fcitx5 holds the input focus. Cleared here; an empty value
+          # is how fcitx5 serialises an empty key list.
+          keyboard.globalSection = {
+            EnableHintByDefault = "False";
+            "Hint Trigger" = ""; # was Control+Alt+H (toggle completion)
+            "One Time Hint Trigger" = ""; # was Control+Alt+J (one word)
+          };
+
           pinyin = {
             globalSection = {
               ShuangpinProfile = "Ziranma";
