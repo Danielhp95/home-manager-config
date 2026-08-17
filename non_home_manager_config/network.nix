@@ -57,13 +57,11 @@
     openFirewall = true;
   };
 
-  # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
-  # (the default) this is the recommended approach. When using systemd-networkd it's
-  # still possible to use this option, but it's recommended to use it in conjunction
-  # with expliciv per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
-  networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.eno1.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp4s0.useDHCP = lib.mkDefault true;
+  # No `networking.useDHCP` here on purpose. connman does its own DHCP per
+  # service, so the connman module force-sets useDHCP = false and *asserts* that
+  # it isn't true. A `networking.useDHCP = lib.mkDefault true;` line survives the
+  # build (the module's plain `false` outranks mkDefault) but is dead config that
+  # would break evaluation the moment the mkDefault were dropped.
 
   # Open ports in the firewall.
   networking.firewall.allowedUDPPorts = [ 53317 ];  # for localsend discovery (multicast)
