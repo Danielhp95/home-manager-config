@@ -101,14 +101,26 @@ in
         # LookAndFeel::SystemColorScheme(), i.e. the real OS light/dark
         # preference. about:* pages still render dark in practice since the
         # desktop is dark, but real websites now track the OS setting instead
-        # of being force-darkened. browser.display.background_color is left
-        # at its default too — it sets the document canvas itself, so setting
-        # it would recolor unstyled pages ember-on-black-text. The white
-        # pre-render flash is killed in userChrome.css by painting the
-        # tabpanel backdrop, which pages never see.
+        # of being force-darkened. The white pre-render flash is killed in
+        # userChrome.css by painting the tabpanel backdrop, which pages never
+        # see.
         "browser.theme.toolbar-theme" = 0;
         "browser.theme.content-theme" = 2;
         "layout.css.prefers-color-scheme.content-override" = 2;
+
+        # browser.display.background_color is the *document canvas* — the
+        # colour an unstyled page paints itself with, page content and not
+        # chrome. This module set it to the ember bg between cada87c and
+        # 18debb1, which left every unstyled light-scheme page dark-on-black.
+        # Dropping the line from nix did not undo that: Home Manager only
+        # writes user.js, and a pref that disappears from user.js keeps its
+        # last value in prefs.js forever. So it is pinned back to Firefox's
+        # compiled-in default (#FFFFFF; the dark-scheme counterpart is the
+        # separate browser.display.background_color.dark = #1C1B22, left
+        # alone) to actively overwrite the stale profile value. Do not point
+        # this at the palette again — chrome theming belongs in
+        # userChrome.css.
+        "browser.display.background_color" = "#FFFFFF";
 
         # Rounded bottom window corners, to match WhiteSur's window shape.
         "widget.gtk.rounded-bottom-corners.enabled" = true;
