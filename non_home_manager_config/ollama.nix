@@ -57,11 +57,41 @@
   };
 
   services.open-webui = {
-    enable = false;
+    enable = true;
     host = "0.0.0.0";
     # options: https://docs.openwebui.com/getting-started/advanced-topics/env-configuration
     environment = {
       OLLAMA_BASE_URL = "http://127.0.0.1:${toString config.services.ollama.port}";
+      # Qwen3's chat template already supports tool calling; this just wires
+      # up a "web search" tool the model can invoke, backed by the local
+      # SearXNG instance below (loopback-only, never leaves the box).
+      ENABLE_RAG_WEB_SEARCH = "True";
+      RAG_WEB_SEARCH_ENGINE = "searxng";
+      SEARXNG_QUERY_URL = "http://127.0.0.1:${toString config.services.searx.settings.server.port}/search?q=<query>";
+      RAG_WEB_SEARCH_RESULT_COUNT = "5";
+      RAG_WEB_SEARCH_CONCURRENT_REQUESTS = "10";
+    };
+  };
+
+  # Local meta-search backend for open-webui's web-search tool. Loopback-only
+  # (no openFirewall, no nginx) since only open-webui on the same host talks
+  # to it.
+  services.searx = {
+    enable = true;
+    settings = {
+      server = {
+        port = 8888;
+        bind_address = "127.0.0.1";
+        # Not sensitive: only signs CSRF-style tokens for a service that
+        # never leaves loopback and has no accounts of its own.
+        secret_key = "f02884e092fa373713e6278b768dda51f40715527abb7d1274f0b603fbae5b37";
+      };
+      # json is required for open-webui to consume results via the API;
+      # html is kept so `searx` is still browsable directly for debugging.
+      search.formats = [
+        "html"
+        "json"
+      ];
     };
   };
 }
