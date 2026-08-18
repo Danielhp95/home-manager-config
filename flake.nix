@@ -63,7 +63,7 @@
     iris = {
       type = "git";
       url = "https://github.com/versenilvis/IRIS";
-      rev = "994ff836752bf4c5246a3aec236dd597421dccf0";
+      rev = "42416fc720d62e80696d839b66deffe8aa7c90d6";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

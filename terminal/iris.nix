@@ -2,11 +2,16 @@
 let
   p = (import ../palette.nix).hash;
 
-  # What used to be fifteen substitutions is now two. Upstream grew a theme
+  # What used to be fifteen substitutions is now three. Upstream grew a theme
   # file and a `ui.max-width` setting (v0.4.19-v0.4.22), so the colour and box
-  # width patches moved into config below; what is left are the two behaviours
-  # that still have no knob. Every replacement is --replace-fail: if upstream
-  # moves a line, the build breaks loudly instead of silently reverting.
+  # width patches moved into config below; what is left are the behaviours that
+  # still have no knob. Every replacement is --replace-fail: if upstream moves
+  # a line, the build breaks loudly instead of silently reverting.
+  #
+  # All three re-applied unchanged across the v0.5.x -> v0.6.3 bump, which
+  # reworked this same file heavily (pty.Open + Setctty instead of pty.Start,
+  # an alt-screen guard, the watchdog cwd relay). The anchors and their
+  # surrounding control flow were re-read against the new tree, not assumed.
   iris = pkgs.iris.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       ### Description column: grow it with the box #############################
@@ -98,6 +103,13 @@ in
   # four accent roles below (key, scroll_info, sys_sel, alias_sel) share gold:
   # they were all #a277ff, and only the border wanted to stay quiet.
   #
+  # The names have drifted from what they paint, though: the "atuin" source
+  # badge added in v0.6.0 is drawn with alias/alias_sel rather than hist/
+  # hist_sel (integration/overlay.go's `case "atuin"`), so atuin rows come out
+  # in the alias colours. Nothing to add here — upstream still has exactly
+  # these nineteen fields, verified against the v0.6.3 tree — but don't read
+  # the field names as a source list.
+  #
   # IRIS stats this path every second alongside config.toml and hot-reloads, so
   # a rebuild applies to running sessions without restarting them.
   xdg.configFile."iris/theme.toml".text = ''
@@ -151,6 +163,36 @@ in
     # Enter would run `nvim ~/.config`. Upstream's default, and the safe one.
     auto-execute = false
 
+    # History mode: 0 = shell history file, 1 = atuin only, 2 = both merged.
+    # New in v0.6.0. This is the setting that matters most on this machine,
+    # because atuin is where the history actually lives: ~/.config/zsh/
+    # .zsh_history holds ~9k lines, while atuin's history.db holds ~159k. Mode
+    # 0 was therefore searching a small fraction of what has ever been typed
+    # here. 2 rather than 1 so a command run in a non-atuin shell (a plain
+    # `zsh -f`, a recovery session) is still reachable.
+    #
+    # IRIS opens the DB read-only and re-reads it when its mtime changes, so
+    # it never contends with atuin's daemon over the write lock.
+    atuin-history = 2
+
+    # Left empty on purpose. IRIS resolves $XDG_DATA_HOME/atuin/history.db and
+    # falls back to ~/.local/share/atuin/history.db, which is exactly where the
+    # atuin module in ./default.nix leaves it — spelling the path out here
+    # would just duplicate atuin's own default and rot if either side moves.
+    atuin-db-path = ""
+
+    # When a command has no completion spec, IRIS runs `<binary> __complete` to
+    # see whether it is a cobra CLI. Configurable since v0.6.1, and worth
+    # knowing the shape of: this executes binaries off $PATH as you type.
+    #
+    # Left on because the same release added a real gate — spec/
+    # cobra_complete.go now reads the Go build info out of the binary and only
+    # probes if it genuinely imports spf13/cobra, on top of the pre-existing
+    # setsid isolation and 300ms timeout. Shell scripts (sie-vpn-connect,
+    # davinci, the writeShellScriptBin wrappers) have no build info and are
+    # never probed at all. Set false if that trade ever stops being worth it.
+    cobra-probe-enabled = true
+
     [ui]
     style = "modern"
     ghost-text = true
@@ -178,6 +220,11 @@ in
     check-on-startup = false
     channel = "stable"
     check-interval = "24h"
+
+    # 0 = off, 1 = auto-install, 2 = confirm first. New in v0.6.x and pinned to
+    # off explicitly rather than left to the default, because 1 would run that
+    # same install.sh unattended.
+    auto-update = 0
 
     [keybindings]
     # Enter and Ctrl-A,E,L,U,W,C are still hardcoded in the input pump, as is
@@ -261,10 +308,14 @@ in
       # an IRIS session hands them to every pane it later spawns. Those panes
       # are not IRIS children — their parent is the tmux server, and the fd is
       # long closed — so without this they would silently drop autosuggestions
-      # and autopair and install an IPC hook writing into nothing. Upstream
-      # guards the same hazard by unsetting the vars when $PPID looks like
-      # tmux; comparing against $IRIS_PID is the tighter form of that check
-      # (verified: IRIS execs the child shell directly, so $PPID == $IRIS_PID).
+      # and autopair and install an IPC hook writing into nothing.
+      #
+      # Upstream rewrote its own version of this guard in v0.6.x (#120): it no
+      # longer greps $PPID for "tmux" but unsets the vars when $PPID differs
+      # from $IRIS_PID *and* the tty differs from a new IRIS_TTY export. That
+      # is looser than what is here — it needs both to fail — so the plain
+      # $PPID == $IRIS_PID test below still covers strictly more cases and is
+      # kept (verified: IRIS execs the child shell directly, so the two match).
       if [[ -n "$IRIS_PID" && -n "$IRIS_FD" && "$PPID" == "$IRIS_PID" ]]; then
         # Two ghost texts on one line garbles both. IRIS draws its own (and is
         # the AI-aware one), so zsh's yields. The plugin tests for the
@@ -290,6 +341,14 @@ in
         # path completions itself, from its own cwd, which never moves because
         # the `cd` happens in the child shell. chpwd covers interactive cds,
         # precmd covers the rest (a script that cds, a subshell popping back).
+        #
+        # This hook earns more than completions since v0.6.x: #129 made the
+        # wrapper chdir to each IRIS_CWD it receives, and #143 relays it on to
+        # the outer watchdog process over a dedicated fd. Anything that locates
+        # a shell by reading its pane's foreground process — tmux's
+        # pane_current_path, most notably — therefore only tracks `cd` inside
+        # an IRIS session because these lines are here. Dropping them would now
+        # strand tmux at the directory the session started in.
         # The exit code on IRIS_CMD_STOP feeds the rule-based "retry the last
         # failure" suggestion, which runs with ai.enabled = false. The wrapper
         # accepts a bare IRIS_CMD_STOP too, so both are additive.
