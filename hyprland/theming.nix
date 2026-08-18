@@ -44,11 +44,23 @@ in
     # back to its default look. (The GSK "Error 71" this used to be blamed on
     # is a GTK renderer issue, handled by GSK_RENDERER=gl in tuigreet.nix.)
     QT_QPA_PLATFORMTHEME = "gtk3";
-    GTK_THEME = "WhiteSur-Dark-orange"; # For nautilus. Not working
+    # Kept for GTK3 apps, but the "for nautilus" part of it was never going to
+    # work and the note is corrected here rather than removed: nautilus is a
+    # libadwaita app, and libadwaita ships its own stylesheet and ignores GTK
+    # themes by design. Same for gnome-weather, gnome-calendar, decibels and
+    # gthumb. What those *do* honour is the accent-color key below.
+    GTK_THEME = "WhiteSur-Dark-orange";
   };
 
   dconf.settings = {
     "org/gnome/desktop/interface".cursor-theme = cursor-theme-name;
     "org/gnome/desktop/interface".color-scheme = "prefer-dark";
+    # libadwaita >= 1.6 reads its accent from here (1.9.3 is what is
+    # installed). The schema default is 'blue', which is what every GNOME app
+    # was drawing with — visibly foreign next to the Ember/WhiteSur orange.
+    # The key is an enum of nine named colours, not a hex value, so 'orange'
+    # is as close to palette.nix `accent` as this mechanism gets; it cannot be
+    # pointed at the exact coral.
+    "org/gnome/desktop/interface".accent-color = "orange";
   };
 }

@@ -5,6 +5,9 @@
   ...
 }:
 
+let
+  pal = (import ./palette.nix).hash;
+in
 {
 
   home.stateVersion = "24.05";
@@ -50,6 +53,8 @@
     ./element.nix
     ./spotify.nix
 
+    ./lnav
+
     ./terminal
     ./terminal/television.nix
     ./terminal/nushell.nix
@@ -75,6 +80,21 @@
   programs.mpv = {
     enable = true;
     config = {
+      # OSD only — the same chrome-vs-content line firefox/default.nix draws.
+      # sub-color and friends are deliberately absent: subtitles are part of
+      # what is being watched, not part of the player's UI, and recolouring
+      # them would be the video equivalent of forcing a website's palette.
+      #
+      # The letterbox that mpv paints around a non-matching aspect ratio is
+      # `background`, whose default is `tiles` (a light checkerboard); pinning
+      # it to a flat palette colour is what keeps a 21:9 film from sitting in
+      # a grey grid. Colors are AARRGGBB, alpha first.
+      osd-color = "#FF${builtins.substring 1 6 pal.fg}";
+      osd-outline-color = "#FF${builtins.substring 1 6 pal.bgDeep}";
+      osd-back-color = "#AF${builtins.substring 1 6 pal.bg}";
+      background = "color";
+      background-color = "#FF${builtins.substring 1 6 pal.bgDeep}";
+
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true; # Don't close mpv when video is done
       # Decode on the iGPU media block (iHD VA-API) instead of CPU cores.
@@ -87,6 +107,24 @@
       # the dGPU cold-started in >1s ("(slow!)" in -v output). Pin to the
       # iGPU that's actually compositing.
       vulkan-device = "Intel(R) Graphics (ARL)";
+    };
+  };
+
+  # The lightweight image viewer. imv paints a checkerboard behind anything
+  # with transparency or a non-matching aspect ratio by default, which is the
+  # brightest thing on the screen in a dark session; `background` replaces it
+  # with a flat palette colour. imv takes bare hex with no leading '#', unlike
+  # every other consumer of palette.nix, hence the substring.
+  #
+  # The overlay is imv's own status line (filename, dimensions, index) — UI,
+  # not image data. Nothing here touches how the image itself is decoded.
+  programs.imv = {
+    enable = true;
+    settings.options = {
+      background = builtins.substring 1 6 pal.bgDeep;
+      overlay_text_color = builtins.substring 1 6 pal.fg;
+      overlay_background_color = builtins.substring 1 6 pal.bg;
+      overlay_background_alpha = "e0";
     };
   };
 
@@ -143,7 +181,7 @@
     # pkgs.spotify as well would shadow it.
 
     # Images
-    imv # Lightweight
+    # imv comes via programs.imv below, which carries its Ember colors.
     gthumb # Viewer for multiple images
 
     # Best youtube downloader
@@ -151,7 +189,8 @@
     ###
 
     ### debugging utils
-    lnav # Use it to pipe `journalctl | lnav` for syntax highlighing / filtering
+    # lnav comes via ./lnav, which carries its Ember theme. Use it to pipe
+    # `journalctl | lnav` for syntax highlighting / filtering.
     pciutils # For `lspci` command.
     lshw # list hardware. For instance `lshw -c display` shows all graphics cards
     nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
@@ -180,8 +219,8 @@
     nautilus-open-any-terminal
     lingot # Instrument tuner
 
-    # Process management
-    bottom
+    # Process management: btop and bottom both come from ./terminal, which
+    # carries their Ember themes.
 
     # File sharing (Like AirDrop)
     localsend
