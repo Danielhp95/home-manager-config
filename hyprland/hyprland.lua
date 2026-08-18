@@ -93,6 +93,11 @@ hl.monitor({
 -- ─────────────────────────────────────────────────────────────────────────────
 -- General / Misc / Input / Cursor / Decoration / Animations / Binds / dwindle
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Restored on leaving the mouse-cursor submap below, which disables the
+-- timeout while active (hl.dsp.cursor.move warps don't reset Hyprland's own
+-- cursor-activity timer, so the cursor would otherwise vanish mid-use).
+local cursor_inactive_timeout = 5
+
 hl.config({
 	misc = {
 		disable_hyprland_logo = true,
@@ -139,7 +144,7 @@ hl.config({
 	},
 
 	cursor = {
-		inactive_timeout = 5,
+		inactive_timeout = cursor_inactive_timeout,
 		-- Hardware cursor plane on the Intel iGPU: moving the cursor costs
 		-- zero compositor repaints. Software cursors (the old `true`) forced
 		-- a damage+repaint on every cursor move; they're only needed when
@@ -397,19 +402,34 @@ hl.define_submap("resize", function()
 	hl.bind("escape", hl.dsp.submap("reset"))
 end)
 
--- Mouse-cursor submap: vim-style hjkl pointer movement via wlrctl, escape to leave
+-- Mouse-cursor submap: vim-style hjkl pointer movement, escape to leave
 -- u / d scroll the wheel up / down
-hl.bind(mod .. " + M", hl.dsp.submap("move"))
+-- NOTE: movement uses hl.dsp.cursor.move (native warp), not wlrctl -- wlrctl
+-- spawns a whole new Wayland client (connect/negotiate/destroy the
+-- zwlr-virtual-pointer-v1 object) on every single repeat tick, which can't
+-- keep up with hold-to-repeat and silently drops most of the moves.
+hl.bind(mod .. " + M", function()
+	-- Native cursor.move warps don't count as "activity" for cursor:inactive_timeout,
+	-- so disable it while in this submap or the cursor vanishes mid-use.
+	hl.config({ cursor = { inactive_timeout = 0 } })
+	hl.dispatch(hl.dsp.submap("move"))
+end)
 hl.define_submap("move", function()
 	local deltas = {
-		h = "-25 0",
-		j = "0 25",
-		k = "0 -25",
-		l = "25 0",
+		h = { x = -25, y = 0 },
+		j = { x = 0, y = 25 },
+		k = { x = 0, y = -25 },
+		l = { x = 25, y = 0 },
 	}
+	local function nudge(delta)
+		return function()
+			local pos = hl.get_cursor_pos()
+			hl.dispatch(hl.dsp.cursor.move({ x = pos.x + delta.x, y = pos.y + delta.y }))
+		end
+	end
 	for key, dir in pairs(directions) do
-		hl.bind(key, hl.dsp.exec_cmd("wlrctl pointer move " .. deltas[key]), { repeating = true })
-		hl.bind(dir, hl.dsp.exec_cmd("wlrctl pointer move " .. deltas[key]), { repeating = true })
+		hl.bind(key, nudge(deltas[key]), { repeating = true })
+		hl.bind(dir, nudge(deltas[key]), { repeating = true })
 	end
 	-- ydotool wheel units are discrete clicks: REL_WHEEL +y = up.
 	-- (wlrctl scroll is broken on Hyprland 0.55: axis events arrive with value120 = 0,
@@ -421,7 +441,10 @@ hl.define_submap("move", function()
 	hl.bind("return", hl.dsp.exec_cmd("wlrctl pointer click left"))
 	hl.bind("SHIFT + space", hl.dsp.exec_cmd("wlrctl pointer click right"))
 	hl.bind("SHIFT + return", hl.dsp.exec_cmd("wlrctl pointer click right"))
-	hl.bind("escape", hl.dsp.submap("reset"))
+	hl.bind("escape", function()
+		hl.config({ cursor = { inactive_timeout = cursor_inactive_timeout } })
+		hl.dispatch(hl.dsp.submap("reset"))
+	end)
 end)
 
 -- wl-kbptr (vimium-style mouse control)
