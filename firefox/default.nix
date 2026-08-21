@@ -83,30 +83,48 @@ in
         # Required for userChrome.css to be read at all.
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 
-        # Dark chrome only — websites are deliberately NOT forced to dark.
-        # browser.theme.toolbar-theme governs the chrome/toolbar stylesheet
-        # only (PreferenceSheet.cpp's aIsChrome branch), so forcing it to 0
-        # can't leak into page content.
+        # Dark chrome, LIGHT content — websites are rendered exactly as their
+        # authors wrote them, which is the whole point of this block.
         #
-        # content-theme and content-override are a different story: per
-        # PreferenceSheet::Prefs::Load, content-override != {0,1} falls
-        # through to ThemeDerivedColorSchemeForContent(), which then reads
-        # content-theme — and *that* pref governs the color-scheme used for
-        # actual web content (prefers-color-scheme results, plus default
-        # scrollbar/form-widget rendering on unstyled pages), not just
-        # about:* pages as the naming suggests. Setting content-theme = 0
-        # here previously forced every site's content to dark unconditionally
-        # (a real leak — this contradicted the comment that used to be here).
-        # Both must be left at 2/non-0-1 so the fallback reaches
-        # LookAndFeel::SystemColorScheme(), i.e. the real OS light/dark
-        # preference. about:* pages still render dark in practice since the
-        # desktop is dark, but real websites now track the OS setting instead
-        # of being force-darkened. The white pre-render flash is killed in
-        # userChrome.css by painting the tabpanel backdrop, which pages never
-        # see.
+        # The trap: "let content follow the OS" is not the same as "don't touch
+        # page colours". This desktop is dark (gtk-application-prefer-dark-theme
+        # = 1, WhiteSur-Dark-orange), so "follow the OS" means Firefox reports
+        # `prefers-color-scheme: dark` to every site, every site with a dark
+        # theme flips itself dark, and the UA's dark colours apply to anything
+        # the page leaves unstyled. That is page recolouring, just outsourced.
+        #
+        # Measured on Firefox 154 in this exact GTK environment (fresh profiles
+        # under Xvfb, one pref changed at a time, screenshotted):
+        #   content-override = 1  ->  content is Light. Sites keep their own
+        #                             colours; dark-theme sites stay light.
+        #   content-override = 0  ->  content is Dark.
+        #   content-override = 2  ->  content follows the OS, i.e. dark here.
+        #                             This is what used to be set, and it is
+        #                             what was still recolouring pages.
+        #   browser.theme.content-theme = 0 / 1 / 2  ->  no effect on content
+        #                             whatsoever once content-override is set;
+        #                             Firefox also rewrites this pref itself
+        #                             from the active theme. It is kept pinned
+        #                             only so a value dropped from user.js
+        #                             can't linger in prefs.js (prefs.js is
+        #                             never pruned), not because it does
+        #                             anything.
+        #   browser.theme.toolbar-theme = 0  ->  chrome only, confirmed: the
+        #                             toolbars/tabs stay dark under every
+        #                             combination above.
+        # Do not re-derive these from Firefox source comments or web docs —
+        # both disagree with the measurement. Re-measure instead.
+        #
+        # Known cost of content-override = 1: Firefox's own in-content pages
+        # (about:preferences, about:config, the pdf.js viewer, reader mode)
+        # are content documents too, so they render light as well. The browser
+        # chrome around them stays dark. That is the trade for websites never
+        # being touched; flip this back to 2 to undo it. Dark Reader is the
+        # per-site opt-in for pages you *want* darkened — it is enabled by
+        # default in its own synced settings, which nix does not control.
         "browser.theme.toolbar-theme" = 0;
         "browser.theme.content-theme" = 2;
-        "layout.css.prefers-color-scheme.content-override" = 2;
+        "layout.css.prefers-color-scheme.content-override" = 1;
 
         # browser.display.background_color is the *document canvas* — the
         # colour an unstyled page paints itself with, page content and not
