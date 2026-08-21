@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, config, ... }:
 
 let
   p = (import ../palette.nix).hash;
@@ -61,6 +61,27 @@ let
 
   plugins = with pkgs.tmuxPlugins; [ resurrect continuum tmux-floax ];
 
+  # continuum drives its autosave *entirely* from the `#(continuum_save.sh)`
+  # interpolation it prepends to status-right, so taking that off the render
+  # path means something else has to call the script — status-daemon.nu does,
+  # once a minute. The script keeps doing its own @continuum-save-interval
+  # check, so the save cadence is still 5 minutes.
+  continuumSave =
+    "${pkgs.tmuxPlugins.continuum}/share/tmux-plugins/continuum/scripts/continuum_save.sh";
+
+  # The one process that now computes the bar's dynamic segments. See the
+  # header of status-daemon.nu for the measurements that motivated it.
+  #
+  # writeNuBin runs it under `nu --no-config-file`, so none of the shell's
+  # own startup (starship, atuin, zoxide, television) is in the picture —
+  # this is nushell the scripting language, not the interactive shell from
+  # ../terminal/nushell.nix. The tmux binary is handed over as argv rather
+  # than found on PATH, so the feeder always drives the same tmux the rest
+  # of this module was built against.
+  statusDaemon = pkgs.writers.writeNuBin "tmux-status-daemon" (
+    builtins.readFile ./status-daemon.nu
+  );
+
   # Loaded last, and in the background. `programs.tmux.plugins` would emit a
   # bare `run-shell <plugin>.tmux` per plugin *above* extraConfig, which gets
   # both of those wrong:
@@ -70,7 +91,10 @@ let
   #    it, overwrote the whole option and silently disabled the 5-minute
   #    auto-save. (Symptom: @continuum-save-last-timestamp frozen at the
   #    server's start time and save files days old.) Loading after the bar is
-  #    built keeps the interpolation.
+  #    built keeps the interpolation — which the feeder chained on below then
+  #    strips deliberately, having taken over calling the save script itself.
+  #    Same reason the strip can't just live in tmux.conf: continuum has to
+  #    have run first, and it runs from here.
   #
   # 2. Cost. Each entrypoint is a bash script that talks back to the server
   #    over dozens of synchronous show-option/set-option round-trips: ~236ms
@@ -82,7 +106,7 @@ let
   # which resurrect only sets when it itself loads.
   loadPlugins = ''
 
-    run-shell -b '${lib.concatMapStringsSep "; " (pl: pl.rtp) plugins}'
+    run-shell -b '${lib.concatMapStringsSep "; " (pl: pl.rtp) plugins}; ${statusDaemon}/bin/tmux-status-daemon #{socket_path} ${continuumSave} ${lib.getExe config.programs.tmux.package}'
   '';
 in
 {
