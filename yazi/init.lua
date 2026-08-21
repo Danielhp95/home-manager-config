@@ -41,6 +41,11 @@ require("full-border"):setup({ type = ui.Border.ROUNDED })
 -- git status signs in the file list (fetchers registered in yazi.toml)
 require("git"):setup()
 
+-- MTP phones / network shares (M p, g m, M u, ...). setup() is mandatory, not
+-- just for options: it seeds the plugin's gvfs root mountpoint state, and the
+-- jump/unmount paths concatenate that value unguarded.
+require("gvfs"):setup()
+
 -- bookmarks
 require("yamb"):setup({
 	bookmarks = {},

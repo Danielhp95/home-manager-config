@@ -105,10 +105,17 @@ in
         on = [ "<C-g>" ];
         run = "plugin tv text";
       }
-      # Mounting: everything lives under the M prefix (which-key menu).
+      # Mounting: every mount action lives under the M prefix (which-key menu),
+      # and nothing else does. M is the only free prefix in yazi's preset keymap
+      # — g (goto) and m (linemode) are both taken, and the g c / m p bindings
+      # here already shadow theirs — so jump-to-device moved off g m, and
+      # jump-back off the ` ` chord, to keep the whole set in one menu.
+      #
       # M m opens the classic mount.yazi UI (udisks disks/partitions), so the
       # pre-gvfs muscle memory of "M then m" still lands there; phones and
-      # other GVfs devices are on M p.
+      # other GVfs devices are on M p. Order matters: the which-key menu lists
+      # candidates in binding order, so it reads mount, navigate, unmount,
+      # manage rather than alphabetical scramble.
       {
         desc = "Mount disks/partitions (udisks)";
         on = [
@@ -124,6 +131,22 @@ in
           "p"
         ];
         run = "plugin gvfs -- select-then-mount --jump";
+      }
+      {
+        desc = "Jump to a mounted device";
+        on = [
+          "M"
+          "j"
+        ];
+        run = "plugin gvfs -- jump-to-device";
+      }
+      {
+        desc = "Back to where you were before the device";
+        on = [
+          "M"
+          "b"
+        ];
+        run = "plugin gvfs -- jump-back-prev-cwd";
       }
       {
         desc = "Unmount/eject device";
@@ -164,22 +187,6 @@ in
           "r"
         ];
         run = "plugin gvfs -- remove-mount";
-      }
-      {
-        desc = "Jump to a mounted device";
-        on = [
-          "g"
-          "m"
-        ];
-        run = "plugin gvfs -- jump-to-device";
-      }
-      {
-        desc = "Jump back to where you were before the device";
-        on = [
-          "`"
-          "`"
-        ];
-        run = "plugin gvfs -- jump-back-prev-cwd";
       }
       {
         desc = "show help";
@@ -713,5 +720,10 @@ in
     lazygit # g l binding
     trash-cli # required by restore.yazi
     mediainfo # required by mediainfo.yazi (ffmpeg comes from home.nix)
+    # `gio`, which every gvfs.yazi action shells out to (it aborts with
+    # "gio not found" without it). services.gvfs only installs the daemons
+    # and backends; the CLI lives in glib, which nothing else here pulls
+    # into PATH.
+    glib
   ];
 }
