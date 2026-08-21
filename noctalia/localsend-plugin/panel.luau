@@ -13,8 +13,9 @@ which matters because prepare-upload blocks until the receiver taps Accept.
 
 Conventions (same as the dart plugin):
 - Colors are palette-role tokens so the wallpaper-derived theme applies.
-- Every on* prop names a global; per-row handlers are closures installed into
-  the script env by cbn().
+- Handler props take closures directly: the reconciler moves any
+  function-valued prop into its own handler table, keyed by the node's path,
+  so per-row handlers need no global names of their own.
 ]]
 
 local DEVICE_GLYPH = {
@@ -39,13 +40,6 @@ local lastFingerprint = nil -- device of the in-flight send, for a PIN retry
 local pinGen = 0 -- bumped to reseed the (uncontrolled) PIN input
 
 local render -- fwd decl
-
-local env = getfenv()
-local function cbn(prefix, i, fn)
-	local name = "cb_" .. prefix .. "_" .. i
-	env[name] = fn
-	return name
-end
 
 -- The nonce makes every set() distinct, so the service's watcher always fires
 -- even when the same command repeats.
@@ -103,11 +97,25 @@ local function header()
 			tooltip = "Rescan for devices",
 			onClick = "onRescan",
 		}),
+		-- The panel is persistent (see plugin.toml), so neither an outside
+		-- click nor opening another panel dismisses it; without this button the
+		-- bar widget's toggle would be the only way to put it away.
+		ui.button({
+			glyph = "x",
+			variant = "ghost",
+			controlSize = "sm",
+			tooltip = "Close",
+			onClick = "onCloseClicked",
+		}),
 	})
 end
 
 function onRescan()
 	cmd({ op = "discover" })
+end
+
+function onCloseClicked()
+	panel.close()
 end
 
 -- ═══════════════════════════════════════════════════════ input buttons ═══
@@ -192,9 +200,9 @@ local function stagedRow(f, i)
 			controlSize = "sm",
 			enabled = not busy(),
 			tooltip = "Remove from the queue",
-			onClick = cbn("unstage", i, function()
+			onClick = function()
 				cmd({ op = "unstage", index = i })
-			end),
+			end,
 		}),
 	})
 end
@@ -218,7 +226,7 @@ end
 
 -- ═════════════════════════════════════════════════════════════ devices ═══
 
-local function deviceRow(d, i)
+local function deviceRow(d)
 	local glyph = DEVICE_GLYPH[d.deviceType or ""] or "device-desktop"
 	local sub = tostring(d.ip or "?")
 	if not d.online then
@@ -243,9 +251,9 @@ local function deviceRow(d, i)
 			variant = "ghost",
 			controlSize = "sm",
 			tooltip = d.fav and "Unpin this device" or "Pin this device (kept while offline)",
-			onClick = cbn("fav", i, function()
+			onClick = function()
 				cmd({ op = "fav", fingerprint = d.fingerprint, on = not d.fav })
-			end),
+			end,
 		}),
 		ui.button({
 			text = "Send",
@@ -254,10 +262,10 @@ local function deviceRow(d, i)
 			controlSize = "sm",
 			enabled = (#staged > 0) and not busy(),
 			tooltip = #staged == 0 and "Stage some files first" or ("Send to " .. tostring(d.alias)),
-			onClick = cbn("send", i, function()
+			onClick = function()
 				lastFingerprint = d.fingerprint
 				cmd({ op = "send", fingerprint = d.fingerprint })
-			end),
+			end,
 		}),
 	}
 
@@ -273,8 +281,8 @@ local function deviceSection()
 		})
 	end
 	local rows = {}
-	for i, d in ipairs(devices) do
-		rows[#rows + 1] = deviceRow(d, i)
+	for _, d in ipairs(devices) do
+		rows[#rows + 1] = deviceRow(d)
 	end
 	return ui.scroll({ flexGrow = 1, gap = 2 }, rows)
 end

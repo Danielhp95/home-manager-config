@@ -54,6 +54,11 @@ local CANCEL_PATH = dataDir .. "/cancel.flag"
 
 -- Single-quote for /bin/sh. Every command here is assembled as a string and
 -- run through sh -c, so anything that came from disk or the user is quoted.
+-- POSIX single-quoting, still needed by every runStream caller: runStream takes
+-- a command *string* only (noctalia's runAsync is the one that accepts an argv
+-- table), and stagePipeline genuinely needs a shell anyway for its redirect and
+-- cleanup. Anything spawned through runAsync should use argv instead - see
+-- discover().
 local function shq(s)
 	return "'" .. tostring(s):gsub("'", "'\\''") .. "'"
 end
@@ -164,24 +169,28 @@ local function discover()
 	scanning = true
 	noctalia.state.set("scanning", true)
 
-	local cmd = table.concat({
-		shq(NU),
+	-- An argv table, not a shell string: this spawn needs no shell, and `alias`
+	-- is a user setting that may well contain a space or a quote. Only runAsync
+	-- takes argv - runStream is string-only, which is why the send/stage paths
+	-- below still build a quoted command line.
+	local argv = {
+		NU,
 		"--no-config-file",
-		shq(SCRIPT),
+		SCRIPT,
 		"discover",
 		"--socat",
-		shq(SOCAT),
+		SOCAT,
 		"--alias",
-		shq(ALIAS),
+		ALIAS,
 		"--fingerprint",
-		shq(FINGERPRINT),
+		FINGERPRINT,
 		"--window",
 		tostring(DISCOVER_MS),
-	}, " ")
+	}
 
 	-- The script sleeps for the discovery window, so the timeout has to clear
 	-- it with room for nu startup and socat teardown.
-	local ok = noctalia.runAsync(cmd, function(res)
+	local ok = noctalia.runAsync(argv, function(res)
 		scanning = false
 		noctalia.state.set("scanning", false)
 		if res.timedOut then

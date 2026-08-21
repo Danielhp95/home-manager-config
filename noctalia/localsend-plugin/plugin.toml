@@ -9,7 +9,11 @@
 id = "dani/localsend"
 name = "LocalSend"
 version = "0.1.0"
-plugin_api = 8
+# See dart-plugin/plugin.toml for what this number does. It was 8 because
+# dismiss_on_outside_click below is gated at 8; 28 is the current ceiling
+# (noctalia 2026-08-19) and keeps every manifest key available.
+# CAVEAT: 28 landed upstream 2026-08-18 — an older noctalia refuses to load this.
+plugin_api = 28
 author = "dani"
 license = "MIT"
 icon = "send"
@@ -95,6 +99,15 @@ position = "top_center"
 # steals focus from this panel, and a normal outside-click dismissal would
 # close the panel out from under the transfer before you can drop anything.
 dismiss_on_outside_click = false
+# Persistent panels live outside noctalia's single active-panel slot: they get
+# their own layer surface, and opening any other panel (launcher, control
+# centre, another plugin) no longer closes this one. That is what a transfer
+# panel wants - prepare-upload blocks until the receiver taps Accept, and the
+# ripdrag drop window is a separate surface entirely. Requires
+# dismiss_on_outside_click = false and placement = "floating" (both above), and
+# rules out keyboard_focus = "exclusive". Nothing dismisses it implicitly any
+# more, hence the explicit close button in panel.luau's header.
+persistent = true
 
 [[service]]
 id = "agent"
