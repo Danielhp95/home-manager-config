@@ -6,13 +6,17 @@
 let
   p = (import ../palette.nix).hash;
 
-  # https://github.com/yazi-rs/plugins — keep this pin roughly in sync with the
-  # yazi version from nixpkgs (currently 26.5.6).
+  # https://github.com/yazi-rs/plugins — this pin MUST track the yazi version
+  # from nixpkgs (currently 26.8.15): the plugin API is versioned, and a plugin
+  # built for an older yazi fails at runtime, not at build time. 26.8.15 reworked
+  # the fetcher API (yazi #4235) — fetchers now return a `ya.co(...)` coroutine
+  # instead of a boolean, so the older git.yazi died with
+  # "error converting lua boolean to function" on every fetch.
   officialPlugins = pkgs.fetchFromGitHub {
     owner = "yazi-rs";
     repo = "plugins";
-    rev = "8cd50c622898d3ace3ca821f540241965308289a";
-    sha256 = "sha256-f4y952sUF/lrHMX6enQts/obk2DeatqAcaVHfjTD65k=";
+    rev = "6f26ae04ba2e4763faada6a7997ae8b57c158cdb";
+    sha256 = "sha256-pySI+LxiGmGEp/cvVXtuOuNzvy3c2QC6zuoTjActPbw=";
   };
 in
 {
@@ -49,14 +53,14 @@ in
       yamb = pkgs.fetchFromGitHub {
         owner = "h-hg";
         repo = "yamb.yazi";
-        rev = "5f2e22e784dd5fc830cd85885a6d1d6690b52298";
-        hash = "sha256-3Cp3+v0laSVsDdTyG26EOh2xt18ER8P9Nla9vtRuj9k=";
+        rev = "971b85862a1a2c5b8133da88b0dd4569adff296e";
+        hash = "sha256-pbwKj4NuIiBMyuRVtbOYWBREZbyg1mKLoCWIAkxrygc=";
       };
       restore = pkgs.fetchFromGitHub {
         owner = "boydaihungst";
         repo = "restore.yazi";
-        rev = "0e0870460b9b74c5ae98b7f96c7c26a9a274ce6d";
-        hash = "sha256-rDsyMF5IEBHx+fJ0oYTCCQAlTSquUcOkFLC4Lmbuz6k=";
+        rev = "7bfcfcbda078b7e51d1ff9a62db9c654a3952fa4";
+        hash = "sha256-pmyS1rU5C6U9LloGoDFB8s6GwoMqG1Jve5OFooI64tU=";
       };
       # Thumbnail + metadata (ISO, aperture, codec, bitrate, ...) preview for
       # images/videos/audio. Needs mediainfo, ffmpeg and imagemagick.
@@ -73,8 +77,8 @@ in
       gvfs = pkgs.fetchFromGitHub {
         owner = "boydaihungst";
         repo = "gvfs.yazi";
-        rev = "c5a0bb924eceeeb8b44bfc00aba0a97ba0287fa3";
-        hash = "sha256-hSHEN/F4uc1FFScB5lLRAKryLwP+O7I9vgEgobGbQyw=";
+        rev = "ebdb87c9783d302a0129911c31c0ae3eb27a5c9f";
+        hash = "sha256-0vW2LBv0r3N91wy5ajra8b0jPeLJ89iE0kP/meTVc7U=";
       };
     };
     keymap.mgr.prepend_keymap = lib.flatten [
@@ -516,15 +520,20 @@ in
         };
       };
 
+      # v26.8.15 made the help menu a command palette (yazi #4074) and renamed
+      # its theme keys with it: `on` -> `chord` (the key column, 20 cells wide),
+      # `run` + `desc` collapsed into a single `action` (the row prints the
+      # description, falling back to the raw command), and `footer` is gone —
+      # the palette's filter line is an Input, styled by [input] above. The old
+      # names were silently ignored, so help rendered on preset colors.
       help = {
-        on.fg = p.accent;
-        run.fg = p.sage;
-        desc.fg = p.fgDim;
+        border.fg = p.accentDim;
+        chord.fg = p.accent;
+        action.fg = p.fg;
         hovered = {
           bg = p.surface;
           bold = true;
         };
-        footer.fg = p.fgDim;
       };
 
       # First match wins; `is` conditions go before the broad mime globs.
