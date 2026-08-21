@@ -59,6 +59,8 @@ in
     ./terminal/television.nix
     ./terminal/nushell.nix
     ./terminal/iris.nix
+
+    ./claude_code
     ./kitty
     ./ghostty
     ./ipython
@@ -227,15 +229,6 @@ in
 
     bluetui # Bluetooth tui
   ];
-
-  programs.claude-code = {
-    enable = true;
-    # settings = {
-    #   # Strip Anthropic/Claude attribution from git commits and PRs
-    #   # (no "🤖 Generated with Claude Code" footer, no Co-Authored-By trailer).
-    #   includeCoAuthoredBy = false;
-    # };
-  };
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
