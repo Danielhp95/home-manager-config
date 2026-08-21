@@ -255,7 +255,39 @@ in
     # on a derivation is import-from-derivation, which drags a build into
     # every evaluation of this flake. Sourcing a store path costs one cached
     # file read per shell and keeps eval pure.
-    zsh.initContent = lib.mkOrder 100 "source ${atuinPtyProxyZsh}";
+    #
+    # The wrapper around the source is a tty guard. The snippet's own re-exec
+    # test is `ACTIVE unset || $TMUX changed` — it is blind to a change of
+    # *terminal*. A shell started on a new tty under the same $TMUX (nvim's
+    # `:terminal`, script(1), any nested pty) therefore skips the exec but
+    # still inherits ATUIN_PTY_PROXY_SOCKET, which now names a proxy owning a
+    # *different* terminal. atuin's Ctrl-R attaches to that foreign proxy and
+    # replays its shadow vt100 into this one: the outer tmux status bar, the
+    # nvim tabline and a stack of old prompts painted in as text, and no
+    # search UI at all. Verified 2026-08-20 by A/B on the socket alone.
+    #
+    # Dropping the stale socket rather than re-exec'ing a proxy for the new tty
+    # is deliberate: a proxy per `:terminal` costs a process and a thrown-away
+    # .zshrc pass on each one. Without the socket atuin just runs unproxied,
+    # which is all it could ever do there anyway.
+    #
+    # Clearing ATUIN_PTY_PROXY_TTY *before* the source and re-exporting it
+    # after is load-bearing, and is why the guard cannot simply sit after the
+    # source: when the snippet does exec (a new tmux pane), the proxy's child
+    # would otherwise inherit this shell's tty, see a mismatch, and throw away
+    # its own brand-new and entirely legitimate socket. Only a shell that
+    # reaches the last line without exec'ing owns the socket it is holding.
+    zsh.initContent = lib.mkOrder 100 ''
+      _atuin_pty_proxy_owner_tty=''${ATUIN_PTY_PROXY_TTY:-}
+      unset ATUIN_PTY_PROXY_TTY
+      if [[ -n ''${ATUIN_PTY_PROXY_SOCKET:-} && -n $_atuin_pty_proxy_owner_tty \
+            && $_atuin_pty_proxy_owner_tty != ''${TTY:-$(tty)} ]]; then
+        unset ATUIN_PTY_PROXY_SOCKET
+      fi
+      unset _atuin_pty_proxy_owner_tty
+      source ${atuinPtyProxyZsh}
+      export ATUIN_PTY_PROXY_TTY=''${TTY:-$(tty)}
+    '';
     # `ls` replacement
     eza.enable = true;
     # Smart cd (also feeds yazi's builtin z/Z jumps)
