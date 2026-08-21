@@ -5,6 +5,21 @@ let
   # copies; glyph vocabulary (, 󰊢, 󰥔) and the pill/slab powerline language
   # (E0B6 open, E0B4 close, E0B0 flame-trail arrows) are shared.
   p = (import ../palette.nix).hash;
+
+  # One quiet graphite pill per language module. Icons are nf-md where the
+  # set has the language, dev/seti otherwise — real glyphs in this file, so
+  # any edit here needs a codepoint grep-verify afterwards (BMP PUA glyphs
+  # have been silently dropped by tooling before).
+  langPill = color: symbol: {
+    format = "[](fg:bg1)[$symbol($version)](fg:${color} bg:bg1)[](fg:bg1) ";
+    inherit symbol;
+  };
+  # Same pill without $version: starship only probes a version when the
+  # format references it, and these probes cost a JVM start.
+  langPillIconOnly = color: symbol: {
+    format = "[](fg:bg1)[$symbol](fg:${color} bg:bg1)[](fg:bg1) ";
+    inherit symbol;
+  };
 in
 {
   programs.starship = {
@@ -41,8 +56,9 @@ in
         "$username$hostname"
         + "$directory"
         + "$git_branch$git_commit$git_state$git_status"
-        + "$nix_shell$direnv"
-        + "$python$nodejs$rust$lua"
+        + "$nix_shell$direnv\${custom.nix}"
+        + "$python$nodejs$rust$lua$golang$java$kotlin$c$cpp$dotnet"
+        + "$php$ruby$swift$dart$scala$elixir$haskell$julia$zig"
         + "$status"
         + "$cmd_duration$jobs$battery$time"
         + "\n$character";
@@ -149,24 +165,40 @@ in
         unloaded_msg = "env✗";
       };
 
+      # Nix project outside a shell — flake/shell/default.nix or any .nix
+      # file. Detection-only custom module: no command, so no fork per
+      # prompt (measured <1ms). Same steel snowflake as nix_shell; inside
+      # `nix develop` both show, and the shell pill carries the state.
+      custom.nix = {
+        detect_files = [ "flake.nix" "shell.nix" "default.nix" ];
+        detect_extensions = [ "nix" ];
+        symbol = "󱄅 ";
+        format = "[](fg:bg1)[$symbol](fg:steel bg:bg1)[](fg:bg1) ";
+      };
+
       # Languages — quiet graphite pills, icon-first; they're context, not
-      # heroes
-      python = {
-        format = "[](fg:bg1)[$symbol($version)](fg:sage bg:bg1)[](fg:bg1) ";
-        symbol = " ";
-      };
-      nodejs = {
-        format = "[](fg:bg1)[$symbol($version)](fg:olive bg:bg1)[](fg:bg1) ";
-        symbol = " ";
-      };
-      rust = {
-        format = "[](fg:bg1)[$symbol($version)](fg:mauve bg:bg1)[](fg:bg1) ";
-        symbol = " ";
-      };
-      lua = {
-        format = "[](fg:bg1)[$symbol($version)](fg:steel bg:bg1)[](fg:bg1) ";
-        symbol = " ";
-      };
+      # heroes. One module per detected project, so the roster can be wide
+      # without the prompt ever growing. JVM languages are icon-only (see
+      # langPillIconOnly).
+      python = langPill "sage" "󰌠 ";
+      nodejs = langPill "olive" "󰎙 ";
+      rust = langPill "mauve" "󱘗 ";
+      lua = langPill "steel" "󰢱 ";
+      golang = langPill "sage" "󰟓 ";
+      java = langPillIconOnly "gold" "󰬷 ";
+      kotlin = langPillIconOnly "mauve" "󱈙 ";
+      c = langPill "olive" "󰙱 ";
+      cpp = langPill "olive" "󰙲 ";
+      dotnet = langPill "mauve" "󰌛 ";
+      php = langPill "mauve" "󰌟 ";
+      ruby = langPill "ember_dim" "󰴭 ";
+      swift = langPill "steel" "󰛥 ";
+      dart = langPill "sage" " ";
+      scala = langPillIconOnly "ember_dim" " ";
+      elixir = langPill "mauve" " ";
+      haskell = langPill "mauve" "󰲒 ";
+      julia = langPill "sage" " ";
+      zig = langPill "gold" " ";
 
       # Background jobs — small mauve pill. (No sudo pill: the
       # module's `sudo -n` check costs ~18ms on every prompt draw.)
