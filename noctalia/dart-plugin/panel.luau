@@ -7,7 +7,9 @@ run cards. Each card collapses to [state dot | id | open | copy | commit |
 project | uptime | created (local tz) | state pill | chevron] plus one row of
 tag chips; expanding
 it adds the full wrapped tag rows, an info line (clusters / updated), the
-description, a tag editor, and state-gated action buttons.
+description, a tag editor, and state-gated action buttons. Right-clicking any
+header button opens the same actions as a native context menu, so the common
+ones are reachable without expanding the card.
 
 Data flow: this panel never talks to `dart run filter` itself — service.luau
 polls and publishes "runs"/"error"/"busy" via noctalia.state, and the panel
@@ -17,10 +19,17 @@ noctalia.runAsync, then request a list refresh.
 
 Conventions:
 - All colors are palette-role tokens so the wallpaper-derived theme applies.
-- Every onClick names a global function; per-row handlers are closures
-  assigned into the script env by cbn() (the notes-plugin idiom).
-- Anything interpolated into a shell command is validated first (run ids
-  must be alphanumeric-with-dashes, tags must not contain quotes).
+- Handler props (onClick/onSubmit/onChange) take closures directly: the
+  reconciler moves any function-valued prop into its own handler table and
+  names it after the node's path, so per-row handlers need no global names.
+  Cards carry key = "run-<id>", which is what makes those paths stable.
+  panel.openContextMenu is the exception - its onActivate is still dispatched
+  by global name, hence onRunMenu() at the bottom of this file.
+- Run mutations spawn via argv tables (noctalia.runAsync{...}), so no value
+  is ever shell-quoted by hand. Two paths still build a shell command line
+  and validate their input first: openInBrowser (BROWSER may itself carry
+  arguments) and the filter bar, whose text is free-form `dart run filter`
+  args that only a shell can split.
 ]]
 
 -- ═══════════════════════════════════════════════════ config & constants ═══
@@ -98,19 +107,6 @@ local filterGen = 0 -- bumped to re-key (reseed) the filter input
 
 local render -- fwd decl; defined in the render section
 
--- ═══════════════════════════════════════════════════ callback plumbing ═══
-
--- The reconciler dispatches onClick/onSubmit by GLOBAL function name.
--- Per-row handlers therefore need distinct names: cbn assigns the closure
--- into the script environment (which is what lua_getglobal reads) and
--- returns its name. Re-renders overwrite the same names with fresh closures.
-local env = getfenv()
-local function cbn(prefix, i, fn)
-	local name = "cb_" .. prefix .. "_" .. i
-	env[name] = fn
-	return name
-end
-
 -- Ask service.luau for a re-poll. The nonce makes every set() distinct so
 -- the state watcher always fires.
 local function requestRefresh()
@@ -137,6 +133,17 @@ local function describe(run)
 		end
 	end
 	return "(no description)"
+end
+
+-- The context menu carries only a run id (see openRunMenu), so items that need
+-- more of the run than its id look it up in the current list.
+local function runById(id)
+	for _, r in ipairs(runs) do
+		if r.id == id then
+			return r
+		end
+	end
+	return nil
 end
 
 -- Tags worth showing as chips (the description= tag is prose, not a tag).
@@ -269,39 +276,36 @@ local function openLogs(id)
 	if not validRunId(id) then
 		return
 	end
-	noctalia.runAsync(
-		'kitty --hold -e sh -c "mkdir -p /tmp/dart-logs && cd /tmp/dart-logs && PATH=\\$PATH:'
-			.. LOGCLI_DIR
-			.. " "
-			.. DART
-			.. " logs -r "
-			.. id
-			.. " -l 2000 && yazi "
-			.. id
-			.. '"'
-	)
+	-- The outer spawn is an argv table, so nothing here passes through a shell
+	-- to be quoted. The inner `sh -c` still needs a shell (&&, cd), but it takes
+	-- the dart path and run id as $1/$2 instead of interpolating them - which is
+	-- what forced the doubly-escaped \\$PATH in the old single-string form.
+	local script = "mkdir -p /tmp/dart-logs && cd /tmp/dart-logs && PATH=$PATH:"
+		.. LOGCLI_DIR
+		.. ' && "$1" logs -r "$2" -l 2000 && yazi "$2"'
+	noctalia.runAsync({ "kitty", "--hold", "-e", "sh", "-c", script, "sh", DART, id })
 end
 
 -- Tag mutations:
---   add/delete: `dart tag <action> --run-ids <id> --tag '<tag>'`
---   replace:    `dart tag replace --run-ids <id> --old-tag '<old>' --new-tag '<new>'`
+--   add/delete: dart tag <action> --run-ids <id> --tag <tag>
+--   replace:    dart tag replace --run-ids <id> --old-tag <old> --new-tag <new>
 -- One tag per call (the CLI has no batch form), toast the outcome, re-poll.
 local function tagAction(action, id, tag, oldTag)
 	tag = noctalia.string.trim(tag or "")
 	if tag == "" then
 		return
 	end
-	if tag:find("'", 1, true) or tag:match("\n") or (oldTag and oldTag:find("'", 1, true)) then
-		noctalia.notifyError("dart tag", "tag must not contain quotes")
-		return
-	end
-	local cmd
+	-- No quote/newline guard: argv hands each value to execve as its own
+	-- element, so a tag containing ' or " or a newline is passed through
+	-- verbatim. (filterByTag still rejects quotes - the *filter* path does go
+	-- through a shell, so such a tag is creatable here but not searchable.)
+	local argv
 	if action == "replace" then
-		cmd = DART .. " tag replace --run-ids " .. id .. " --old-tag '" .. oldTag .. "' --new-tag '" .. tag .. "'"
+		argv = { DART, "tag", "replace", "--run-ids", id, "--old-tag", oldTag, "--new-tag", tag }
 	else
-		cmd = DART .. " tag " .. action .. " --run-ids " .. id .. " --tag '" .. tag .. "'"
+		argv = { DART, "tag", action, "--run-ids", id, "--tag", tag }
 	end
-	noctalia.runAsync(cmd, function(res)
+	noctalia.runAsync(argv, function(res)
 		if res.timedOut or res.exitCode ~= 0 then
 			noctalia.notifyError("dart tag " .. action .. " failed", res.stderr:sub(-300))
 		else
@@ -323,7 +327,7 @@ local function runAction(action, id)
 	end
 	actionBusy, pending = id, nil
 	render()
-	local ok = noctalia.runAsync(DART .. " run " .. action .. " " .. id, function(res)
+	local ok = noctalia.runAsync({ DART, "run", action, id }, function(res)
 		actionBusy = nil
 		if res.timedOut or res.exitCode ~= 0 then
 			noctalia.notifyError(
@@ -368,7 +372,7 @@ end
 -- One tag chip -> (node, estimatedWidth). Chips are compact BUTTONS because
 -- rows/labels can't take onClick. Normal mode: click searches for the tag.
 -- Edit mode: [tag -> load into the input for replace] [x -> delete].
-local function tagChip(tag, i, j, editing, runId)
+local function tagChip(tag, editing, runId)
 	local disp = #tag > CHIP_MAX_CHARS and (tag:sub(1, CHIP_MAX_CHARS - 3) .. "...") or tag
 	local textWidth = math.min(#disp * CHIP_PX_PER_CHAR, 250)
 	if editing then
@@ -380,10 +384,10 @@ local function tagChip(tag, i, j, editing, runId)
 				variant = "outline",
 				selected = (editingOldTag == tag),
 				tooltip = "Edit tag (loads it into the input; Enter replaces)",
-				onClick = cbn("tagedit" .. j, i, function()
+				onClick = function()
 					editingOldTag = tag
 					render()
-				end),
+				end,
 			}),
 			ui.button({
 				glyph = "x",
@@ -391,9 +395,9 @@ local function tagChip(tag, i, j, editing, runId)
 				height = 22,
 				variant = "ghost",
 				tooltip = "Delete tag '" .. tag .. "'",
-				onClick = cbn("tagdel" .. j, i, function()
+				onClick = function()
 					tagAction("delete", runId, tag)
-				end),
+				end,
 			}),
 		}),
 			textWidth + 72
@@ -404,9 +408,9 @@ local function tagChip(tag, i, j, editing, runId)
 		height = 22,
 		variant = "secondary",
 		tooltip = "Search: --tag-ss '" .. tag .. "'",
-		onClick = cbn("tag" .. j, i, function()
+		onClick = function()
 			filterByTag(tag)
-		end),
+		end,
 	}),
 		textWidth + 26
 end
@@ -415,15 +419,15 @@ end
 -- expose it), so chips are packed into rows by estimated pixel width.
 -- Collapsed cards keep only the first row plus a "+n" overflow label;
 -- expanded cards show every row.
-local function chipRowNodes(run, i, expanded)
+local function chipRowNodes(run, expanded)
 	local tags = chipTags(run)
 	if #tags == 0 then
 		return {}
 	end
 	local editing = (editTagsId == run.id)
 	local rows, cur, curW, placed = {}, {}, 0, 0
-	for j, t in ipairs(tags) do
-		local node, w = tagChip(t, i, j, editing, run.id)
+	for _, t in ipairs(tags) do
+		local node, w = tagChip(t, editing, run.id)
 		if curW + w > CHIP_ROW_BUDGET and #cur > 0 then
 			if not expanded then
 				break
@@ -446,7 +450,7 @@ end
 
 -- Copyable commit chip; nil when the run carries no commit. The chip shows the
 -- usual 12-char prefix, the clipboard gets the full hash.
-local function commitButton(run, i)
+local function commitButton(run)
 	if not run.git_commit or run.git_commit == "" then
 		return nil
 	end
@@ -458,10 +462,44 @@ local function commitButton(run, i)
 		height = 22,
 		variant = "ghost",
 		tooltip = "Copy full commit hash",
-		onClick = cbn("copycommit", i, function()
+		onClick = function()
 			copyToClipboard("Copied commit", run.git_commit)
-		end),
+		end,
 	})
+end
+
+-- Per-run context menu, opened by right-clicking any of the card's header
+-- buttons. Three constraints from the host shape this:
+--   * openContextMenu needs a live pointer serial, and only onRightClick
+--     carries one - an onClick handler would silently get `false` back. So
+--     there is no left-click "..." button; right-click is the whole gesture.
+--   * onActivate is dispatched by GLOBAL name (unlike the render tree's
+--     handler props, which take closures), so the run id travels in `context`
+--     rather than being captured - see onRunMenu() at the bottom.
+--   * Items are label + enabled only; the menu has no icons or shortcuts.
+-- `enabled` must be a real boolean, hence the `== true` on the CANCELABLE
+-- lookup, which is otherwise nil for a state that cannot be cancelled.
+local function openRunMenu(run)
+	local free = (actionBusy == nil)
+	local items = {
+		{ kind = "header", label = run.id },
+		{ kind = "item", id = "open", label = "Open in browser" },
+		{ kind = "item", id = "copy", label = "Copy run id" },
+	}
+	if run.git_commit and run.git_commit ~= "" then
+		items[#items + 1] = { kind = "item", id = "copycommit", label = "Copy commit hash" }
+	end
+	items[#items + 1] = { kind = "item", id = "logs", label = "Logs (download, browse in yazi)" }
+	items[#items + 1] = { kind = "item", id = "tags", label = "Edit tags" }
+	items[#items + 1] = { kind = "separator" }
+	items[#items + 1] = { kind = "item", id = "suspend", label = "Suspend", enabled = free and run.state == "running" }
+	items[#items + 1] =
+		{ kind = "item", id = "resume", label = "Resume", enabled = free and run.state == "suspended_manual" }
+	items[#items + 1] =
+		{ kind = "item", id = "cancel", label = "Cancel run", enabled = free and CANCELABLE[run.state] == true }
+	items[#items + 1] = { kind = "separator" }
+	items[#items + 1] = { kind = "item", id = "delete", label = "Delete run", enabled = free }
+	panel.openContextMenu({ onActivate = "onRunMenu", context = run.id, items = items })
 end
 
 -- Card header: state dot | run id | open | copy | ... | commit | project |
@@ -472,7 +510,13 @@ end
 -- it has no fontWeight prop (an unknown prop warns on every reconcile pass);
 -- ui.label takes fontWeight but no onClick, and boxes - the other clickable
 -- node - cannot hold children. Hence the separate open-in-browser button.
-local function cardHeader(run, i, expanded, color)
+local function cardHeader(run, expanded, color)
+	-- Shared by every header button: right-click anywhere in the control
+	-- cluster opens the run menu, so the gesture does not depend on hitting
+	-- one specific glyph.
+	local menu = function()
+		openRunMenu(run)
+	end
 	local bits = {
 		ui.glyph({ name = "point-filled", size = 16, color = color }),
 		ui.label({ text = run.id, color = "on_surface", fontWeight = "bold", fontSize = 13, maxLines = 1 }),
@@ -480,23 +524,25 @@ local function cardHeader(run, i, expanded, color)
 			glyph = "external-link",
 			variant = "ghost",
 			controlSize = "sm",
-			tooltip = "Open in browser",
-			onClick = cbn("open", i, function()
+			tooltip = "Open in browser (right-click: menu)",
+			onClick = function()
 				openInBrowser(run.id)
-			end),
+			end,
+			onRightClick = menu,
 		}),
 		ui.button({
 			glyph = "copy",
 			variant = "ghost",
 			controlSize = "sm",
-			tooltip = "Copy run id",
-			onClick = cbn("copy", i, function()
+			tooltip = "Copy run id (right-click: menu)",
+			onClick = function()
 				copyToClipboard("Copied", run.id)
-			end),
+			end,
+			onRightClick = menu,
 		}),
 		ui.spacer({ flexGrow = 1 }),
 	}
-	local commit = commitButton(run, i)
+	local commit = commitButton(run)
 	if commit then
 		bits[#bits + 1] = commit
 	end
@@ -520,8 +566,8 @@ local function cardHeader(run, i, expanded, color)
 		glyph = expanded and "chevron-up" or "chevron-down",
 		variant = "ghost",
 		controlSize = "sm",
-		tooltip = expanded and "Collapse" or "Description & actions",
-		onClick = cbn("toggle", i, function()
+		tooltip = (expanded and "Collapse" or "Description & actions") .. " (right-click: menu)",
+		onClick = function()
 			-- NB: `expanded and nil or run.id` would ALWAYS yield run.id (Lua
 			-- ternary pitfall with nil), hence the explicit branch.
 			if expandedId == run.id then
@@ -533,7 +579,8 @@ local function cardHeader(run, i, expanded, color)
 			editTagsId = nil
 			editingOldTag = nil
 			render()
-		end),
+		end,
+		onRightClick = menu,
 	})
 	return ui.row({ gap = 8, align = "center" }, bits)
 end
@@ -541,7 +588,7 @@ end
 -- Info line of an expanded card: clusters | last update. (The commit lives in
 -- the header now, on every card.) All fields come from the slimmed filter
 -- payload - no extra CLI calls.
-local function infoLine(run, _i)
+local function infoLine(run)
 	local info = {}
 	local clusters = {}
 	for name, st in pairs(run.clusters or {}) do
@@ -571,7 +618,7 @@ end
 
 -- Tag editor row (only in edit mode): an input that adds a new tag, or -
 -- when a chip loaded a tag - replaces it on Enter, plus a cancel button.
-local function tagEditorRow(run, i)
+local function tagEditorRow(run)
 	local nodes = {
 		ui.input({
 			-- key carries tagGen + the loaded tag: bumping tagGen clears the
@@ -582,7 +629,7 @@ local function tagEditorRow(run, i)
 			fontSize = 12,
 			controlSize = "sm",
 			width = TAG_INPUT_WIDTH,
-			onSubmit = cbn("tagadd", i, function(text)
+			onSubmit = function(text)
 				tagGen += 1
 				if editingOldTag then
 					local old = editingOldTag
@@ -591,7 +638,7 @@ local function tagEditorRow(run, i)
 				else
 					tagAction("add", run.id, text)
 				end
-			end),
+			end,
 		}),
 	}
 	if editingOldTag then
@@ -600,11 +647,11 @@ local function tagEditorRow(run, i)
 			variant = "ghost",
 			controlSize = "sm",
 			tooltip = "Cancel edit (back to adding)",
-			onClick = cbn("tageditcancel", i, function()
+			onClick = function()
 				editingOldTag = nil
 				tagGen += 1
 				render()
-			end),
+			end,
 		})
 		nodes[#nodes + 1] = ui.label({
 			text = "editing '" .. editingOldTag .. "' - Enter replaces it",
@@ -627,7 +674,7 @@ end
 -- row for an inline confirm (the CLI is non-interactive, so the widget owns
 -- the confirmation step). Suspend/resume act immediately - they're cheap to
 -- undo. Gating mirrors dart_client's state machine.
-local function actionButtons(run, i)
+local function actionButtons(run)
 	if pending and pending.id == run.id then
 		return {
 			ui.label({
@@ -641,19 +688,19 @@ local function actionButtons(run, i)
 				glyph = "check",
 				variant = "destructive",
 				controlSize = "sm",
-				onClick = cbn("yes", i, function()
+				onClick = function()
 					runAction(pending.action, run.id)
-				end),
+				end,
 			}),
 			ui.button({
 				text = "No",
 				glyph = "x",
 				variant = "ghost",
 				controlSize = "sm",
-				onClick = cbn("no", i, function()
+				onClick = function()
 					pending = nil
 					render()
-				end),
+				end,
 			}),
 		}
 	end
@@ -664,9 +711,9 @@ local function actionButtons(run, i)
 		variant = "ghost",
 		controlSize = "sm",
 		tooltip = "Download pod logs, browse with yazi",
-		onClick = cbn("logs", i, function()
+		onClick = function()
 			openLogs(run.id)
-		end),
+		end,
 	})
 	btns[#btns + 1] = ui.button({
 		text = "Tags",
@@ -674,13 +721,13 @@ local function actionButtons(run, i)
 		variant = "ghost",
 		controlSize = "sm",
 		tooltip = (editTagsId == run.id) and "Done editing tags" or "Edit tags (add/edit/delete)",
-		onClick = cbn("edittags", i, function()
+		onClick = function()
 			-- if-then-else, not `and nil or`: the latter always yields run.id,
 			-- since `cond and nil` is nil and `nil or run.id` then falls through.
 			editTagsId = if editTagsId == run.id then nil else run.id
 			editingOldTag = nil
 			render()
-		end),
+		end,
 	})
 	if CANCELABLE[run.state] then
 		btns[#btns + 1] = ui.button({
@@ -689,10 +736,10 @@ local function actionButtons(run, i)
 			variant = "outline",
 			controlSize = "sm",
 			enabled = enabled,
-			onClick = cbn("cancel", i, function()
+			onClick = function()
 				pending = { id = run.id, action = "cancel" }
 				render()
-			end),
+			end,
 		})
 	end
 	if run.state == "running" then
@@ -702,9 +749,9 @@ local function actionButtons(run, i)
 			variant = "outline",
 			controlSize = "sm",
 			enabled = enabled,
-			onClick = cbn("suspend", i, function()
+			onClick = function()
 				runAction("suspend", run.id)
-			end),
+			end,
 		})
 	end
 	if run.state == "suspended_manual" then
@@ -714,9 +761,9 @@ local function actionButtons(run, i)
 			variant = "primary",
 			controlSize = "sm",
 			enabled = enabled,
-			onClick = cbn("resume", i, function()
+			onClick = function()
 				runAction("resume", run.id)
-			end),
+			end,
 		})
 	end
 	btns[#btns + 1] = ui.button({
@@ -725,10 +772,10 @@ local function actionButtons(run, i)
 		variant = "destructive",
 		controlSize = "sm",
 		enabled = enabled,
-		onClick = cbn("delete", i, function()
+		onClick = function()
 			pending = { id = run.id, action = "delete" }
 			render()
-		end),
+		end,
 	})
 	if actionBusy == run.id then
 		btns[#btns + 1] = ui.label({ text = "working...", color = "on_surface_variant", fontSize = 12 })
@@ -738,18 +785,18 @@ end
 
 -- One run card. Cards carry their own fill so runs read as clearly delimited
 -- blocks; the expanded card gets a stronger fill plus an outline border.
-local function runCard(run, i)
+local function runCard(run)
 	local expanded = (expandedId == run.id)
 	local color = stateColor(run.state)
 
-	local children = { cardHeader(run, i, expanded, color) }
-	for _, rowNode in ipairs(chipRowNodes(run, i, expanded)) do
+	local children = { cardHeader(run, expanded, color) }
+	for _, rowNode in ipairs(chipRowNodes(run, expanded)) do
 		children[#children + 1] = rowNode
 	end
 
 	if expanded then
 		children[#children + 1] = ui.separator({ spacing = 4, color = "outline/0.4" })
-		children[#children + 1] = infoLine(run, i)
+		children[#children + 1] = infoLine(run)
 		children[#children + 1] = ui.label({
 			text = describe(run),
 			color = "on_surface",
@@ -765,9 +812,9 @@ local function runCard(run, i)
 			})
 		end
 		if editTagsId == run.id then
-			children[#children + 1] = tagEditorRow(run, i)
+			children[#children + 1] = tagEditorRow(run)
 		end
-		children[#children + 1] = ui.row({ gap = 8, align = "center", justify = "end" }, actionButtons(run, i))
+		children[#children + 1] = ui.row({ gap = 8, align = "center", justify = "end" }, actionButtons(run))
 	end
 
 	-- infoLine may return nil; compact the children array so the reconciler
@@ -886,8 +933,8 @@ render = function()
 		})
 	else
 		local cards = {}
-		for i, run in ipairs(runs) do
-			cards[#cards + 1] = runCard(run, i)
+		for _, run in ipairs(runs) do
+			cards[#cards + 1] = runCard(run)
 		end
 		body = ui.scroll({ flexGrow = 1, gap = 8 }, cards)
 	end
@@ -952,6 +999,34 @@ end
 function onFilterClear()
 	filterGen += 1 -- re-key the input back to empty
 	applyFilter("")
+end
+
+-- Context-menu dispatch: (activated item id, the value passed as `context` -
+-- here the run id). Destructive items expand the card and arm the same inline
+-- Yes/No confirm the action buttons use, rather than firing outright: the CLI
+-- has no confirm flag, so the panel owns that step either way.
+function onRunMenu(itemId, runId)
+	if itemId == "open" then
+		openInBrowser(runId)
+	elseif itemId == "copy" then
+		copyToClipboard("Copied", runId)
+	elseif itemId == "copycommit" then
+		local run = runById(runId)
+		if run and run.git_commit and run.git_commit ~= "" then
+			copyToClipboard("Copied commit", run.git_commit)
+		end
+	elseif itemId == "logs" then
+		openLogs(runId)
+	elseif itemId == "tags" then
+		expandedId, editTagsId, editingOldTag = runId, runId, nil
+		render()
+	elseif itemId == "suspend" or itemId == "resume" then
+		runAction(itemId, runId)
+	elseif itemId == "cancel" or itemId == "delete" then
+		expandedId = runId
+		pending = { id = runId, action = itemId }
+		render()
+	end
 end
 
 -- Scripting hooks:
