@@ -206,9 +206,9 @@
       # raises EXCEPTION_FLT_DIVIDE_BY_ZERO on a native thread Wine can't dispatch to, so the
       # game dies ~1s in with exit code 0. Verified by running the same game build that worked
       # on 580 (2026-06-30) against 595 — identical crash. Keep 580 until 595+ is retested.
-      # package = config.boot.kernelPackages.nvidiaPackages.latest;
+      package = config.boot.kernelPackages.nvidiaPackages.latest;
       # package = config.boot.kernelPackages.nvidiaPackages.stable;
-      package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
+      # package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
       modesetting.enable = true;
       powerManagement = {
         enable = true;
