@@ -239,7 +239,7 @@ in
       # sources at every session start — network-dependent login latency that
       # stalled offline. Update deliberately from the plugin manager instead.
       # The local dani/* plugins are out-of-store symlinks and unaffected.
-      plugins.auto_update = false;
+      plugins.auto_update = "none";
       plugins.source = [
         {
           name = "official";
