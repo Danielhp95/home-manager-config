@@ -10,6 +10,32 @@
   ...
 }:
 
+let
+  # Post-`nh os boot`/`nh os switch` sanity check. /boot (vfat ESP) is a
+  # different device than /nix/store (btrfs root), so GRUB's copyKernels
+  # kicks in automatically and grub-install copies the profile's bzImage to
+  # /boot/kernels/<store-name> rather than booting straight from the store.
+  # A rebuild that updates the store/profile but never touches the ESP
+  # (unmounted or failed /boot) leaves that copy stale — the exact failure
+  # that let the booted kernel's modules get GC'd out from under it. See
+  # kernel-bootloader-drift memory.
+  esp-check = pkgs.writeShellScriptBin "esp-check" ''
+    set -eu
+    kernel_store_path="$(readlink -f /nix/var/nix/profiles/system/kernel)"
+    kernel_name="$(printf '%s' "''${kernel_store_path#/nix/store/}" | tr / -)"
+    esp_kernel="/boot/kernels/$kernel_name"
+
+    if [ ! -e "$esp_kernel" ]; then
+      echo "ESP OUT OF SYNC: $esp_kernel missing (profile kernel: $kernel_store_path)"
+      exit 1
+    elif ! cmp -s "$esp_kernel" "$kernel_store_path"; then
+      echo "ESP OUT OF SYNC: $esp_kernel differs from $kernel_store_path"
+      exit 1
+    fi
+    echo "ESP in sync: $esp_kernel"
+  '';
+in
+
 {
   imports = [
     ../tuigreet.nix
@@ -55,9 +81,17 @@
       # 15d/5 was retaining ~57 generations (~83 GB of store), and even 7d kept
       # ~60 around with frequent switching on a 91%-full disk. Three days of
       # rollback targets plus the last 10 generations is plenty in practice.
+      # Age-based on purpose, same reasoning as the classic
+      # `nix.gc.options = "--delete-older-than 30d"`: a blanket `-d`/
+      # `--delete-old` is what stripped the running kernel's modules out from
+      # under it after a rebuild silently failed to reach the ESP.
       extraArgs = "--keep-since 3d --keep 10";
     };
   };
+
+  # `esp-check` after `nh os boot`/`nh os switch`: catches a rebuild that
+  # updated the store/profile but never made it onto the ESP.
+  environment.systemPackages = [ esp-check ];
 
   # gcr provides the D-Bus prompter that gnome-keyring and gcr-ssh-agent use
   # for unlock/PIN dialogs; without it keyring prompts silently fail.

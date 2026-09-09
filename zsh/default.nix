@@ -16,6 +16,22 @@ let
   '';
   fileManager = "yazi";
   p = (import ../palette.nix).hash;
+  # Flags a booted kernel whose module tree no longer matches the current
+  # system profile. This is the running-system half of the ESP sync check
+  # (esp-check, non_home_manager_config/configuration.nix): it's what would
+  # have caught the running kernel's modules getting GC'd out from under it
+  # before the machine actually needed to reboot into them. See
+  # kernel-bootloader-drift memory.
+  kernelDriftCheck = ''
+    __profile_modules=(/nix/var/nix/profiles/system/kernel-modules/lib/modules/*(N))
+    if [[ -n $__profile_modules[1] ]]; then
+      __profile_kernel=''${__profile_modules[1]:t}
+      if [[ $__profile_kernel != $(uname -r) ]]; then
+        print -P "%F{#${p.error}}reboot: kernel/profile mismatch%f (running $(uname -r), profile has $__profile_kernel)"
+      fi
+    fi
+    unset __profile_modules __profile_kernel
+  '';
   # Ember styling for zsh-syntax-highlighting. The plugin's defaults use
   # named ANSI colors; overriding with palette.nix hex keeps the prompt in
   # the same voice as starship: commands are the coral hero, strings olive
@@ -129,6 +145,7 @@ in
         keyBindings
         + fzf-tab-conf
         + syntax-highlight-conf
+        + kernelDriftCheck
         + ''
           # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
           autoload -U select-word-style

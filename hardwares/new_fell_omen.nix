@@ -172,6 +172,12 @@
     options = [
       "fmask=0077"
       "dmask=0077"
+      # Fail fast (5s) instead of systemd's long default wait if the ESP
+      # doesn't show up. Deliberately NOT "nofail": nofail is what let a
+      # rebuild report success against a missing /boot, leaving the
+      # bootloader on a stale kernel whose modules a later GC then deleted
+      # out from under it (kernel-bootloader-drift incident).
+      "x-systemd.device-timeout=5s"
     ];
   };
 
