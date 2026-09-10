@@ -148,7 +148,7 @@ hl.config({
 		-- Hardware cursor plane on the Intel iGPU: moving the cursor costs
 		-- zero compositor repaints. Software cursors (the old `true`) forced
 		-- a damage+repaint on every cursor move; they're only needed when
-		-- the NVIDIA card scans out — see the dgpu branch below.
+		-- the NVIDIA card scans out — see the dgpu-hdmi branch below.
 		no_hardware_cursors = false,
 	},
 
@@ -202,10 +202,14 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "d
 -- in per-launch with `nvidia-offload <cmd>`. Caveat: display outputs wired to
 -- the NVIDIA GPU (some HDMI/DP ports) won't work while this is set.
 -- ─────────────────────────────────────────────────────────────────────────────
--- The `dgpu` command toggles a marker file; when present, Hyprland also opens
--- the NVIDIA card (Intel stays the render GPU, NVIDIA only scans out) so the
--- HDMI port works — at the cost of the dGPU never suspending (~8W). Takes
--- effect on the next Hyprland start (log out/in after toggling).
+-- /etc/hypr-dgpu-hdmi only exists under the "dgpu-hdmi" NixOS specialisation
+-- (specialisations/dgpu-hdmi.nix); when present, Hyprland also opens the
+-- NVIDIA card (Intel stays the render GPU, NVIDIA only scans out) so the
+-- HDMI port works — at the cost of the dGPU never suspending (~8W). Boot
+-- into that specialisation from the GRUB menu to flip this; it used to be a
+-- `dgpu` toggle script + ~/.config/hypr/dgpu-mode marker file, replaced
+-- because a boot-time choice is what this actually needed (it can't take
+-- effect without a fresh Hyprland start anyway).
 -- AQ_DRM_DEVICES is colon-separated, so by-path names (which contain colons)
 -- get shattered on parse — resolve them to canonical /dev/dri/cardN first.
 -- Card numbering isn't stable across boots, hence resolving at startup.
@@ -217,12 +221,12 @@ local function resolve_card(path)
 end
 local intel_card = resolve_card("/dev/dri/by-path/pci-0000:00:02.0-card")
 local nvidia_card = resolve_card("/dev/dri/by-path/pci-0000:02:00.0-card")
-local dgpu_marker = io.open(os.getenv("HOME") .. "/.config/hypr/dgpu-mode", "r")
-if dgpu_marker then
-	dgpu_marker:close()
+local dgpu_hdmi = io.open("/etc/hypr-dgpu-hdmi", "r")
+if dgpu_hdmi then
+	dgpu_hdmi:close()
 	hl.env("AQ_DRM_DEVICES", intel_card .. ":" .. nvidia_card)
 	-- Hardware cursors glitch on NVIDIA scanout; fall back to software
-	-- rendering only in dgpu mode.
+	-- rendering only in dgpu-hdmi mode.
 	hl.config({ cursor = { no_hardware_cursors = true } })
 else
 	hl.env("AQ_DRM_DEVICES", intel_card)

@@ -150,6 +150,7 @@
 
             # Specialisations
             ./specialisations/roadwarrior.nix
+            ./specialisations/dgpu-hdmi.nix
             {
               users.users.dev = {
                 isNormalUser = true;
