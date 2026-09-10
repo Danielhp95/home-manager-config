@@ -133,7 +133,7 @@
           modules = [
             home-manager.nixosModules.default # Otherwise home-manager isn't imported
             ./hardwares/new_fell_omen.nix
-
+            # ./hardwares/lenovo_t16g_gen3.nix
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/ollama.nix
             ./non_home_manager_config/network.nix
