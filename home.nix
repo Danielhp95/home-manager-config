@@ -151,6 +151,10 @@ in
       system = "x86_64-linux";
       config.allowUnfree = true;
     }).at "26.05").grayjay # video platform aggregator
+    ((inputs.multiverse.lib.mkMultiverse {
+      system = "x86_64-linux";
+      config.allowUnfree = true;
+    }).at "26.05").discord # video platform aggregator
 
     openconnect
 
@@ -220,6 +224,8 @@ in
     nautilus
     nautilus-open-any-terminal
     lingot # Instrument tuner
+
+    android-tools
 
     # Process management: btop and bottom both come from ./terminal, which
     # carries their Ember themes.
