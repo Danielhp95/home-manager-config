@@ -207,11 +207,14 @@ in
       # Clean up on restart
       live-restore = false; # Don't try to restore containers on restart
     };
-    # Auto-prune old containers
+    # Auto-prune old containers. Deliberately NOT "--all": that flag removes
+    # every *unused* image and stopped container, not just dangling ones —
+    # silently, on a timer. Same failure shape as the kernel-module GC bug
+    # (kernel-bootloader-drift memory): automated cleanup deleting something
+    # you meant to keep. Plain prune only touches dangling layers/containers.
     autoPrune = {
       enable = true;
       dates = "weekly";
-      flags = [ "--all" ];
     };
   };
   hardware.nvidia-container-toolkit.enable = true;
