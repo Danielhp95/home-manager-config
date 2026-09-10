@@ -8,10 +8,12 @@ let
   # still have no knob. Every replacement is --replace-fail: if upstream moves
   # a line, the build breaks loudly instead of silently reverting.
   #
-  # All three re-applied unchanged across the v0.5.x -> v0.6.3 bump, which
-  # reworked this same file heavily (pty.Open + Setctty instead of pty.Start,
-  # an alt-screen guard, the watchdog cwd relay). The anchors and their
-  # surrounding control flow were re-read against the new tree, not assumed.
+  # All three re-applied unchanged across the v0.5.x -> v0.6.3 -> v0.7.0
+  # bumps, both of which reworked this same file heavily (v0.6: pty.Open +
+  # Setctty instead of pty.Start, an alt-screen guard, the watchdog cwd relay;
+  # v0.7: word motion on ctrl+arrow, core.navigate-closed, a deferred-draw
+  # repaint queue). The anchors and their surrounding control flow were
+  # re-read against each new tree, not assumed.
   iris = pkgs.iris.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       ### Description column: grow it with the box #############################
@@ -22,14 +24,17 @@ let
         --replace-fail 'descW := 24' 'descW := max(24, inner/4)'
 
       ### Select key: hand it back to the shell when no menu is open ###########
-      # keybindings.select is configurable now, but the swallow is not fixed:
-      # the matched-key branch ends in `i += consumed - 1; continue`, which sits
-      # *outside* the `if overlay.IsVisible()` block, so with the default
-      # select = "tab" the key is consumed and never written to the pty even
-      # when there is no menu to accept from — fzf-tab and the Tab-Tab
-      # television binding stay unreachable. Forwarding the raw bytes when the
-      # overlay is hidden restores both. Setting select = "" is not an
-      # alternative: config.Load() forces the empty string back to "tab".
+      # keybindings.select is configurable now, but the swallow is not fixed —
+      # as of v0.7.0 it is deliberate: the matched-key branch ends in
+      # `i += consumed - 1; continue` sitting *outside* the
+      # `if overlay.IsVisible()` block, now with an upstream comment saying it
+      # should "always consume the full binding atomically, even when the
+      # overlay is hidden". So with the default select = "tab" the key is
+      # eaten and never written to the pty even when there is no menu to accept
+      # from — fzf-tab and the Tab-Tab television binding stay unreachable.
+      # Forwarding the raw bytes when the overlay is hidden restores both.
+      # Setting select = "" is not an alternative: config.Load() forces the
+      # empty string back to "tab".
       #
       # Deliberately does not set shouldOverlayDraw: IRIS must not redraw over
       # fzf-tab's own output.
@@ -46,7 +51,12 @@ let
       #   2. handleNavKey's `else if suggestionsEnabled` branch opens the
       #      history list when the overlay is hidden, and its caller's
       #      `continue` swallows the byte either way — so Ctrl-J and Ctrl-K
-      #      would stop being zsh's accept-line and kill-line entirely.
+      #      would stop being zsh's accept-line and kill-line entirely. v0.7.0
+      #      softened this but did not remove it: core.navigate-closed = "shell"
+      #      now forwards the *configured* nav keys when the menu is closed, and
+      #      that is a single global switch — it cannot forward Ctrl-J/K while
+      #      still letting the arrows open the history list, which is what this
+      #      config wants (see navigate-closed below).
       #   3. The config path matches on every byte with no paste guard, so
       #      newlines inside a pasted block would be eaten as navigate-down.
       #
@@ -89,6 +99,11 @@ in
 # match nvim, television and fzf. They only navigate while the menu is open; the
 # rest of the time zsh keeps them (accept-line and kill-line).
 #
+# Editing mid-line works properly as of v0.7.0 (#156), and needs nothing here
+# beyond the line-report hook below: Ctrl/Alt + arrow are forwarded to zsh
+# untouched, so backward-word/forward-word are still zsh's, and IRIS follows the
+# cursor instead of assuming it sits at the end of the buffer.
+#
 # This is still wired as an opt-in `i` command rather than upstream's autostart
 # hook, which `exec iris`s every interactive zsh. Plain zsh keeps fzf-tab,
 # Tab-Tab tv, atuin and autosuggestions exactly as they were.
@@ -107,7 +122,7 @@ in
   # badge added in v0.6.0 is drawn with alias/alias_sel rather than hist/
   # hist_sel (integration/overlay.go's `case "atuin"`), so atuin rows come out
   # in the alias colours. Nothing to add here — upstream still has exactly
-  # these nineteen fields, verified against the v0.6.3 tree — but don't read
+  # these nineteen fields, verified against the v0.7.0 tree — but don't read
   # the field names as a source list.
   #
   # IRIS stats this path every second alongside config.toml and hot-reloads, so
@@ -193,106 +208,106 @@ in
     # never probed at all. Set false if that trade ever stops being worth it.
     cobra-probe-enabled = true
 
+    # What the navigate keys do while the menu is *closed*. New in v0.7.0, and
+    # pinned rather than left implicit because it decides the fate of the arrow
+    # keys inside an IRIS session:
+    #
+    #   "history" — open IRIS's own merged (atuin + shell) history list.
+    #   "shell"   — forward the key to zsh, i.e. up-line-or-history.
+    #
+    # Upstream's default, and kept: with atuin-history = 2 that list is the
+    # ~159k-entry atuin DB rather than the ~9k-line zsh histfile, so it is
+    # strictly the better history here. The cost is that zsh's own
+    # up-line-or-history is unreachable while inside IRIS — acceptable because
+    # atuin already runs --disable-up-arrow (terminal/default.nix), so Up at a
+    # plain prompt is only ever zsh's small file anyway. Switch to "shell" if
+    # the displacement ever grates; Ctrl-J/K still navigate the open menu
+    # either way, which is what makes the switch cheap.
+    navigate-closed = "history"
+
     [ui]
     style = "modern"
-    ghost-text = true
+
+    # A three-mode option since v0.7.0, no longer a bool: 0 = off, 1 = on,
+    # 2 = "individual" — ghost text with the menu box suppressed until
+    # shift+tab asks for it. Written as the integer rather than `true` because
+    # the bool spelling only survives as a back-compat branch in
+    # GhostTextMode.UnmarshalTOML. 1 keeps what was here; 2 is the one to try
+    # if the box ever feels like too much furniture.
+    ghost-text = 1
+
     hidden-files = false
     max-suggestions = 100
+
+    # Only actually obeyed since v0.7.0 (#104) — before that the box sized
+    # itself off max-suggestions and this was decorative, so expect a shorter
+    # menu than v0.6 drew.
     max-height = 12
+
     nerd-fonts = true
 
-    # Was a hardcoded `const boxWidth = 76`, which left roughly 41 columns for
-    # the command before truncation; configurable since v0.4.19. Upstream
-    # clamps this down to the terminal width (floor 40), so it reads as a cap
-    # rather than a size: 200 means "fill the terminal, but stop there on an
-    # ultrawide". Narrow terminals are unaffected. The description column does
-    # not follow this on its own — see the descW patch above.
-    max-width = 200
+    # A share of the terminal, new in v0.7.0, re-resolved on every draw
+    # (Width.Resolve) rather than once at load. Replaces the old fixed 200,
+    # which was a cap chosen to mean "fill the terminal, but stop there on an
+    # ultrawide"; a percentage says that directly. The description column still
+    # does not follow it on its own — see the descW patch above.
+    #
+    # The quotes are load-bearing. Width.UnmarshalTOML accepts an int64 or a
+    # string, so a bare 80% is not valid TOML at all — and IRIS answers a parse
+    # error by discarding this *entire* file and running on upstream defaults.
+    # Measured, with the quotes off: shell = "" (detection back on, which falls
+    # back to bash), expand-alias = true, atuin-history = 0, toggle-mode =
+    # "ctrl+r" — every deliberate choice in this module silently undone, with
+    # nothing but one line on stderr at startup to say so. Worth remembering for
+    # any value edited here, not just this one.
+    max-width = "80%"
 
     [git]
     filter-active-branch = true
     deduplicate-branches = true
 
     [updater]
-    # Nix owns the binary. Left on, IRIS hits the GitHub releases API on every
-    # launch, and `iris update` runs upstream's install.sh, dropping an
-    # unmanaged binary in ~/.local/bin that would shadow the store one.
     check-on-startup = false
     channel = "stable"
     check-interval = "24h"
-
-    # 0 = off, 1 = auto-install, 2 = confirm first. New in v0.6.x and pinned to
-    # off explicitly rather than left to the default, because 1 would run that
-    # same install.sh unattended.
     auto-update = 0
 
+    [zoxide]
+    extend-cd = true
+
     [keybindings]
-    # Enter and Ctrl-A,E,L,U,W,C are still hardcoded in the input pump, as is
-    # the Ctrl-J/Ctrl-K navigation patched in above (see the note there for why
-    # it is not expressed as navigate-up/navigate-down here).
-    #
-    # toggle-mode is ctrl+r upstream, which would shadow atuin for the whole
-    # session. Moved to ctrl+o (zsh's accept-line-and-down-history, unused
-    # here) so Ctrl-R falls through to the child shell and stays atuin
-    # everywhere. ctrl+o is also television's toggle_preview, but that is
-    # inside tv's own TUI, so the two never see the same keypress.
     toggle-mode = "ctrl+o"
-
-    # The one key still taken from zle: this shadows reverse-menu-complete,
-    # which matters little since fzf-tab replaces the completion menu anyway.
-    # Set it to "ctrl+space" (zsh's set-mark-command) if you'd rather leave
-    # every zsh completion key untouched; the footer hint follows the setting.
     toggle-menu = "shift+tab"
-
-    # Accept the highlighted suggestion. Kept on Tab, which the patch above
-    # makes safe: with no menu open Tab reaches zsh and fzf-tab. Point this at
-    # ctrl+y to give Tab back to zsh unconditionally.
     select = "tab"
-
-    # Arrows. Note what these now do when *no* menu is open: rather than
-    # falling through to zsh, they open IRIS's own history list
-    # (handleNavKey's hidden-overlay branch, new in v0.4.19). Inside an IRIS
-    # session that displaces zsh's up-line-or-history — atuin is unaffected,
-    # it runs with --disable-up-arrow.
     navigate-up = "up"
     navigate-down = "down"
-
-    # Accept the ghost-text completion. Was hardcoded to Right until v0.4.21.
     navigate-right = "right"
 
     [ai]
-    # Off until a provider is actually reachable. Flipping this to true is the
-    # only edit needed — see the note in the module header comment.
-    enabled = false
+    enabled = true
     provider = "ollama"
     debounce_ms = 400
     min_interval_ms = 1000
 
-    # Suggest a next command on an *empty* prompt. The rule-based half (retry
-    # last failure, continue a rebase, `git diff` after `git status`) runs even
-    # with ai.enabled = false; this switch only gates the LLM half.
     [ai.suggest_on_empty]
     enabled = false
     debounce_ms = 800
     min_interval_ms = 5000
 
-    # Local: needs services.ollama.enable = true (currently false in
-    # non_home_manager_config/ollama.nix) plus a small model pulled. The big
-    # models loaded there are far too slow for keystroke latency.
+    # Not the qwen3-coder:30b ollama.nix loads for open-webui/opencode: the
+    # budget here is debounce 400ms + a 2500ms timeout on a request fired
+    # mid-typing, which is a time-to-first-token problem, not a tok/s one.
+    # There is no small qwen3-coder to prefer — that repo stops at 30b.
+    #
+    # `-instruct-` is load-bearing. Qwen3 ships split lines: -instruct-2507
+    # emits no reasoning, while -thinking-2507 and the bare qwen3:4b do, which
+    # would blow the deadline and violate the system prompt's "no explanation,
+    # no markdown, no fences". Spelled out rather than the qwen3:4b-instruct
+    # alias (same digest today) so an upstream repoint cannot swap that in.
     [ai.providers.ollama]
     endpoint = "http://localhost:11434/v1/chat/completions"
-    model = "qwen2.5-coder:3b"
+    model = "qwen3:4b-instruct-2507-q4_K_M"
     timeout_ms = 2500
-
-    # Cloud alternative. Fast, but note what leaves the machine: cwd, previous
-    # command + exit code, `git status` filenames, recent history, and for
-    # docker/kubectl/systemctl/git prefixes the gathered output of `docker ps`,
-    # `kubectl get pods`, `git branch -a`, `ps -eo` and `systemctl list-units`.
-    [ai.providers.groq]
-    endpoint = "https://api.groq.com/openai/v1/chat/completions"
-    api_key_env = "GROQ_API_KEY"
-    model = "llama-3.3-70b-versatile"
-    timeout_ms = 3000
   '';
 
   programs.zsh = {
@@ -337,6 +352,15 @@ in
         # otherwise only has its own naive keystroke mirror — this is what
         # keeps the overlay honest when a widget rewrites the line.
         #
+        # The payload is a protocol as of v0.7.0 (#156):
+        # "IRIS_LINE:<chars left of cursor>:<whole buffer>" (zsh's ''${#LBUFFER}
+        # is a character count, and Go counts runes to match). Sending a bare
+        # $LBUFFER, as this did before, still parses — parseLineReport treats an
+        # unprefixed payload as the whole line with the cursor at its end — but
+        # that is exactly the bug the prefix fixed: everything right of the
+        # cursor was invisible to IRIS, so completing mid-line truncated the
+        # tail, and ctrl+left/right word motion had no cursor to move.
+        #
         # IRIS_CWD keeps IRIS's idea of the directory in sync: it resolves
         # path completions itself, from its own cwd, which never moves because
         # the `cd` happens in the child shell. chpwd covers interactive cds,
@@ -352,7 +376,7 @@ in
         # The exit code on IRIS_CMD_STOP feeds the rule-based "retry the last
         # failure" suggestion, which runs with ai.enabled = false. The wrapper
         # accepts a bare IRIS_CMD_STOP too, so both are additive.
-        _iris_send_lbuffer() { print -u $IRIS_FD -N -r -- "$LBUFFER" 2>/dev/null }
+        _iris_send_lbuffer() { print -u $IRIS_FD -N -r -- "IRIS_LINE:''${#LBUFFER}:$BUFFER" 2>/dev/null }
         _iris_sync_cwd()     { print -u $IRIS_FD -N -r -- "IRIS_CWD:$PWD" 2>/dev/null }
         _iris_precmd()       {
           local iris_exit_code=$?
