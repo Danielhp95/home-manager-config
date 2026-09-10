@@ -95,15 +95,21 @@ in
 
   # gcr provides the D-Bus prompter that gnome-keyring and gcr-ssh-agent use
   # for unlock/PIN dialogs; without it keyring prompts silently fail.
-  services.dbus.packages = [ pkgs.gcr ];
+  #
+  # Explicitly gcr_3, not gcr_4: nixpkgs removed the unversioned `gcr` alias
+  # (it now throws, demanding an explicit ABI), and the two are not
+  # interchangeable for this purpose. gcr_3 is what ships
+  # org.gnome.keyring.SystemPrompter.service and PrivatePrompter.service;
+  # gcr_4 ships no D-Bus service files at all, so naming it here would leave
+  # this line syntactically fine and functionally empty — the silent failure
+  # above, back again. gcr_3 is also the ABI gnome-keyring itself links
+  # (gcr-3.41.2), so the prompter matches its consumer.
+  services.dbus.packages = [ pkgs.gcr_3 ];
 
   # Compressed in-RAM swap. The machine had no swap at all: systemd-oomd
   # degraded to pressure-only mode and nix-daemon died with SIGABRT during
   # large rebuilds (30G+ peak on 2026-08-02).
   zramSwap.enable = true;
-
-  # The journal had grown to 3.9 GB with no cap on a 91%-full disk.
-  services.journald.extraConfig = "SystemMaxUse=500M";
 
   # BBR keeps throughput up on lossy/high-latency paths where cubic backs
   # off hard (substitution downloads, video calls on hotel wifi). fq is the
@@ -296,49 +302,29 @@ in
     };
   };
 
-  # Universal Wayland Session Manager. tuigreet's hyprland session runs
-  # `uwsm start -- Hyprland` (tuigreet.nix), which turns the session into
-  # systemd user units instead of a hand-managed process tree:
+  # No uwsm: tuigreet's hyprland session execs `start-hyprland` directly
+  # (Hyprland's own crash-watchdog binary, tuigreet.nix), and session
+  # lifecycle goes through home-manager's own systemd integration instead
+  # (wayland.windowManager.hyprland.systemd, hyprland/default.nix):
   #
   #   greetd session script (exports fcitx/wayland env)
-  #     -> uwsm start: pushes that env into the user manager + dbus,
-  #        then starts wayland-wm@Hyprland.service (Type=notify)
-  #     -> Hyprland runs `uwsm finalize` (hyprland.lua start hook):
-  #        exports WAYLAND_DISPLAY etc. and signals readiness
+  #     -> start-hyprland execs Hyprland, restarts it if it dies non-cleanly
+  #     -> hyprland.start hook: dbus-update-activation-environment --systemd
+  #        --all, then stop/start hyprland-session.target
   #     -> graphical-session.target goes active; every service WantedBy
   #        it (fcitx5-daemon, hyprpolkitagent, vicinae, noctalia, awww,
   #        gpg-agent.socket...) starts with the wayland env guaranteed.
-  #   Compositor exit stops the target and everything bound to it.
-  #
-  # Day-to-day:
-  #   - session health:  systemctl --user status wayland-wm@Hyprland
-  #   - session log:     journalctl --user -u wayland-wm@Hyprland
-  #   - graceful logout: `uwsm stop` (plain `hyprctl dispatch exit` also
-  #     works — uwsm notices the compositor died — but stop is the
-  #     intended path and what a power-menu logout should call)
-  #   - optional: launch GUI apps as `uwsm app -- <cmd>` to give each its
-  #     own scope (a crashing app can't drag the compositor cgroup down)
+  #   Compositor exit stops hyprland-session.target and everything bound to it.
   #
   # Gotchas:
-  #   - `uwsm finalize` in hyprland.lua is load-bearing: wayland-wm@ is
-  #     Type=notify, so if the hook is removed the session times out and
-  #     gets torn down (~10s of Hyprland, then back to tuigreet).
   #   - Session daemons must be systemd units WantedBy=graphical-session.
   #     target. exec-once / manual `systemctl start` in the startup path
-  #     is how the polkit agent and gpg-agent silently died pre-uwsm.
-  #   - Keep home-manager's wayland.windowManager.hyprland.systemd.enable
-  #     = false (hyprland/default.nix): its generated hook stops/starts
-  #     graphical-session.target by hand and would fight uwsm.
-  #   - uwsm activates xdg-desktop-autostart.target, which the old setup
-  #     never did: /etc/xdg/autostart entries now run (keyring + at-spi
-  #     are idempotent, geoclue agent + evolution-alarm-notify are
-  #     wanted, iwgtk-indicator is new). Audit with
-  #     `systemctl --user list-units 'app-*'`.
-  #   - The service environment is a login-time snapshot (greetd exports
-  #     + finalize vars). Exporting vars in a shell later never reaches
-  #     services; change tuigreet.nix / hyprland.lua instead.
-  #   - One graphical session per user: uwsm start refuses a second one.
-  programs.uwsm.enable = true;
+  #     killed the polkit agent and gpg-agent silently before this was
+  #     fixed — see graphical-session-target-dance memory.
+  #   - Never override wayland.windowManager.hyprland.systemd.extraCommands
+  #     to stop graphical-session.target directly — that's the exact
+  #     hand-rolled hook that caused the above. Leave it at the module
+  #     default (stop/start hyprland-session.target, one level down).
 
   # Services previously pulled in implicitly by services.desktopManager.gnome
   services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
@@ -377,7 +363,6 @@ in
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   programs.zsh.enable = true;
   # Home-manager runs compinit with the full fpath (plugins included); running
   # it here too makes the two fight over ~/.config/zsh/.zcompdump, rebuilding
@@ -390,6 +375,7 @@ in
       "wheel"
       "docker"
       "ydotool" # access to the ydotoold socket (keyboard-driven scrolling)
+      "adbusers" # USB debugging (dart-android phone installs)
     ]; # group "wheel" -> sudo access
     packages = [ ];
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
