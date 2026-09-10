@@ -19,8 +19,9 @@
       OLLAMA_KV_CACHE_TYPE = "q8_0";
       # Keep the whole 24GB budget for one model/request at a time instead of
       # splitting VRAM across concurrent loads or parallel request slots.
-      OLLAMA_MAX_LOADED_MODELS = "1";
-      OLLAMA_NUM_PARALLEL = "1";
+      OLLAMA_MAX_LOADED_MODELS = "2";
+      OLLAMA_NUM_PARALLEL = "2";
+      OLLAMA_LOAD_TIMEOUT = "15m";
       # Default window for any request that doesn't pass num_ctx. Ollama
       # auto-sizes this from VRAM and lands on 32k here, but 64k is free:
       # measured 119.5 vs 119.6 tok/s, 21385 MiB resident with ~3GB still
@@ -53,6 +54,41 @@
       # enough to separate "finds real bugs" from "doesn't", not enough to
       # rank two models that both scored full marks.
       "qwen3-coder:30b"
+
+      # Qwen3-4B-Instruct-2507 (2.50 GB), pulled for one caller only: IRIS's
+      # inline AI completions (terminal/iris.nix points ai.providers.ollama
+      # here). That is a keystroke-latency budget — debounce 400ms, a 2500ms
+      # timeout, a request fired mid-typing — which the 30B above cannot meet no
+      # matter how fast it generates, because the cost that matters there is
+      # time-to-first-token, not tok/s.
+      #
+      # There is no small Qwen3-Coder to use instead: the qwen3-coder repo
+      # publishes 30b and 480b and nothing else (checked against the registry),
+      # so the coder-specialised option at this size is the older generation,
+      # qwen2.5-coder:3b/7b. This is the newer generation at a comparable size —
+      # 2.50 GB against 1.93 GB for qwen2.5-coder:3b, well under the 4.68 GB of
+      # qwen2.5-coder:7b.
+      #
+      # The `-instruct-` in the tag is load-bearing, which is why the quant is
+      # spelled out rather than left as the `qwen3:4b-instruct` alias (identical
+      # digest today, b72accf9724e). Qwen3 ships split lines: `4b-instruct-2507`
+      # does not emit reasoning, `4b-thinking-2507` and the bare `qwen3:4b` do.
+      # A thinking model here would fail twice over — <think> tokens blow the
+      # 2500ms deadline, and IRIS's system prompt demands the raw command line
+      # with no prose or fences.
+      #
+      # Unbenchmarked on this card, unlike the two models above: chosen to fit a
+      # deadline and to follow a strict output format, not to win a coding
+      # comparison.
+      #
+      # Watch OLLAMA_MAX_LOADED_MODELS = 1 above: ollama keeps exactly one model
+      # resident, so an IRIS completion evicts qwen3-coder:30b and the next
+      # open-webui or opencode request pays a full reload to get it back (and
+      # vice versa). If that thrashing shows up the fix is to raise the limit to
+      # 2 rather than to drop this model — 2.5GB against the ~3GB the 30B leaves
+      # spare, so it plausibly fits — but that trade is unmeasured and the
+      # comment above deliberately reserves the whole budget for one model.
+      "qwen3:4b-instruct-2507-q4_K_M"
     ];
   };
 
