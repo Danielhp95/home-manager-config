@@ -4,8 +4,8 @@ Run-list panel (entry "panel" of dani/dart).
 
 Layout: header (title, counts, refresh, close) -> filter bar -> scrollable
 run cards. Each card collapses to [state dot | id | open | copy | commit |
-project | uptime | created (local tz) | state pill | chevron] plus one row of
-tag chips; expanding
+project | uptime | created (local tz) | priority | state pill | chevron] plus
+one row of tag chips; expanding
 it adds the full wrapped tag rows, an info line (clusters / updated), the
 description, a tag editor, and state-gated action buttons. Right-clicking any
 header button opens the same actions as a native context menu, so the common
@@ -25,17 +25,21 @@ Conventions:
   Cards carry key = "run-<id>", which is what makes those paths stable.
   panel.openContextMenu is the exception - its onActivate is still dispatched
   by global name, hence onRunMenu() at the bottom of this file.
-- Run mutations spawn via argv tables (noctalia.runAsync{...}), so no value
-  is ever shell-quoted by hand. Two paths still build a shell command line
-  and validate their input first: openInBrowser (BROWSER may itself carry
-  arguments) and the filter bar, whose text is free-form `dart run filter`
-  args that only a shell can split.
+- Every spawn is an argv table (noctalia.runAsync{...}), so no value is ever
+  shell-quoted by hand. The two inputs that really are word lists - $BROWSER,
+  which may carry its own arguments, and the filter bar's free-form
+  `dart run filter` args - are split by common.splitWords, not by a shell.
+- Helpers the entries share (run URL, run-id guard, refresh request, word
+  splitting) live in common.luau, loaded with require().
 ]]
 
 -- ═══════════════════════════════════════════════════ config & constants ═══
 
+local common = require("./common.luau")
+local requestRefresh = common.requestRefresh
+local validRunId = common.validRunId
+
 local DART = noctalia.getConfig("dart_path")
-local DETAILS_URL = "https://dart.platform.research.sony/en/details/"
 
 -- `dart logs` shells out to logcli; until `nh os switch` puts grafana-loki on
 -- the PATH (home.packages in noctalia/default.nix), fall back to the store
@@ -107,12 +111,6 @@ local filterGen = 0 -- bumped to re-key (reseed) the filter input
 
 local render -- fwd decl; defined in the render section
 
--- Ask service.luau for a re-poll. The nonce makes every set() distinct so
--- the state watcher always fires.
-local function requestRefresh()
-	noctalia.state.set("command", { op = "refresh", nonce = os.clock() })
-end
-
 -- ═══════════════════════════════════════════════ run metadata helpers ═══
 
 local function stateColor(state)
@@ -157,19 +155,6 @@ local function chipTags(run)
 	return out
 end
 
--- "2026-07-15T16:32:15.220306+00:00" -> "07-15 16:32" (display only; the
--- timestamp stays UTC, matching what the DART web UI shows).
-local function shortTime(iso)
-	if type(iso) ~= "string" then
-		return ""
-	end
-	local mo, d, h, mi = iso:match("^%d+%-(%d+)%-(%d+)T(%d+):(%d+)")
-	if not mo then
-		return ""
-	end
-	return mo .. "-" .. d .. " " .. h .. ":" .. mi
-end
-
 -- Days-since-epoch for a UTC civil date (Howard Hinnant's algorithm). Only
 -- ever called with a real calendar date pulled out of an ISO timestamp, so
 -- no need to handle y < 0.
@@ -184,7 +169,7 @@ end
 
 -- ISO UTC timestamp -> Unix epoch seconds. Doesn't use os.time({...}), which
 -- treats the table as *local* time and would skew by the machine's UTC
--- offset - the same trap the shortTime() comment above warns about.
+-- offset.
 local function epochFromIso(iso)
 	if type(iso) ~= "string" then
 		return nil
@@ -197,16 +182,20 @@ local function epochFromIso(iso)
 	return days * 86400 + tonumber(h) * 3600 + tonumber(mi) * 60 + tonumber(s)
 end
 
--- ISO UTC timestamp -> "07-15 16:32" in the *local* system timezone. Unlike
--- shortTime() (which regex-slices the UTC fields verbatim), this goes through
--- epochFromIso() + os.date() so the displayed clock matches the machine's
--- actual timezone, not the DART web UI's UTC display.
+-- ISO UTC timestamp -> "07-15 16:32", through noctalia's own formatter (the
+-- one the clock settings use). localShortTime renders in the machine's
+-- timezone; shortTime passes "UTC" (plugin API 19) to match what the DART web
+-- UI shows.
+local SHORT_TIME = "{:%m-%d %H:%M}"
+
 local function localShortTime(iso)
 	local epoch = epochFromIso(iso)
-	if not epoch then
-		return ""
-	end
-	return os.date("%m-%d %H:%M", epoch)
+	return if epoch then noctalia.formatTime(SHORT_TIME, epoch) else ""
+end
+
+local function shortTime(iso)
+	local epoch = epochFromIso(iso)
+	return if epoch then noctalia.formatTime(SHORT_TIME, epoch, "UTC") else ""
 end
 
 -- Wall-clock time a run has been alive: created_at -> now, as "<d>d<h>h<m>m".
@@ -225,20 +214,19 @@ local function uptime(iso)
 	return days .. "d" .. hours .. "h" .. minutes .. "m"
 end
 
-local function validRunId(id)
-	return type(id) == "string" and id:match("^[%w%-]+$") ~= nil
-end
-
 -- ═══════════════════ actions: everything that leaves the panel process ═══
 
--- Publish verbatim `dart run filter` args (service.luau appends them to the
--- default --limit/--username-ss). Empty text returns to the default query.
--- The args reach the CLI through /bin/sh -c, so shell metacharacters are
--- rejected; quotes/spaces/=/commas stay usable for filter values.
+-- Publish verbatim `dart run filter` args (service.luau adds them after the
+-- default --username-ss/--limit). Empty text returns to the default query.
+-- The text never reaches a shell - service.luau splits it into an argv spawn
+-- with common.splitWords - so the one thing to refuse here is text that does
+-- not split, i.e. an unterminated quote. Quotes, spaces, =, commas and even
+-- $() are all just characters in a filter value.
 local function applyFilter(text)
 	text = noctalia.string.trim(text or "")
-	if text:match("[;&|<>`$()]") or text:match("\n") then
-		noctalia.notifyError("dart filter", "shell metacharacters ;&|<>`$() are not allowed")
+	local words, splitErr = common.splitWords(text)
+	if not words then
+		noctalia.notifyError("dart filter", splitErr)
 		return
 	end
 	customFilter = text ~= "" and text or nil
@@ -248,15 +236,12 @@ local function applyFilter(text)
 	render()
 end
 
--- Tag chip click: search for that tag (single-quoted so =, braces etc.
--- survive the shell; a tag containing a quote cannot be quoted safely).
+-- Tag chip click: search for that tag. common.quoteWord keeps the filter text
+-- readable and editable, and splitWords undoes it exactly, so any tag is
+-- searchable, one containing a quote included.
 local function filterByTag(tag)
-	if tag:find("'", 1, true) then
-		noctalia.notifyError("dart filter", "tag contains a quote; type the filter manually")
-		return
-	end
 	filterGen += 1 -- re-key the input so it shows the new filter text
-	applyFilter("--tag-ss '" .. tag .. "'")
+	applyFilter("--tag-ss " .. common.quoteWord(tag))
 end
 
 -- Same URL dart.nvim opens. Detached spawn (runAsync without a callback)
@@ -265,8 +250,7 @@ local function openInBrowser(id)
 	if not validRunId(id) then
 		return
 	end
-	local browser = noctalia.getenv("BROWSER") or "xdg-open"
-	noctalia.runAsync(browser .. ' "' .. DETAILS_URL .. id .. '"')
+	noctalia.runAsync(common.browserArgv(common.DETAILS_URL .. id))
 end
 
 -- dart.nvim's <leader>l equivalent. `dart logs` downloads per-pod files into
@@ -297,8 +281,7 @@ local function tagAction(action, id, tag, oldTag)
 	end
 	-- No quote/newline guard: argv hands each value to execve as its own
 	-- element, so a tag containing ' or " or a newline is passed through
-	-- verbatim. (filterByTag still rejects quotes - the *filter* path does go
-	-- through a shell, so such a tag is creatable here but not searchable.)
+	-- verbatim.
 	local argv
 	if action == "replace" then
 		argv = { DART, "tag", "replace", "--run-ids", id, "--old-tag", oldTag, "--new-tag", tag }
@@ -362,6 +345,26 @@ end
 
 -- ═══════════════════════════════════════════════════════ UI builders ═══
 
+-- Scheduling priority pill, sat just left of the state pill. DART schedules the
+-- highest priority first, and a run submitted without one counts as 0
+-- (dart_client/hydra.py), so a missing value shows as 0 rather than nothing.
+-- tostring drops the ".0" the API sends for whole numbers (-1.0 -> "-1").
+local function priorityChip(run)
+	local priority = tonumber(run.priority) or 0
+	return ui.row(
+		{ fill = "on_surface_variant/0.12", radius = 9, paddingH = 8, paddingV = 2, gap = 4, align = "center" },
+		{
+			ui.glyph({ name = "arrows-sort", size = 12, color = "on_surface_variant" }),
+			ui.label({
+				text = tostring(priority),
+				color = "on_surface_variant",
+				fontWeight = "semibold",
+				fontSize = 11,
+			}),
+		}
+	)
+end
+
 -- Non-interactive pill (used for the project chip).
 local function chip(text, fillRole, textRole)
 	return ui.row({ fill = fillRole, radius = 9, paddingH = 8, paddingV = 2, align = "center" }, {
@@ -369,8 +372,9 @@ local function chip(text, fillRole, textRole)
 	})
 end
 
--- One tag chip -> (node, estimatedWidth). Chips are compact BUTTONS because
--- rows/labels can't take onClick. Normal mode: click searches for the tag.
+-- One tag chip -> (node, estimatedWidth). Chips are compact buttons rather than
+-- clickable rows: a row takes onClick, but only a button carries the tooltip
+-- that says what the click does. Normal mode: click searches for the tag.
 -- Edit mode: [tag -> load into the input for replace] [x -> delete].
 local function tagChip(tag, editing, runId)
 	local disp = #tag > CHIP_MAX_CHARS and (tag:sub(1, CHIP_MAX_CHARS - 3) .. "...") or tag
@@ -407,7 +411,7 @@ local function tagChip(tag, editing, runId)
 		fontSize = 11,
 		height = 22,
 		variant = "secondary",
-		tooltip = "Search: --tag-ss '" .. tag .. "'",
+		tooltip = "Search: --tag-ss " .. common.quoteWord(tag),
 		onClick = function()
 			filterByTag(tag)
 		end,
@@ -503,13 +507,12 @@ local function openRunMenu(run)
 end
 
 -- Card header: state dot | run id | open | copy | ... | commit | project |
--- uptime | created (local tz) | state pill | expand chevron.
+-- uptime | created (local tz) | priority | state pill | expand chevron.
 --
--- The id is a label, not a button, because bold and clickable are mutually
--- exclusive in this UI API: only ui.button carries onClick alongside text, and
--- it has no fontWeight prop (an unknown prop warns on every reconcile pass);
--- ui.label takes fontWeight but no onClick, and boxes - the other clickable
--- node - cannot hold children. Hence the separate open-in-browser button.
+-- The id is a bold label with separate open/copy buttons beside it, not a
+-- clickable row wrapped around the label. Rows do take onClick, but only
+-- ui.button carries a tooltip and the onRightClick that openRunMenu needs, and
+-- every header control answers right-click with the run menu.
 local function cardHeader(run, expanded, color)
 	-- Shared by every header button: right-click anywhere in the control
 	-- cluster opens the run menu, so the gesture does not depend on hitting
@@ -559,6 +562,7 @@ local function cardHeader(run, expanded, color)
 		bits[#bits + 1] = ui.glyph({ name = "calendar", size = 12, color = "on_surface_variant" })
 		bits[#bits + 1] = ui.label({ text = created, color = "on_surface_variant", fontSize = 11 })
 	end
+	bits[#bits + 1] = priorityChip(run)
 	bits[#bits + 1] = ui.row({ fill = color .. "/0.15", radius = 9, paddingH = 8, paddingV = 2, align = "center" }, {
 		ui.label({ text = run.state, color = color, fontWeight = "semibold", fontSize = 11 }),
 	})

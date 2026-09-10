@@ -7,18 +7,19 @@
 id = "dani/dart"
 name = "DART Runs"
 version = "0.1.0"
-# plugin_api is a compatibility window, not a feature list: noctalia loads a
-# plugin only while its declared version sits inside [oldest, current] — 3..28
-# as of noctalia 2026-08-19. The Luau binding layer never sees this number, so
-# every call this plugin already makes was legal at 3; raising it widens which
-# plugin.toml keys are accepted and opts into the >=17 service lifecycle, where
-# noctalia calls onEnable() on the service and onExit()'s reason argument
-# reports "disable"/"uninstall" instead of always "reload". Neither handler is
-# defined here and a call to a missing global is a no-op, so the bump is inert
-# today — it is here so new manifest keys need no second bump.
-# CAVEAT: 28 landed upstream 2026-08-18. Rolling back to a generation with a
-# noctalia older than that makes it refuse to load this plugin outright.
-plugin_api = 28
+# plugin_api is a compatibility window: noctalia loads a plugin only while its
+# declared version sits inside [oldest, current] — 3..30 as of noctalia d6607b4
+# (2026-09-08) — and gates manifest keys on it. Declared at the current level;
+# what the code actually relies on, by level:
+#    9  closures as ui callback props      22  require("./common.luau")
+#   19  formatTime(..., "UTC")             24  argv runAsync, for every spawn
+#   28  panel.openContextMenu
+# Unused on purpose: 17's onEnable() / onExit reason (nothing to set up or tear
+# down), 29's graph pointer callbacks, and 30's [[panel]] `layer` key — the
+# default "top" keeps this dropdown under fullscreen windows, which is right.
+# CAVEAT: the previous noctalia pin (69a9018) topped out at 28. Rolling back to
+# a generation that old makes noctalia refuse to load this plugin outright.
+plugin_api = 30
 author = "dani"
 license = "MIT"
 icon = "target-arrow" # catalog glyph only; the bar shows assets/dart-logo.png

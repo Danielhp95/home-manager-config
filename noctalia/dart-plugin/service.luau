@@ -22,6 +22,8 @@ the run's page in $BROWSER); see the "Clickable toasts" block for why they go
 through notify-send rather than noctalia.notify.
 ]]
 
+local common = require("./common.luau")
+
 local DART = noctalia.getConfig("dart_path")
 local NU = noctalia.getConfig("nu_path")
 local USER = noctalia.getConfig("username")
@@ -64,33 +66,50 @@ local function customFilter()
 	return nil
 end
 
--- `dart run filter <args>` piped through slim.nu. The ~142KB --detailed payload
--- is slimmed before Lua ever parses it (json.decode runs inside a 25ms callback
--- budget). Capture-then-pipe instead of pipefail so a dart failure surfaces as a
+-- `dart run filter <args>` piped through slim.nu, as an argv spawn. The ~142KB
+-- --detailed payload is slimmed before Lua ever parses it (json.decode runs
+-- inside a 25ms callback budget). The pipe still needs a shell, but only as
+-- this fixed script: the dart and nu paths, slim.nu and every filter argument
+-- arrive as positional parameters, so no value is ever spliced into shell
+-- text. Capture-then-pipe instead of pipefail so a dart failure surfaces as a
 -- nonzero exit even though slim.nu is last in the pipeline (POSIX-sh safe).
 -- --stdin feeds the pipe to the script's $in; --no-config-file keeps the
 -- interactive config.nu (starship/atuin/... inits) out of a hot path.
+local SLIM_SCRIPT = 'd=$1 n=$2 s=$3; shift 3; o=$("$d" run filter "$@") || exit $?; '
+	.. 'printf "%s" "$o" | "$n" --no-config-file --stdin "$s"'
+local SLIM_NU = noctalia.pluginDir() .. "/slim.nu"
+
 local function slimmed(args)
-	return 'o=$('
-		.. DART
-		.. " run filter "
-		.. args
-		.. ') || exit $?; printf "%s" "$o" | '
-		.. NU
-		.. ' --no-config-file --stdin "'
-		.. noctalia.pluginDir()
-		.. '/slim.nu"'
+	local argv = { "/bin/sh", "-c", SLIM_SCRIPT, "sh", DART, NU, SLIM_NU }
+	for _, arg in ipairs(args) do
+		argv[#argv + 1] = arg
+	end
+	return argv
 end
 
--- Build the poll command. A custom filter replaces the default states query but
--- stays scoped to the configured user. --limit/--username-ss come FIRST so a
+-- Build the poll argv. A custom filter replaces the default states query but
+-- stays scoped to the configured user: --username-ss/--limit come FIRST so a
 -- user-supplied value wins (click keeps the last occurrence of an option).
-local function listCmd()
+-- The filter text is split into words here, not by a shell. The panel refuses
+-- text that does not split, so the error return only guards a filter that
+-- reached noctalia.state some other way.
+local function listArgv()
+	local args = { "--username-ss", USER, "--limit", tostring(LIMIT) }
 	local custom = customFilter()
 	if custom then
-		return slimmed("--limit " .. tostring(LIMIT) .. " --username-ss " .. USER .. " " .. custom .. " --detailed")
+		local words, splitErr = common.splitWords(custom)
+		if not words then
+			return nil, splitErr
+		end
+		for _, word in ipairs(words) do
+			args[#args + 1] = word
+		end
+	else
+		args[#args + 1] = "--states"
+		args[#args + 1] = STATES
 	end
-	return slimmed("--username-ss " .. USER .. " --states " .. STATES .. " --limit " .. tostring(LIMIT) .. " --detailed")
+	args[#args + 1] = "--detailed"
+	return slimmed(args)
 end
 
 -- ── State transitions ───────────────────────────────────────────────────────
@@ -142,43 +161,26 @@ end
 -- noctalia defers NotificationClosed for an actionable notification that only
 -- expired, which is what keeps the control center's history entry clickable
 -- too; the process is reaped when that entry is dismissed or ages out.
-local DETAILS_URL = "https://dart.platform.research.sony/en/details/" -- as in panel.luau
-local BROWSER = noctalia.getenv("BROWSER") or "xdg-open"
 local LOGO = noctalia.pluginDir() .. "/assets/dart-logo.png"
 local HAS_NOTIFY_SEND = noctalia.commandExists("notify-send")
 
--- Same guard as the panel: a run id is interpolated into /bin/sh, so anything
--- that is not alphanumeric-with-dashes falls back to a plain toast.
-local function validRunId(id)
-	return type(id) == "string" and id:match("^[%w%-]+$") ~= nil
-end
-
-local function sq(s) -- POSIX single-quoting for /bin/sh -c
-	return "'" .. (tostring(s):gsub("'", "'\\''")) .. "'"
-end
+-- Waiting on notify-send and then deciding needs a shell, so the spawn is a
+-- fixed script with everything passed positionally: $1 urgency, $2 icon,
+-- $3 title, $4 body, and the rest is the browser argv with the run URL last.
+-- stdout carries the action key when the toast is clicked and is empty when it
+-- just expires, so the browser only ever starts on a click.
+local NOTIFY_SCRIPT = 'u=$1 i=$2 t=$3 b=$4; shift 4; '
+	.. 'a=$(notify-send -a Noctalia -u "$u" -i "$i" -A "default=Open run" "$t" "$b"); '
+	.. '[ "$a" = default ] && exec "$@"'
 
 -- `-a Noctalia` keeps the toast visually identical to noctalia.notify's, which
 -- is what addInternal() stamps as the app name.
 local function clickableNotify(id, title, body, failure)
-	return noctalia.runAsync(table.concat({
-		"a=$(notify-send -a Noctalia -u ",
-		failure and "critical" or "normal",
-		" -i ",
-		sq(LOGO),
-		" -A ",
-		sq("default=Open run"),
-		" ",
-		sq(title),
-		" ",
-		sq(body),
-		")",
-		-- stdout carries the action key when the toast is clicked and is empty
-		-- when it just expires, so the browser only ever starts on a click.
-		'; [ "$a" = default ] && exec ',
-		BROWSER,
-		" ",
-		sq(DETAILS_URL .. id),
-	}))
+	local argv = { "/bin/sh", "-c", NOTIFY_SCRIPT, "sh", failure and "critical" or "normal", LOGO, title, body }
+	for _, arg in ipairs(common.browserArgv(common.DETAILS_URL .. id)) do
+		argv[#argv + 1] = arg
+	end
+	return noctalia.runAsync(argv)
 end
 
 local function loadSeen()
@@ -196,7 +198,7 @@ local seen = loadSeen()
 
 -- Clicking the toast opens the run's page, the same URL the panel's open button
 -- uses. Falls back to a plain (unclickable) toast when notify-send is missing,
--- the id is unsafe to interpolate, or the spawn is refused.
+-- the id would not make a run URL, or the spawn is refused.
 --
 -- The newline is a hard break, not a suggestion: the toast body is laid out
 -- with single_paragraph_mode off (render/text/cairo_text_renderer.cpp), so
@@ -208,7 +210,7 @@ local seen = loadSeen()
 local function announce(id, from, to)
 	local line = ("%s\n%s → %s"):format(id, tostring(from), tostring(to))
 	local failure = isFailureState(to)
-	if HAS_NOTIFY_SEND and validRunId(id) and clickableNotify(id, "DART", line, failure) then
+	if HAS_NOTIFY_SEND and common.validRunId(id) and clickableNotify(id, "DART", line, failure) then
 		return
 	end
 	if failure then
@@ -230,8 +232,8 @@ local function resolveVanished(vanished)
 	if #ids == 0 then
 		return
 	end
-	local cmd = slimmed("--id-ss " .. table.concat(ids, ",") .. " --limit " .. tostring(LIMIT) .. " --detailed")
-	noctalia.runAsync(cmd, function(res)
+	local argv = slimmed({ "--id-ss", table.concat(ids, ","), "--limit", tostring(LIMIT), "--detailed" })
+	noctalia.runAsync(argv, function(res)
 		local landed = {}
 		if not res.timedOut and res.exitCode == 0 then
 			local rows = noctalia.json.decode(res.stdout)
@@ -338,6 +340,11 @@ refresh = function()
 		pendingRefresh = true
 		return
 	end
+	local argv, argvErr = listArgv()
+	if not argv then
+		noctalia.state.set("error", "bad dart filter: " .. tostring(argvErr))
+		return
+	end
 	isPolling = true
 	noctalia.state.set("busy", true)
 	-- Captured at poll start, not in the callback: only the default query is
@@ -349,7 +356,7 @@ refresh = function()
 	-- 20s timeout: far above the ~1.5s p50, far below the 120s browser hang
 	-- a stale refresh token would cause. On timeout the whole process group
 	-- is killed and handleResult shows the `dart login` hint.
-	local ok = noctalia.runAsync(listCmd(), function(res)
+	local ok = noctalia.runAsync(argv, function(res)
 		isPolling = false
 		noctalia.state.set("busy", false)
 		handleResult(res, diffable)

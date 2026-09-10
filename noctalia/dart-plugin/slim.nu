@@ -15,6 +15,9 @@ def main [] {
 			project: ($r.project_info? | default {} | get --optional project_id)
 			tags: ($cfg | get --optional tags | default [])
 			description: ($cfg | get --optional description)
+			# Float from the API (-1.0); null when submitted without one, which
+			# DART schedules as 0 - the panel shows it that way.
+			priority: ($cfg | get --optional priority)
 			git_commit: ($r.git_commit? | default "")
 			state_updated_at: $r.state_updated_at?
 			user_name: $r.user_name?

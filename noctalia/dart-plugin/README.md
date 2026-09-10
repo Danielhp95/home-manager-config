@@ -15,14 +15,18 @@ panel.
 **Panel** (1200×640, floating, centered under the bar)
 
 - One card per run: state dot + colored state pill, run id, project chip,
-  creation time, tag chips. Cards expand (chevron) to show the description,
+  creation time, scheduling priority (just left of the state pill; a run
+  submitted without one shows DART's default, 0), tag chips. Cards expand (chevron) to show the description,
   an info line (copyable git commit, clusters, last state change), and actions.
 - Run id click → run page in `$BROWSER`; copy buttons for id and commit.
 - **Filter bar**: free-form `dart run filter` args (e.g.
   `--tag-ss expt=foo --states success`). Applied args stay scoped to
   `--username-ss <you>` and `--limit <n>` unless you override them (the CLI
-  keeps the last occurrence of a repeated option). Clicking a **tag chip**
-  searches `--tag-ss '<tag>'`. Empty filter → default query (your active runs).
+  keeps the last occurrence of a repeated option). Quote values as you would in
+  a shell (`'…'`, `"…"`, `\`), but no shell ever runs the text: the plugin
+  splits it into arguments itself, so `$`, `;` and `|` are plain characters.
+  Clicking a **tag chip** searches `--tag-ss '<tag>'`, quotes in the tag
+  included. Empty filter → default query (your active runs).
 - **Actions**, gated by `dart_client`'s state machine: Cancel (two-step
   confirm), Suspend (only from `running`), Resume (only from
   `suspended_manual`), Delete (two-step confirm). The CLI has no confirmation
@@ -56,6 +60,9 @@ panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 ```
 
 - `plugin.toml` — manifest: entries, panel geometry, user settings.
+- `common.luau` — helpers every entry `require`s: the run-page URL, the run-id
+  guard, the refresh request, and the shell-style word splitter that turns the
+  filter text and `$BROWSER` into argv.
 - `service.luau` — the only place `dart run filter` runs. Handles the
   custom-filter query, queues refreshes requested mid-poll, publishes state,
   and raises the transition toasts.
@@ -84,8 +91,9 @@ Declarative install is in `../default.nix`: the plugin dir is linked to
 hot-reload the running shell), `plugins.enabled = ["dani/dart"]`, and the
 `dart` widget alias sits in `bar.default.end`.
 
-- Edit any `.luau` → noctalia hot-reloads that entry (watch `journalctl
-  --user -u noctalia -f` for errors). Manifest changes need
+- Edit any `.luau` → noctalia hot-reloads that entry; editing `common.luau`
+  reloads every entry that requires it (watch `journalctl --user -u noctalia -f`
+  for errors). Manifest changes need
   `noctalia msg plugins disable dani/dart && noctalia msg plugins enable dani/dart`.
 - Lint: `noctalia plugins lint ~/.local/share/noctalia/plugins/dart`
 - Drive it: `noctalia msg panel-toggle dani/dart:panel`,
@@ -109,8 +117,8 @@ hot-reload the running shell), `plugins.enabled = ["dani/dart"]`, and the
   GUI and `noctalia msg plugins enable`) merge OVER the nix-managed
   config.toml and replace arrays wholesale — if nix edits to `plugins.enabled`
   or `bar.default.end` stop applying, delete the shadowing block there.
-- Tag values containing a single quote can't be safely shell-quoted; those
-  operations are rejected with a toast rather than risking mangled commands.
+- `plugin.toml` declares `plugin_api = 30`. A noctalia without API 30 (the
+  2026-08 pins stop at 28) refuses to load the plugin at all.
 - A clickable transition toast is a detached `notify-send -A default=…` process
   parked on the D-Bus reply, since only the sender is told the action fired and
   `noctalia.notify` cannot carry actions. noctalia defers `NotificationClosed`

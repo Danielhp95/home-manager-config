@@ -9,6 +9,8 @@ has no update() tick. Note bar widgets get one VM per output, which is why
 the polling lives in the singleton service instead of here.
 ]]
 
+local common = require("./common.luau")
+
 local runs = noctalia.state.get("runs") or {}
 local err = noctalia.state.get("error")
 
@@ -100,7 +102,7 @@ end
 -- forces a re-poll through the service's command channel.
 function onIpc(event)
 	if event == "refresh" then
-		noctalia.state.set("command", { op = "refresh", nonce = os.clock() })
+		common.requestRefresh()
 	end
 end
 
