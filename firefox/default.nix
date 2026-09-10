@@ -22,9 +22,9 @@
 # in storage.sync (storage-sync-v2.sqlite), while Home Manager's
 # extensions.settings only writes the storage.local backend. Firefox Sync
 # carries them instead — see services.sync.engine.extension-storage.force below.
-# ./vimium-settings.json is a plain snapshot of Vimium's config kept for
-# disaster recovery; nothing applies it, restore it by hand through Vimium's
-# Options page -> Backup and Restore -> Choose a backup file.
+# ./vimium.nix therefore owns Vimium's config as *data* and renders it to
+# ~/.local/share/vimium/vimium-settings.json; restoring it stays a manual step
+# through Vimium's Options page -> Backup and Restore -> Choose a backup file.
 #
 # Three installed add-ons are *not* declared here because they have no package
 # in the firefox-addons set: GoLinks (teamgolinks@gmail.com), History Export
@@ -36,8 +36,14 @@
 
 let
   p = (import ../palette.nix).hash;
+
+  # The profile directory, spelled once — `path` below and the profile-scoped
+  # files at the bottom of this module have to agree.
+  profilePath = "1t50d90o.default";
 in
 {
+  imports = [ ./vimium.nix ];
+
   programs.firefox = {
     enable = true;
 
@@ -52,7 +58,7 @@ in
       id = 0;
       # Must match the existing directory name, otherwise Firefox starts on an
       # empty profile.
-      path = "1t50d90o.default";
+      path = profilePath;
       isDefault = true;
 
       # Pinned to whatever the firefox-addons input locks; `nix flake update
@@ -83,48 +89,48 @@ in
         # Required for userChrome.css to be read at all.
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
 
-        # Dark chrome, LIGHT content — websites are rendered exactly as their
-        # authors wrote them, which is the whole point of this block.
+        # Dark chrome, content that follows the OS light/dark setting — same
+        # as a stock Firefox. content-override was pinned to 1 (force Light,
+        # always) from 2026-08-20 to 2026-08-21 on the theory that "follow the
+        # OS" was itself what recoloured pages. That traded one complaint for
+        # a worse one: about:preferences/about:config/pdf.js/reader-mode stuck
+        # light no matter the desktop theme, and any site the user actually
+        # wanted dark got forced light too. Reverted to 2 on request.
         #
-        # The trap: "let content follow the OS" is not the same as "don't touch
-        # page colours". This desktop is dark (gtk-application-prefer-dark-theme
-        # = 1, WhiteSur-Dark-orange), so "follow the OS" means Firefox reports
-        # `prefers-color-scheme: dark` to every site, every site with a dark
-        # theme flips itself dark, and the UA's dark colours apply to anything
-        # the page leaves unstyled. That is page recolouring, just outsourced.
-        #
-        # Measured on Firefox 154 in this exact GTK environment (fresh profiles
-        # under Xvfb, one pref changed at a time, screenshotted):
-        #   content-override = 1  ->  content is Light. Sites keep their own
-        #                             colours; dark-theme sites stay light.
-        #   content-override = 0  ->  content is Dark.
-        #   content-override = 2  ->  content follows the OS, i.e. dark here.
-        #                             This is what used to be set, and it is
-        #                             what was still recolouring pages.
+        # Measured on Firefox 154 in this exact GTK environment (dark:
+        # gtk-application-prefer-dark-theme = 1, WhiteSur-Dark-orange; fresh
+        # profiles under Xvfb, one pref changed at a time, screenshotted):
+        #   content-override = 1  ->  content is Light, unconditionally.
+        #   content-override = 0  ->  content is Dark, unconditionally.
+        #   content-override = 2  ->  content follows the OS (dark, here).
         #   browser.theme.content-theme = 0 / 1 / 2  ->  no effect on content
-        #                             whatsoever once content-override is set;
-        #                             Firefox also rewrites this pref itself
-        #                             from the active theme. It is kept pinned
-        #                             only so a value dropped from user.js
-        #                             can't linger in prefs.js (prefs.js is
-        #                             never pruned), not because it does
-        #                             anything.
+        #                             whatsoever; Firefox also rewrites this
+        #                             pref itself from the active theme. Kept
+        #                             pinned only so a value dropped from
+        #                             user.js can't linger in prefs.js
+        #                             (prefs.js is never pruned), not because
+        #                             it does anything.
         #   browser.theme.toolbar-theme = 0  ->  chrome only, confirmed: the
         #                             toolbars/tabs stay dark under every
         #                             combination above.
         # Do not re-derive these from Firefox source comments or web docs —
         # both disagree with the measurement. Re-measure instead.
         #
-        # Known cost of content-override = 1: Firefox's own in-content pages
-        # (about:preferences, about:config, the pdf.js viewer, reader mode)
-        # are content documents too, so they render light as well. The browser
-        # chrome around them stays dark. That is the trade for websites never
-        # being touched; flip this back to 2 to undo it. Dark Reader is the
-        # per-site opt-in for pages you *want* darkened — it is enabled by
-        # default in its own synced settings, which nix does not control.
+        # The recurring "Firefox is recolouring websites" complaint is NOT
+        # this pref: it's Dark Reader (an installed add-on, see
+        # extensions.packages below). Its synced settings
+        # (storage-sync-v2.sqlite) read enabled=true, enabledByDefault=true,
+        # with a long `disabledFor` exclusion list — i.e. it force-darkens
+        # every site except the ones piled up in that list, backwards from
+        # "opt in per site". Nix cannot fix this: that config lives in
+        # Firefox Sync's extension-storage backend, which Home Manager's
+        # extensions.settings does not write (see the file header — it only
+        # reaches storage.local). Turn it off by hand: Dark Reader's toolbar
+        # icon -> Settings (gear) -> Enabled by default -> off, leaving it as
+        # a per-site opt-in for pages you actually want darkened.
         "browser.theme.toolbar-theme" = 0;
         "browser.theme.content-theme" = 2;
-        "layout.css.prefers-color-scheme.content-override" = 1;
+        "layout.css.prefers-color-scheme.content-override" = 2;
 
         # browser.display.background_color is the *document canvas* — the
         # colour an unstyled page paints itself with, page content and not
@@ -217,4 +223,56 @@ in
       + builtins.readFile ./userChrome.css;
     };
   };
+
+  # --- keyboard shortcuts (about:keyboard) -------------------------------
+  # Ctrl+S opens Split View instead of Save Page As.
+  #
+  # Split View is Firefox's own, native since 149 (this machine runs 155), and
+  # no add-on can reach it: there is no WebExtension API for it, which is why
+  # Vimium/Tridactyl/Surfingkeys all cannot bind it and why extensions that
+  # advertise "split view" really juggle separate windows. The keyboard path is
+  # about:keyboard (shipped 147), whose customisations live in this file —
+  # verified against the shipped implementation, not docs:
+  #
+  #   browser/components/customkeys/CustomKeys.sys.mjs
+  #     const config = new JSONFile({
+  #       path: PathUtils.join(PathUtils.profileDir, "customKeys.json"),
+  #     });
+  #
+  # Schema, from that file's own comment: a flat map of XUL <key> element id ->
+  # { modifiers, key, keycode }, where `key` and `keycode` are mutually
+  # exclusive and an empty object means "the default binding is cleared".
+  # Modifiers are sorted and comma-joined; on Linux Ctrl serialises as "accel"
+  # and printable keys are stored upper-case (CustomKeysParent.handleEvent
+  # does `event.key.toUpperCase()`), so this is byte-for-byte what the
+  # about:keyboard UI would have written.
+  #
+  # Safe to own from nix: CustomKeys only ever calls config.load() at window
+  # open. It calls saveSoon() exclusively from changeKey/clearKey/resetKey/
+  # resetAll — i.e. only when about:keyboard itself edits a shortcut. Nothing
+  # rewrites this file behind us on startup, unlike search.json.mozlz4.
+  #
+  # The flip side is that about:keyboard becomes read-only for these two: it
+  # writes atomically (temp file + rename), which would replace the Home
+  # Manager symlink with a regular file and leave nix and the profile
+  # disagreeing. Edit here and rebuild, not in the browser.
+  #
+  # key_savePage is cleared rather than left alone. Its default *is* Ctrl+S
+  # (`<key id="key_savePage" data-l10n-id="save-page-shortcut"
+  # command="Browser:SavePage" modifiers="accel"/>`), so leaving it bound would
+  # put two <key> elements on the same chord and let document order decide.
+  # Save Page As is still on File -> Save Page As, and can be given another
+  # chord here if it turns out to be missed.
+  #
+  # Chrome-level keys are matched before content scripts see them, so this wins
+  # over Vimium's keymap on every page — including the ones Vimium is excluded
+  # from anyway (see ./vimium.nix).
+  home.file.".mozilla/firefox/${profilePath}/customKeys.json".text =
+    builtins.toJSON {
+      key_addTabSplitView = {
+        modifiers = "accel";
+        key = "S";
+      };
+      key_savePage = { };
+    };
 }
