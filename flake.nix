@@ -15,14 +15,14 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      rev = "24e23ca4bb6041014c3b784fdf5012b2fdae89ac";
+      rev = "7ebf13abb3c391604c60c9f627c7a403bcec8d17";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
       url = "https://github.com/outfoxxed/hy3/";
-      rev = "42b7ed8fd9aefd3f36e5f617afd5071245c67853";
+      rev = "12a73ab0adddbc39f839da320dcc2b028769fc58";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
@@ -30,7 +30,6 @@
     hyprland-preview-share-picker = {
       type = "git";
       url = "https://github.com/WhySoBad/hyprland-preview-share-picker";
-      rev = "e2f30ff85486e557018523da45ccbc846e3a499c";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -63,7 +62,7 @@
     iris = {
       type = "git";
       url = "https://github.com/versenilvis/IRIS";
-      rev = "42416fc720d62e80696d839b66deffe8aa7c90d6";
+      rev = "ac1cfe72820bbbb0f0eb3fb017a6b1e7f3fcb2fe";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -116,7 +115,6 @@
         )
       ];
       hmSharedModules = [
-        inputs.noctalia.homeModules.default
         inputs.spicetify-nix.homeManagerModules.default
       ];
       hmExtraSpecialArgs = {
