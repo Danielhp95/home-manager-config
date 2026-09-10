@@ -181,15 +181,24 @@ in
     plugins = with pkgs; [
       hy3
     ];
-    # NOTE: the dbus-update-activation-environment exec-once entries that used to
-    # live here are now in hyprland.lua's hl.on("hyprland.start", ...) hook, since
-    # `settings` is serialized as hl.<name>(...) lua calls under configType = "lua".
-    # UWSM owns the session lifecycle now (tuigreet launches `uwsm start`,
-    # see tuigreet.nix): it exports the env to the user manager and manages
-    # graphical-session.target canonically, so the old stop/start dance (and
-    # its PartOf= footguns) is gone. Hyprland reports back via `uwsm finalize`
-    # in hyprland.lua's start hook.
-    systemd.enable = false;
+    # greetd launches the compositor via `start-hyprland` (Hyprland's own
+    # crash-watchdog binary, see tuigreet.nix) instead of uwsm now. Session
+    # lifecycle is back on this module's own systemd integration: on
+    # hyprland.start it runs `dbus-update-activation-environment --systemd`
+    # then the *default* extraCommands (stop/start hyprland-session.target,
+    # which activates graphical-session.target). Do NOT override extraCommands
+    # to stop graphical-session.target directly — that was the old hand-rolled
+    # hook and it silently killed hyprpolkitagent/gpg-agent.socket every login
+    # (see graphical-session-target-dance memory): stopping
+    # graphical-session.target tears down every PartOf= unit, and only
+    # WantedBy= units come back when hyprland-session.target pulls the target
+    # back up. The module's default (stop/start hyprland-session.target, one
+    # level down) avoids that.
+    systemd = {
+      enable = true;
+      variables = [ "--all" ];
+      enableXdgAutostart = true;
+    };
     xwayland.enable = true;
   };
 

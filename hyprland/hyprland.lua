@@ -3,7 +3,9 @@
 -- Lua-equivalent of hyprland.conf (Hyprland >= 0.55, hy3 with lua support).
 -- Home Manager prepends `hl.plugin.load(<hy3>)` before this file, so
 -- hl.plugin.hy3.* and the hy3 config values are available below. Session/env
--- systemd integration is UWSM's job now (see tuigreet.nix + hyprland/default.nix).
+-- systemd integration is home-manager's own systemd hook (wayland.windowManager
+-- .hyprland.systemd, see hyprland/default.nix); greetd launches the compositor
+-- via start-hyprland (tuigreet.nix).
 --
 -- Reference: https://wiki.hypr.land/Configuring/Start/
 
@@ -181,6 +183,18 @@ hl.config({
 	dwindle = {
 		preserve_split = true,
 	},
+
+	render = {
+		-- Hand eligible output commits to the DRM page-flip queue asynchronously
+		-- instead of blocking the render loop on each one (Hyprland >= 0.56's
+		-- OutputCommitCoordinator). Default is off -- it's new and opt-in. Worth
+		-- it here for the same reason borderangle is disabled and hardware
+		-- cursors are on: this iGPU has no headroom to spare, and blur behind
+		-- almost every window (ignore_opacity + the transparency above) already
+		-- makes each frame expensive. If frames start tearing or stuttering,
+		-- this is the first knob to put back to false.
+		async_commit = true,
+	},
 })
 
 -- Animations: curves + per-leaf settings
@@ -234,17 +248,121 @@ end
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Runtime state that has to survive a config reload
+--
+-- A reload (`hyprctl reload`, SUPER+SHIFT+C below, or a home-manager switch)
+-- throws away the Lua VM entirely and re-runs this file from scratch, so
+-- anything a running config put in a variable comes back nil. Two pieces of
+-- state live *only* in the running compositor and used to be lost on every
+-- rebuild:
+--
+--   * the per-workspace scrolling/hy3 toggle (`scrolling_workspaces` below),
+--   * the `present` script's mirror rule (hyprland/default.nix) — which is why
+--     that file warned "don't rebuild mid-presentation".
+--
+-- Hyprland >= 0.56 fires `config.unload` just before a reload, which is the
+-- hook that lets us hand state forward. It can't go through a Lua variable
+-- (fresh VM), so it goes through a file.
+--
+-- Reload vs. logout: `config.unload` fires on shutdown too, immediately
+-- followed by `hyprland.shutdown` — so shutdown writes the file and then
+-- deletes it again, and a fresh session starts clean (mirroring off, every
+-- workspace back on hy3), which is the behaviour that was there before. Only a
+-- reload restores. A hard crash can leave a stale file behind and cause one
+-- spurious restore on next login; delete it by hand if that ever bites.
+-- ─────────────────────────────────────────────────────────────────────────────
+local state_dir = os.getenv("HOME") .. "/.local/state/hypr"
+local state_path = state_dir .. "/lua-runtime-state"
+
+-- Forward declaration: the layout toggle populates this, and save_state below
+-- reads it, but the keybinding section that owns it is further down the file.
+local scrolling_workspaces = {} -- workspace id (number) -> true while toggled to scrolling
+
+-- Which output the `present` script has mirroring, or nil. Read live from the
+-- compositor rather than trusting a marker the script writes: `present` is only
+-- one of the ways a mirror can be set up (hyprctl eval by hand is another), and
+-- the compositor is the thing that actually knows.
+local function mirrored_output()
+	for _, mon in ipairs(hl.get_monitors()) do
+		if mon.is_mirror then
+			return mon.name
+		end
+	end
+	return nil
+end
+
+local function save_state()
+	os.execute("mkdir -p " .. state_dir)
+	local f = io.open(state_path, "w")
+	if not f then
+		return
+	end
+	local ids = {}
+	for id in pairs(scrolling_workspaces) do
+		ids[#ids + 1] = tostring(id)
+	end
+	table.sort(ids)
+	f:write("scrolling=", table.concat(ids, ","), "\n")
+	f:write("mirror=", mirrored_output() or "", "\n")
+	f:close()
+end
+
+local function restore_state()
+	local f = io.open(state_path, "r")
+	if not f then
+		return
+	end
+	local saved = {}
+	for line in f:lines() do
+		local k, v = line:match("^(%w+)=(.*)$")
+		if k then
+			saved[k] = v
+		end
+	end
+	f:close()
+
+	for id in (saved.scrolling or ""):gmatch("[^,]+") do
+		local n = tonumber(id)
+		if n then
+			scrolling_workspaces[n] = true
+			hl.workspace_rule({ workspace = id, layout = "scrolling" })
+		end
+	end
+
+	-- Restate mode/position/scale for the same reason the `present` script does:
+	-- a rule keyed on the output name outranks the "" wildcard above, so leaving
+	-- them off would silently fall back to scale "auto".
+	if saved.mirror and saved.mirror ~= "" then
+		hl.monitor({
+			output = saved.mirror,
+			mode = "preferred",
+			position = "auto",
+			scale = "1",
+			mirror = "eDP-1",
+		})
+		-- Monitor rules, unlike hl.config values, aren't re-read each frame —
+		-- they need an explicit re-apply. Same two-step as `present`.
+		hl.exec_cmd("hyprctl dispatch forcerendererreload")
+	end
+end
+
+hl.on("config.unload", save_state)
+hl.on("config.reloaded", restore_state)
+-- Fires right after config.unload on exit, so a logout leaves no file behind.
+hl.on("hyprland.shutdown", function()
+	os.remove(state_path)
+end)
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Autostart (was: exec-once)
 -- Home Manager already registers a hyprland.start hook (hl.on appends, so this
 -- one runs alongside it) which does `dbus-update-activation-environment
--- --systemd --all` — no need to repeat any env propagation here.
+-- --systemd --all` and starts hyprland-session.target — no need to repeat any
+-- env propagation or session-target handling here.
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.on("hyprland.start", function()
-	-- Tell UWSM the compositor is up: exports WAYLAND_DISPLAY (+ the listed
-	-- vars) to the systemd user manager and sends readiness for the
-	-- Type=notify wayland-wm@ unit — without this the session times out.
-	hl.exec_cmd("uwsm finalize HYPRLAND_INSTANCE_SIGNATURE")
 	hl.exec_cmd("hyprctl dispatch workspace 2") -- start on the terminal workspace
+	os.remove(state_path) -- belt and braces: clear anything a crash left behind
 end)
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -298,6 +416,11 @@ hl.bind(
 )
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"))
 hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"))
+-- Re-read hyprland.lua in place (Hyprland >= 0.56 native dispatcher; previously
+-- this was only reachable as `hyprctl reload`). Note this drops the Lua VM, so
+-- runtime-only state goes through the state file — see the runtime-state
+-- section near the top.
+hl.bind(mod .. " + SHIFT + C", hl.dsp.reload_config())
 
 -- Toggle bar
 hl.bind(mod .. " + b", hl.dsp.exec_cmd("noctalia msg bar-toggle"))
@@ -315,30 +438,46 @@ hl.bind(mod .. " + period", hl.dsp.focus({ workspace = "e+1" }))
 
 -- Layout toggle: hy3 <-> Hyprland's native scrolling (niri-style) layout,
 -- scoped to the active workspace via a per-workspace layout rule (Hyprland
--- >= 0.54's layout rewrite). Runtime-only: resets on reload/relogin, same
--- as the `present` script's monitor rule above. The hjkl movement binds
--- below check this table to pick hy3's tree-aware dispatcher or
--- Hyprland's native direction dispatcher (which scrolling implements and
--- hy3 doesn't).
-local scrolling_workspaces = {} -- workspace id (number) -> true while toggled to scrolling
+-- >= 0.54's layout rewrite). Survives a reload now (see the runtime-state
+-- section above), but still resets on relogin. The hjkl movement binds below
+-- check `scrolling_workspaces` (declared up there, because config.unload has
+-- to read it) to pick hy3's tree-aware dispatcher or Hyprland's native
+-- direction dispatcher (which scrolling implements and hy3 doesn't).
+local layout_bind = mod .. " + N"
 
 local function active_ws_id()
 	local ws = hl.get_active_workspace()
 	return ws and ws.id or nil
 end
 
-hl.bind(mod .. " + N", function()
+hl.bind(layout_bind, function()
 	local id = active_ws_id()
 	if not id then
 		return
 	end
+	local layout
 	if scrolling_workspaces[id] then
 		scrolling_workspaces[id] = nil
-		hl.workspace_rule({ workspace = tostring(id), layout = "hy3" })
+		layout = "hy3"
 	else
 		scrolling_workspaces[id] = true
-		hl.workspace_rule({ workspace = tostring(id), layout = "scrolling" })
+		layout = "scrolling"
 	end
+	hl.workspace_rule({ workspace = tostring(id), layout = layout })
+
+	-- The toggle is otherwise silent and the two layouts look alike until you
+	-- try to move a window, so say which one is live and how to get back. The
+	-- synchronous hint makes a second press replace the first toast rather than
+	-- stack another one (ignored by daemons that don't implement it).
+	hl.exec_cmd(
+		string.format(
+			"notify-send -a hyprland -h string:x-canonical-private-synchronous:hypr-layout "
+				.. "'Layout: %s' 'Workspace %d — %s to toggle'",
+			layout,
+			id,
+			layout_bind
+		)
+	)
 end)
 
 -- Focus / move window (hy3, or Hyprland's native dispatcher on a workspace
