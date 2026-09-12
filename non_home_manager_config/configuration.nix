@@ -10,35 +10,10 @@
   ...
 }:
 
-let
-  # Post-`nh os boot`/`nh os switch` sanity check. /boot (vfat ESP) is a
-  # different device than /nix/store (btrfs root), so GRUB's copyKernels
-  # kicks in automatically and grub-install copies the profile's bzImage to
-  # /boot/kernels/<store-name> rather than booting straight from the store.
-  # A rebuild that updates the store/profile but never touches the ESP
-  # (unmounted or failed /boot) leaves that copy stale — the exact failure
-  # that let the booted kernel's modules get GC'd out from under it. See
-  # kernel-bootloader-drift memory.
-  esp-check = pkgs.writeShellScriptBin "esp-check" ''
-    set -eu
-    kernel_store_path="$(readlink -f /nix/var/nix/profiles/system/kernel)"
-    kernel_name="$(printf '%s' "''${kernel_store_path#/nix/store/}" | tr / -)"
-    esp_kernel="/boot/kernels/$kernel_name"
-
-    if [ ! -e "$esp_kernel" ]; then
-      echo "ESP OUT OF SYNC: $esp_kernel missing (profile kernel: $kernel_store_path)"
-      exit 1
-    elif ! cmp -s "$esp_kernel" "$kernel_store_path"; then
-      echo "ESP OUT OF SYNC: $esp_kernel differs from $kernel_store_path"
-      exit 1
-    fi
-    echo "ESP in sync: $esp_kernel"
-  '';
-in
-
 {
   imports = [
     ../tuigreet.nix
+    ./esp-check.nix
     ../fcitx5/fonts.nix # the input method itself is home-manager config now
     ./voxtype.nix
   ];
@@ -85,13 +60,17 @@ in
       # `nix.gc.options = "--delete-older-than 30d"`: a blanket `-d`/
       # `--delete-old` is what stripped the running kernel's modules out from
       # under it after a rebuild silently failed to reach the ESP.
+      # `--keep 10` must stay >= boot.loader.grub.configurationLimit (10, in
+      # hardwares/*.nix): GC must never delete a generation GRUB still lists.
       extraArgs = "--keep-since 3d --keep 10";
     };
   };
 
-  # `esp-check` after `nh os boot`/`nh os switch`: catches a rebuild that
-  # updated the store/profile but never made it onto the ESP.
-  environment.systemPackages = [ esp-check ];
+  # kexec-tools on PATH. NixOS's kexec module enables this by default, but it
+  # is what made the 2026-09 recovery possible without a USB stick (booting
+  # the matching kernel straight from the store after a wrong-kernel boot),
+  # so it is pinned here rather than left to an upstream default.
+  boot.kexec.enable = true;
 
   # gcr provides the D-Bus prompter that gnome-keyring and gcr-ssh-agent use
   # for unlock/PIN dialogs; without it keyring prompts silently fail.

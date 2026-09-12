@@ -26,7 +26,9 @@
       {
         matches = [
           { "node.name" = "~alsa_output.pci-0000_02_00.1.pro-output-.*"; }
-          { "node.name" = "~alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__HDMI[0-9]__sink"; }
+          {
+            "node.name" = "~alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__HDMI[0-9]__sink";
+          }
         ];
         actions = {
           update-props = {
@@ -92,24 +94,52 @@
       };
     };
     loader = {
-      # systemd-boot = {
-      #   configurationLimit = 10; # Empirically tested so that we don't run out of space in '/boot'
-      #   enable = true;  # NOTE: hopefully this doesn't fuck things up
-      # };
+      # GRUB, not systemd-boot: the Undertale theme below is the point.
+      #
+      # 2026-09-09..12 boot incident (`grub rescue>` "symbol 'grub_memcpy' not
+      # found", then a systemd-boot entry for a closure deleted months ago).
+      # The cause was not GRUB or a stale ESP: rebuilds had been landing on
+      # the ESP all along. It was three loaders on one ESP, picked by an
+      # INSYDE firmware whose BootOrder never kept the "NixOS-boot" NVRAM
+      # entry efibootmgr created: first Ubuntu's leftover core image (which
+      # reads modules from OUR /boot/grub/x86_64-efi, so the 2.14 modules a
+      # nixpkgs bump wrote were unloadable by it), then the systemd-boot the
+      # original 25.11 install left behind. Policy since:
+      #   * install to the removable path /EFI/BOOT/BOOTX64.EFI, which the
+      #     firmware's "Internal Hard Disk" entry loads regardless of NVRAM;
+      #   * never launch or chainload another GRUB core from this ESP: every
+      #     core on it shares one module directory, and any core not written
+      #     by the same grub-install run breaks on the next nixpkgs bump;
+      #   * esp-check (non_home_manager_config/esp-check.nix) runs after every
+      #     install and fails the rebuild when the ESP disagrees with the
+      #     profile or the removable image is not GRUB.
+      # Flipping efiInstallAsRemovable does not by itself re-run grub-install
+      # (its state file ignores the flag): the first rebuild after this change
+      # needs `nh os boot --install-bootloader`; esp-check says so if forgotten.
 
       # Back to 5s: 1s was technically enough (any keypress opens the menu for
-      # older generations / the Ubuntu chainload) but left no room to actually
+      # older generations / the Ubuntu entry) but left no room to actually
       # read the entries, and the boot-speed win never justified the misses.
       timeout = 5;
       efi = {
-        canTouchEfiVariables = true;
+        # nixpkgs asserts this off when efiInstallAsRemovable is on. Nothing
+        # is lost: the NVRAM entry it used to write existed but sat outside
+        # BootOrder on this firmware, so NVRAM never chose the loader here.
+        canTouchEfiVariables = false;
         efiSysMountPoint = "/boot";
       };
       grub = {
         enable = true;
         device = "nodev";
         efiSupport = true;
+        efiInstallAsRemovable = true;
+        # The installer turns this on by itself when /boot is a different
+        # filesystem from the store; pinned so the ESP layout esp-check
+        # verifies (/boot/kernels/<store-name>) never depends on detection.
+        copyKernels = true;
         useOSProber = false;
+        # Must stay <= the `--keep N` of programs.nh.clean (configuration.nix):
+        # GRUB lists this many generations; GC must never delete one it lists.
         configurationLimit = 10;
 
         # Undertale mirror-scene theme: the boot menu renders inside the
@@ -127,15 +157,18 @@
         gfxmodeEfi = "1920x1200,auto";
 
         extraEntries = ''
-          # Chainload to Ubuntu's GRUB config file
+          # Ubuntu: run its own grub.cfg from its /boot partition
+          # (/dev/nvme0n1p2, ext4) inside THIS GRUB; its initrd unlocks its
+          # LUKS root (/dev/nvme0n1p3) as before. Not `chainloader
+          # /EFI/ubuntu/grubx64.efi`: that core's prefix is (hd0,gpt1)/grub,
+          # our module directory, and an old core loading 2.14 modules is
+          # exactly the grub_memcpy rescue prompt.
           menuentry "Ubuntu" {
             insmod part_gpt
-            insmod fat
-            insmod search_fs_uuid
-            search --set=root --fs-uuid 701C-C166
-            chainloader /EFI/ubuntu/grubx64.efi.backup
+            insmod ext2
+            search --set=root --fs-uuid 6ff714da-bb16-4d42-8581-5082d45d2176
+            configfile /grub/grub.cfg
           }
-
         '';
       };
     };
