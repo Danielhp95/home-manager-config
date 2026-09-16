@@ -37,6 +37,14 @@
           height = 864;
         };
       };
+      # Clipboard history lives in noctalia (noctalia/default.nix). Stop vicinae
+      # recording copies too, and hide its history command so there is one list.
+      # `monitoring` is the "Clipboard monitoring" preference's key (vicinae
+      # 0.28 has no schema doc for it; read out of the server binary).
+      providers.clipboard = {
+        preferences.monitoring = false;
+        entrypoints.history.enabled = false;
+      };
       font = {
         normal = {
           size = 15;

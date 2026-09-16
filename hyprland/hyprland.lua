@@ -414,7 +414,14 @@ hl.bind(
 	mod .. " + SHIFT + S",
 	hl.dsp.exec_cmd("hyprshot --mode=region --raw --clipboard-only | satty -f - --copy-command wl-copy --early-exit")
 )
+-- Freeze the screen and draw on it in noctalia's annotation editor, then copy or save.
+hl.bind(mod .. " + A", hl.dsp.exec_cmd("noctalia msg screenshot-annotate"))
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"))
+-- noctalia owns clipboard history (vicinae's monitoring is off, menu_launchers/).
+hl.bind(mod .. " + CONTROL + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
+-- Alt+Tab window switcher: Tab/Shift+Tab cycle, releasing Alt commits, Escape
+-- cancels. The overlay grabs the keyboard itself, so only the open is bound.
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"))
 hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"))
 -- Re-read hyprland.lua in place (Hyprland >= 0.56 native dispatcher; previously
 -- this was only reachable as `hyprctl reload`). Note this drops the Lua VM, so

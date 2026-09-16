@@ -163,6 +163,12 @@ in
         font_family = "Adwaita Sans";
         telemetry_enabled = false;
         avatar_path = "~/.face";
+        # noctalia is the clipboard history (panel: mod+CONTROL+V in
+        # hyprland.lua); vicinae's clipboard monitoring is switched off in
+        # menu_launchers/ so the two don't both record every copy.
+        clipboard_enabled = true;
+        # Alt+Tab switcher lists windows most-recently-used first.
+        window_switcher.mru = true;
       };
 
       theme = {
@@ -342,6 +348,7 @@ in
             id = "right";
             members = [
               "tray"
+              "privacy"
               "notifications"
               "dart"
               "localsend"
@@ -370,6 +377,9 @@ in
         workspaces = {
           label_source = "name";
           show_labels = true;
+          # Only the focused monitor's active workspace gets focused_color; the
+          # active workspace on other monitors falls back to occupied_color
+          focused_output_only = true;
         };
 
         clock = {
@@ -411,6 +421,13 @@ in
         bluetooth = {
           show_label = true;
           hide_when_no_connected_device = false;
+        };
+
+        # Mic / camera / screen-share indicator: voxtype (mod+V), the screen
+        # recorder and xdph screencasts all capture without any other visible
+        # sign. Hidden while nothing is capturing.
+        privacy = {
+          hide_inactive = true;
         };
 
         # NOTE: there is deliberately no wifi widget here. noctalia's builtin
