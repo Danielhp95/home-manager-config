@@ -1,0 +1,6 @@
+{
+  "name": "firefox-start-page-wanderer-page",
+  "private": true,
+  "type": "module",
+  "description": "Marks the page sources as ES modules so `node --test` can import search.js the same way the browser does. Not installed into the built page."
+}

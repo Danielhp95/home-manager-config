@@ -37,12 +37,20 @@
 let
   p = (import ../palette.nix).hash;
 
+  # Port, URL and search aliases for the start page, shared with its service
+  # and with ./vimium.nix so the three cannot drift apart.
+  startPage = import ./firefox-start-page-wanderer/shared.nix;
+
   # The profile directory, spelled once — `path` below and the profile-scoped
   # files at the bottom of this module have to agree.
   profilePath = "1t50d90o.default";
 in
 {
-  imports = [ ./vimium.nix ];
+  imports = [
+    ./vimium.nix
+    # The start page and the user service behind it; see its default.nix.
+    ./firefox-start-page-wanderer
+  ];
 
   programs.firefox = {
     enable = true;
@@ -74,7 +82,36 @@ in
         tab-session-manager
         zhongwen
         export-cookies-txt
+        # Points Ctrl+T at the local start page. Firefox has no pref for the
+        # new-tab URL (browser.newtab.url was removed in 41), and the built-in
+        # about:newtab is a privileged page where Vimium cannot run at all —
+        # which is the whole reason the page is served over http.
+        new-tab-override
       ];
+
+      # New Tab Override's own settings, which — unlike Vimium's — live in
+      # storage.local, the one backend Home Manager can write. Key names and
+      # values are from the add-on's js/core/defaults.js and js/core/newtab.js
+      # (v19.0.0), not from its documentation:
+      #   type = "custom_url"   use `url` rather than the feed/local-file modes
+      #   focus_website = true  open a replacement tab and close the internal
+      #                         one, which leaves focus in the page instead of
+      #                         the address bar, so j/k/f work immediately
+      #
+      # CAVEAT, the same shape as the Vimium one in the header: Firefox
+      # imports browser-extension-data/<id>/storage.js into its IndexedDB only
+      # on the add-on's first run. Editing these values later in nix changes
+      # nothing on a profile that has already run it — reset the add-on's data
+      # or set it on its own options page (about:addons -> New Tab Override ->
+      # Preferences).
+      extensions.settings."newtaboverride@agenedia.com" = {
+        force = true;
+        settings = {
+          type = "custom_url";
+          url = startPage.url;
+          focus_website = true;
+        };
+      };
 
       # `force` is required because Firefox replaces the search.json.mozlz4
       # symlink on every launch. Consequence: OpenSearch engines added from a
@@ -184,6 +221,16 @@ in
         # network.http.speculative-parallel-limit are deliberately absent:
         # uBlock Origin owns those via extension-settings.json, and declaring
         # them here would just fight the extension on every start.
+
+        # --- start page ---------------------------------------------------
+        # Startup, the Home button and Alt+Home all land on the same page
+        # Ctrl+T does (the add-on above owns new tabs; this pref cannot).
+        "browser.startup.homepage" = startPage.url;
+        # 1 = open the homepage, which is already this profile's value. Pinned
+        # rather than left implicit for the reason in the Vimium header: a
+        # pref that is merely absent from user.js keeps whatever prefs.js
+        # happens to hold.
+        "browser.startup.page" = 1;
 
         # --- UI ----------------------------------------------------------
         "sidebar.visibility" = "hide-sidebar";

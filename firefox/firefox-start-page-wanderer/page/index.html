@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wanderer</title>
+    <!-- Inline so a new tab never waits on a second request for its icon. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231c1b19'/%3E%3Cpath d='M1 12l4-6 3 4 2-3 5 5z' fill='%234a3b33'/%3E%3Ccircle cx='8' cy='5' r='2' fill='%23e08060'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/assets/palette.css" />
+    <link rel="stylesheet" href="/assets/style.css" />
+    <script type="module" src="/assets/app.js"></script>
+  </head>
+  <body>
+    <!-- The painting and its weather. Decorative: nothing here is hintable. -->
+    <div class="art" aria-hidden="true">
+      <img class="art-canvas" src="/assets/wanderer-ember.jpg" alt="" />
+      <div class="fog fog-low"></div>
+      <div class="fog fog-high"></div>
+      <div class="glow"></div>
+      <div class="scrim"></div>
+    </div>
+
+    <main class="column">
+      <header class="masthead">
+        <h1 class="clock" id="clock">--:--</h1>
+        <p class="date" id="date"></p>
+        <p class="sky" id="sky"><span class="dim">…</span></p>
+      </header>
+
+      <!-- First input in the document: Vimium's `gi` lands here. -->
+      <form class="search" id="search-form" role="search">
+        <label class="visually-hidden" for="search-input">Search</label>
+        <input
+          id="search-input"
+          type="search"
+          name="q"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="gi to search — alias + query, or anything"
+        />
+      </form>
+      <details class="aliases">
+        <summary>search aliases</summary>
+        <ul id="alias-list"></ul>
+      </details>
+
+      <section class="panel" id="panel-todo">
+        <h2>today <span class="status" id="todo-status"></span></h2>
+        <ul class="todo" id="todo-list"></ul>
+        <!-- Second input in the document: `2gi`. -->
+        <form id="todo-form">
+          <label class="visually-hidden" for="todo-input">Add a task</label>
+          <input
+            id="todo-input"
+            type="text"
+            autocomplete="off"
+            placeholder="2gi to add a task"
+          />
+        </form>
+        <p class="todo-actions">
+          <button type="button" id="todo-clear" hidden>clear done</button>
+          <span class="flash" id="todo-flash" hidden></span>
+        </p>
+      </section>
+
+      <div class="split">
+        <section class="panel" id="panel-machine">
+          <h2>fell-omen <span class="status" id="machine-status"></span></h2>
+          <div id="machine-body"><p class="dim">…</p></div>
+        </section>
+
+        <section class="panel" id="panel-code">
+          <h2>code <span class="status" id="code-status"></span></h2>
+          <div id="code-body"><p class="dim">…</p></div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

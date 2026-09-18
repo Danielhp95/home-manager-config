@@ -60,38 +60,14 @@ let
       "file:///*"
     ];
 
-    # `o`/`O`/`b`/`B` search aliases. Format is `alias: url description`, with
-    # %s as the query placeholder.
-    #
-    # Two of these are kept verbatim from the export despite looking wrong,
-    # because fixing them silently would change what the keys do:
-    #   sgn  has no %s at all — the query lands nowhere
-    #   sg   has no %s and its context: value is truncated ("globa")
-    # Fix or delete them deliberately, not as a side effect of this port.
-    searchEngines = builtins.concatStringsSep "\n" [
-      "w: https://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
-      "gh: https://github.com/%s GitHub"
-      "eet: https://www.etymonline.com/search?q=%s English etymology"
-      "ym: https://music.youtube.com/search?q=%s Youtube Music"
-      "syn: https://www.freethesaurus.com/%s Synonyms (Thesaurus)"
-      "pydoc: https://pytorch.org/docs/stable/search.html?q=%s&check_keywords=yes&area=default# Pytorch documentation"
-      "y: https://www.youtube.com/results?search_query=%s Youtube"
-      "gm: https://www.google.com/maps?q=%s Google maps"
-      "gs: https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=%s&btnG= Google Scholar"
-      "gtf: https://translate.google.com/?sl=auto&tl=fr&text=%s&op=translate Google Translate English -> French"
-      "gte: https://translate.google.com/?sl=fr&tl=en&text=%s&op=translate Google Translate French -> English"
-      "fc: https://www.frenchconjugation.com/%s.html French conjugaison"
-      "d: https://duckduckgo.com/?q=%s DuckDuckGo"
-      "r: https://www.reddit.com/r/%s Reddit"
-      "ji: https://meet.jit.si/%s Jitsi"
-      "sgn: https://sourcegraph.com/search?q=context:global+lang:nix+ Source graph nix"
-      "sg: https://sourcegraph.com/search?q=context:globa Source graph"
-      "manp: https://helpmanual.io/man1/%s man pages"
-      "archw: https://wiki.archlinux.org/index.php/%s Arch Wiki"
-      "da: https://dart.platform.research.sony/en?q=%s Dart search"
-      "nxs: https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=%s Nix search"
-      "saicode: https://github.com/search?q=repo%3ASonyResearch%2Fsai%20%s&type=code SAI code search"
-    ];
+    # `o`/`O`/`b`/`B` search aliases, now owned by
+    # ./firefox-start-page-wanderer/shared.nix: the start page's search box
+    # expands exactly the same aliases, and two hand-kept copies would drift
+    # the first time one is edited. The commentary on the malformed `sg`/`sgn`
+    # entries moved there with them.
+    searchEngines = builtins.concatStringsSep "\n" (
+      import ./firefox-start-page-wanderer/shared.nix
+    ).searchAliases;
 
     # Custom key mappings. Empty: the snapshot's only entry was
     #   map c-k file:///home/sarios/Pictures/test.html

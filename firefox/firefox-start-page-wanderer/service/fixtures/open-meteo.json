@@ -1,0 +1,31 @@
+{
+  "latitude": 43.3125,
+  "longitude": -8.375,
+  "generationtime_ms": 0.698089599609375,
+  "utc_offset_seconds": 7200,
+  "timezone": "Europe/Madrid",
+  "timezone_abbreviation": "GMT+2",
+  "elevation": 21.0,
+  "current_units": {
+    "time": "iso8601",
+    "interval": "seconds",
+    "temperature_2m": "°C",
+    "weather_code": "wmo code",
+    "cloud_cover": "%",
+    "visibility": "m"
+  },
+  "current": {
+    "time": "2026-09-18T18:30",
+    "interval": 900,
+    "temperature_2m": 20.9,
+    "weather_code": 45,
+    "cloud_cover": 44,
+    "visibility": 39720.0
+  },
+  "daily_units": { "time": "iso8601", "sunrise": "iso8601", "sunset": "iso8601" },
+  "daily": {
+    "time": ["2026-09-18", "2026-09-19"],
+    "sunrise": ["2026-09-18T08:16", "2026-09-19T08:17"],
+    "sunset": ["2026-09-18T20:38", "2026-09-19T20:36"]
+  }
+}

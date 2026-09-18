@@ -1,0 +1,18 @@
+[
+  {
+    "number": 412,
+    "title": "Fix replay-buffer indexing off by one",
+    "url": "https://github.com/Danielhp95/regym/pull/412",
+    "repository": { "name": "regym", "nameWithOwner": "Danielhp95/regym" },
+    "updatedAt": "2026-09-17T09:12:44Z",
+    "isDraft": false
+  },
+  {
+    "number": 7,
+    "title": "Draft: sketch of the new opponent sampler",
+    "url": "https://github.com/Danielhp95/sandbox/pull/7",
+    "repository": { "name": "sandbox", "nameWithOwner": "Danielhp95/sandbox" },
+    "updatedAt": "2026-09-16T18:02:00Z",
+    "isDraft": true
+  }
+]
