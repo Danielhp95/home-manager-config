@@ -37,6 +37,13 @@
           height = 864;
         };
       };
+      # vicinae reads raw evdev, independent of Hyprland's `mod + D` bind
+      # below, and its default toggle key collides with fcitx5's Alt+space
+      # trigger (fcitx5/default.nix): both fire on the same keypress. Pin it
+      # off Alt+space so fcitx5 owns that combo exclusively.
+      global_shortcuts = {
+        toggle = "super+control+space";
+      };
       # Clipboard history lives in noctalia (noctalia/default.nix). Stop vicinae
       # recording copies too, and hide its history command so there is one list.
       # `monitoring` is the "Clipboard monitoring" preference's key (vicinae

@@ -18,7 +18,8 @@ panel.
   creation time, scheduling priority (just left of the state pill; a run
   submitted without one shows DART's default, 0), tag chips. Cards expand (chevron) to show the description,
   an info line (copyable git commit, clusters, last state change), and actions.
-- Run id click → run page in `$BROWSER`; copy buttons for id and commit.
+- Run id click → run page in `$BROWSER`; copy buttons for id, run URL and
+  commit. The link button copies the same URL the open button navigates to.
 - **Filter bar**: free-form `dart run filter` args (e.g.
   `--tag-ss expt=foo --states success`). Applied args stay scoped to
   `--username-ss <you>` and `--limit <n>` unless you override them (the CLI

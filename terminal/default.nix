@@ -205,6 +205,21 @@ in
         };
       };
     };
+    # Per-project shells. starship's format already carried a $direnv module
+    # long before direnv was installed. nix-direnv caches the evaluated shell
+    # and GC-roots it under .direnv/, so `use flake` is instant on re-entry
+    # and survives `nh clean` without needing nix.settings.keep-outputs.
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
+    # tldr client (the binary is still `tldr`). Replaces pkgs.tldr: cached
+    # pages, no python startup. enableAutoUpdates refreshes the cache instead
+    # of failing with "cache is stale" after a few weeks.
+    tealdeer = {
+      enable = true;
+      enableAutoUpdates = true;
+    };
     # Really nice shell history
     atuin = {
       enable = true;
@@ -224,6 +239,10 @@ in
         ai = {
           enabled = true;
         };
+        # Ctrl-R opens filtered to the current git repo (cycle out with
+        # Ctrl-R); with ~34k unique commands the repo cut is usually the
+        # right first guess.
+        workspaces = true;
         # No theme here on purpose: atuin's built-in colors were preferred to
         # an Ember-derived theme (tried and reverted 2026-08-18). It has full
         # theme support via programs.atuin.themes + settings.theme.name if

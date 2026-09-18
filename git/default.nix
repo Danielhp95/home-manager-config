@@ -1,10 +1,27 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    gh
     libgit2
   ];
-  programs.difftastic.enable = true;
+  # Structural diffs for `git diff`. git.enable is explicit: the module
+  # stopped wiring diff.external automatically, and until this was set difft
+  # was installed but git never called it.
+  programs.difftastic = {
+    enable = true;
+    git.enable = true;
+  };
+  # Installs gh and declares the credential helper in the HM git config, so
+  # it no longer depends on the ~/.gitconfig that `gh auth setup-git` wrote
+  # (that file can be deleted; hosts.yml with the token stays gh's own).
+  # settings mirrors what ~/.config/gh/config.yml already held.
+  programs.gh = {
+    enable = true;
+    gitCredentialHelper.enable = true;
+    settings = {
+      git_protocol = "https";
+      aliases.co = "pr checkout";
+    };
+  };
   programs.git = {
     enable = true;
 

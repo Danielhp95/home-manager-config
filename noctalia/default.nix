@@ -109,6 +109,15 @@ in
     pkgs.socat
     pkgs.ripdrag
     pkgs.zenity
+
+    # jrohland/claudecode gates its service on `commandExists("jq")`. jq was
+    # only ever reachable as an interpolated store path (hyprland/default.nix),
+    # never on PATH, so the plugin would have silently reported no data.
+    pkgs.jq
+
+    # rylos/tailnet resolves its default Taildrop directory with `xdg-user-dir
+    # DOWNLOAD`; without it the setting falls back to an unwritable path.
+    pkgs.xdg-user-dirs
   ];
 
   # The Ember palette as a noctalia custom palette. Custom palettes are read
@@ -169,6 +178,16 @@ in
         clipboard_enabled = true;
         # Alt+Tab switcher lists windows most-recently-used first.
         window_switcher.mru = true;
+
+        # Screenshots replace hyprshot + satty: every capture opens the
+        # annotation editor, and Enter/Done copies to the clipboard only.
+        # Nothing lands in ~/Pictures unless Save / Ctrl+S is pressed
+        # explicitly (that still writes there, to `directory`).
+        screenshot = {
+          annotate = true;
+          save_to_file = false;
+          copy_to_clipboard = true;
+        };
       };
 
       theme = {
@@ -184,8 +203,9 @@ in
         custom_palette = "Ember";
         # Propagate wallpaper colors to other apps' configs.
         templates = {
+          # No "cava": cava isn't installed, and its template's apply.sh
+          # exits 1 on every palette apply ("cava config file not found").
           builtin_ids = [
-            "cava"
             "hyprland"
           ];
           community_ids = [ "telegram" ];
@@ -267,6 +287,39 @@ in
       plugins.enabled = [
         "dani/dart"
         "dani/localsend"
+
+        # Community plugins. The source clone is a `blob:none` partial clone and
+        # noctalia's git calls do not lazy-fetch: if a newly enabled plugin shows
+        # up empty, pre-warm its blobs with
+        #   git -C ~/.local/state/noctalia/plugins/sources/community/repo \
+        #     ls-tree -r HEAD -- <dir> | awk '{print $3}' | git -C ... cat-file --batch-check
+        # before enabling. Same trap makes the whole community catalog vanish
+        # from the list after a bare `git fetch` until catalog.toml is fetched.
+
+        # Tailscale status/control: peers, exit nodes, IP copy, Taildrop, and a
+        # launcher provider. Needs tailscale + ssh (system profile), gio and
+        # xdg-open (already present), and xdg-user-dirs (added to home.packages
+        # above for its Taildrop directory default).
+        "rylos/tailnet"
+
+        # Claude Code subscription usage: rate limits, token burn, cost, daily
+        # activity, per-model breakdown. Gates on jq and curl at runtime — jq was
+        # NOT in any profile before this (only interpolated as a store path in
+        # hyprland/default.nix), hence the home.packages entry above.
+        "jrohland/claudecode"
+
+        # Searchable Hyprland keybindings. Reads binds from the *running*
+        # compositor over `hyprctl`, which is the only reason it works here:
+        # anything that parses hyprland.conf is useless under configType = "lua"
+        # (see hyprland/default.nix), so blackbartblues/keymap is deliberately
+        # not used.
+        "kenn/keybind-cheatsheet"
+
+        # Enabled through the GUI before this list existed, so it was only ever
+        # live via the settings.toml override. Recorded here so the nix list is
+        # the complete set. Overlaps jrohland/claudecode (usage telemetry);
+        # drop whichever earns less bar space.
+        "lowcache/claude-companion"
       ];
 
       wallpaper = {
@@ -295,12 +348,11 @@ in
         };
       };
 
-      # Three-island bar: the bar's own background is fully transparent
-      # (its drop shadow is scaled by background_opacity, so no orphaned
-      # shadow strip) and each lane is one capsule_group, so what renders is
-      # three solid pills — start / workspaces / end — with wallpaper showing
-      # through between them. Named "default" to override noctalia's built-in
-      # bar; any other name would spawn a second bar alongside it.
+      # Floating pills: the bar's own background is fully transparent (its
+      # drop shadow is scaled by background_opacity, so no orphaned shadow
+      # strip) and every widget is its own solid capsule, with wallpaper
+      # showing through between them. Named "default" to override noctalia's
+      # built-in bar; any other name would spawn a second bar alongside it.
       bar.default = {
         position = "top";
         thickness = 36;
@@ -320,46 +372,41 @@ in
         capsule_fill = "surface_variant";
         capsule_opacity = 1.0;
         # Capsule cross-size as a fraction of bar thickness (default 0.76).
-        # With the bar background gone the islands *are* the bar, so a bit
+        # With the bar background gone the pills *are* the bar, so a bit
         # thicker keeps them from reading skinnier than the old pill.
         capsule_thickness = 0.88;
 
-        # Lanes hold "group:<id>" tokens; the groups' members are the old lane
-        # lists. Group capsules inherit capsule_fill/capsule_opacity from above.
-        start = [ "group:left" ];
-        center = [ "group:mid" ];
-        end = [ "group:right" ];
-        capsule_group = [
-          {
-            id = "left";
-            members = [
-              "home"
-              "clock"
-              "sysmon"
-              "active_window"
-              "media"
-            ];
-          }
-          {
-            id = "mid";
-            members = [ "workspaces" ];
-          }
-          {
-            id = "right";
-            members = [
-              "tray"
-              "privacy"
-              "notifications"
-              "dart"
-              "localsend"
-              "battery"
-              "volume"
-              "brightness"
-              "tlp_mode"
-              "bluetooth"
-              "control-center"
-            ];
-          }
+        # Plain lanes, no capsule_group: every widget draws its own pill. The
+        # grouped three-island version was tried and rejected (2026-09-16) —
+        # dart belongs next to the workspaces, and the right side reads better
+        # as separate pills.
+        start = [
+          "home"
+          "clock"
+          "sysmon"
+          # Reads as a meter, so it sits with sysmon rather than in the status
+          # lane on the right.
+          "claudecode"
+          "active_window"
+          "media"
+        ];
+        center = [
+          "workspaces"
+          "dart"
+          "localsend"
+        ];
+        end = [
+          "tray"
+          "privacy"
+          "notifications"
+          "battery"
+          "volume"
+          "brightness"
+          "tlp_mode"
+          # Next to bluetooth: both are "is this radio/link up" pills.
+          "tailnet"
+          "bluetooth"
+          "control-center"
         ];
       };
 
@@ -448,6 +495,24 @@ in
         localsend = {
           type = "dani/localsend:widget";
         };
+
+        # Tailscale link state (rylos/tailnet). The plugin also registers a
+        # launcher provider and a "toggle" shortcut, so this pill is the
+        # convenience, not the only way in.
+        tailnet = {
+          type = "rylos/tailnet:bar";
+        };
+
+        # Claude Code subscription usage (jrohland/claudecode). Stays blank
+        # until jq is on the shell's PATH — see the home.packages note above.
+        claudecode = {
+          type = "jrohland/claudecode:pill";
+        };
+
+        # kenn/keybind-cheatsheet deliberately has *no* entry here. Its widget
+        # would be a permanent pill for a panel opened a few times a month, so
+        # it is bound to mod+SHIFT+slash in hyprland/hyprland.lua instead
+        # (`noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet`).
       };
 
       dock.enabled = false;

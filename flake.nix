@@ -11,6 +11,12 @@
 
     multiverse.url = "github:fzakaria/nixpkgs-multiverse";
 
+    # Weekly prebuilt nix-index database. Without it programs.nix-index and
+    # `comma` have nothing to look up: ~/.cache/nix-index was empty for months
+    # and `nix run nixpkgs#foo` was the workaround (2.7k times in history).
+    nix-index-database.url = "github:nix-community/nix-index-database";
+    nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
+
     ### hyprland
     hyprland = {
       type = "git";
@@ -72,6 +78,31 @@
     voxtype.url = "github:peteonrails/voxtype";
     voxtype.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Claude Code skill collections, pulled as plain sources so that
+    # `nix flake update <name>` tracks upstream. Which skills are exposed is
+    # chosen in claude_code/default.nix; the same set is vendored per-repo as
+    # git submodules (e.g. ~/Projects/exact_systems/rewriter/.claude).
+    superpowers = {
+      url = "github:obra/superpowers";
+      flake = false;
+    };
+    mattpocock-skills = {
+      url = "github:mattpocock/skills";
+      flake = false;
+    };
+    socratic-skills = {
+      url = "github:rodbv/socratic-skills";
+      flake = false;
+    };
+    walkthrough-skill = {
+      url = "github:alexanderop/walkthrough";
+      flake = false;
+    };
+    codebase-to-course = {
+      url = "github:zarazhangrui/codebase-to-course";
+      flake = false;
+    };
+
     # CloudBrink BrinkAgent VPN packaging (kept out of git; pulled in as source).
     brinkagentSrc = {
       url = "path:/home/dani/Projects/brinkagent";
@@ -116,12 +147,16 @@
       ];
       hmSharedModules = [
         inputs.spicetify-nix.homeManagerModules.default
+        inputs.nix-index-database.homeModules.nix-index
       ];
       hmExtraSpecialArgs = {
         inherit inputs;
       };
     in
     {
+      # `nix fmt` — the RFC 166 formatter (nixfmt-rfc-style is now just nixfmt).
+      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
+
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {

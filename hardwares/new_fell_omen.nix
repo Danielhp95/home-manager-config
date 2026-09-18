@@ -101,18 +101,26 @@
       # The cause was not GRUB or a stale ESP: rebuilds had been landing on
       # the ESP all along. It was three loaders on one ESP, picked by an
       # INSYDE firmware whose BootOrder never kept the "NixOS-boot" NVRAM
-      # entry efibootmgr created: first Ubuntu's leftover core image (which
-      # reads modules from OUR /boot/grub/x86_64-efi, so the 2.14 modules a
-      # nixpkgs bump wrote were unloadable by it), then the systemd-boot the
-      # original 25.11 install left behind. Policy since:
+      # entry efibootmgr created: first the "ubuntu" entry, whose
+      # \EFI\ubuntu\shimx64.efi was not Ubuntu's shim (that sits beside it as
+      # shimx64.efi.backup) but an older GRUB core copied there in 2025-12 so
+      # this firmware would boot NixOS at all (it reads modules from OUR
+      # /boot/grub/x86_64-efi, so the 2.14 modules a nixpkgs bump wrote were
+      # unloadable by it), then the systemd-boot the original 25.11 install
+      # left behind. Policy since:
       #   * install to the removable path /EFI/BOOT/BOOTX64.EFI, which the
       #     firmware's "Internal Hard Disk" entry loads regardless of NVRAM;
       #   * never launch or chainload another GRUB core from this ESP: every
       #     core on it shares one module directory, and any core not written
       #     by the same grub-install run breaks on the next nixpkgs bump;
+      #   * the firmware re-creates the "ubuntu" entry, first in BootOrder,
+      #     whenever that file exists (deleting the entry lasted one boot), so
+      #     the file is kept as a byte copy of BOOTX64.EFI, refreshed on every
+      #     install (khome.espCheck.loaderMirrors below);
       #   * esp-check (non_home_manager_config/esp-check.nix) runs after every
       #     install and fails the rebuild when the ESP disagrees with the
-      #     profile or the removable image is not GRUB.
+      #     profile, the removable image is not GRUB, or any firmware entry
+      #     would start a GRUB core other than it.
       # Flipping efiInstallAsRemovable does not by itself re-run grub-install
       # (its state file ignores the flag): the first rebuild after this change
       # needs `nh os boot --install-bootloader`; esp-check says so if forgotten.
@@ -159,10 +167,9 @@
         extraEntries = ''
           # Ubuntu: run its own grub.cfg from its /boot partition
           # (/dev/nvme0n1p2, ext4) inside THIS GRUB; its initrd unlocks its
-          # LUKS root (/dev/nvme0n1p3) as before. Not `chainloader
-          # /EFI/ubuntu/grubx64.efi`: that core's prefix is (hd0,gpt1)/grub,
-          # our module directory, and an old core loading 2.14 modules is
-          # exactly the grub_memcpy rescue prompt.
+          # LUKS root (/dev/nvme0n1p3) as before. Not a chainloader to
+          # /EFI/ubuntu: its shimx64.efi is this GRUB's mirror, and Ubuntu's
+          # own shim (shimx64.efi.backup) has no grubx64.efi left to load.
           menuentry "Ubuntu" {
             insmod part_gpt
             insmod ext2
@@ -173,6 +180,10 @@
       };
     };
   };
+
+  # See the loader policy above: whatever the firmware's "ubuntu" entry loads
+  # must be this install's GRUB.
+  khome.espCheck.loaderMirrors = [ "EFI/ubuntu/shimx64.efi" ];
 
   # noatime: no metadata write per file read (store scans, builds, greps).
   # compress=zstd:1: cheap transparent compression, new writes only.

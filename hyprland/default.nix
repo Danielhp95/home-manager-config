@@ -208,11 +208,33 @@ in
   services.hyprpolkitagent.enable = true;
 
   home.packages = with pkgs; [
-    inputs.hyprland-preview-share-picker.packages.${pkgs.stdenv.hostPlatform.system}.default # cooler screen picker
+    # Cooler screen picker (window/monitor previews instead of a bare list).
+    #
+    # The Outputs tab drops every monitor unpatched: the picker enumerates
+    # wl_outputs, then looks each name up in `hyprctl monitors`, having first
+    # filtered that list by `!disabled`. Hyprland serialises that field as
+    # `!m_enabled`, and since the 0.56 rev pinned below it reports `disabled:
+    # true` for monitors that are plainly enabled and rendering (the Lua API
+    # disagrees with itself here — `hl.get_monitors()[i].enabled` is true for
+    # the same monitors). So the filter empties the list, every wl_output then
+    # misses its lookup, and the tab renders with nothing in it — "output
+    # <name> does not exist on hyprland" in /tmp/hyprland-preview-share-picker.log.
+    #
+    # Dropping the filter is safe: `hyprctl monitors` without `all` only lists
+    # live monitors to begin with, so it was never load-bearing here.
+    # Upstream bug: WhySoBad/hyprland-preview-share-picker#28. Drop this when
+    # either side fixes it — the substituteInPlace is --replace-fail, so a
+    # picker bump that touches the line fails the build rather than silently
+    # going back to an empty tab.
+    (inputs.hyprland-preview-share-picker.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
+      postPatch = (old.postPatch or "") + ''
+        substituteInPlace src/views/outputs.rs \
+          --replace-fail '.map(|monitors| monitors.into_iter().filter(|monitor| !monitor.disabled).collect::<Vec<_>>())' \
+                         '.map(|monitors| monitors.into_iter().collect::<Vec<_>>())'
+      '';
+    }))
 
-    # For screenshots
-    hyprshot
-    satty
+    # Screenshots and annotation are noctalia's (noctalia/default.nix).
 
     pw-volume
 

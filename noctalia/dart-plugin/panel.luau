@@ -3,10 +3,10 @@
 Run-list panel (entry "panel" of dani/dart).
 
 Layout: header (title, counts, refresh, close) -> filter bar -> scrollable
-run cards. Each card collapses to [state dot | id | open | copy | commit |
-project | uptime | created (local tz) | priority | state pill | chevron] plus
-one row of tag chips; expanding
-it adds the full wrapped tag rows, an info line (clusters / updated), the
+run cards. Each card collapses to [state dot | id | open | copy | link |
+commit | project | uptime | created (local tz) | priority | state pill |
+chevron] plus one row of tag chips; expanding it adds the full wrapped tag
+rows, an info line (clusters / updated), the
 description, a tag editor, and state-gated action buttons. Right-clicking any
 header button opens the same actions as a native context menu, so the common
 ones are reachable without expanding the card.
@@ -244,13 +244,24 @@ local function filterByTag(tag)
 	applyFilter("--tag-ss " .. common.quoteWord(tag))
 end
 
--- Same URL dart.nvim opens. Detached spawn (runAsync without a callback)
--- so the browser outlives the shell.
-local function openInBrowser(id)
+-- Same URL dart.nvim opens, or nil when the id would not survive being a path
+-- segment. One guard for both consumers: the open button spawns it, the link
+-- button copies it, and neither can produce a URL the other would refuse.
+local function runUrl(id)
 	if not validRunId(id) then
+		return nil
+	end
+	return common.DETAILS_URL .. id
+end
+
+-- Detached spawn (runAsync without a callback) so the browser outlives the
+-- shell.
+local function openInBrowser(id)
+	local url = runUrl(id)
+	if not url then
 		return
 	end
-	noctalia.runAsync(common.browserArgv(common.DETAILS_URL .. id))
+	noctalia.runAsync(common.browserArgv(url))
 end
 
 -- dart.nvim's <leader>l equivalent. `dart logs` downloads per-pod files into
@@ -341,6 +352,19 @@ local function copyToClipboard(label, text)
 	if noctalia.copyToClipboard(text, "text/plain") then
 		noctalia.notify(label, text)
 	end
+end
+
+-- The URL behind the open button, on the clipboard instead of in a browser -
+-- what you want when the run is going into a message or a ticket. Has to sit
+-- below copyToClipboard: `local function` is only in scope after its own
+-- declaration, so calling it from further up would silently resolve to a nil
+-- global instead.
+local function copyRunUrl(id)
+	local url = runUrl(id)
+	if not url then
+		return
+	end
+	copyToClipboard("Copied URL", url)
 end
 
 -- ═══════════════════════════════════════════════════════ UI builders ═══
@@ -489,6 +513,7 @@ local function openRunMenu(run)
 		{ kind = "header", label = run.id },
 		{ kind = "item", id = "open", label = "Open in browser" },
 		{ kind = "item", id = "copy", label = "Copy run id" },
+		{ kind = "item", id = "copyurl", label = "Copy run URL" },
 	}
 	if run.git_commit and run.git_commit ~= "" then
 		items[#items + 1] = { kind = "item", id = "copycommit", label = "Copy commit hash" }
@@ -506,10 +531,10 @@ local function openRunMenu(run)
 	panel.openContextMenu({ onActivate = "onRunMenu", context = run.id, items = items })
 end
 
--- Card header: state dot | run id | open | copy | ... | commit | project |
--- uptime | created (local tz) | priority | state pill | expand chevron.
+-- Card header: state dot | run id | open | copy | link | ... | commit |
+-- project | uptime | created (local tz) | priority | state pill | chevron.
 --
--- The id is a bold label with separate open/copy buttons beside it, not a
+-- The id is a bold label with separate open/copy/link buttons beside it, not a
 -- clickable row wrapped around the label. Rows do take onClick, but only
 -- ui.button carries a tooltip and the onRightClick that openRunMenu needs, and
 -- every header control answers right-click with the run menu.
@@ -540,6 +565,19 @@ local function cardHeader(run, expanded, color)
 			tooltip = "Copy run id (right-click: menu)",
 			onClick = function()
 				copyToClipboard("Copied", run.id)
+			end,
+			onRightClick = menu,
+		}),
+		-- Same target as the open button beside it, to the clipboard rather
+		-- than to $BROWSER. "link" not "copy": the pair reads as id-vs-URL at a
+		-- glance, which two copy glyphs would not.
+		ui.button({
+			glyph = "link",
+			variant = "ghost",
+			controlSize = "sm",
+			tooltip = "Copy run URL (right-click: menu)",
+			onClick = function()
+				copyRunUrl(run.id)
 			end,
 			onRightClick = menu,
 		}),
@@ -1014,6 +1052,8 @@ function onRunMenu(itemId, runId)
 		openInBrowser(runId)
 	elseif itemId == "copy" then
 		copyToClipboard("Copied", runId)
+	elseif itemId == "copyurl" then
+		copyRunUrl(runId)
 	elseif itemId == "copycommit" then
 		local run = runById(runId)
 		if run and run.git_commit and run.git_commit ~= "" then

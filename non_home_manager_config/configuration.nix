@@ -14,6 +14,7 @@
   imports = [
     ../tuigreet.nix
     ./esp-check.nix
+    ./grub-generation-label.nix
     ../fcitx5/fonts.nix # the input method itself is home-manager config now
     ./voxtype.nix
   ];
@@ -36,6 +37,9 @@
       "flakes"
       "nix-command"
     ];
+    # This flake's working tree is dirty nearly always, so the "Git tree is
+    # dirty" line on every `nh os switch` / `nix fmt` carried no information.
+    settings.warn-dirty = false;
     optimise.automatic = true; # periodically run `nix store optimise`
     # Garbage collection is handled by `programs.nh.clean` below (the NixOS nh
     # module asserts that nix.gc.automatic and nh.clean must not both be on).

@@ -108,17 +108,21 @@ in
     fd # find alternative
     dust # du alternative. Pretty crazy
     duf # like du, but for free space
-
-    # `, <cmd>` runs any program from nixpkgs without installing it, resolving
-    # the command through the nix-index database configured below.
-    comma
   ];
 
-  # If command is not present, it tells us where it can be found
+  # If command is not present, it tells us where it can be found. The
+  # database itself comes from the nix-index-database flake input (wired in
+  # as a shared HM module in flake.nix), which drops a prebuilt weekly index
+  # into ~/.cache/nix-index — `nix-index` was never run by hand here, so the
+  # cache sat empty and both the hook and `comma` were inert.
   programs.nix-index = {
     enable = true;
     enableZshIntegration = true;
   };
+  # `, <cmd>` runs any program from nixpkgs without installing it. The module
+  # ships comma wrapped to that same database (pkgs.comma on its own would
+  # collide with it in home.packages).
+  programs.nix-index-database.comma.enable = true;
 
   # `bat`: cat clone with syntax highlighting + git integration.
   # theme = "base16" renders through the terminal's live ANSI palette, so bat

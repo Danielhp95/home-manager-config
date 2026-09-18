@@ -31,65 +31,48 @@
       OLLAMA_CONTEXT_LENGTH = "65536";
     };
     loadModels = [
-      # Qwen3-Coder-30B-A3B: 30.5B total parameters but a Mixture-of-Experts
-      # with only ~3B active per token, so it costs 3B-class compute. On this
-      # card (RTX 5090 Laptop, 24463 MiB) that is the difference between
-      # fitting and not.
-      #
-      # Benchmarked against the dense Qwen3-32B UD-Q4_K_XL that used to be
-      # here, same code-analysis prompt, same KV settings:
-      #
-      #                         prefill      generate    layers on GPU
-      #   Qwen3-32B dense       848 tok/s    15.4 tok/s   63/65
-      #   Qwen3-Coder-30B-A3B  2506 tok/s   119.6 tok/s   49/49
-      #
-      # The dense 32B was never fully resident — two layers ran on CPU and
-      # every token crossed PCIe, which is where its 15 tok/s came from. A
-      # dense 32B at Q4 does not fit 24GB alongside a real KV cache; shrinking
-      # the window to 16k makes it fit but buys back only ~8%, because the
-      # ceiling is the weights.
-      #
-      # Both models found 6/6 planted defects in a small bug-hunting test, so
-      # the speed is not bought with quality. That test was three snippets —
-      # enough to separate "finds real bugs" from "doesn't", not enough to
-      # rank two models that both scored full marks.
-      "qwen3-coder:30b"
-
-      # Qwen3-4B-Instruct-2507 (2.50 GB), pulled for one caller only: IRIS's
-      # inline AI completions (terminal/iris.nix points ai.providers.ollama
-      # here). That is a keystroke-latency budget — debounce 400ms, a 2500ms
-      # timeout, a request fired mid-typing — which the 30B above cannot meet no
-      # matter how fast it generates, because the cost that matters there is
-      # time-to-first-token, not tok/s.
-      #
-      # There is no small Qwen3-Coder to use instead: the qwen3-coder repo
-      # publishes 30b and 480b and nothing else (checked against the registry),
-      # so the coder-specialised option at this size is the older generation,
-      # qwen2.5-coder:3b/7b. This is the newer generation at a comparable size —
-      # 2.50 GB against 1.93 GB for qwen2.5-coder:3b, well under the 4.68 GB of
-      # qwen2.5-coder:7b.
-      #
-      # The `-instruct-` in the tag is load-bearing, which is why the quant is
-      # spelled out rather than left as the `qwen3:4b-instruct` alias (identical
-      # digest today, b72accf9724e). Qwen3 ships split lines: `4b-instruct-2507`
-      # does not emit reasoning, `4b-thinking-2507` and the bare `qwen3:4b` do.
-      # A thinking model here would fail twice over — <think> tokens blow the
-      # 2500ms deadline, and IRIS's system prompt demands the raw command line
-      # with no prose or fences.
-      #
-      # Unbenchmarked on this card, unlike the two models above: chosen to fit a
-      # deadline and to follow a strict output format, not to win a coding
-      # comparison.
-      #
-      # Watch OLLAMA_MAX_LOADED_MODELS = 1 above: ollama keeps exactly one model
-      # resident, so an IRIS completion evicts qwen3-coder:30b and the next
-      # open-webui or opencode request pays a full reload to get it back (and
-      # vice versa). If that thrashing shows up the fix is to raise the limit to
-      # 2 rather than to drop this model — 2.5GB against the ~3GB the 30B leaves
-      # spare, so it plausibly fits — but that trade is unmeasured and the
-      # comment above deliberately reserves the whole budget for one model.
-      "qwen3:4b-instruct-2507-q4_K_M"
+      "qwen3-coder:30b"  # Local development
+      "qwen3:4b-instruct-2507-q4_K_M"  # IRIS
     ];
+  };
+
+  # iris-qwen3-4b: the model above with num_ctx baked in, which is what IRIS
+  # actually requests. ollama's OpenAI-compatible endpoint, the only API IRIS
+  # speaks, ignores `options.num_ctx` in the request body. So the plain tag
+  # always loads at OLLAMA_CONTEXT_LENGTH x OLLAMA_NUM_PARALLEL = 131072
+  # tokens: 13040 MiB of VRAM for a 2.3 GiB model, 9792 MiB of it KV cache.
+  # With the window set on the model it is 3146 MiB. 4096 is ample. IRIS
+  # truncates everything it adds to the prompt (git status/diff, --help) to a
+  # few thousand characters.
+  #
+  # Created through the API rather than a Modelfile + `ollama create`, which
+  # would need the CLI to find the server. Re-creating an identical model is
+  # a no-op, so this can run on every boot. A missing base model (fresh
+  # machine, ollama-model-loader still pulling) makes the create fail and the
+  # unit retry. Note that services.ollama.syncModels = true would delete this
+  # model, because it is not in loadModels.
+  systemd.services.ollama-iris-model = {
+    description = "Create the small-context ollama model used by IRIS";
+    wantedBy = [
+      "multi-user.target"
+      "ollama.service"
+    ];
+    after = [
+      "ollama.service"
+      "ollama-model-loader.service"
+    ];
+    bindsTo = [ "ollama.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      DynamicUser = true;
+      Restart = "on-failure";
+      RestartSec = "30s";
+    };
+    script = ''
+      ${pkgs.curl}/bin/curl -sSf --retry 10 --retry-connrefused --retry-delay 2 \
+        http://127.0.0.1:${toString config.services.ollama.port}/api/create \
+        -d '{"model":"iris-qwen3-4b","from":"qwen3:4b-instruct-2507-q4_K_M","parameters":{"num_ctx":4096},"stream":false}'
+    '';
   };
 
   services.open-webui = {

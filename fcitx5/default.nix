@@ -11,7 +11,28 @@
 # and is unaffected.
 { pkgs, ... }:
 
+let
+  # The Ember skin (./ember). It is installed twice on purpose:
+  #
+  #  * `addons` below bakes it into the fcitx5 wrapper, which is where the
+  #    daemon's own classicui finds it. That covers every text-input-v3
+  #    client (kitty, ghostty, anything without an IM-module env var).
+  #  * `home.packages` puts the same package on the user profile, i.e. on
+  #    every *application's* XDG_DATA_DIRS. That is needed because the
+  #    fcitx5-gtk and fcitx5-qt IM plugins (Firefox, Telegram: anything that
+  #    honours GTK_IM_MODULE/QT_IM_MODULE=fcitx from tuigreet.nix) do not let
+  #    the daemon draw the candidate window on Wayland. They advertise a
+  #    "client side input panel", draw the popup inside the app, read Theme=
+  #    from ~/.config/fcitx5/conf/classicui.conf and then look that theme up
+  #    in the app's own data dirs, silently falling back to fcitx5's stock
+  #    white "default" skin when it is not there. The wrapper's share/ is
+  #    private to the daemon, so without this second copy the terminal shows
+  #    Ember while Firefox and Telegram show the white default.
+  ember = import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg; };
+in
 {
+  home.packages = [ ember ];
+
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
@@ -24,7 +45,7 @@
         qt6Packages.fcitx5-configtool
         qt6Packages.fcitx5-chinese-addons
         fcitx5-rose-pine
-        (import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg; })
+        ember
       ];
 
       settings = {

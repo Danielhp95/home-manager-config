@@ -410,15 +410,20 @@ hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"))
 -- with the rest of them (opacity-opaque-tag). Global opacity is untouched.
 hl.bind(mod .. " + SHIFT + o", hl.dsp.window.tag({ tag = "opaque", action = "toggle" }))
 hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("bash /home/dani/nix_config/zsh/scripts/video/record_video.sh"))
-hl.bind(
-	mod .. " + SHIFT + S",
-	hl.dsp.exec_cmd("hyprshot --mode=region --raw --clipboard-only | satty -f - --copy-command wl-copy --early-exit")
-)
+-- Region screenshot through noctalia's annotation editor (shell.screenshot.annotate
+-- in noctalia/default.nix); Enter/Done copies to the clipboard, Ctrl+S saves.
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
 -- Freeze the screen and draw on it in noctalia's annotation editor, then copy or save.
 hl.bind(mod .. " + A", hl.dsp.exec_cmd("noctalia msg screenshot-annotate"))
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"))
 -- noctalia owns clipboard history (vicinae's monitoring is off, menu_launchers/).
 hl.bind(mod .. " + CONTROL + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
+-- Searchable keybind cheatsheet (kenn/keybind-cheatsheet, enabled in
+-- noctalia/default.nix). It reads the binds back out of the running compositor
+-- over hyprctl, so it stays correct under configType = "lua" -- unlike the
+-- plugins that parse hyprland.conf, which this config does not have. No bar
+-- pill on purpose; this bind is the only entry point.
+hl.bind(mod .. " + SHIFT + slash", hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"))
 -- Alt+Tab window switcher: Tab/Shift+Tab cycle, releasing Alt commits, Escape
 -- cancels. The overlay grabs the keyboard itself, so only the open is bound.
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"))
@@ -712,7 +717,7 @@ hl.layer_rule({ name = "vicinae-no-animation", match = { namespace = "vicinae" }
 hl.layer_rule({ name = "noctalia-bar-gap-noblur", match = { namespace = "noctalia-bar-default" }, ignore_alpha = 0.1 })
 -- rofi dropped out of this alternation with the package itself. vicinae is a
 -- layer-shell surface too and could be added here, but it animates on purpose.
-hl.layer_rule({ name = "layer-no-anim", match = { namespace = "^(grim|hyprshot)$" }, no_anim = true })
+hl.layer_rule({ name = "layer-no-anim", match = { namespace = "^(grim)$" }, no_anim = true })
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Window rules
@@ -735,7 +740,7 @@ hl.window_rule({
 })
 hl.window_rule({
 	name = "messaging-apps",
-	match = { class = "^(Slack|org\\.telegram\\.desktop|Element)$" },
+	match = { class = "^(Slack|org\\.telegram\\.desktop|Element|discord)$" },
 	workspace = 9,
 })
 
@@ -744,7 +749,7 @@ hl.window_rule({ name = "float-general-title", match = { title = "^(Weather|Main
 hl.window_rule({
 	name = "float-general",
 	match = {
-		class = "^(Rofi|org\\.pulseaudio\\.pavucontrol|blueberry|mpv|imv|satty)$",
+		class = "^(Rofi|org\\.pulseaudio\\.pavucontrol|blueberry|mpv|imv)$",
 	},
 	float = true,
 })
@@ -763,7 +768,7 @@ hl.window_rule({ name = "tile-grayjay", match = { title = "GrayJay" }, tile = tr
 -- Opacity
 hl.window_rule({
 	name = "opacity-multiclass",
-	match = { class = "^(org\\.pulseaudio\\.pavucontrol|zoom|firefox|satty|mpv|matplotlib)$" },
+	match = { class = "^(org\\.pulseaudio\\.pavucontrol|zoom|firefox|mpv|matplotlib)$" },
 	opacity = "1.0 override 1.0 override",
 })
 hl.window_rule({

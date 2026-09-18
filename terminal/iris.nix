@@ -2,6 +2,10 @@
 let
   p = (import ../palette.nix).hash;
 
+  # The ollama model IRIS completes with. ollama-iris-model.service in
+  # ../non_home_manager_config/ollama.nix creates it under this exact name.
+  aiModel = "iris-qwen3-4b";
+
   # What used to be fifteen substitutions is now three. Upstream grew a theme
   # file and a `ui.max-width` setting (v0.4.19-v0.4.22), so the colour and box
   # width patches moved into config below; what is left are the behaviours that
@@ -295,19 +299,37 @@ in
     min_interval_ms = 5000
 
     # Not the qwen3-coder:30b ollama.nix loads for open-webui/opencode: the
-    # budget here is debounce 400ms + a 2500ms timeout on a request fired
+    # budget here is debounce 400ms + a timeout on a request fired
     # mid-typing, which is a time-to-first-token problem, not a tok/s one.
     # There is no small qwen3-coder to prefer — that repo stops at 30b.
     #
-    # `-instruct-` is load-bearing. Qwen3 ships split lines: -instruct-2507
-    # emits no reasoning, while -thinking-2507 and the bare qwen3:4b do, which
-    # would blow the deadline and violate the system prompt's "no explanation,
-    # no markdown, no fences". Spelled out rather than the qwen3:4b-instruct
-    # alias (same digest today) so an upstream repoint cannot swap that in.
+    # ${aiModel} is qwen3:4b-instruct-2507-q4_K_M with num_ctx 4096 baked in
+    # (created by ollama-iris-model.service in ollama.nix). It has to be a
+    # derived model: this endpoint ignores both `options.num_ctx` and
+    # `keep_alive` in the request body (tested), so extra_request_body cannot
+    # carry either one, and the base tag loads at OLLAMA_CONTEXT_LENGTH x
+    # OLLAMA_NUM_PARALLEL = 131k tokens — 13040 MiB of VRAM for a 2.3 GiB
+    # model. At 4096 it is 3146 MiB, and IRIS's prompt is capped well under
+    # that (context_provider.go truncates git status/diff/help to ~3k chars).
+    #
+    # `-instruct-` in the base tag is load-bearing. Qwen3 ships split lines:
+    # -instruct-2507 emits no reasoning, while -thinking-2507 and the bare
+    # qwen3:4b do, which would blow the deadline and violate the system
+    # prompt's "no explanation, no markdown, no fences".
+    #
+    # The timeout is not the latency budget. A warm completion takes ~30ms. A
+    # cold one takes ~2.55s, measured with 4k and 64k windows alike, so that
+    # cost is llama-server/CUDA start-up rather than the KV cache. At the old
+    # 2500 that meant IRIS dropped the connection just before the model
+    # finished loading, ollama aborted the load ("client connection closed
+    # before llama-server finished loading"), and the next request started
+    # from cold again. The journal had 52 of those aborts in three days and
+    # not one completed load. 4000 lets a cold load finish. Normally there
+    # isn't one, because the precmd hook below keeps the model warm.
     [ai.providers.ollama]
     endpoint = "http://localhost:11434/v1/chat/completions"
-    model = "qwen3:4b-instruct-2507-q4_K_M"
-    timeout_ms = 2500
+    model = "${aiModel}"
+    timeout_ms = 4000
   '';
 
   programs.zsh = {
@@ -317,6 +339,27 @@ in
     # are read by the plugins at load time, which makes the result independent
     # of how home-manager happens to order the rest of .zshrc.
     initContent = lib.mkBefore ''
+      # Drop IRIS_* vars that belong to some other terminal. This is upstream's
+      # own guard from `iris init zsh`, which the inlined hook below had left
+      # out, and it matters for more than the hooks. `iris` does not look for a
+      # live session. If IRIS_PID is set at all, it SIGUSR1s that pid to
+      # "reload" it and exits, and the reload SIGKILLs the session's shell. So
+      # `i` in nvim's :terminal, when nvim was started from an IRIS session,
+      # killed that session and nvim with it. Reproduced: "[IRIS] Sent reload
+      # signal to parent session.", then nvim was gone. Any tmux pane whose
+      # server was started inside IRIS did the same to a stranger. With a
+      # stale pid, SIGUSR1's default action kills whatever process owns it now.
+      #
+      # This is looser than the hook guard below on purpose. A plain `zsh`
+      # typed inside an IRIS session is not IRIS's child but is on IRIS's tty,
+      # so the vars really do describe its terminal, and `iris` there reloading
+      # the session is what upstream intends. IRIS_WATCHDOG_CWD_FD is extra here.
+      # Upstream leaves it set, and a wrapper that inherits it writes cwd
+      # updates into whatever that fd number happens to be.
+      if [[ -n "$IRIS_PID" && "$PPID" != "$IRIS_PID" && "$TTY" != "$IRIS_TTY" ]]; then
+        unset IRIS_PID IRIS_IS_CHILD IRIS_FD IRIS_TTY IRIS_WATCHDOG_CWD_FD
+      fi
+
       # Only true in the zsh that IRIS spawned as its child. The $PPID test is
       # load-bearing under tmux and not just belt-and-braces: IRIS_PID/IRIS_FD
       # are plain environment variables, so a tmux server started from inside
@@ -390,6 +433,32 @@ in
         add-zsh-hook precmd _iris_precmd
         add-zsh-hook preexec _iris_preexec
         add-zsh-hook chpwd _iris_sync_cwd
+
+        # Keep the AI model loaded for as long as IRIS is in use. Ollama
+        # unloads an idle model after keep_alive, and a cold load (~2.55s)
+        # loses to the first few keystrokes anyway, since each one cancels the
+        # in-flight request and a cancelled request aborts the load with it.
+        # The OpenAI endpoint IRIS talks to cannot set keep_alive. It does
+        # *refresh* the window a model was loaded with, though (measured: 20m
+        # at load, and a request 5s later pushed expiry to 20m from then). So one
+        # native load with 30m keeps the model warm through every completion,
+        # and it unloads 30m after the last one, rather than holding 3 GiB of
+        # VRAM forever the way keep_alive = -1 would.
+        #
+        # Re-sent at most every five minutes from precmd, which recovers from
+        # an eviction (loading qwen3-coder:30b for opencode evicts this, since
+        # the two don't fit together) and from an ollama restart. A request for
+        # a model that is already loaded only resets its timer. Backgrounded
+        # and disowned, so a slow or absent ollama never holds up the prompt.
+        zmodload -F zsh/datetime p:EPOCHSECONDS
+        typeset -gi _iris_ai_warmed_at=0
+        _iris_ai_warm() {
+          (( EPOCHSECONDS - _iris_ai_warmed_at < 300 )) && return
+          _iris_ai_warmed_at=$EPOCHSECONDS
+          ${pkgs.curl}/bin/curl -s -m 60 http://127.0.0.1:11434/api/generate \
+            -d '{"model":"${aiModel}","keep_alive":"30m"}' >/dev/null 2>&1 &!
+        }
+        add-zsh-hook precmd _iris_ai_warm
       fi
     '';
   };

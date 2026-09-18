@@ -53,6 +53,9 @@ in
     ./element.nix
     ./spotify.nix
 
+    ./easyeffects.nix
+    ./pipewire-eq.nix
+
     ./lnav
 
     ./terminal
@@ -147,26 +150,40 @@ in
 
     # zoom-us
 
-    ((inputs.multiverse.lib.mkMultiverse {
-      system = "x86_64-linux";
-      config.allowUnfree = true;
-    }).at "26.05").grayjay # video platform aggregator
-    ((inputs.multiverse.lib.mkMultiverse {
-      system = "x86_64-linux";
-      config.allowUnfree = true;
-    }).at "26.05").discord # video platform aggregator
+    (
+      (inputs.multiverse.lib.mkMultiverse {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+      }).at
+      "26.05"
+    ).grayjay # video platform aggregator
+    (
+      (inputs.multiverse.lib.mkMultiverse {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+      }).at
+      "26.05"
+    ).discord # video platform aggregator
 
     openconnect
 
     ## Videography
     (writeScriptBin "davinci" ''
-      QT_QPA_PLATFORM=xcb ${davinci-resolve}/bin/davinci-resolve
+      QT_QPA_PLATFORM=xcb ${
+        (
+          (inputs.multiverse.lib.mkMultiverse {
+            system = "x86_64-linux";
+            config.allowUnfree = true;
+          }).at
+          "26.05"
+        ).davinci-resolve
+      }/bin/davinci-resolve
     '')
 
     ### Basic utilities
     ripgrep # better grep
     zenith # better top
-    tldr # succint command explanations
+    # tldr comes from programs.tealdeer in ./terminal
     acpi # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
     coreutils

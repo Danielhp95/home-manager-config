@@ -1,6 +1,12 @@
 {lib, ...}:
 {
   specialisation.roadwarrior.configuration = {
+    # GRUB entry title. Without it install-grub.pl falls back to
+    # "(<name> - <date> - <version>)", and the date it uses is the mtime of
+    # $toplevel/specialisation/<name> — a store path, so Nix has pinned it to
+    # epoch+1 and every specialisation row on the menu reads 1969-12-31.
+    boot.loader.grub.configurationName = "Roadwarrior";
+
     imports = [ ../hardwares/disable_nvidia.nix ];
     home-manager.users.dani.wayland.windowManager.hyprland = {
       enable = true;
