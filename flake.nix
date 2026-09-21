@@ -21,14 +21,14 @@
     hyprland = {
       type = "git";
       url = "https://github.com/hyprwm/Hyprland";
-      rev = "7ebf13abb3c391604c60c9f627c7a403bcec8d17";
+      rev = "83cf6a6ed540dc37808434259c6a3ba663de9616";
       submodules = true;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hy3 = {
       type = "git";
-      url = "https://github.com/outfoxxed/hy3/";
-      rev = "12a73ab0adddbc39f839da320dcc2b028769fc58";
+      url = "https://github.com/elafarge/hy3/";
+      rev = "378fb240479d631bed749554417cf9d12e5e0ef6";
       submodules = true;
       inputs.hyprland.follows = "hyprland";
     };
