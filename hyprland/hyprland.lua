@@ -207,7 +207,13 @@ hl.animation({ leaf = "border", enabled = true, speed = 10, bezier = "default" }
 hl.animation({ leaf = "borderangle", enabled = false })
 hl.animation({ leaf = "fade", enabled = true, speed = 7, bezier = "default" })
 hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "default", style = "slidefadevert" })
+-- The special workspace drops in from the top and retracts back up. The In and
+-- Out leaves are split because the style's direction word is applied per leaf,
+-- and Hyprland calls Out with the opposite `left` flag from In: "top" on In
+-- means enter from above, but the same word on Out would exit downward, so
+-- Out uses "bottom" to leave the way it came.
+hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 6, bezier = "default", style = "slidefadevert top" })
+hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 6, bezier = "default", style = "slidefadevert bottom" })
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Environment variables (GPU selection)
