@@ -198,22 +198,29 @@ hl.config({
 })
 
 -- Animations: curves + per-leaf settings
+-- `speed` is in deciseconds (4 = 400ms). Tuned so the things you hit dozens of
+-- times a day (focus ring, workspace switch, panels) settle in ~300-400ms, and
+-- exits are quicker than entrances.
 hl.curve("myBezier", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.05 } } })
-hl.animation({ leaf = "windows", enabled = true, speed = 7, bezier = "myBezier" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 7, bezier = "default", style = "popin 80%" })
-hl.animation({ leaf = "border", enabled = true, speed = 10, bezier = "default" })
+hl.animation({ leaf = "windows", enabled = true, speed = 4, bezier = "myBezier" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "default", style = "popin 80%" })
+hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "default" })
 -- borderangle animates the gradient forever: the compositor repaints even
 -- when fully idle, so the iGPU never rests. Static gradient instead.
 hl.animation({ leaf = "borderangle", enabled = false })
-hl.animation({ leaf = "fade", enabled = true, speed = 7, bezier = "default" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default" })
+hl.animation({ leaf = "fade", enabled = true, speed = 3, bezier = "default" })
+-- No `layers` leaf means panels, OSDs and notifications inherit the global
+-- default (speed 8, 800ms), which is slow for transient UI.
+hl.animation({ leaf = "layers", enabled = true, speed = 3, bezier = "default" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "default" })
 -- The special workspace drops in from the top and retracts back up. The In and
 -- Out leaves are split because the style's direction word is applied per leaf,
 -- and Hyprland calls Out with the opposite `left` flag from In: "top" on In
 -- means enter from above, but the same word on Out would exit downward, so
--- Out uses "bottom" to leave the way it came.
-hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 6, bezier = "default", style = "slidefadevert top" })
-hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 6, bezier = "default", style = "slidefadevert bottom" })
+-- Out uses "bottom" to leave the way it came. Out is 15% slower than a plain
+-- 300ms exit (3.45) so the retract doesn't feel clipped.
+hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 4, bezier = "default", style = "slidefadevert top" })
+hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 3.45, bezier = "default", style = "slidefadevert bottom" })
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Environment variables (GPU selection)
