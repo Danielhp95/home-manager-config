@@ -34,6 +34,7 @@ local devices = noctalia.state.get("devices") or {}
 local transfer = noctalia.state.get("transfer") or { state = "idle" }
 local scanning = noctalia.state.get("scanning") or false
 local err = noctalia.state.get("error")
+local receive = noctalia.state.get("receive") or { state = "off" }
 
 local isOpen = true
 local lastFingerprint = nil -- device of the in-flight send, for a PIN retry
@@ -84,10 +85,20 @@ local function header()
 		subtitle = #staged .. (#staged == 1 and " file" or " files") .. " · " .. humanSize(totalStagedBytes())
 	end
 
+	local rx
+	if receive.state == "off" then
+		rx = "receiving off — " .. tostring(receive.reason or "not running")
+	else
+		rx = "receiving as " .. tostring(noctalia.getConfig("alias") or "noctalia")
+	end
+
 	return ui.row({ align = "center", gap = 10 }, {
 		ui.glyph({ name = "send", size = 20, color = "primary" }),
 		ui.label({ text = "LocalSend", fontSize = 16, fontWeight = "bold", color = "on_surface" }),
-		ui.label({ text = subtitle, color = "on_surface_variant", fontSize = 12, flexGrow = 1 }),
+		ui.column({ gap = 0, flexGrow = 1 }, {
+			ui.label({ text = subtitle, color = "on_surface_variant", fontSize = 12 }),
+			ui.label({ text = rx, color = receive.state == "off" and "error" or "on_surface_variant", fontSize = 11 }),
+		}),
 		scanning and ui.label({ text = "scanning...", color = "on_surface_variant", fontSize = 12 })
 			or ui.spacer({ width = 1 }),
 		ui.button({
@@ -329,8 +340,9 @@ local function transferStrip()
 	if state == "uploading" then
 		local pct = tonumber(transfer.percent) or 0
 		local label = tostring(transfer.name or "")
-		if transfer.total and tonumber(transfer.total) and tonumber(transfer.total) > 1 then
-			label = string.format("%s (%d/%d)", label, (tonumber(transfer.index) or 0) + 1, tonumber(transfer.total))
+		local total = tonumber(transfer.total) or 0
+		if total > 1 then
+			label = string.format("%s (%d/%d)", label, (tonumber(transfer.index) or 0) + 1, total)
 		end
 		local speed = (transfer.speed and transfer.speed ~= "") and (transfer.speed .. "/s") or ""
 		return ui.column({ gap = 4, paddingH = 6 }, {
@@ -389,6 +401,110 @@ local function transferStrip()
 	})
 end
 
+-- ═══════════════════════════════════════════════════════════ receiving ═══
+
+function onAccept()
+	cmd({ op = "accept", session = receive.session })
+end
+function onDecline()
+	cmd({ op = "decline", session = receive.session })
+end
+function onCancelReceive()
+	cmd({ op = "cancel_receive" })
+end
+function onDismissReceive()
+	cmd({ op = "dismiss_receive" })
+end
+function onOpenFolder()
+	cmd({ op = "open_folder" })
+end
+
+local function receiveStrip()
+	local state = receive.state
+	if state == nil or state == "off" or state == "idle" then
+		return nil
+	end
+	local who = tostring((receive.sender and receive.sender.alias) or "a device")
+	local ip = tostring((receive.sender and receive.sender.ip) or "")
+	local glyph = DEVICE_GLYPH[(receive.sender and receive.sender.deviceType) or ""] or "device-desktop"
+
+	if state == "waiting" then
+		local rows = {}
+		for i, f in ipairs(receive.files or {}) do
+			if i > 6 then
+				rows[#rows + 1] = ui.label({
+					text = "+" .. (#receive.files - 6) .. " more",
+					color = "on_surface_variant",
+					fontSize = 11,
+					paddingH = 6,
+				})
+				break
+			end
+			rows[#rows + 1] = ui.row({ gap = 8, align = "center", paddingH = 6 }, {
+				ui.glyph({ name = (f.type or ""):find("^image/") and "photo" or "file", size = 13, color = "on_surface_variant" }),
+				ui.label({ text = f.name or "?", color = "on_surface", fontSize = 12, maxLines = 1, flexGrow = 1 }),
+				ui.label({ text = humanSize(f.size), color = "on_surface_variant", fontSize = 11 }),
+			})
+		end
+		local n = #(receive.files or {})
+		return ui.column({ gap = 6, paddingH = 6 }, {
+			ui.row({ gap = 8, align = "center" }, {
+				ui.glyph({ name = glyph, size = 18, color = "tertiary" }),
+				ui.label({
+					text = who .. " wants to send " .. n .. (n == 1 and " file" or " files") .. " · " .. humanSize(receive.total),
+					color = "on_surface",
+					fontSize = 13,
+					fontWeight = "semibold",
+					flexGrow = 1,
+				}),
+				ui.label({ text = ip, color = "on_surface_variant", fontSize = 11 }),
+			}),
+			ui.column({ gap = 2 }, rows),
+			ui.row({ gap = 8, align = "center" }, {
+				ui.spacer({ flexGrow = 1 }),
+				ui.button({ text = "Decline", variant = "ghost", controlSize = "sm", onClick = "onDecline" }),
+				ui.button({ text = "Accept", glyph = "download", variant = "primary", controlSize = "sm", onClick = "onAccept" }),
+			}),
+		})
+	end
+
+	if state == "receiving" then
+		local pct = tonumber(receive.percent) or 0
+		local label = tostring(receive.name or "")
+		if label == "" then
+			label = "Receiving from " .. who .. "..."
+		else
+			local total = tonumber(receive.filesTotal) or 0
+			if total > 1 then
+				label = string.format("%s (%d/%d)", label, (tonumber(receive.index) or 0) + 1, total)
+			end
+		end
+		local speed = (receive.speed and receive.speed ~= "") and (receive.speed .. "/s") or ""
+		return ui.column({ gap = 4, paddingH = 6 }, {
+			ui.row({ gap = 8, align = "center" }, {
+				ui.glyph({ name = "download", size = 14, color = "primary" }),
+				ui.label({ text = label, color = "on_surface", fontSize = 12, maxLines = 1, flexGrow = 1 }),
+				ui.label({ text = speed, color = "on_surface_variant", fontSize = 11 }),
+				ui.label({ text = pct .. "%", color = "primary", fontSize = 11, fontWeight = "semibold" }),
+				ui.button({ text = "Cancel", variant = "ghost", controlSize = "sm", onClick = "onCancelReceive" }),
+			}),
+			ui.progress({ progress = pct / 100, fill = "primary", track = "surface_variant", height = 6, radius = 3 }),
+		})
+	end
+
+	local color = (state == "done") and "primary" or (state == "error") and "error" or "on_surface_variant"
+	local icon = (state == "done") and "check" or (state == "error") and "alert-triangle" or "circle-x"
+	local bits = {
+		ui.glyph({ name = icon, size = 14, color = color }),
+		ui.label({ text = who .. ": " .. tostring(receive.message or state), color = color, fontSize = 12, maxLines = 2, flexGrow = 1 }),
+	}
+	if state == "done" then
+		bits[#bits + 1] = ui.button({ text = "Open folder", glyph = "folder", variant = "ghost", controlSize = "sm", onClick = "onOpenFolder" })
+	end
+	bits[#bits + 1] = ui.button({ text = "Dismiss", variant = "ghost", controlSize = "sm", onClick = "onDismissReceive" })
+	return ui.row({ gap = 8, align = "center", paddingH = 6 }, bits)
+end
+
 -- ══════════════════════════════════════════════════════════════ render ═══
 
 render = function()
@@ -414,6 +530,12 @@ render = function()
 			ui.glyph({ name = "alert-triangle", size = 13, color = "error" }),
 			ui.label({ text = tostring(err), color = "error", fontSize = 11, maxLines = 2 }),
 		})
+	end
+
+	local rx = receiveStrip()
+	if rx then
+		children[#children + 1] = ui.separator({ spacing = 4, color = "outline/0.4" })
+		children[#children + 1] = rx
 	end
 
 	local strip = transferStrip()
@@ -447,8 +569,13 @@ noctalia.state.watch("error", function(v)
 	err = v
 	render()
 end)
+noctalia.state.watch("receive", function(v)
+	receive = v or { state = "off" }
+	render()
+end)
 
 function onOpen()
+	noctalia.state.set("panelOpen", true)
 	isOpen = true
 	-- Devices come and go; a sweep is ~1s, so refresh on every open rather
 	-- than keeping a background timer running.
@@ -457,6 +584,7 @@ function onOpen()
 end
 
 function onClose()
+	noctalia.state.set("panelOpen", false)
 	isOpen = false
 end
 
@@ -473,6 +601,10 @@ function onIpc(event, payload)
 	elseif event == "send" and payload and payload ~= "" then
 		lastFingerprint = payload
 		cmd({ op = "send", fingerprint = payload })
+	elseif event == "accept" then
+		cmd({ op = "accept", session = receive.session })
+	elseif event == "decline" then
+		cmd({ op = "decline", session = receive.session })
 	end
 end
 

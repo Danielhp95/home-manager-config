@@ -13,9 +13,39 @@ common case — drag a file in, send it — never needs the panel at all.
 
 local staged = noctalia.state.get("staged") or {}
 local transfer = noctalia.state.get("transfer") or { state = "idle" }
+local receive = noctalia.state.get("receive") or { state = "off" }
 
 local function render()
 	barWidget.setGlyph("send")
+
+	-- An incoming transfer outranks an outgoing one in the badge.
+	local rx = receive.state
+	if rx == "waiting" then
+		barWidget.setGlyph("download")
+		barWidget.setColor("tertiary")
+		barWidget.setText("?")
+		barWidget.setTooltip(tostring((receive.sender and receive.sender.alias) or "a device") .. " wants to send " .. #(receive.files or {}) .. " file(s)")
+		return
+	elseif rx == "receiving" then
+		barWidget.setGlyph("download")
+		barWidget.setColor("primary")
+		barWidget.setText(tostring(receive.percent or 0) .. "%")
+		local rows = {
+			{ key = "from", value = tostring((receive.sender and receive.sender.alias) or "") },
+			{ key = "file", value = tostring(receive.name or "") },
+		}
+		if receive.speed and receive.speed ~= "" then
+			rows[#rows + 1] = { key = "speed", value = receive.speed .. "/s" }
+		end
+		barWidget.setTooltip(rows)
+		return
+	elseif rx == "error" then
+		barWidget.setGlyph("download")
+		barWidget.setColor("error")
+		barWidget.setText("!")
+		barWidget.setTooltip(tostring(receive.message or "receive failed"))
+		return
+	end
 
 	local state = transfer.state
 
@@ -71,6 +101,10 @@ noctalia.state.watch("staged", function(v)
 end)
 noctalia.state.watch("transfer", function(v)
 	transfer = v or { state = "idle" }
+	render()
+end)
+noctalia.state.watch("receive", function(v)
+	receive = v or { state = "off" }
 	render()
 end)
 
