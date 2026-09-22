@@ -740,6 +740,9 @@ function update()
 		startReceiver()
 		return
 	end
+	if os.time() - receiverStartedAt < 20 then
+		return -- a fresh spawn may not have replaced a stale pid file yet
+	end
 	noctalia.runAsync({ "kill", "-0", pid }, function(res)
 		if res.exitCode ~= 0 then
 			noctalia.log("receive: receiver " .. pid .. " is gone, respawning")
@@ -846,6 +849,9 @@ publishStaged()
 publishTransfer()
 publishDevices()
 publishReceive()
+-- A pid file left by a crash would make the first watchdog tick spawn a
+-- second receiver next to the one starting here.
+noctalia.removeFile(RECEIVER_PID)
 startReceiver()
 discover()
 

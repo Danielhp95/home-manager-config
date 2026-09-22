@@ -36,10 +36,16 @@ FAKE_FINGERPRINT = "FAKERECEIVER000000000000000000000000000000000000000000000000
 def announce_responder():
     """Answer multicast announcements the way a real LocalSend device does.
 
+    Current LocalSend answers with `POST /api/localsend/v2/register` to the
+    announcer (over the protocol and port the announcement named) and never
+    over UDP; --udp-reply switches to the multicast reply that older builds
+    sent, to keep that path of localsend.nu testable too.
+
     Lets the plugin's own discovery find this receiver, so the full path
     (discover -> pick device -> send) can be tested without a human tapping
     Accept on a phone.
     """
+    import urllib.request
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -72,9 +78,22 @@ def announce_responder():
             continue
         if payload.get("fingerprint") == FAKE_FINGERPRINT:
             continue
-        if payload.get("announce"):
+        if not payload.get("announce"):
+            continue
+        if ARGS.udp_reply:
             tx.sendto(json.dumps(me).encode(), (GROUP, DISCOVERY_PORT))
-            print(f"[fake] replied to announce from {addr[0]}", flush=True)
+            print(f"[fake] replied to announce from {addr[0]} over UDP", flush=True)
+            continue
+        url = f"{payload.get('protocol', 'http')}://{addr[0]}:{payload.get('port', DISCOVERY_PORT)}/api/localsend/v2/register"
+        body = {k: v for k, v in me.items() if k not in ("announcement", "announce")}
+        req = urllib.request.Request(
+            url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=0.5) as resp:
+                print(f"[fake] registered with {addr[0]} ({resp.status})", flush=True)
+        except Exception as e:
+            print(f"[fake] register with {addr[0]} failed: {e}", flush=True)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -87,6 +106,23 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         if payload:
             self.wfile.write(payload)
+
+    def do_GET(self):
+        # What LocalSend's own "legacy scan" asks every host on the subnet.
+        if urlparse(self.path).path.endswith("/info"):
+            info = {
+                "alias": ARGS.alias,
+                "version": "2.1",
+                "deviceModel": "fake",
+                "deviceType": "mobile",
+                "fingerprint": FAKE_FINGERPRINT,
+                "port": ARGS.port,
+                "protocol": "http",
+                "download": False,
+            }
+            self._reply(200, json.dumps(info).encode(), "application/json")
+            return
+        self._reply(404)
 
     def do_POST(self):
         url = urlparse(self.path)
@@ -195,6 +231,11 @@ def main():
         "--announce",
         action="store_true",
         help="answer multicast discovery, so the plugin can find this receiver",
+    )
+    p.add_argument(
+        "--udp-reply",
+        action="store_true",
+        help="with --announce: reply over multicast like pre-rewrite LocalSend, instead of an HTTP register",
     )
     p.add_argument("--alias", default="Fake Receiver")
     ARGS = p.parse_args()

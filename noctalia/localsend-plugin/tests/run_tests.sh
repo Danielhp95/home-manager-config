@@ -112,11 +112,11 @@ else
   echo "  FAIL  only $N progress events"; sed 's/^/        /' "$WORK/out.jsonl"; FAILED=1
 fi
 
-# Discovery: the receiver answers our multicast announcement the way current
-# LocalSend does, with an HTTP register POST to our ip:53317, so this also
-# covers the responder localsend.nu runs for the length of a sweep.
-# receiver.py (the plugin's own server, see the receive section below) is the
-# register endpoint peers answer to; a sweep reads its registrations.log.
+# Discovery: the fake answers our multicast announcement the way current
+# LocalSend does, with an HTTP register POST to our ip:53317. receiver.py (the
+# plugin's own server, see the receive section below) is that endpoint; a
+# sweep reads its registrations.log. Both 53317 cases are skipped while the
+# live plugin holds the port.
 RDL="$WORK/downloads"; mkdir -p "$RDL"
 echo '[]' > "$WORK/favs.json"
 start_receiver_53317() { # data-dir -> starts receiver.py on the real port, waits for listening
@@ -128,20 +128,25 @@ start_receiver_53317() { # data-dir -> starts receiver.py on the real port, wait
     grep -q '"event": "listening"' "$1/events.jsonl" 2>/dev/null && return 0
     sleep 0.1
   done
+  if grep -q '"event": "port_busy"' "$1/events.jsonl" 2>/dev/null; then
+    echo "  SKIP  53317 is in use (the live plugin?), cannot run this case"; return 2
+  fi
   echo "receiver.py failed to start on 53317"; cat "$1/events.jsonl" "$1/err.log"; return 1
 }
 
 echo "== discover: peer registers over HTTP with receiver.py =="
-start_receiver_53317 "$WORK/rdisco" || exit 1
-start_receiver accept --announce --alias fake-disco || exit 1
-$NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint TESTFINGERPRINT --window 1500 \
-  --registrations "$WORK/rdisco/registrations.log" --receiver-up > "$WORK/disco.json" 2> "$WORK/disco.err"
-kill $DISCO_PID 2>/dev/null; wait $DISCO_PID 2>/dev/null
-check "found fake-disco" '"alias":"fake-disco"' "$WORK/disco.json"
-if grep -q "registered with" "$WORK/receiver.log"; then
-  echo "  PASS  receiver used HTTP register"
-else
-  echo "  FAIL  receiver did not register"; cat "$WORK/receiver.log" "$WORK/disco.err"; FAILED=1
+start_receiver_53317 "$WORK/rdisco"; RC=$?
+if [ "$RC" -eq 1 ]; then exit 1; elif [ "$RC" -eq 0 ]; then
+  start_receiver accept --announce --alias fake-disco || exit 1
+  $NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint TESTFINGERPRINT --window 1500 \
+    --registrations "$WORK/rdisco/registrations.log" --receiver-up > "$WORK/disco.json" 2> "$WORK/disco.err"
+  kill $DISCO_PID 2>/dev/null; wait $DISCO_PID 2>/dev/null
+  check "found fake-disco" '"alias":"fake-disco"' "$WORK/disco.json"
+  if grep -q "registered with" "$WORK/receiver.log"; then
+    echo "  PASS  receiver used HTTP register"
+  else
+    echo "  FAIL  receiver did not register"; cat "$WORK/receiver.log" "$WORK/disco.err"; FAILED=1
+  fi
 fi
 
 echo "== discover: legacy receiver replies over UDP =="
@@ -149,18 +154,18 @@ start_receiver accept --announce --udp-reply --alias fake-udp || exit 1
 $NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint TESTFINGERPRINT --window 1500 > "$WORK/disco.json" 2> "$WORK/disco.err"
 check "found fake-udp" '"alias":"fake-udp"' "$WORK/disco.json"
 
-# The LocalSend app scenario: something else holds 53317, so the register
-# responder cannot bind and discovery must fall back to the /info subnet scan.
 # The LocalSend app scenario: something else answers /info on 53317 and the
 # service knows its receiver is down, so discovery falls back to the subnet
 # scan. receiver.py stands in for the app here (it serves /info too).
 echo "== discover: receiver down -> subnet scan fallback =="
-start_receiver_53317 "$WORK/rscan" || exit 1
-$NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint OTHERFINGERPRINT --window 800 \
-  --registrations "$WORK/nonexistent.log" --scan-hosts 127.0.0.1 > "$WORK/disco.json" 2> "$WORK/disco.err"
-kill $DISCO_PID 2>/dev/null; wait $DISCO_PID 2>/dev/null
-check "reported receiver down" 'receiver is not running' "$WORK/disco.err"
-check "found fake-laptop by scan" '"alias":"fake-laptop"' "$WORK/disco.json"
+start_receiver_53317 "$WORK/rscan"; RC=$?
+if [ "$RC" -eq 1 ]; then exit 1; elif [ "$RC" -eq 0 ]; then
+  $NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint OTHERFINGERPRINT --window 800 \
+    --registrations "$WORK/nonexistent.log" --scan-hosts 127.0.0.1 > "$WORK/disco.json" 2> "$WORK/disco.err"
+  kill $DISCO_PID 2>/dev/null; wait $DISCO_PID 2>/dev/null
+  check "reported receiver down" 'receiver is not running' "$WORK/disco.err"
+  check "found fake-laptop by scan" '"alias":"fake-laptop"' "$WORK/disco.json"
+fi
 
 # ───────────────────────────────────────────────── receive (receiver.py) ───
 # receiver.py is driven by our own sender. A decision is a file the panel
@@ -207,6 +212,11 @@ EOF
   echo "$WORK/rjob.json"
 }
 
+ONE="[{\"path\": \"$WORK/a.txt\", \"name\": \"a.txt\", \"size\": $(stat -c%s "$WORK/a.txt"), \"type\": \"text/plain\"}]"
+# curl as the sender, for the cases where the sender must misbehave.
+PREP='{"info":{"alias":"curl-sender","fingerprint":"CURLFP","deviceType":"desktop","port":1},"files":{"f0":{"id":"f0","fileName":"c.txt","size":3,"fileType":"text/plain"}}}'
+prep_url="http://127.0.0.1:$RPORT/api/localsend/v2/prepare-upload"
+
 echo "== receive: accept two files, one nested =="
 start_receiver_py || exit 1
 $NU --no-config-file "$SCRIPT" send "$(rjob "$FILES")" > "$WORK/out.jsonl" 2>&1 &
@@ -236,12 +246,44 @@ $NU --no-config-file "$SCRIPT" send "$(rjob "$FILES")" > "$WORK/out.jsonl" 2>&1
 check "timeout event"  '"event": "timeout"'  "$WORK/recv_events.jsonl"
 check "sender got 403" '"message":"declined"' "$WORK/out.jsonl"
 
-echo "== receive: pinned sender is auto-accepted =="
+echo "== receive: pinned sender is auto-accepted (pin check disabled) =="
 echo '[{"fingerprint": "SENDERFINGERPRINT", "alias": "noctalia-test"}]' > "$WORK/favs.json"
-start_receiver_py || exit 1
+start_receiver_py --no-verify-pins || exit 1
 $NU --no-config-file "$SCRIPT" send "$(rjob "$FILES")" > "$WORK/out.jsonl" 2>&1
 check "auto true"   '"auto": true'          "$WORK/recv_events.jsonl"
 check "sender done" '"event":"done","sent":2' "$WORK/out.jsonl"
+
+# A fingerprint is just a string in the request body; anyone on the LAN who
+# has seen the phone announce can claim it. Auto-accept therefore only
+# applies when the sender proves it: its TLS certificate's SHA-256 must be
+# the pinned fingerprint. A sender with no TLS server gets the prompt.
+echo "== receive: pinned fingerprint without proof is still prompted =="
+start_receiver_py || exit 1
+$NU --no-config-file "$SCRIPT" send "$(rjob "$FILES")" > "$WORK/out.jsonl" 2>&1 &
+SEND_PID=$!; decide accept; wait $SEND_PID
+check "auto false without TLS proof" '"auto": false' "$WORK/recv_events.jsonl"
+check "sender done after prompt"     '"event":"done","sent":2' "$WORK/out.jsonl"
+
+echo "== receive: pinned fingerprint proven by the sender's certificate =="
+if command -v openssl >/dev/null 2>&1; then
+  openssl req -x509 -newkey rsa:2048 -nodes -keyout "$WORK/tls.key" -out "$WORK/tls.crt" -days 1 -subj "/CN=LocalSend User" >/dev/null 2>&1
+  TLSFP=$(openssl x509 -in "$WORK/tls.crt" -outform DER | sha256sum | cut -d' ' -f1 | tr a-f A-F)
+  openssl s_server -accept 8396 -cert "$WORK/tls.crt" -key "$WORK/tls.key" -quiet > /dev/null 2>&1 &
+  TLS_PID=$!; sleep 0.5
+  echo "[{\"fingerprint\": \"$TLSFP\", \"alias\": \"tls-phone\"}]" > "$WORK/favs.json"
+  start_receiver_py || exit 1
+  cat > "$WORK/tlsjob.json" <<EOF
+{"device": {"ip": "127.0.0.1", "port": $RPORT, "protocol": "http", "alias": "fake-laptop"},
+ "pin": null, "alias": "tls-phone", "fingerprint": "$TLSFP", "port": 8396,
+ "files": $ONE}
+EOF
+  $NU --no-config-file "$SCRIPT" send "$WORK/tlsjob.json" > "$WORK/out.jsonl" 2>&1
+  check "auto true with TLS proof" '"auto": true' "$WORK/recv_events.jsonl"
+  check "sender done"              '"event":"done","sent":1' "$WORK/out.jsonl"
+  kill $TLS_PID 2>/dev/null
+else
+  echo "  SKIP  openssl not on PATH"
+fi
 
 echo "== receive: pinned sender still prompted with --no-auto-accept =="
 start_receiver_py --no-auto-accept || exit 1
@@ -252,7 +294,6 @@ echo '[]' > "$WORK/favs.json"
 
 echo "== receive: name collision gets (1) suffix =="
 start_receiver_py || exit 1
-ONE="[{\"path\": \"$WORK/a.txt\", \"name\": \"a.txt\", \"size\": $(stat -c%s "$WORK/a.txt"), \"type\": \"text/plain\"}]"
 for _ in 1 2; do
   $NU --no-config-file "$SCRIPT" send "$(rjob "$ONE")" > "$WORK/out.jsonl" 2>&1 &
   SEND_PID=$!; decide accept; wait $SEND_PID
@@ -324,12 +365,77 @@ python3 "$HERE/../receiver.py" --port "$RPORT" --alias x --fingerprint y --downl
 RECV_PID=$!; sleep 0.5
 [ ! -s "$RDATA/registrations.log" ] && echo "  PASS  registrations.log truncated" || { echo "  FAIL  log kept"; FAILED=1; }
 
-echo "== receive: port busy =="
-python3 "$HERE/../receiver.py" --port "$RPORT" --alias x --fingerprint y --download-dir "$RDL" --data-dir "$WORK/rdata2" --favourites "$WORK/favs.json" > "$WORK/busy.jsonl" 2>/dev/null
+echo "== receive: sender vanishes while the prompt is up =="
+start_receiver_py || exit 1
+curl -s -m 1 -X POST -H 'Content-Type: application/json' --data "$PREP" "$prep_url" >/dev/null 2>&1
+decide accept
+sleep 1
+check "cancelled instead" '"event": "cancelled"' "$WORK/recv_events.jsonl"
+if grep -q '"event": "accepted"' "$WORK/recv_events.jsonl"; then echo "  FAIL  accepted a vanished sender"; FAILED=1; else echo "  PASS  no accepted event"; fi
+$NU --no-config-file "$SCRIPT" send "$(rjob "$ONE")" > "$WORK/out.jsonl" 2>&1 &
+SEND_PID=$!; decide accept; wait $SEND_PID
+check "next sender not told busy" '"event":"done","sent":1' "$WORK/out.jsonl"
+
+echo "== receive: an accepted session that never uploads is reaped =="
+start_receiver_py --idle-timeout 2 || exit 1
+curl -s -m 5 -X POST -H 'Content-Type: application/json' --data "$PREP" "$prep_url" > "$WORK/prep.json" 2>/dev/null &
+CP=$!; decide accept; wait $CP
+check "accepted" '"event": "accepted"' "$WORK/recv_events.jsonl"
+sleep 3.5
+check "reaped as cancelled" '"event": "cancelled"' "$WORK/recv_events.jsonl"
+$NU --no-config-file "$SCRIPT" send "$(rjob "$ONE")" > "$WORK/out.jsonl" 2>&1 &
+SEND_PID=$!; decide accept; wait $SEND_PID
+check "next sender not told busy" '"event":"done","sent":1' "$WORK/out.jsonl"
+
+echo "== receive: cancel from the panel before the first upload =="
+start_receiver_py || exit 1
+curl -s -m 5 -X POST -H 'Content-Type: application/json' --data "$PREP" "$prep_url" > "$WORK/prep.json" 2>/dev/null &
+CP=$!; decide accept; wait $CP
+SID=$(python3 -c "import json,sys; d=json.load(open('$WORK/prep.json')); print(d['sessionId'])")
+TOK=$(python3 -c "import json,sys; d=json.load(open('$WORK/prep.json')); print(d['files']['f0'])")
+echo cancel > "$RDATA/decisions/$SID"
+CODE=$(printf 'abc' | curl -s -o /dev/null -w '%{http_code}' -m 5 -X POST -T - "http://127.0.0.1:$RPORT/api/localsend/v2/upload?sessionId=$SID&fileId=f0&token=$TOK")
+[ "$CODE" = "500" ] && echo "  PASS  upload refused with 500" || { echo "  FAIL  upload got $CODE"; FAILED=1; }
+check "cancelled event" '"event": "cancelled"' "$WORK/recv_events.jsonl"
+[ ! -e "$RDL/c.txt" ] && echo "  PASS  nothing written" || { echo "  FAIL  c.txt written"; FAILED=1; }
+
+echo "== receive: oversized bodies are refused =="
+start_receiver_py || exit 1
+CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 3 -X POST -H 'Content-Length: 100000000' -H 'Content-Type: application/json' --data '{}' "http://127.0.0.1:$RPORT/api/localsend/v2/register")
+[ "$CODE" = "413" ] && echo "  PASS  register 413" || { echo "  FAIL  register got $CODE"; FAILED=1; }
+curl -s -m 5 -X POST -H 'Content-Type: application/json' --data "$PREP" "$prep_url" > "$WORK/prep.json" 2>/dev/null &
+CP=$!; decide accept; wait $CP
+SID=$(python3 -c "import json; print(json.load(open('$WORK/prep.json'))['sessionId'])")
+TOK=$(python3 -c "import json; print(json.load(open('$WORK/prep.json'))['files']['f0'])")
+head -c 100000 /dev/zero > "$WORK/toobig.bin"
+CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 5 -X POST -T "$WORK/toobig.bin" -H 'Expect:' "http://127.0.0.1:$RPORT/api/localsend/v2/upload?sessionId=$SID&fileId=f0&token=$TOK")
+[ "$CODE" = "413" ] && echo "  PASS  upload larger than announced -> 413" || { echo "  FAIL  upload got $CODE"; FAILED=1; }
+check "error names the file" 'larger than announced' "$WORK/recv_events.jsonl"
+[ ! -e "$RDL/c.txt" ] && echo "  PASS  nothing written" || { echo "  FAIL  c.txt written"; FAILED=1; }
+
+echo "== receive: multicast responder registers with an announcing peer =="
+start_receiver_py || exit 1
+rm -rf "$WORK/rdata_b"; mkdir -p "$WORK/rdata_b"
+python3 "$HERE/../receiver.py" --port 8397 --alias fake-phone-server --fingerprint PHONEFP --download-dir "$RDL" --data-dir "$WORK/rdata_b" --favourites "$WORK/favs.json" --no-multicast > "$WORK/rb.jsonl" 2>/dev/null &
+RB_PID=$!; sleep 0.5
+printf '{"alias":"fake-phone","version":"2.1","deviceModel":"x","deviceType":"mobile","fingerprint":"PHONEFP","port":8397,"protocol":"http","download":false,"announce":true,"announcement":true}' \
+  | socat -u - UDP4-DATAGRAM:224.0.0.167:53317,ip-multicast-ttl=1
+sleep 1.5
+grep -q '"alias": "fake-laptop"' "$WORK/rdata_b/registrations.log" 2>/dev/null && echo "  PASS  registered with the announcer" || { echo "  FAIL  no registration"; cat "$WORK/rdata_b/registrations.log" 2>/dev/null; FAILED=1; }
+kill $RB_PID 2>/dev/null
+
+echo "== receive: port busy leaves the running receiver's data alone =="
+start_receiver_py || exit 1
+echo accept > "$RDATA/decisions/keepme"; echo "1 1.2.3.4 {}" >> "$RDATA/registrations.log"
+python3 "$HERE/../receiver.py" --port "$RPORT" --alias x --fingerprint y --download-dir "$RDL" --data-dir "$RDATA" --favourites "$WORK/favs.json" > "$WORK/busy.jsonl" 2>/dev/null
 RC=$?
 check "port_busy event" '"event": "port_busy"' "$WORK/busy.jsonl"
 [ "$RC" -eq 2 ] && echo "  PASS  exit code 2" || { echo "  FAIL  exit $RC"; FAILED=1; }
-kill "$RECV_PID" 2>/dev/null; RECV_PID=""
+[ -f "$RDATA/decisions/keepme" ] && echo "  PASS  decision kept" || { echo "  FAIL  decision wiped"; FAILED=1; }
+grep -q 1.2.3.4 "$RDATA/registrations.log" && echo "  PASS  registrations kept" || { echo "  FAIL  registrations truncated"; FAILED=1; }
+[ -s "$RDATA/receiver.pid" ] && echo "  PASS  pid file kept" || { echo "  FAIL  pid file gone"; FAILED=1; }
+kill "$RECV_PID" 2>/dev/null; wait "$RECV_PID" 2>/dev/null; RECV_PID=""
+[ ! -e "$RDATA/receiver.pid" ] && echo "  PASS  pid file removed on SIGTERM" || { echo "  FAIL  pid file left after SIGTERM"; FAILED=1; }
 
 echo
 if [ "$FAILED" -eq 0 ]; then echo "ALL TESTS PASSED"; else echo "FAILURES"; fi

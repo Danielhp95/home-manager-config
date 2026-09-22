@@ -411,7 +411,9 @@ def send-job [job: string, curl: string, cancel_file: string]: nothing -> nothin
         {id: $id, entry: (if ($preview | is-empty) { $core } else { $core | insert preview $preview })}
     })
     let body = {
-        info: (self-info ($j.alias? | default "noctalia") ($j.fingerprint? | default ""))
+        # `port` in the job overrides ours: the receiver proves a pinned
+        # sender by a TLS handshake to info.port, which tests point elsewhere.
+        info: (self-info ($j.alias? | default "noctalia") ($j.fingerprint? | default "") | merge {port: ($j.port? | default $PORT)})
         files: ($entries | reduce --fold {} {|it, acc| $acc | insert $it.id $it.entry })
     }
 
