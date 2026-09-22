@@ -17,7 +17,7 @@ plugin_api = 28
 author = "dani"
 license = "MIT"
 icon = "send"
-description = "Send files over LocalSend: drag-and-drop or pick, then choose a device — without opening the LocalSend app."
+description = "Send and receive files over LocalSend: drag-and-drop or pick, choose a device — and accept incoming transfers — without the LocalSend app."
 
 [[setting]]
 key = "alias"
@@ -83,6 +83,28 @@ type = "bool"
 label_key = "settings.clear_after_send.label"
 description_key = "settings.clear_after_send.description"
 default = true
+
+[[setting]]
+key = "download_dir"
+type = "string"
+label_key = "settings.download_dir.label"
+description_key = "settings.download_dir.description"
+default = "~/Downloads"
+
+[[setting]]
+key = "auto_accept_pinned"
+type = "bool"
+label_key = "settings.auto_accept_pinned.label"
+description_key = "settings.auto_accept_pinned.description"
+default = true
+
+[[setting]]
+key = "python_path"
+type = "string"
+label_key = "settings.python_path.label"
+description_key = "settings.python_path.description"
+default = "/etc/profiles/per-user/dani/bin/python3"
+advanced = true
 
 [[widget]]
 id = "widget"

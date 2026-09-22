@@ -31,6 +31,18 @@
     "clear_after_send": {
       "label": "Clear after sending",
       "description": "Empty the staged file list once a transfer completes."
+    },
+    "download_dir": {
+      "label": "Download folder",
+      "description": "Where received files are saved. Existing names get a (1) suffix, never overwritten."
+    },
+    "auto_accept_pinned": {
+      "label": "Auto-accept pinned devices",
+      "description": "Devices starred in the panel are accepted without asking."
+    },
+    "python_path": {
+      "label": "python3 path",
+      "description": "python3 that runs receiver.py (the receiving server)."
     }
   }
 }

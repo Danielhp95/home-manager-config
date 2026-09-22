@@ -70,9 +70,8 @@ def pid-alive [pid: string]: nothing -> bool {
     (^kill -0 $pid | complete | get exit_code) == 0
 }
 
-# Our identity on the network. Sender-only: we announce so that other devices
-# answer (that IS the discovery mechanism), but we run no server, so a device
-# that tries to send TO us will fail — LocalSend proper is the receiver here.
+# Our identity on the network, shared with receiver.py (which serves it on
+# /info and /register). Plain HTTP because there is no certificate.
 def self-info [alias: string, fingerprint: string]: nothing -> record {
     {
         alias: $alias
@@ -81,58 +80,149 @@ def self-info [alias: string, fingerprint: string]: nothing -> record {
         deviceType: "desktop"
         fingerprint: $fingerprint
         port: $PORT
-        protocol: "https"
+        protocol: "http"
         download: false
     }
 }
 
 # ────────────────────────────────────────────────────────────── discover ───
 
-# Announce ourselves on the multicast group and collect the announcements that
-# come back. A device's IP is NOT in its payload, so we need socat's
-# SOCAT_PEERADDR: `fork` runs the SYSTEM child once per datagram with that set.
+# One sh per datagram. The whole line goes out in a single printf: with the
+# prefix and the body as two writes, two datagrams landing together (our own
+# announcement looping back plus a reply) interleave and the reply loses its
+# PEER= prefix.
+const UDP_HANDLER = r#'
+body=$(cat | tr -d '\r\n')
+printf 'PEER=%s %s\n' "$SOCAT_PEERADDR" "$body" >> __TMP__
+'#
+
+# LocalSend's own fallback: ask every host on our /24 for its /info. Needed
+# when receiver.py is not listening (the LocalSend app holds 53317) and when
+# the access point drops multicast between clients. Prints one
+# "<ip> <protocol> <json>" line per LocalSend host; ~2-3s for a /24.
+def subnet-scan [curl: string, only: string]: nothing -> list {
+    let hosts = if ($only | is-not-empty) {
+        $only | split row ","
+    } else {
+        let src = (try { ^ip -j route get $GROUP | from json | get 0.prefsrc } catch { "" })
+        if ($src | is-empty) { return [] }
+        let prefix = ($src | split row "." | first 3 | str join ".")
+        1..254 | each {|n| $"($prefix).($n)" } | where {|h| $h != $src }
+    }
+    # Only a successful probe prints a line, protocol first so the body can be
+    # anything. https is what LocalSend ships with; http is its
+    # encryption-off mode.
+    let probe = "c=" + (shq $curl) + "; b=$($c -skf -m 1.5 \"https://$1:53317/api/localsend/v2/info\" 2>/dev/null) && printf '%s https %s\\n' \"$1\" \"$b\" || { b=$($c -sf -m 1.5 \"http://$1:53317/api/localsend/v2/info\" 2>/dev/null) && printf '%s http %s\\n' \"$1\" \"$b\"; }; true"
+    $hosts | str join "\n"
+    | ^xargs -P 128 -I{} sh -c $probe _ {}
+    | lines
+    | each {|line|
+        let m = ($line | parse --regex '^(?<ip>[0-9.]+) (?<protocol>https?) (?<body>\{.*\})$')
+        if ($m | is-empty) { return null }
+        let row = ($m | first)
+        let payload = (try { $row.body | from json } catch { null })
+        if $payload == null { return null }
+        {alias: "unknown", deviceType: "desktop", deviceModel: "", port: $PORT, protocol: $row.protocol, fingerprint: "", download: false}
+        | merge $payload
+        | insert ip $row.ip
+    }
+    | compact
+}
+
+# Announce ourselves on the multicast group and collect the answers. Since the
+# LocalSend core rewrite a device answers an announcement in exactly one way:
+# `POST /api/localsend/v2/register` to the announcer's ip:port, over the
+# protocol the announcement named. That endpoint is receiver.py (spawned by
+# service.luau), which appends "<epoch ms> <ip> <body>" to --registrations for
+# every register it gets; a sweep reads the lines newer than itself. The UDP
+# listener stays for pre-rewrite builds that still reply by multicast, and the
+# /info subnet scan covers the receiver being down (LocalSend app holding the
+# port) and access points that drop multicast.
 export def "main discover" [
     --socat: string = "socat"
+    --curl: string = "curl"
     --alias: string = "noctalia"
     --fingerprint: string = ""
     --window: int = 2000 # ms to listen after announcing
+    --registrations: string = "" # receiver.py's registrations.log
+    --receiver-up # the service believes receiver.py is listening
+    --scan-hosts: string = "" # tests: comma-separated hosts to probe instead of the /24
 ]: nothing -> nothing {
+    let start = ((date now | into int) / 1_000_000 | math floor)
     let tmp = (mktemp -t "localsend-discover-XXXXXX")
+    let errf = (mktemp -t "localsend-discover-err-XXXXXX")
+    let udp_handler = (mktemp -t "localsend-udp-XXXXXX")
     let secs = ($window / 1000 + 0.4)
 
-    # Listener first, so it is up before our announcement provokes the replies.
-    # `timeout` bounds it instead of a kill, so no pid bookkeeping is needed.
-    let listen = $"timeout ($secs) (shq $socat) -u 'UDP4-RECVFROM:($PORT),ip-add-membership=($GROUP):0.0.0.0,reuseaddr,fork' SYSTEM:'printf \"PEER=%s \" \"$SOCAT_PEERADDR\"; cat; echo' > (shq $tmp) 2>/dev/null &"
-    ^sh -c $listen
+    let me = (self-info $alias $fingerprint)
+    $UDP_HANDLER | str replace --all "__TMP__" (shq $tmp) | save --force $udp_handler
+
+    # Listener first, so it is up before our announcement provokes the
+    # answers. `timeout` bounds it instead of a kill, so no pid bookkeeping.
+    let udp = $"timeout ($secs) (shq $socat) -u 'UDP4-RECVFROM:($PORT),ip-add-membership=($GROUP):0.0.0.0,reuseaddr,fork' SYSTEM:(shq $"sh ($udp_handler)") 2>> (shq $errf) &"
+    ^sh -c $udp
     sleep 250ms
 
-    let me = (self-info $alias $fingerprint | merge {announce: true, announcement: true})
-    $me | to json --raw | ^$socat -u - $"UDP4-DATAGRAM:($GROUP):($PORT),ip-multicast-ttl=4"
+    # Twice, like LocalSend's own burst: a peer that was mid-scan on the first
+    # datagram answers the second.
+    let announcement = ($me | merge {announce: true, announcement: true} | to json --raw)
+    for delay in [0ms 600ms] {
+        sleep $delay
+        $announcement | ^$socat -u - $"UDP4-DATAGRAM:($GROUP):($PORT),ip-multicast-ttl=4"
+    }
 
-    sleep ($window * 1ms)
+    sleep (($window * 1ms) - 600ms)
 
     let raw = (try { open --raw $tmp | lines } catch { [] })
+    let errs = (try { open --raw $errf | str trim } catch { "" })
+    let registered = (try { open --raw $registrations | lines } catch { [] })
     # Diagnostics on stderr: the caller logs them when a sweep comes back
     # empty, which is the difference between "nobody answered" and "the
     # listener never started".
-    # NB no "(s)" in this string: parentheses inside $"..." are evaluated.
-    print --stderr $"discover: captured ($raw | length) datagram lines"
-    rm --force $tmp
+    # NB no "(s)" in these strings: parentheses inside $"..." are evaluated.
+    print --stderr $"discover: ($raw | length) udp lines, ($registered | length) registration lines"
+    if not $receiver_up {
+        print --stderr "discover: receiver is not running (LocalSend app holding 53317?), peers cannot register; scanning the subnet instead"
+    } else if ($errs | is-not-empty) {
+        print --stderr $"discover: listener: ($errs | str substring 0..300)"
+    }
+    rm --force $tmp $errf $udp_handler
 
-    let devices = ($raw
+    # Defaults first, parsed payload over them: announcements from
+    # older/other implementations may omit fields.
+    let defaults = {alias: "unknown", deviceType: "desktop", deviceModel: "", port: $PORT, protocol: "https", fingerprint: "", download: false}
+    let from_udp = ($raw
         | each {|line|
-            let m = ($line | parse --regex '^PEER=(?<ip>[0-9.]+)(?<body>\{.*\})$')
+            let m = ($line | parse --regex '^PEER=(?<ip>[0-9.]+)\s*(?<body>\{.*\})$')
             if ($m | is-empty) { return null }
             let row = ($m | first)
             let payload = (try { $row.body | from json } catch { null })
             if $payload == null { return null }
-            # Defaults first, parsed payload over them: announcements from
-            # older/other implementations may omit fields.
-            {alias: "unknown", deviceType: "desktop", deviceModel: "", port: $PORT, protocol: "https", fingerprint: "", download: false}
-            | merge $payload
-            | insert ip $row.ip
+            $defaults | merge $payload | insert ip $row.ip
         }
-        | compact
+        | compact)
+    let from_register = ($registered
+        | each {|line|
+            let m = ($line | parse --regex '^(?<ts>\d+) (?<ip>[0-9.]+) (?<body>\{.*\})$')
+            if ($m | is-empty) { return null }
+            let row = ($m | first)
+            if ($row.ts | into int) < $start { return null }
+            let payload = (try { $row.body | from json } catch { null })
+            if $payload == null { return null }
+            $defaults | merge $payload | insert ip $row.ip
+        }
+        | compact)
+    let announced = ($from_udp ++ $from_register)
+
+    let scanned = if (not $receiver_up) or ($announced | where fingerprint != $fingerprint | is-empty) {
+        let found = (subnet-scan $curl $scan_hosts)
+        print --stderr $"discover: subnet scan answered by ($found | length) hosts"
+        $found
+    } else {
+        []
+    }
+
+    let devices = ($announced ++ $scanned
         | where fingerprint != $fingerprint
         | where fingerprint != ""
         | uniq-by fingerprint
@@ -159,11 +249,16 @@ def stage-entry [full: string, name: string]: nothing -> record {
 # named relative to the directory's parent, so dropping ~/pics/holiday sends
 # "holiday/day1/a.jpg" and the receiver rebuilds the tree.
 def stage-one [p: string]: nothing -> list {
+    # A path that does not exist (deleted since the drop, a stray line) makes
+    # `path expand` yield nothing and would abort the whole batch; skip it.
+    if not ($p | path exists) { return [] }
     let full = ($p | path expand --no-symlink)
     let kind = ($p | path expand | path type) # follow the link to classify it
     if $kind == "dir" {
         let base = ($full | path dirname)
-        glob $"($full)/**/*" --no-dir
+        # cd first: the directory name must not be part of the glob pattern,
+        # or a folder called "shots [1]" matches nothing.
+        do { cd $full; glob "**/*" --no-dir }
         | each {|f| stage-entry $f ($f | path relative-to $base) }
     } else if $kind == "file" {
         [(stage-entry $full ($full | path basename))]
@@ -286,6 +381,17 @@ export def "main send" [
     --curl: string = "curl"
     --cancel-file: string = "" # touch this path to abort in flight
 ]: nothing -> nothing {
+    # The Luau side only ever sees stdout lines, and treats the stream as live
+    # until a terminal event arrives. An uncaught nu error would go to stderr
+    # and leave the plugin waiting forever, so every failure becomes an event.
+    try {
+        send-job $job $curl $cancel_file
+    } catch {|e|
+        emit {event: "error", stage: "internal", code: 0, message: $"internal error: ($e.msg)"}
+    }
+}
+
+def send-job [job: string, curl: string, cancel_file: string]: nothing -> nothing {
     let j = (open --raw $job | from json)
     let dev = $j.device
     let base = $"($dev.protocol)://($dev.ip):($dev.port)/api/localsend/v2"

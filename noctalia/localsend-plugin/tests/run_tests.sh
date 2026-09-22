@@ -115,9 +115,28 @@ fi
 # Discovery: the receiver answers our multicast announcement the way current
 # LocalSend does, with an HTTP register POST to our ip:53317, so this also
 # covers the responder localsend.nu runs for the length of a sweep.
-echo "== discover: receiver registers over HTTP =="
+# receiver.py (the plugin's own server, see the receive section below) is the
+# register endpoint peers answer to; a sweep reads its registrations.log.
+RDL="$WORK/downloads"; mkdir -p "$RDL"
+echo '[]' > "$WORK/favs.json"
+start_receiver_53317() { # data-dir -> starts receiver.py on the real port, waits for listening
+  rm -rf "$1"; mkdir -p "$1"
+  python3 "$HERE/../receiver.py" --port 53317 --alias fake-laptop --fingerprint TESTFINGERPRINT \
+    --download-dir "$RDL" --data-dir "$1" --favourites "$WORK/favs.json" > "$1/events.jsonl" 2> "$1/err.log" &
+  DISCO_PID=$!
+  for _ in $(seq 1 40); do
+    grep -q '"event": "listening"' "$1/events.jsonl" 2>/dev/null && return 0
+    sleep 0.1
+  done
+  echo "receiver.py failed to start on 53317"; cat "$1/events.jsonl" "$1/err.log"; return 1
+}
+
+echo "== discover: peer registers over HTTP with receiver.py =="
+start_receiver_53317 "$WORK/rdisco" || exit 1
 start_receiver accept --announce --alias fake-disco || exit 1
-$NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint TESTFINGERPRINT --window 1500 > "$WORK/disco.json" 2> "$WORK/disco.err"
+$NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint TESTFINGERPRINT --window 1500 \
+  --registrations "$WORK/rdisco/registrations.log" --receiver-up > "$WORK/disco.json" 2> "$WORK/disco.err"
+kill $DISCO_PID 2>/dev/null; wait $DISCO_PID 2>/dev/null
 check "found fake-disco" '"alias":"fake-disco"' "$WORK/disco.json"
 if grep -q "registered with" "$WORK/receiver.log"; then
   echo "  PASS  receiver used HTTP register"
@@ -132,22 +151,23 @@ check "found fake-udp" '"alias":"fake-udp"' "$WORK/disco.json"
 
 # The LocalSend app scenario: something else holds 53317, so the register
 # responder cannot bind and discovery must fall back to the /info subnet scan.
-echo "== discover: port 53317 busy -> subnet scan fallback =="
-pkill -f "fake_receiver.py --port $PORT" 2>/dev/null
-python3 "$HERE/fake_receiver.py" --port 53317 --out "$WORK/out" --mode accept --alias fake-scan > "$WORK/receiver53317.log" 2>&1 &
-SCAN_PID=$!
-sleep 0.5
-$NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint TESTFINGERPRINT --window 800 --scan-hosts 127.0.0.1 > "$WORK/disco.json" 2> "$WORK/disco.err"
-kill $SCAN_PID 2>/dev/null
-check "reported busy port" 'port 53317 is busy' "$WORK/disco.err"
-check "found fake-scan by scan" '"alias":"fake-scan"' "$WORK/disco.json"
+# The LocalSend app scenario: something else answers /info on 53317 and the
+# service knows its receiver is down, so discovery falls back to the subnet
+# scan. receiver.py stands in for the app here (it serves /info too).
+echo "== discover: receiver down -> subnet scan fallback =="
+start_receiver_53317 "$WORK/rscan" || exit 1
+$NU --no-config-file "$SCRIPT" discover --alias noctalia-test --fingerprint OTHERFINGERPRINT --window 800 \
+  --registrations "$WORK/nonexistent.log" --scan-hosts 127.0.0.1 > "$WORK/disco.json" 2> "$WORK/disco.err"
+kill $DISCO_PID 2>/dev/null; wait $DISCO_PID 2>/dev/null
+check "reported receiver down" 'receiver is not running' "$WORK/disco.err"
+check "found fake-laptop by scan" '"alias":"fake-laptop"' "$WORK/disco.json"
 
 # ───────────────────────────────────────────────── receive (receiver.py) ───
 # receiver.py is driven by our own sender. A decision is a file the panel
 # would write; here the test writes it once the receiver has emitted the
 # `request` event (which carries the session id).
 RPORT=8398
-RDATA="$WORK/rdata"; RDL="$WORK/downloads"
+RDATA="$WORK/rdata"
 RECV_PID=""
 
 start_receiver_py() { # extra args...
@@ -186,7 +206,6 @@ rjob() { # files-json -> job file targeting receiver.py
 EOF
   echo "$WORK/rjob.json"
 }
-echo '[]' > "$WORK/favs.json"
 
 echo "== receive: accept two files, one nested =="
 start_receiver_py || exit 1
