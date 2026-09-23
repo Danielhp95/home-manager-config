@@ -79,9 +79,6 @@ in
     inputs.voxtype.homeManagerModules.default
   ];
 
-  # Wallpaper managaer
-  services.awww.enable = true;
-
   programs.mpv = {
     enable = true;
     config = {
