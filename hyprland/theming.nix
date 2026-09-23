@@ -41,13 +41,10 @@ in
   home.sessionVariables = {
     # Make Qt apps follow the GTK theme. Only a "gtk3" platform-theme plugin
     # exists (libqgtk3.so) — "gtk4" is not a valid value and Qt silently fell
-    # back to its default look. (The GSK "Error 71" this used to be blamed on
-    # is a GTK renderer issue, handled by GSK_RENDERER=gl in tuigreet.nix.)
+    # back to its default look.
     QT_QPA_PLATFORMTHEME = "gtk3";
-    # Kept for GTK3 apps, but the "for nautilus" part of it was never going to
-    # work and the note is corrected here rather than removed: nautilus is a
-    # libadwaita app, and libadwaita ships its own stylesheet and ignores GTK
-    # themes by design. Same for gnome-weather, gnome-calendar, decibels and
+    # For GTK3 apps only. nautilus is a libadwaita app, and libadwaita ships
+    # its own stylesheet and ignores GTK themes by design. Same for gnome-weather, gnome-calendar, decibels and
     # gthumb. What those *do* honour is the accent-color key below.
     GTK_THEME = "WhiteSur-Dark-orange";
   };

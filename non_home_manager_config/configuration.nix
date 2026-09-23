@@ -250,10 +250,6 @@
     fira-code-symbols # NOTE might not be needed with nord-fonts.firacode
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
-    # NOTE nerd-fonts.iosevka was dropped: ~1 GB of closure (it ships ~100 style
-    # variants) for two uses. Its consumers now point elsewhere — vicinae at
-    # ../menu_launchers/default.nix uses JetBrainsMono NF, and the media-control
-    # symbol_map in ../kitty/kitty.conf uses Noto Sans Symbols 2 + Unifont.
     nerd-fonts.symbols-only # full "Symbols Nerd Font Mono" — complete icon set, used as kitty fallback
   ];
 
@@ -285,7 +281,7 @@
     };
   };
 
-  # No uwsm: tuigreet's hyprland session execs `start-hyprland` directly
+  # tuigreet's hyprland session execs `start-hyprland` directly
   # (Hyprland's own crash-watchdog binary, tuigreet.nix), and session
   # lifecycle goes through home-manager's own systemd integration instead
   # (wayland.windowManager.hyprland.systemd, hyprland/default.nix):
@@ -295,7 +291,7 @@
   #     -> hyprland.start hook: dbus-update-activation-environment --systemd
   #        --all, then stop/start hyprland-session.target
   #     -> graphical-session.target goes active; every service WantedBy
-  #        it (fcitx5-daemon, hyprpolkitagent, vicinae, noctalia, awww,
+  #        it (fcitx5-daemon, hyprpolkitagent, vicinae, noctalia,
   #        gpg-agent.socket...) starts with the wayland env guaranteed.
   #   Compositor exit stops hyprland-session.target and everything bound to it.
   #
@@ -309,7 +305,7 @@
   #     hand-rolled hook that caused the above. Leave it at the module
   #     default (stop/start hyprland-session.target, one level down).
 
-  # Services previously pulled in implicitly by services.desktopManager.gnome
+  # Services a GNOME desktop would normally enable
   services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
   services.udisks2.enable = true; # yazi mount menu
   services.gnome.evolution-data-server.enable = true; # gnome-calendar storage daemons (no mail client pulled in)

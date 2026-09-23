@@ -19,13 +19,7 @@
 #
 # It is written outside the repo on purpose. Home Manager renders to read-only
 # store symlinks, so pointing this at ./vimium-settings.json would drop a
-# symlink into the git worktree where a tracked file used to be.
-#
-# This replaced the hand-maintained ./vimium-settings.json snapshot, which was
-# a verbatim copy of the live storage.sync row. Two things were changed in the
-# move, both noted where they occur below: duplicate exclusion patterns were
-# collapsed, and a key mapping pointing at a home directory that no longer
-# exists was dropped.
+# symlink into the git worktree.
 #
 # Keys and value *types* here are Vimium's, not ours — note that several
 # booleans are stringly-typed ("true", "[]") because that is what Vimium

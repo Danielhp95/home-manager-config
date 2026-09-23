@@ -189,7 +189,7 @@ in
       # still forks a second starship on every prompt, it just forks one
       # that prints nothing. Clearing RPROMPT is what actually removes the
       # fork (measured: 3.3ms of the ~29ms Enter-to-new-prompt round trip).
-      # Everything that used to live there now renders on the left; see the
+      # Everything renders on the left instead; see the
       # `format` comment in ../starship/default.nix.
       #
       # mkAfter (order 1500) is load-bearing: the home-manager starship

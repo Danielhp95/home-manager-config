@@ -384,7 +384,7 @@ async function main() {
   setInterval(tickClock, 1000);
 
   // The catch belongs on the fetch, not on .json(): the service restarts on
-  // every switch, and a rejected fetch here used to abort main() and leave a
+  // every switch, and a rejected fetch here would abort main() and leave a
   // page that ticks its clock but whose search box and panels do nothing.
   const aliases = parseAliases(
     await fetch("/assets/aliases.json")

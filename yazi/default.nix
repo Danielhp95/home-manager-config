@@ -527,12 +527,10 @@ in
         };
       };
 
-      # v26.8.15 made the help menu a command palette (yazi #4074) and renamed
-      # its theme keys with it: `on` -> `chord` (the key column, 20 cells wide),
-      # `run` + `desc` collapsed into a single `action` (the row prints the
-      # description, falling back to the raw command), and `footer` is gone —
-      # the palette's filter line is an Input, styled by [input] above. The old
-      # names were silently ignored, so help rendered on preset colors.
+      # The help menu is a command palette (yazi #4074): `chord` is the key
+      # column (20 cells wide), `action` the row (the description, falling back
+      # to the raw command), and its filter line is an Input, styled by [input]
+      # above. Unknown keys are silently ignored.
       help = {
         border.fg = p.accentDim;
         chord.fg = p.accent;

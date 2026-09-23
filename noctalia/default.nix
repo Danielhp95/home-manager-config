@@ -241,8 +241,8 @@ in
         behavior."lock-and-suspend".enabled = false;
       };
 
-      # noctalia owns the lockscreen now that hyprlock is removed, so the
-      # suspend interlock is stated here rather than left to the default.
+      # noctalia owns the lockscreen, so the suspend interlock is stated here
+      # rather than left to the default.
       lockscreen = {
         enabled = true;
         lock_before_suspend = true;
@@ -255,13 +255,10 @@ in
         { type = "nightlight"; }
         { type = "bluetooth"; }
         { type = "notification"; }
-        # NOTE: the power_profile shortcut spoke to power-profiles-daemon,
-        # which is now disabled in favour of TLP (see tlp_mode bar widget).
         { type = "dark_mode"; }
       ];
 
-      # auto_update is plugins-wide since the 2026-07 noctalia bump (it used to
-      # be a per-source key). Off: it made the bar git-fetch both plugin
+      # auto_update is plugins-wide. Off: it made the bar git-fetch both plugin
       # sources at every session start — network-dependent login latency that
       # stalled offline. Update deliberately from the plugin manager instead.
       # The local dani/* plugins are out-of-store symlinks and unaffected.

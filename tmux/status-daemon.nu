@@ -1,8 +1,7 @@
 # Feeds the dynamic status-line segments from one background process.
 #
-# The bar used to carry three #() jobs: continuum's autosave hook, a
-# `git rev-parse` for the branch, and `free -m | awk` for the RAM. tmux
-# re-runs a #() job whenever a status redraw lands in a new second, and
+# Why not #() jobs for continuum's autosave hook, the git branch and the
+# RAM: tmux re-runs a #() job whenever a status redraw lands in a new second, and
 # *every* keypress that produces pane output forces a redraw, because
 # automatic-rename re-evaluates #{pane_current_command} on pane activity.
 # Measured on this config: 0.10 job-fires/s sitting idle (correct for
@@ -11,10 +10,9 @@
 # tmux clients making synchronous round trips back into the very server
 # that also has to service the keystrokes.
 #
-# So the jobs move off the render path and into this loop, which parks
-# finished strings in @st_git / @st_ram for the format to read back with
-# no fork at all. A redraw is now pure string work. The clock was always
-# a native strftime and is untouched.
+# So they run in this loop instead, which parks finished strings in
+# @st_git / @st_ram for the format to read back with no fork at all. A
+# redraw is pure string work.
 #
 # Nushell suits this better than a POSIX shell does: everything a tick
 # needs apart from talking to tmux is a builtin. `open` reads /proc and

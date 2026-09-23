@@ -6,10 +6,8 @@ let
   # ../non_home_manager_config/ollama.nix creates it under this exact name.
   aiModel = "iris-qwen3-4b";
 
-  # What used to be fifteen substitutions is now three. Upstream grew a theme
-  # file and a `ui.max-width` setting (v0.4.19-v0.4.22), so the colour and box
-  # width patches moved into config below; what is left are the behaviours that
-  # still have no knob. Every replacement is --replace-fail: if upstream moves
+  # Colours and box width are configured below; these substitutions cover the
+  # behaviours that have no knob. Every replacement is --replace-fail: if upstream moves
   # a line, the build breaks loudly instead of silently reverting.
   #
   # All three re-applied unchanged across the v0.5.x -> v0.6.3 -> v0.7.0

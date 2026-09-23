@@ -230,7 +230,6 @@
   services = {
     xserver.videoDrivers = [
       "nvidia"
-      # "intelgpu"  # No longer working!
     ]; # Have nvidia and intel GPUs active
     logind.settings.Login.HandleLidSwitchDocked = "suspend"; # Suspend when laptop lid is closed but computer is docked to monitors / keyboard
     logind.settings.Login.HandleLidSwitch = "suspend"; # Specifies what to do when the laptop lid is closed.

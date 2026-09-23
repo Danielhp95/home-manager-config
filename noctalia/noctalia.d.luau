@@ -244,8 +244,7 @@ declare noctalia: {
 	-- Clamped to a 16 ms floor; drives the `update` hook.
 	setUpdateInterval: (ms: number) -> (),
 	-- Value of a plugin.toml [[setting]] key, nil (plus a logged warning) if the
-	-- key is undeclared. The per-global getConfig variants (barWidget.getConfig
-	-- etc.) were removed in v5. Typed `any` deliberately: the value's type is
+	-- key is undeclared. Typed `any` deliberately: the value's type is
 	-- whatever `type =` the key declares in plugin.toml, which is out of reach
 	-- here, so a union would just force a cast at every call site.
 	getConfig: (key: string) -> any,

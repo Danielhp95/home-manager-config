@@ -115,9 +115,7 @@ hl.config({
 		col = {
 			-- Focused window gets the coral rim; unfocused borders stay the
 			-- background color, so the 5px border reads as invisible padding
-			-- between columns rather than a drawn rim. (This used to be
-			-- borderless on both — focus via the hy3 tab bar only — but the
-			-- active glow came back by request.)
+			-- between columns rather than a drawn rim.
 			active_border = ember,
 			inactive_border = background,
 		},
@@ -233,9 +231,7 @@ hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 3.45, bezie
 -- (specialisations/dgpu-hdmi.nix); when present, Hyprland also opens the
 -- NVIDIA card (Intel stays the render GPU, NVIDIA only scans out) so the
 -- HDMI port works — at the cost of the dGPU never suspending (~8W). Boot
--- into that specialisation from the GRUB menu to flip this; it used to be a
--- `dgpu` toggle script + ~/.config/hypr/dgpu-mode marker file, replaced
--- because a boot-time choice is what this actually needed (it can't take
+-- into that specialisation from the GRUB menu to flip this (it can't take
 -- effect without a fresh Hyprland start anyway).
 -- AQ_DRM_DEVICES is colon-separated, so by-path names (which contain colons)
 -- get shattered on parse — resolve them to canonical /dev/dri/cardN first.
@@ -266,12 +262,11 @@ hl.env("LIBVA_DRIVER_NAME", "iHD")
 -- A reload (`hyprctl reload`, SUPER+SHIFT+C below, or a home-manager switch)
 -- throws away the Lua VM entirely and re-runs this file from scratch, so
 -- anything a running config put in a variable comes back nil. Two pieces of
--- state live *only* in the running compositor and used to be lost on every
+-- state live *only* in the running compositor and would be lost on every
 -- rebuild:
 --
 --   * the per-workspace scrolling/hy3 toggle (`scrolling_workspaces` below),
---   * the `present` script's mirror rule (hyprland/default.nix) — which is why
---     that file warned "don't rebuild mid-presentation".
+--   * the `present` script's mirror rule (hyprland/default.nix).
 --
 -- Hyprland >= 0.56 fires `config.unload` just before a reload, which is the
 -- hook that lets us hand state forward. It can't go through a Lua variable
@@ -280,8 +275,7 @@ hl.env("LIBVA_DRIVER_NAME", "iHD")
 -- Reload vs. logout: `config.unload` fires on shutdown too, immediately
 -- followed by `hyprland.shutdown` — so shutdown writes the file and then
 -- deletes it again, and a fresh session starts clean (mirroring off, every
--- workspace back on hy3), which is the behaviour that was there before. Only a
--- reload restores. A hard crash can leave a stale file behind and cause one
+-- workspace back on hy3). Only a reload restores. A hard crash can leave a stale file behind and cause one
 -- spurious restore on next login; delete it by hand if that ever bites.
 -- ─────────────────────────────────────────────────────────────────────────────
 local state_dir = os.getenv("HOME") .. "/.local/state/hypr"
@@ -397,14 +391,8 @@ local hy3 = hl.plugin.hy3
 -- process and open in ~5ms instead of ~400ms (fonts/GPU already initialized).
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"))
 
--- NOTE: Super+Ctrl+P used to run bash /home/dani/Projects/sai/rofi_wrapper.sh
--- ("hacky script for plotting metrics from runs"). That file no longer exists,
--- so the bind had been dead for a while; it went out with rofi. The chord is
--- free if the script comes back.
-
--- Lock screen when closing laptop lid. noctalia's lockscreen, not hyprlock:
--- there is only one lockscreen on this system now (see hyprland/default.nix),
--- and it is the same one noctalia's idle timers and suspend raise.
+-- Lock screen when closing laptop lid: noctalia's lockscreen, the same one
+-- noctalia's idle timers and suspend raise.
 hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("noctalia msg session lock"), { locked = true })
 
 -- Utilities
@@ -441,10 +429,9 @@ hl.bind(mod .. " + SHIFT + slash", hl.dsp.exec_cmd("noctalia msg panel-toggle ke
 -- cancels. The overlay grabs the keyboard itself, so only the open is bound.
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"))
 hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"))
--- Re-read hyprland.lua in place (Hyprland >= 0.56 native dispatcher; previously
--- this was only reachable as `hyprctl reload`). Note this drops the Lua VM, so
--- runtime-only state goes through the state file — see the runtime-state
--- section near the top.
+-- Re-read hyprland.lua in place (Hyprland >= 0.56 native dispatcher). Note
+-- this drops the Lua VM, so runtime-only state goes through the state file —
+-- see the runtime-state section near the top.
 hl.bind(mod .. " + SHIFT + C", hl.dsp.reload_config())
 
 -- Toggle bar
@@ -677,7 +664,7 @@ hl.config({
 				border_width = 1,
 				-- Mirrors the tmux window pills: the selected tab is a hot coral slab
 				-- with dark text, unselected tabs cool to a graphite slab with a
-				-- burnt-umber rim (they used to be olive green / invisible-on-black).
+				-- burnt-umber rim.
 				colors = {
 					active = ember,
 					active_border = ember,

@@ -4,7 +4,6 @@ let
   p = (import ../palette.nix).hash;
   # The @color_* variables tmux.conf renders with, generated from palette.nix
   # so tmux, starship and the rest of the system share one source of truth.
-  # (tmux.conf used to carry near-identical local copies of these values.)
   emberColors = ''
     # ── Ember palette — GENERATED from palette.nix by default.nix ──
     # Surfaces

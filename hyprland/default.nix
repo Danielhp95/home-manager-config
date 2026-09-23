@@ -167,11 +167,6 @@ let
 in
 {
   imports = [ ./theming.nix ];
-  # NOTE: hyprlock is gone (and ./hyprlock.conf with it). noctalia's lockscreen
-  # is the only one now — it is what the lid switch and the lock keybind in
-  # hyprland.lua call, what noctalia's idle behaviours raise (noctalia/
-  # default.nix), and what suspend locks behind. Having both meant two
-  # lockscreens with two themes reachable by two different paths.
   wayland.windowManager.hyprland = {
     enable = true;
     # Hyprland >= 0.55 / nixpkgs 26.05 default: config is written in lua.
@@ -260,8 +255,8 @@ in
 
   # wl-present (in the wl-mirror package above) shells out to a dmenu for its
   # `set-scaling` and `custom` subcommands, auto-detecting wofi/wmenu/fuzzel/
-  # rofi/dmenu in that order — none of which are installed since rofi went away,
-  # so it would have fallen through to a bare `dmenu` that does not exist. It
+  # rofi/dmenu in that order — none of which are installed, so it would fall
+  # through to a bare `dmenu` that does not exist. It
   # calls `$DMENU -p "<prompt>"`, which is exactly vicinae's dmenu interface.
   # Only reaches things launched from a shell; the `present` script above and
   # plain `wl-mirror` need no picker either way.

@@ -27,7 +27,6 @@ selectable_bg_color=#966859
 selectable_border_color=#A09473
 label_font_family=FiraCode Nerd Font Mono SemBd
 # label_font_family=JetBrainsMono Nerd Font Medium
-# (was "Iosevka NFM Medium Obl" — nerd-fonts.iosevka is no longer installed)
 label_font_size=16 80% 100
 label_symbols=abcdefghijklmnopqrstuvwxyz
 

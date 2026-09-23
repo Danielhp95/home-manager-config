@@ -225,8 +225,8 @@ in
     show_channel_descriptions = true
     sort_alphabetically = true
 
-    # Ember colors from palette.nix (this block used to carry drifted local
-    # copies; coral = accent, the theme's orange stand-in)
+    # Ember colors from palette.nix (coral = accent, the theme's orange
+    # stand-in)
     # ═══════════════════════════════════════════════════════════════════════════
     [ui.theme_overrides]
     # Base colors

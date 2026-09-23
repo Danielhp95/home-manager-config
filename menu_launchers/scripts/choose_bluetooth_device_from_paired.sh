@@ -17,8 +17,8 @@ selection=$(
 )
 device=$(awk '{print $3}' <<<"$selection")
 
-# rofi had -no-custom to guarantee the result was a real list entry; vicinae has
-# no equivalent, and it exits 0 when dismissed, so the MAC itself is the check.
+# vicinae can't guarantee the result is a real list entry, and it exits 0 when
+# dismissed, so the MAC itself is the check.
 if [[ ! $device =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
 	exit 0
 fi

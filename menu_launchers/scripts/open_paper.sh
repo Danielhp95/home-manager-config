@@ -44,8 +44,7 @@ done < <(find "$PAPERS_LOCATION" -maxdepth 1 -type f -name '*.pdf' -print0)
 # vicinae does not clamp a wider request to the monitor, it just overflows.
 choice=$(printf '%s\n' "${entries[@]}" | vicinae dmenu -p "Choose paper" -W 1850)
 
-# Guard on the selection, not on $?. Two reasons this is not the old
-# `(($? == 0))`: the pipeline's status is printf's, which is always 0, and
-# vicinae exits 0 when dismissed without a choice as well (verified). Between
-# them, cancelling used to run zathura on the ~/papers directory itself.
+# Guard on the selection, not on $?: the pipeline's status is printf's, which
+# is always 0, and vicinae exits 0 when dismissed without a choice as well
+# (verified). Either way, cancelling would run zathura on ~/papers itself.
 [ -n "$choice" ] && exec zathura "${thumb_to_pdf[$choice]:-$choice}"
