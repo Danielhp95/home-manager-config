@@ -7,6 +7,9 @@
     # themeFile = "Dracula";
   };
 
+  # Pipelines for `custom_shaders` in kitty.conf.
+  xdg.configFile."kitty/shaders".source = ./shaders;
+
   # kitty runs single-instance (`kitty -1` in hyprland.lua), so new windows
   # reuse the long-lived process and never re-read kitty.conf on their own.
   # SIGUSR1 tells the running instance to reload its config, which follows the
