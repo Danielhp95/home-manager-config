@@ -193,6 +193,17 @@ local function clickableNotify(id, title, body, failure)
 	return noctalia.runAsync(argv)
 end
 
+-- Batch-overflow summaries ("and N more...") have no single run to link to, so
+-- they skip notify-send's click action - but they should still carry the dart
+-- logo like every per-run toast does, instead of falling back to
+-- noctalia.notify's generic icon. Detached the same way clickableNotify is.
+local function plainNotify(title, body)
+	if HAS_NOTIFY_SEND and noctalia.runAsync({ "notify-send", "-a", "Noctalia", "-u", "normal", "-i", LOGO, title, body }) then
+		return
+	end
+	noctalia.notify(title, body)
+end
+
 local function loadSeen()
 	local raw = noctalia.readFile(SEEN_PATH)
 	if type(raw) ~= "string" or raw == "" then
@@ -257,7 +268,7 @@ local function resolveVanished(vanished)
 		end
 		for i, id in ipairs(ids) do
 			if i > MAX_TOASTS then
-				noctalia.notify("DART", ("and %d more run(s) left the active set"):format(#ids - MAX_TOASTS))
+				plainNotify("DART", ("and %d more run(s) left the active set"):format(#ids - MAX_TOASTS))
 				break
 			end
 			-- No row and no error means the run is genuinely gone; a failed
@@ -302,7 +313,7 @@ local function diffAndNotify(runs)
 		end
 	end
 	if extra > 0 then
-		noctalia.notify("DART", ("and %d more state change(s)"):format(extra))
+		plainNotify("DART", ("and %d more state change(s)"):format(extra))
 	end
 	resolveVanished(vanished)
 end
