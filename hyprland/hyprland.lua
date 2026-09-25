@@ -586,6 +586,8 @@ hl.bind(mod .. " + F2", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = 
 hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd(backlight .. " set 1%"), { repeating = true, description = "Set minimum brightness" })
 hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, description = "Increase brightness" })
 hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true, description = "Set maximum brightness" })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true, locked = true, description = "Decrease brightness" })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, locked = true, description = "Increase brightness" })
 -- `volume-all-sinks` (noctalia/default.nix) steps every *hardware* sink at once
 -- -- speakers plus each paired headset, skipping the easyeffects / eq_* virtual
 -- sinks audio flows through -- so the keys do the same thing as scrolling the
@@ -594,9 +596,28 @@ local volume = "volume-all-sinks"
 hl.bind(mod .. " + F6", hl.dsp.exec_cmd(volume .. " 5%-"), { repeating = true, description = "Decrease volume" })
 hl.bind(mod .. " + F7", hl.dsp.exec_cmd(volume .. " 5%+"), { repeating = true, description = "Increase volume" })
 hl.bind(mod .. " + F5", hl.dsp.exec_cmd(volume .. " mute"), { description = "Mute/unmute volume" })
+-- The SUPER binds above are chords *on top of* the F-keys. FN is resolved in
+-- keyboard firmware, so FN+F2/F3/F5/F6/F7 never reach the compositor as F-keys --
+-- they arrive as bare XF86MonBrightness*/XF86Audio* keysyms. Binding those with a
+-- modifier means a bare FN press matches nothing, which is why the volume and
+-- brightness keys did nothing. Every hardware key therefore needs a bare bind too.
+-- `locked` keeps them live on the lock screen; `repeating` lets them key-repeat.
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(volume .. " 5%-"), { repeating = true, locked = true, description = "Decrease volume" })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(volume .. " 5%+"), { repeating = true, locked = true, description = "Increase volume" })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd(volume .. " mute"), { locked = true, description = "Mute/unmute volume" })
 hl.bind(mod .. " + XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { description = "Next track" })
 hl.bind(mod .. " + XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { description = "Play/pause" })
 hl.bind(mod .. " + XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { description = "Previous track" })
+-- Bare transport keys. These matter more than the SUPER chords above: the Bluetooth
+-- headset (WH-1000XM6, via BlueZ AVRCP) and the HP keyboard's consumer-control
+-- endpoint both emit these keysyms, and you cannot hold SUPER on a headset -- so
+-- with only the SUPER binds, the headphones' play/next/prev buttons did nothing.
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true, description = "Next track" })
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/pause" })
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
+hl.bind("XF86AudioStop", hl.dsp.exec_cmd("playerctl stop"), { locked = true, description = "Stop playback" })
+-- FN+F8 on the HP chassis, routed through the "HP WMI hotkeys" device.
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, description = "Toggle mic mute" })
 
 -- Speech-to-text
 hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record start"), { description = "Start speech-to-text recording" })
