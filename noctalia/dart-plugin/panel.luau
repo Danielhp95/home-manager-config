@@ -95,6 +95,7 @@ local CANCELABLE = {
 local runs = noctalia.state.get("runs") or {}
 local err = noctalia.state.get("error")
 local busy = noctalia.state.get("busy") or false
+local muted = noctalia.state.get("muted") and true or false
 
 -- Panel-local interaction state. The panel VM persists across open/close,
 -- so onClose() resets whatever should not greet the next open.
@@ -933,6 +934,12 @@ local function headerBar()
 		busy and ui.label({ text = "refreshing...", color = "on_surface_variant", fontSize = 12 })
 			or ui.spacer({ width = 1 }),
 		ui.button({
+			glyph = muted and "bell-off" or "bell",
+			variant = muted and "tertiary" or "ghost",
+			tooltip = muted and "Unmute transition notifications" or "Mute transition notifications",
+			onClick = "onMuteToggled",
+		}),
+		ui.button({
 			glyph = "refresh",
 			variant = "ghost",
 			enabled = not busy,
@@ -1002,6 +1009,10 @@ noctalia.state.watch("busy", function(v)
 	busy = v and true or false
 	render()
 end)
+noctalia.state.watch("muted", function(v)
+	muted = v and true or false
+	render()
+end)
 
 function onOpen(_context)
 	isOpen = true
@@ -1020,6 +1031,12 @@ end
 
 function onRefreshClicked()
 	requestRefresh()
+end
+
+function onMuteToggled()
+	muted = not muted
+	noctalia.state.set("muted", muted)
+	render()
 end
 
 function onCloseClicked()

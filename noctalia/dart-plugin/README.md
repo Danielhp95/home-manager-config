@@ -48,7 +48,10 @@ queued → running
 
 A run that leaves the active set is re-queried by id so the terminal state is
 reported rather than "gone". **Clicking the toast opens that run's page in
-`$BROWSER`.**
+`$BROWSER`.** The bell button in the panel header mutes/unmutes these toasts
+instantly (a runtime override on top of the `notify_transitions` setting,
+kept in `noctalia.state` like the filter bar's text — it resets on a plugin
+disable/enable, not on a hot reload).
 
 ## Architecture
 

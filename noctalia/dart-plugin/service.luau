@@ -15,6 +15,7 @@ Publishes over noctalia.state (shared by all entries of this plugin):
 Listens on:
   "command"       { op = "refresh", nonce } -> re-poll now (widget/panel ask)
   "custom_filter" verbatim `dart run filter` args from the panel's filter bar
+  "muted"         bool; true suspends transition toasts (panel's bell button)
 
 Also raises a notification on every run state transition between two polls —
 see the "State transitions" block below. Those toasts are clickable (click →
@@ -33,6 +34,15 @@ local NOTIFY = noctalia.getConfig("notify_transitions")
 if NOTIFY == nil then
 	NOTIFY = true
 end
+
+-- Runtime override of NOTIFY, flipped by the panel's bell button. Separate
+-- from the notify_transitions setting (a config-file default) so muting is
+-- instant and needs no plugin reload; like custom_filter, it lives only in
+-- noctalia.state and resets on a plugin disable/enable.
+local muted = noctalia.state.get("muted") and true or false
+noctalia.state.watch("muted", function(v)
+	muted = v and true or false
+end)
 
 -- Default query states: dart.nvim's active set, extended with the manual
 -- suspend/resume/cancel in-flight states - without suspended_manual the
@@ -273,8 +283,8 @@ local function diffAndNotify(runs)
 		noctalia.writeFile(SEEN_PATH, encoded)
 	end
 
-	if not NOTIFY or previous == nil then
-		return -- cold start: take the baseline, say nothing
+	if not NOTIFY or muted or previous == nil then
+		return -- cold start, or muted: take the baseline, say nothing
 	end
 
 	local shown, extra, vanished = 0, 0, {}
