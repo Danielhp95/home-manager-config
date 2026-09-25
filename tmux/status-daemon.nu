@@ -190,7 +190,11 @@ def tick-plan [clients: list<record>] {
   for c in $clients {
     if not ($c.session in $seen) {
       $seen = ($seen | append $c.session)
-      let branch = (git-branch $c.path | default $NO_REPO)
+      # Isolated per client: a HEAD half-written during this one pane's
+      # checkout/rebase must not blank the plan for every other session too
+      # -- that previously threw out of the whole `for`, so one stuck pane
+      # silently froze everyone's @st_git until it stopped erroring.
+      let branch = (try { git-branch $c.path | default $NO_REPO } catch { $NO_REPO })
       $sig = ($sig + "|" + $c.session + "=" + $branch)
       $cmd = ($cmd | append [";" "set" "-q" "-t" $c.session "@st_git" $branch])
     }
