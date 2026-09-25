@@ -78,6 +78,9 @@ in
 
   ];
 
+  # ansi = the terminal's 16 colours (Ember). Overrides goose's config.yaml.
+  home.sessionVariables.GOOSE_CLI_THEME = "ansi";
+
   home.file.".docker/config.json".source = ./docker_config.json;
   home.file.".config/sai_docker/config.yaml".source = ./sai_docker_config.yaml;
 
