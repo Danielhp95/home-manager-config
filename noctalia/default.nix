@@ -7,6 +7,39 @@
 let
   p = import ../palette.nix;
 
+  # Step the volume of every hardware sink at once (speakers + each paired
+  # headset), so the bar's volume pill changes what is actually playing rather
+  # than only the currently-default sink. Virtual sinks (easyeffects_sink, the
+  # eq_* filter chains) are skipped on purpose: audio flows *through* them into
+  # a hardware sink, so stepping them too would apply the change 2-3 times.
+  # Hardware sinks are the ones that carry a device.id.
+  #
+  # `volume-all-sinks 5%+` / `5%-` steps them; `volume-all-sinks mute` toggles
+  # them as one group (mute all unless every one is already muted, then unmute
+  # all), so a headset and the speakers can never drift out of sync.
+  #
+  # It goes on PATH (home.packages below) because the hyprland volume binds
+  # call it by name too: hyprland.lua is read verbatim, so it cannot carry a
+  # store path. Both the bar gesture and the keys run this one script.
+  volumeAllSinks = pkgs.writeShellScriptBin "volume-all-sinks" ''
+    wpctl=${pkgs.wireplumber}/bin/wpctl
+    ids=$(${pkgs.pipewire}/bin/pw-dump \
+      | ${pkgs.jq}/bin/jq -r '.[] | select(.info.props."media.class" == "Audio/Sink" and .info.props."device.id" != null) | .id')
+    case "$1" in
+      mute)
+        target=1
+        for id in $ids; do
+          "$wpctl" get-volume "$id" | grep -q MUTED || { target=1; break; }
+          target=0
+        done
+        for id in $ids; do "$wpctl" set-mute "$id" "$target"; done
+        ;;
+      *)
+        for id in $ids; do "$wpctl" set-volume -l 1.0 "$id" "$1"; done
+        ;;
+    esac
+  '';
+
   # One half (dark or light) of a noctalia custom palette. The file format is
   # two of these under "dark"/"light": m* slots drive the whole shell, and the
   # `terminal` block feeds the terminal templates. The slot mapping is straight
@@ -97,6 +130,8 @@ in
 {
   home.packages = [
     tlp-mode
+    # Shared with the hyprland volume binds, see the definition above.
+    volumeAllSinks
     # logcli for `dart logs` (the dart-plugin Logs button and terminal use).
     # Until the switch lands, the plugin falls back to the sai FHS env's store
     # path (see dart-plugin/panel.luau openLogs).
@@ -457,6 +492,14 @@ in
           tooltip = "Power mode (TLP) — click: cycle, right-click: status";
           actions.left = "exec tlp-mode";
           actions.right = "exec kitty --hold -e sudo tlp-stat -s";
+        };
+
+        # Scrolling the pill steps every hardware sink (see volumeAllSinks),
+        # not just the default one; the label and left/right click still
+        # follow the default sink.
+        volume = {
+          actions.scroll_up = "exec ${volumeAllSinks}/bin/volume-all-sinks 5%+";
+          actions.scroll_down = "exec ${volumeAllSinks}/bin/volume-all-sinks 5%-";
         };
 
         # Icon + connected device name in the bar; hovering lists each

@@ -261,7 +261,7 @@ in
 
     # Screenshots and annotation are noctalia's (noctalia/default.nix).
 
-    pw-volume
+    # Volume keys use `volume-all-sinks` from noctalia/default.nix.
 
     hyprpicker
 

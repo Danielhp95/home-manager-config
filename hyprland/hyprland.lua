@@ -586,9 +586,14 @@ hl.bind(mod .. " + F2", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = 
 hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd(backlight .. " set 1%"), { repeating = true, description = "Set minimum brightness" })
 hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, description = "Increase brightness" })
 hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true, description = "Set maximum brightness" })
-hl.bind(mod .. " + F6", hl.dsp.exec_cmd("pw-volume change -5%"), { repeating = true, description = "Decrease volume" })
-hl.bind(mod .. " + F7", hl.dsp.exec_cmd("pw-volume change +5%"), { repeating = true, description = "Increase volume" })
-hl.bind(mod .. " + F5", hl.dsp.exec_cmd("pw-volume mute toggle"), { description = "Mute/unmute volume" })
+-- `volume-all-sinks` (noctalia/default.nix) steps every *hardware* sink at once
+-- -- speakers plus each paired headset, skipping the easyeffects / eq_* virtual
+-- sinks audio flows through -- so the keys do the same thing as scrolling the
+-- bar's volume pill, instead of only touching whichever sink is default.
+local volume = "volume-all-sinks"
+hl.bind(mod .. " + F6", hl.dsp.exec_cmd(volume .. " 5%-"), { repeating = true, description = "Decrease volume" })
+hl.bind(mod .. " + F7", hl.dsp.exec_cmd(volume .. " 5%+"), { repeating = true, description = "Increase volume" })
+hl.bind(mod .. " + F5", hl.dsp.exec_cmd(volume .. " mute"), { description = "Mute/unmute volume" })
 hl.bind(mod .. " + XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { description = "Next track" })
 hl.bind(mod .. " + XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { description = "Play/pause" })
 hl.bind(mod .. " + XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { description = "Previous track" })
