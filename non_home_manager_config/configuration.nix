@@ -15,7 +15,7 @@
     ../tuigreet.nix
     ./esp-check.nix
     ./grub-generation-label.nix
-    ../fcitx5/fonts.nix # the input method itself is home-manager config now
+    ./fonts.nix
     ./voxtype.nix
   ];
 
@@ -238,20 +238,6 @@
       };
     };
   };
-
-  fonts.packages = with pkgs; [
-    # Noto: means no tofu. Tofu is the colloquial term for errors in rendering chinese characters
-    noto-fonts
-    babelstone-han # unicode font with loooads of Han characters
-
-    font-awesome # NOTE do I need this?
-    material-symbols
-
-    fira-code-symbols # NOTE might not be needed with nord-fonts.firacode
-    nerd-fonts.jetbrains-mono
-    nerd-fonts.fira-code
-    nerd-fonts.symbols-only # full "Symbols Nerd Font Mono" — complete icon set, used as kitty fallback
-  ];
 
   # Set your time zone.
   # services.automatic-timezoned.enable = true;

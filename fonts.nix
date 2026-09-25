@@ -1,0 +1,47 @@
+# Single source of truth for fonts, the typographic counterpart of
+# palette.nix. Values are fontconfig family names; `packages` provides them.
+#
+# Hand-kept mirrors (their config can't import this file): the hy3 tab font in
+# hyprland/hyprland.lua, which is read verbatim, and --mono in the start page's
+# style.css. Deliberate one-offs stay local: GRUB's Determination Mono
+# (grub_theme/) and the start page's Cormorant Garamond display serif.
+{
+  # UI text: GTK/Qt, noctalia, fcitx5 and fontconfig's sans-serif.
+  ui = "Adwaita Sans";
+  uiSize = 11;
+
+  # Cell-grid text: terminals, hy3 tabs, wl-kbptr, fontconfig's monospace.
+  # The Nerd Font "Mono" variant keeps icons one cell wide.
+  mono = "JetBrainsMono Nerd Font Mono";
+  # The same face's SemiBold under its legacy family name, for APIs that take
+  # a family but no weight (wl-kbptr's cairo toy fonts).
+  monoSemiBold = "JetBrainsMono NFM SemiBold";
+  # Icons at natural width, for mono text outside a cell grid (vicinae).
+  monoWide = "JetBrainsMono Nerd Font";
+
+  # fontconfig's serif, Latin included.
+  serif = [
+    "Source Han Serif SC"
+    "Source Han Serif TC"
+  ];
+  # CJK fallback behind `ui`, for Chinese input.
+  cjkSans = [
+    "Source Han Sans SC"
+    "Source Han Sans TC"
+  ];
+
+  emoji = "Noto Color Emoji"; # from fonts.enableDefaultPackages
+  # Icon fallback for glyphs the main font lacks (kitty symbol_map).
+  symbols = "Symbols Nerd Font Mono";
+
+  packages =
+    pkgs: with pkgs; [
+      adwaita-fonts
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.symbols-only
+      source-han-sans
+      source-han-serif
+      noto-fonts # broad script coverage, incl. Noto Sans Symbols 2 (kitty symbol_map)
+      babelstone-han # Han characters beyond Source Han's set
+    ];
+}

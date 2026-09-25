@@ -169,7 +169,7 @@ in
     # Schema reference: example.toml in the noctalia repo.
     settings = {
       shell = {
-        font_family = "Adwaita Sans";
+        font_family = (import ../fonts.nix).ui;
         telemetry_enabled = false;
         avatar_path = "~/.face";
         # noctalia is the clipboard history (panel: mod+CONTROL+V in

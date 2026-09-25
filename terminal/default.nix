@@ -45,8 +45,6 @@ in
   };
 
   home.packages = with pkgs; [
-    fira-code
-    powerline-fonts
     nix-search-tv
     rsync
   ];

@@ -20,7 +20,7 @@
     enableZshIntegration = true;
     settings = {
       # ── Fonts ──────────────────────────────────────────────────────────────
-      font-family = "JetBrainsMono Nerd Font Mono";
+      font-family = (import ../fonts.nix).mono;
       # kitty `adjust_line_height 117%`; ghostty adds on top of base → 17% = 117%.
       adjust-cell-height = "17%";
 

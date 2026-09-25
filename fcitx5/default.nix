@@ -29,6 +29,7 @@ let
   #    private to the daemon, so without this second copy the terminal shows
   #    Ember while Firefox and Telegram show the white default.
   ember = import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg; };
+  ui = (import ../fonts.nix).ui;
 in
 {
   home.packages = [ ember ];
@@ -116,9 +117,9 @@ in
           classicui.globalSection = {
             "Vertical Candidate List" = "False";
             WheelForPaging = "True";
-            Font = "\"Sans 14\"";
-            MenuFont = "\"Sans 14\"";
-            TrayFont = "\"Sans Bold 14\"";
+            Font = "\"${ui} 14\"";
+            MenuFont = "\"${ui} 14\"";
+            TrayFont = "\"${ui} Bold 14\"";
             TrayOutlineColor = "#000000";
             TrayTextColor = "#ffffff";
             PreferTextIcon = "False";

@@ -1,6 +1,7 @@
 {pkgs, config, ...}:
 let
   cursor-theme-name = "Bibata-Modern-Amber";
+  f = import ../fonts.nix;
 in
 {
   gtk = {
@@ -25,8 +26,8 @@ in
     };
 
     font = {
-      name = "Fira Code";
-      size = 11;
+      name = f.ui;
+      size = f.uiSize;
     };
   };
 

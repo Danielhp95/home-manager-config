@@ -3,6 +3,7 @@
 {
   programs.kitty = {
     enable = true;
+    font.name = (import ../fonts.nix).mono;
     extraConfig = builtins.readFile ./kitty.conf;
     # themeFile = "Dracula";
   };

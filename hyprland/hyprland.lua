@@ -658,7 +658,7 @@ hl.config({
 				radius = 5, -- was `rounding` in old hy3; renamed to `radius`
 				render_text = true,
 				text_center = true,
-				text_font = "FiraCode Nerd Font Mono Bold",
+				text_font = "JetBrainsMono Nerd Font Mono Bold", -- fonts.nix mono (Pango: trailing Bold = weight)
 				text_height = 12,
 				text_padding = 0,
 				border_width = 1,
