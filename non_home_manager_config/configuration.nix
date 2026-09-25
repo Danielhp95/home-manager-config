@@ -164,7 +164,8 @@
     enable = true;
     percentageLow = 20;
     percentageCritical = 10;
-    percentageAction = 5;
+    # noctalia's last battery warning fires at 2%; any higher pre-empts it.
+    percentageAction = 2;
     # There is no swap device (only zram), so Hibernate has nowhere to write the
     # image: the action fails and the battery drains to a hard power loss.
     # PowerOff is the only action here that can't lose the filesystem state.

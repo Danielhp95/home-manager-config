@@ -7,6 +7,35 @@
 let
   p = import ../palette.nix;
 
+  noctaliaPkg = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
+  # Stormlight wording for noctalia's battery warnings (low at the threshold
+  # and 5%, critical at 2%). `battery` is also the laptop's {device} label.
+  stormlightStrings = pkgs.writeText "stormlight-strings.json" (builtins.toJSON {
+    battery = "Stormlight";
+    battery-low-title = "Stormlight running low";
+    battery-low-body = "{device}: {percent}%. The spheres are going dun; set them out for the next highstorm.";
+    battery-critical-title = "Life before death";
+    battery-critical-body = "{device}: {percent}%. Your battery is dead. But I'll see what I can do.";
+  });
+
+  # noctalia's strings have no per-string override, so this is its asset
+  # bundle as a symlink tree with en.json patched, used via
+  # NOCTALIA_ASSETS_DIR. Fails the build if upstream renames a key.
+  stormlightAssets =
+    pkgs.runCommandLocal "noctalia-assets-stormlight" { nativeBuildInputs = [ pkgs.jq ]; }
+      ''
+        assets=${noctaliaPkg}/share/noctalia/assets
+        cp -rs $assets $out
+        chmod u+w $out/translations
+        rm $out/translations/en.json
+        jq --slurpfile s ${stormlightStrings} '
+          (($s[0] | keys) - (.notifications.internal | keys)) as $missing
+          | if $missing != [] then error("unknown keys: \($missing)") else . end
+          | .notifications.internal += $s[0]
+        ' $assets/translations/en.json > $out/translations/en.json
+      '';
+
   # Step the volume of every hardware sink at once (speakers + each paired
   # headset), so the bar's volume pill changes what is actually playing rather
   # than only the currently-default sink. Virtual sinks (easyeffects_sink, the
@@ -192,9 +221,13 @@ in
   xdg.dataFile."noctalia/plugins/localsend".source =
     config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/localsend-plugin";
 
+  systemd.user.services.noctalia.Service.Environment = [
+    "NOCTALIA_ASSETS_DIR=${stormlightAssets}"
+  ];
+
   programs.noctalia = {
     enable = true;
-    package = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    package = noctaliaPkg;
 
     # Run noctalia as a systemd user service (restarts automatically on config changes)
     systemd.enable = true;
@@ -375,23 +408,10 @@ in
 
       notification = {
         enable_daemon = true;
-
-        # batsignal fires its "full" notification (-f 97, see hyprland/default.nix)
-        # every time the charger blips, which on a flaky plug means a toast every
-        # few seconds. Drop anything it reports at 95% or above: the app name
-        # narrows it to batsignal, and match_content is an ECMAScript regex run
-        # (case-insensitively) over the summary and body — batsignal's body is
-        # always "Battery level: NN%". Low/critical warnings sit well under 95
-        # and still come through.
-        filter.batsignal-near-full = {
-          enabled = true;
-          match = "batsignal";
-          match_content = "Battery level: (9[5-9]|100)%";
-          show_toast = false;
-          save_history = false;
-          play_sound = false;
-        };
       };
+
+      # First low-battery warning; noctalia adds fixed 5% and 2% levels.
+      battery.warning_threshold = 20;
 
       # Floating pills: the bar's own background is fully transparent (its
       # drop shadow is scaled by background_opacity, so no orphaned shadow
