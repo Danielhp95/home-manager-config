@@ -1,5 +1,31 @@
 { pkgs, ... }:
 
+let
+  palette = import ../palette.nix;
+
+  # Accents follow kitty.conf's ANSI mapping; steel (magma) is both blue and
+  # the palette's orange.
+  emberColors = c: {
+    core = {
+      background = c.bg;
+      foreground = c.fg;
+      secondary_background = c.bgAlt;
+      border = c.border;
+      accent = c.accent;
+    };
+
+    accents = {
+      blue = c.steel;
+      green = c.olive;
+      magenta = c.mauve;
+      orange = c.steel;
+      purple = c.mauve;
+      red = c.accent;
+      yellow = c.gold;
+      cyan = c.sage;
+    };
+  };
+in
 {
   # dmenu-style list selection goes through `vicinae dmenu` (the session daemon
   # below, wearing the Ember theme). See scripts/open_paper.sh and
@@ -64,26 +90,7 @@
           inherits = "vicinae-dark";
         };
 
-        colors = {
-          core = {
-            background = "#1c1b19";
-            foreground = "#d8d0c0";
-            secondary_background = "#242320";
-            border = "#3a342d";
-            accent = "#e08060";
-          };
-
-          accents = {
-            blue = "#ef7f38"; # steel (magma orange since 2026-08)
-            green = "#8a9868"; # olive
-            magenta = "#988090"; # mauve
-            orange = "#c09058";
-            purple = "#988090";
-            red = "#e08060"; # coral
-            yellow = "#c8b468"; # gold
-            cyan = "#7aa88a"; # sage
-          };
-        };
+        colors = emberColors palette.hash;
       };
 
       ember-light = {
@@ -96,26 +103,7 @@
           inherits = "vicinae-light";
         };
 
-        colors = {
-          core = {
-            background = "#e6dac4";
-            foreground = "#282418";
-            secondary_background = "#d8ccb6";
-            border = "#b8ac96";
-            accent = "#b84c30";
-          };
-
-          accents = {
-            blue = "#a84e16"; # steel (light-mode magma since 2026-08)
-            green = "#4a6830"; # olive
-            magenta = "#706070"; # mauve
-            orange = "#946030";
-            purple = "#706070";
-            red = "#b84c30"; # coral
-            yellow = "#7a6820"; # gold
-            cyan = "#386858"; # sage
-          };
-        };
+        colors = emberColors palette.light.hash;
       };
     };
   };
