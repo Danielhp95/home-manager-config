@@ -188,8 +188,10 @@ alternate binary names and grepping every `.nix` file caught them:
 
 - **`goose`** — `goose-cli` is declared in `sony_ai/default.nix`; the binary is
   live at `/etc/profiles/per-user/dani/bin/goose`.
-- **`opencode`** — declared in `non_home_manager_config/ollama.nix`
-  `systemPackages`, live in `/run/current-system/sw/bin`.
+- **`opencode`** — was declared in `non_home_manager_config/ollama.nix`
+  `systemPackages`; removed 2026-09-25, so `~/.config/opencode`,
+  `~/.local/share/opencode`, `~/.local/state/opencode` and
+  `~/.cache/opencode` are real orphans now.
 - **`evolution`** — `services.gnome.evolution-data-server.enable = true` backs
   gnome-calendar, and `~/.config/evolution/sources/system-calendar.source` is
   its live storage config. Deleting it would have wiped calendar setup.

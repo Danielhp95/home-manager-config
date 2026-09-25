@@ -296,7 +296,7 @@ in
     debounce_ms = 800
     min_interval_ms = 5000
 
-    # Not the qwen3-coder:30b ollama.nix loads for open-webui/opencode: the
+    # Not the qwen3-coder:30b ollama.nix loads for open-webui: the
     # budget here is debounce 400ms + a timeout on a request fired
     # mid-typing, which is a time-to-first-token problem, not a tok/s one.
     # There is no small qwen3-coder to prefer — that repo stops at 30b.
@@ -444,7 +444,7 @@ in
         # VRAM forever the way keep_alive = -1 would.
         #
         # Re-sent at most every five minutes from precmd, which recovers from
-        # an eviction (loading qwen3-coder:30b for opencode evicts this, since
+        # an eviction (loading qwen3-coder:30b for open-webui evicts this, since
         # the two don't fit together) and from an ollama restart. A request for
         # a model that is already loaded only resets its timer. Backgrounded
         # and disowned, so a slow or absent ollama never holds up the prompt.

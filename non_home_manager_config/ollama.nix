@@ -6,7 +6,6 @@
   ...
 }:
 {
-  environment.systemPackages = with pkgs; [ opencode ];
   services.ollama = {
     enable = true;
     host = "0.0.0.0";
