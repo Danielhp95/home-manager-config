@@ -1,5 +1,127 @@
 { pkgs, ... }:
+let
+  # gh's markdown style (glamour, via GLAMOUR_STYLE): glamour's dark.json with
+  # Ember colours. Text uses ANSI slot numbers, so the terminal's Ember 16
+  # apply. Code blocks go through chroma's fixed 256-colour table, where only
+  # the xterm values of slots 1-7 map back to those slots exactly (bright
+  # ones and slot 8 tie with other entries), so comments use grey 242, the
+  # nearest to muted. Token roles follow ../ipython/ipython_config.py.
+  slot = {
+    accent = "#800000";
+    olive = "#008000";
+    gold = "#808000";
+    steel = "#000080";
+    mauve = "#800080";
+    sage = "#008080";
+    fg = "#c0c0c0";
+    comment = "#6c6c6c";
+  };
+  bold = color: {
+    inherit color;
+    bold = true;
+  };
+  glamourEmber = pkgs.writeText "glamour-ember.json" (builtins.toJSON {
+    document = {
+      block_prefix = "\n";
+      block_suffix = "\n";
+      margin = 2;
+    };
+    block_quote = {
+      indent = 1;
+      indent_token = "│ ";
+      color = "8";
+    };
+    list.level_indent = 2;
+    heading = bold "1" // {
+      block_suffix = "\n";
+    };
+    h1 = {
+      prefix = " ";
+      suffix = " ";
+      color = "0";
+      background_color = "1";
+      bold = true;
+    };
+    h2.prefix = "## ";
+    h3.prefix = "### ";
+    h4.prefix = "#### ";
+    h5.prefix = "##### ";
+    h6 = {
+      prefix = "###### ";
+      color = "8";
+      bold = false;
+    };
+    strikethrough.crossed_out = true;
+    emph.italic = true;
+    strong.bold = true;
+    hr = {
+      color = "8";
+      format = "\n--------\n";
+    };
+    item.block_prefix = "• ";
+    enumeration.block_prefix = ". ";
+    task = {
+      ticked = "[✓] ";
+      unticked = "[ ] ";
+    };
+    link = {
+      color = "4";
+      underline = true;
+    };
+    link_text = bold "3";
+    image = {
+      color = "5";
+      underline = true;
+    };
+    image_text = {
+      color = "8";
+      format = "Image: {{.text}} →";
+    };
+    # Hex: surface has no ANSI slot.
+    code = {
+      prefix = " ";
+      suffix = " ";
+      color = "2";
+      background_color = "#${(import ../palette.nix).surface}";
+    };
+    code_block = {
+      color = "7";
+      margin = 2;
+      chroma = {
+        text.color = slot.fg;
+        error = bold slot.accent;
+        comment = {
+          color = slot.comment;
+          italic = true;
+        };
+        comment_preproc.color = slot.gold;
+        keyword = bold slot.mauve;
+        keyword_reserved = bold slot.mauve;
+        keyword_namespace = bold slot.mauve;
+        keyword_type.color = slot.gold;
+        name_builtin.color = slot.steel;
+        name_tag.color = slot.mauve;
+        name_class = bold slot.accent;
+        name_constant.color = slot.sage;
+        name_decorator.color = slot.gold;
+        name_exception = bold slot.accent;
+        name_function.color = slot.accent;
+        literal_number.color = slot.sage;
+        literal_string.color = slot.olive;
+        literal_string_escape.color = slot.sage;
+        generic_deleted.color = slot.accent;
+        generic_emph.italic = true;
+        generic_inserted.color = slot.olive;
+        generic_strong.bold = true;
+        generic_subheading.color = slot.comment;
+      };
+    };
+    definition_description.block_prefix = "\n🠶 ";
+  });
+in
 {
+  home.sessionVariables.GLAMOUR_STYLE = "${glamourEmber}";
+
   home.packages = with pkgs; [
     libgit2
   ];
