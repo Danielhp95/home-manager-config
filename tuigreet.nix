@@ -97,28 +97,23 @@ let
       (sortSessionList cfg.defaultSession sessions)
     )
   );
-  # Ember / WhiteSur-Dark-orange colors (see ./palette.nix). tuigreet parses
-  # these with ratatui's Color::from_str, which takes #rrggbb as well as the
-  # 16 ANSI color names.
-  #
-  # NOTE the greeter runs on VT1 (terminal.vt below) and the Linux console
-  # cannot display 24-bit color — the kernel approximates each value to the
-  # nearest of its 16 palette entries, so this degrades to "coral -> red,
-  # graphite -> black" there. The hex is still what we want written down: it is
-  # exact whenever the greeter runs inside a real terminal.
-  p = (import ./palette.nix).hash;
+  # ANSI slot names, not hex: the greeter runs on VT1, where the kernel maps
+  # 24-bit colour to a slot by per-channel hue bits (drivers/tty/vt/vt.c), so
+  # hex coral lands on bright yellow. Names hit their slot exactly, and
+  # console.colors (configuration.nix) makes the slots Ember. Per kitty.conf:
+  # black = bg, red = accent, yellow = gold, gray = fg, darkgray = muted.
   themeSpec = concatStringsSep ";" [
-    "container=${p.bg}"
-    "border=${p.accent}"
-    "title=${p.fg}"
-    "text=${p.fg}"
+    "container=black"
+    "border=red"
+    "title=gray"
+    "text=gray"
     # `greet` styles the whole greeting, pixel art included — Sans' bone.
-    "greet=${p.fg}"
-    "time=${p.accent}"
-    "prompt=${p.gold}"
-    "input=${p.fg}"
-    "action=${p.fgDim}"
-    "button=${p.accent}"
+    "greet=gray"
+    "time=red"
+    "prompt=yellow"
+    "input=gray"
+    "action=darkgray"
+    "button=red"
   ];
   # --greeting takes multi-line text, so it can carry half-block pixel art.
   # greetd doesn't do shell expansion of its command string, so the $(cat ...)

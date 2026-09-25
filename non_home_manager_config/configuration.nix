@@ -225,6 +225,31 @@
     ];
   };
 
+  # kitty.conf's color0-15, so the greeter, LUKS prompt and ttys are Ember.
+  # Set via kernel params: takes effect on the next boot.
+  console.colors =
+    let
+      c = import ../palette.nix;
+    in
+    [
+      c.bg
+      c.accent
+      c.olive
+      c.gold
+      c.steel
+      c.mauve
+      c.sage
+      c.fg
+      c.muted
+      c.accentBright
+      c.oliveBright
+      c.goldBright
+      c.steelBright
+      c.mauveBright
+      c.sageBright
+      "ffffff"
+    ];
+
   khome = {
     tuigreet = {
       enable = true;
