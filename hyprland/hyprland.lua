@@ -575,6 +575,15 @@ hl.bind(
 	),
 	{ description = "Keyboard-driven mouse control (wl-kbptr)" }
 )
+-- Same, but the picked target gets a right click instead of a left one
+-- (mode_click.button defaults to "left" in wl-kbptr.yaml; overridden here).
+hl.bind(
+	mod .. " + CONTROL + SHIFT + f",
+	hl.dsp.exec_cmd(
+		"wl-kbptr -o modes=floating,click -o mode_floating.source=detect -o mode_click.button=right --config=/home/dani/.config/wl-kbptr.yaml"
+	),
+	{ description = "Keyboard-driven mouse control — right click (wl-kbptr)" }
+)
 -- Volume / Brightness
 -- The nvidia driver registers a phantom `nvidia_0` backlight for its own
 -- (disconnected) card0-eDP-2, and bare `brightnessctl` picks it over
