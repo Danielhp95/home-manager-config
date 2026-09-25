@@ -119,17 +119,28 @@ let
 
       # `monitors all`, not `monitors`: a monitor that is currently mirroring is
       # omitted from the plain listing entirely, so the plain one can see how to
-      # turn mirroring on but never how to turn it back off. `all` also includes
-      # disabled outputs, hence the .disabled filter below.
+      # turn mirroring on but never how to turn it back off.
+      #
+      # `all` also lists disabled outputs, but its JSON `disabled` field can't
+      # weed them out: Hyprland 0.56 serialises it as m_enabled (the text output
+      # correctly uses !m_enabled; see src/ipc/s1/Commands.cpp), so every live
+      # monitor reads `disabled: true`. Filtering on it left no candidates and
+      # `present` always said "No external display connected". Instead, "live"
+      # is taken from the plain listing, which only holds enabled, unmirrored
+      # monitors, plus whatever `all` shows as mirroring. That never touches the
+      # field, so it survives upstream fixing it.
       monitors=$(hyprctl monitors all -j) || { say "hyprctl unavailable"; exit 1; }
+      live=$(hyprctl monitors -j) || { say "hyprctl unavailable"; exit 1; }
 
       # The target is whatever external display is attached. Named explicitly as
       # $2 when more than one is (at the desk both HPs are), since mirroring the
       # wrong panel mid-talk is worse than refusing.
       target="''${2:-}"
       if [ -z "$target" ]; then
-        candidates=$(printf '%s' "$monitors" | ${jq} -r --arg b "$builtin_panel" \
-          '.[] | select(.name != $b and .disabled == false) | .name')
+        candidates=$(${jq} -rn --arg b "$builtin_panel" \
+          --argjson all "$monitors" --argjson live "$live" \
+          '[$live[].name] + [$all[] | select(.mirrorOf != "none") | .name]
+           | unique | .[] | select(. != $b)')
         count=$(printf '%s' "$candidates" | grep -c . || true)
         case "$count" in
           0) say "No external display connected"; exit 1 ;;
