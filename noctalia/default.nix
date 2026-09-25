@@ -288,6 +288,11 @@ in
 
       nightlight.enabled = true;
 
+      weather = {
+        enabled = true;
+        unit = "celsius";
+      };
+
       # Idle locking. Nothing else on this system does it any more: hyprlock is
       # gone (hyprland/default.nix) and there is no hypridle/swayidle, so these
       # three behaviours are the whole story — before this, the screen locked on
@@ -393,6 +398,10 @@ in
         # gpu-screen-recorder comes from programs.gpu-screen-recorder in
         # configuration.nix.
         "noctalia/screen_recorder"
+
+        # Active Hyprland submap (resize / move) as a bar chip; click resets.
+        # Event-driven off socket2 via socat, no polling.
+        "k4n4t4/hypr-submap"
       ];
 
       # Super+Shift+R leaves the saved recording on the clipboard as a file://
@@ -441,37 +450,77 @@ in
         # thicker keeps them from reading skinnier than the old pill.
         capsule_thickness = 0.88;
 
-        # Plain lanes, no capsule_group: every widget draws its own pill. The
-        # grouped three-island version was tried and rejected (2026-09-16) —
-        # dart belongs next to the workspaces, and the right side reads better
-        # as separate pills.
+        # Plain lanes: every widget draws its own pill. The grouped
+        # three-island version was tried and rejected (2026-09-16) — dart
+        # belongs next to the workspaces, and the right side reads better as
+        # separate pills. The one exception is the cpu/ram sysmon group
+        # below (2026-09-22): those two belong together as one meter.
+        #
+        # Semantic grouping (2026-09-22): the clock+weather pill leads the bar
+        # since time/date is the thing you glance at first. Right side leads
+        # with the tray pill (tray, notifications), then claudecode usage, the
+        # bluetooth/volume/brightness pill, and the machine-state pill (cpu,
+        # ram, gpu, battery) anchors the far right edge.
         start = [
-          "home"
-          "clock"
-          "sysmon"
-          # Reads as a meter, so it sits with sysmon rather than in the status
-          # lane on the right.
-          "claudecode"
+          "group:clockweather"
           "active_window"
           "media"
         ];
         center = [
+          "privacy"
+          "hypr-submap"
           "workspaces"
           "dart"
           "localsend"
         ];
         end = [
-          "tray"
-          "privacy"
-          "notifications"
-          "battery"
-          "volume"
-          "brightness"
-          "tlp_mode"
-          # Next to bluetooth: both are "is this radio/link up" pills.
-          "tailnet"
-          "bluetooth"
-          "control-center"
+          "group:tray"
+          "claudecode"
+          "group:volbright"
+          "group:sysmon"
+        ];
+
+        capsule_group = [
+          # clock + weather share one pill.
+          {
+            id = "clockweather";
+            members = [
+              "clock"
+              "weather"
+            ];
+            fill = "surface_variant";
+          }
+          # tray + notifications share one pill.
+          {
+            id = "tray";
+            members = [
+              "tray"
+              "notifications"
+            ];
+            fill = "surface_variant";
+          }
+          # bluetooth + volume + brightness share one pill.
+          {
+            id = "volbright";
+            members = [
+              "bluetooth"
+              "volume"
+              "brightness"
+            ];
+            fill = "surface_variant";
+          }
+          # cpu + ram + gpu + vram + battery share one machine-state pill.
+          {
+            id = "sysmon";
+            members = [
+              "sysmon"
+              "ram"
+              "gpu"
+              "vram"
+              "battery"
+            ];
+            fill = "surface_variant";
+          }
         ];
       };
 
@@ -494,37 +543,19 @@ in
           focused_output_only = true;
         };
 
+        # Never set `anchor` on the clock (the settings GUI can save it to
+        # settings.toml): bar.cpp won't merge an anchored widget into a
+        # capsule_group, so it silently splits off the clockweather pill.
         clock = {
           format = "{:%H:%M %a, %b %d}";
           tooltip_format = "{:%A, %B %d, %Y}";
         };
 
-        # Leftmost button: drops the control centre's Home tab (avatar, uptime,
-        # weather, media, the control_center.shortcuts above) down from the bar.
-        # It has to be a custom_button rather than a second `control-center`
-        # widget because that widget type has no option for which tab to open —
-        # it reopens wherever you last were, and this button is specifically the
-        # home dropdown.
-        home = {
-          type = "custom_button";
-          glyph = "home";
-          tooltip = "Home";
-          actions.left = "exec noctalia msg panel-toggle control-center home";
-        };
-
-        # TLP power mode as a custom_button: left-click cycles
-        # auto -> forced low power -> forced performance -> auto (with a
-        # notification), right-click opens tlp-stat in a terminal.
-        #
-        # `actions.left`/`actions.right` rather than the old `command`/
-        # `right_command`: those are gesture bindings now, and noctalia was
-        # migrating them in memory on every load with a deprecation warning.
-        tlp_mode = {
-          type = "custom_button";
-          glyph = "bolt";
-          tooltip = "Power mode (TLP) — click: cycle, right-click: status";
-          actions.left = "exec tlp-mode";
-          actions.right = "exec kitty --hold -e sudo tlp-stat -s";
+        # Current conditions, sourced from [weather] above (coordinates
+        # resolved from the location block).
+        weather = {
+          show_temperature = true;
+          show_condition = true;
         };
 
         # Scrolling the pill steps every hardware sink (see volumeAllSinks),
@@ -535,12 +566,49 @@ in
           actions.scroll_down = "exec ${volumeAllSinks}/bin/volume-all-sinks 5%-";
         };
 
+        # CPU utilisation gauge (default sysmon stat is cpu_usage).
+        sysmon = {
+          stat = "cpu_usage";
+        };
+
+        # RAM used %, alongside the cpu sysmon pill.
+        ram = {
+          type = "sysmon";
+          stat = "ram_pct";
+        };
+
+        # dGPU utilisation and VRAM, read over NVML from the RTX 5090 (the
+        # i915 iGPU exposes neither). Mostly for ollama and DART runs: a model
+        # that spilled to CPU shows up as low VRAM. The VRAM gauge idles at
+        # ~2%, the driver's reserved memory, which nvidia-smi lists apart from
+        # "Used". Polling costs no D3 sleep: Hyprland holds /dev/nvidia0 open,
+        # so the card stays in D0 regardless. Own glyphs (cube, stack) so they
+        # don't reuse the cpu/ram ones: the defaults gave vram the same chip
+        # icon as ram.
+        gpu = {
+          type = "sysmon";
+          stat = "gpu_usage";
+          glyph = "cube";
+        };
+        vram = {
+          type = "sysmon";
+          stat = "gpu_vram";
+          glyph = "stack-2";
+        };
+
         # Icon + connected device name in the bar; hovering lists each
         # connected device with its battery %. Left-click opens the
         # control-center bluetooth tab, right-click toggles bluetooth power.
         bluetooth = {
           show_label = true;
           hide_when_no_connected_device = false;
+        };
+
+        # Hyprland submap chip (k4n4t4/hypr-submap), left of the workspaces.
+        # Hidden in the default map so it only shows while resize/move is on.
+        hypr-submap = {
+          type = "k4n4t4/hypr-submap:hypr-submap";
+          hide_when_default = true;
         };
 
         # Mic / camera / screen-share indicator: voxtype (mod+V), the screen
@@ -569,23 +637,11 @@ in
           type = "dani/localsend:widget";
         };
 
-        # Tailscale link state (rylos/tailnet). The plugin also registers a
-        # launcher provider and a "toggle" shortcut, so this pill is the
-        # convenience, not the only way in.
-        tailnet = {
-          type = "rylos/tailnet:bar";
-        };
-
         # Claude Code subscription usage (jrohland/claudecode). Stays blank
         # until jq is on the shell's PATH — see the home.packages note above.
         claudecode = {
           type = "jrohland/claudecode:pill";
         };
-
-        # kenn/keybind-cheatsheet deliberately has *no* entry here. Its widget
-        # would be a permanent pill for a panel opened a few times a month, so
-        # it is bound to mod+SHIFT+slash in hyprland/hyprland.lua instead
-        # (`noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet`).
       };
 
       dock.enabled = false;
