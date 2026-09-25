@@ -353,64 +353,65 @@ local hy3 = hl.plugin.hy3
 
 -- -1 = single-instance: after the first window, new ones reuse the running
 -- process and open in ~5ms instead of ~400ms (fonts/GPU already initialized).
-hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"))
+hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"), { description = "Open terminal" })
 
 -- Lock screen when closing laptop lid: noctalia's lockscreen, the same one
 -- noctalia's idle timers and suspend raise.
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("noctalia msg session lock"), { locked = true })
+hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("noctalia msg session lock"), { locked = true, description = "Lock screen on lid close" })
 
 -- Utilities
-hl.bind(mod .. " + D", hl.dsp.exec_cmd("vicinae toggle"))
+hl.bind(mod .. " + D", hl.dsp.exec_cmd("vicinae toggle"), { description = "Open app launcher" })
 hl.bind(
 	mod .. " + SHIFT + B",
-	hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/choose_bluetooth_device_from_paired.sh")
+	hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/choose_bluetooth_device_from_paired.sh"),
+	{ description = "Choose Bluetooth device" }
 )
-hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/open_paper.sh"))
+hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/open_paper.sh"), { description = "Open paper search" })
 -- Moved off SHIFT+o, which is the opacity toggle again (see below).
-hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"))
+hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"), { description = "OCR screen text" })
 -- Force the focused window fully opaque and back. Implemented as a tag rather
 -- than `setprop alpha`: a tag is per-window state the compositor already tracks
 -- and toggles for us, so each window remembers whether it is opaque without
 -- this config having to, and the actual opacity lives in one window rule down
 -- with the rest of them (opacity-opaque-tag). Global opacity is untouched.
-hl.bind(mod .. " + SHIFT + o", hl.dsp.window.tag({ tag = "opaque", action = "toggle" }))
-hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("bash /home/dani/nix_config/zsh/scripts/video/record_video.sh"))
+hl.bind(mod .. " + SHIFT + o", hl.dsp.window.tag({ tag = "opaque", action = "toggle" }), { description = "Toggle window opaque tag" })
+hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("bash /home/dani/nix_config/zsh/scripts/video/record_video.sh"), { description = "Toggle screen recording" })
 -- Region screenshot through noctalia's annotation editor (shell.screenshot.annotate
 -- in noctalia/default.nix); Enter/Done copies to the clipboard, Ctrl+S saves.
-hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia msg screenshot-region"), { description = "Screenshot region (annotate)" })
 -- Freeze the screen and draw on it in noctalia's annotation editor, then copy or save.
-hl.bind(mod .. " + A", hl.dsp.exec_cmd("noctalia msg screenshot-annotate"))
-hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"))
+hl.bind(mod .. " + A", hl.dsp.exec_cmd("noctalia msg screenshot-annotate"), { description = "Screenshot + annotate (full screen)" })
+hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"), { description = "Open volume mixer" })
 -- noctalia owns clipboard history (vicinae's monitoring is off, menu_launchers/).
-hl.bind(mod .. " + CONTROL + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"))
+hl.bind(mod .. " + CONTROL + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"), { description = "Open clipboard history" })
 -- Searchable keybind cheatsheet (kenn/keybind-cheatsheet, enabled in
 -- noctalia/default.nix). It reads the binds back out of the running compositor
 -- over hyprctl, so it stays correct under configType = "lua" -- unlike the
 -- plugins that parse hyprland.conf, which this config does not have. No bar
 -- pill on purpose; this bind is the only entry point.
-hl.bind(mod .. " + SHIFT + slash", hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"))
+hl.bind(mod .. " + SHIFT + slash", hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"), { description = "Open keybind cheatsheet" })
 -- Alt+Tab window switcher: Tab/Shift+Tab cycle, releasing Alt commits, Escape
 -- cancels. The overlay grabs the keyboard itself, so only the open is bound.
-hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"))
-hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"))
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"), { description = "Window switcher" })
+hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock screen" })
 -- Re-read hyprland.lua in place (Hyprland >= 0.56 native dispatcher). Note
 -- this drops the Lua VM, so runtime-only state goes through the state file —
 -- see the runtime-state section near the top.
-hl.bind(mod .. " + SHIFT + C", hl.dsp.reload_config())
+hl.bind(mod .. " + SHIFT + C", hl.dsp.reload_config(), { description = "Reload Hyprland config" })
 
 -- Toggle bar
-hl.bind(mod .. " + b", hl.dsp.exec_cmd("noctalia msg bar-toggle"))
+hl.bind(mod .. " + b", hl.dsp.exec_cmd("noctalia msg bar-toggle"), { description = "Toggle bar" })
 
 -- Normal workspaces
-hl.bind(mod .. " + Space", hl.dsp.window.float({ action = "toggle" }))
+hl.bind(mod .. " + Space", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 
 for i = 1, 9 do
-	hl.bind(mod .. " + " .. i, hl.dsp.focus({ workspace = i }))
-	hl.bind(mod .. " + SHIFT + " .. i, hy3.move_to_workspace(tostring(i), { follow = true }))
+	hl.bind(mod .. " + " .. i, hl.dsp.focus({ workspace = i }), { description = "Focus workspace " .. i })
+	hl.bind(mod .. " + SHIFT + " .. i, hy3.move_to_workspace(tostring(i), { follow = true }), { description = "Move window to workspace " .. i })
 end
-hl.bind(mod .. " + TAB", hl.dsp.focus({ workspace = "previous" }))
-hl.bind(mod .. " + comma", hl.dsp.focus({ workspace = "e-1" }))
-hl.bind(mod .. " + period", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind(mod .. " + TAB", hl.dsp.focus({ workspace = "previous" }), { description = "Focus previous workspace" })
+hl.bind(mod .. " + comma", hl.dsp.focus({ workspace = "e-1" }), { description = "Focus previous empty workspace" })
+hl.bind(mod .. " + period", hl.dsp.focus({ workspace = "e+1" }), { description = "Focus next empty workspace" })
 
 -- Layout toggle: hy3 <-> Hyprland's native scrolling (niri-style) layout,
 -- scoped to the active workspace via a per-workspace layout rule (Hyprland
@@ -454,7 +455,7 @@ hl.bind(layout_bind, function()
 			layout_bind
 		)
 	)
-end)
+end, { description = "Toggle workspace layout (hy3 / scrolling)" })
 
 -- Focus / move window (hy3, or Hyprland's native dispatcher on a workspace
 -- toggled to scrolling), vim keys and arrows
@@ -475,37 +476,37 @@ for key, dir in pairs(directions) do
 			hl.dispatch(hy3.move_window(dir))
 		end
 	end
-	hl.bind(mod .. " + " .. key, move_focus)
-	hl.bind(mod .. " + " .. dir, move_focus)
-	hl.bind(mod .. " + SHIFT + " .. key, move_window)
+	hl.bind(mod .. " + " .. key, move_focus, { description = "Focus window (" .. dir .. ")" })
+	hl.bind(mod .. " + " .. dir, move_focus, { description = "Focus window (" .. dir .. ")" })
+	hl.bind(mod .. " + SHIFT + " .. key, move_window, { description = "Move window (" .. dir .. ")" })
 end
 
-hl.bind(mod .. " + SHIFT + Space", hy3.toggle_focus_layer())
-hl.bind(mod .. " + C", hl.dsp.window.center())
+hl.bind(mod .. " + SHIFT + Space", hy3.toggle_focus_layer(), { description = "Toggle hy3 focus layer" })
+hl.bind(mod .. " + C", hl.dsp.window.center(), { description = "Center floating window" })
 
-hl.bind(mod .. " + s", hy3.set_swallow("toggle"))
+hl.bind(mod .. " + s", hy3.set_swallow("toggle"), { description = "Toggle window swallow (hy3)" })
 
-hl.bind(mod .. " + t", hy3.change_group("toggletab"))
-hl.bind(mod .. " + CONTROL + t", hy3.lock_tab()) -- lock a tab so it acts as a single node
-hl.bind(mod .. " + g", hy3.make_group("tab"))
+hl.bind(mod .. " + t", hy3.change_group("toggletab"), { description = "Toggle tab group (hy3)" })
+hl.bind(mod .. " + CONTROL + t", hy3.lock_tab(), { description = "Lock tab group (hy3)" }) -- lock a tab so it acts as a single node
+hl.bind(mod .. " + g", hy3.make_group("tab"), { description = "Make tab group (hy3)" })
 
-hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.close())
+hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.close(), { description = "Close window" })
 
-hl.bind(mod .. " + E", hl.dsp.layout("togglesplit")) -- toggle horizontal/vertical split
-hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
-hl.bind(mod .. " + O", hl.dsp.exec_cmd("hyprctl dispatch setprop activewindow opaque toggle"))
+hl.bind(mod .. " + E", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" }) -- toggle horizontal/vertical split
+hl.bind(mod .. " + F", hl.dsp.window.fullscreen(), { description = "Toggle fullscreen" })
+hl.bind(mod .. " + O", hl.dsp.exec_cmd("hyprctl dispatch setprop activewindow opaque toggle"), { description = "Toggle active window opacity" })
 
 -- Special workspaces
-hl.bind(mod .. " + Minus", hl.dsp.workspace.toggle_special())
-hl.bind(mod .. " + SHIFT + Minus", hl.dsp.window.move({ workspace = "special" }))
+hl.bind(mod .. " + Minus", hl.dsp.workspace.toggle_special(), { description = "Toggle special workspace" })
+hl.bind(mod .. " + SHIFT + Minus", hl.dsp.window.move({ workspace = "special" }), { description = "Move window to special workspace" })
 
 -- Mouse
 -- NOTE: the legacy `hy3:focustab, mouse` (bindn on mouse:272) is a no-op in current
 -- hy3 (focus_tab requires a direction or index), so it is intentionally omitted.
-hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
+hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Drag window (mouse)" })
 
 -- Resize submap
-hl.bind(mod .. " + R", hl.dsp.submap("resize"))
+hl.bind(mod .. " + R", hl.dsp.submap("resize"), { description = "Enter resize submap" })
 hl.define_submap("resize", function()
 	local resize = {
 		h = { x = -15, y = 0 },
@@ -515,10 +516,10 @@ hl.define_submap("resize", function()
 	}
 	for key, dir in pairs(directions) do
 		local delta = { x = resize[key].x, y = resize[key].y, relative = true }
-		hl.bind(key, hl.dsp.window.resize(delta), { repeating = true })
-		hl.bind(dir, hl.dsp.window.resize(delta), { repeating = true })
+		hl.bind(key, hl.dsp.window.resize(delta), { repeating = true, description = "Resize window (" .. dir .. ")" })
+		hl.bind(dir, hl.dsp.window.resize(delta), { repeating = true, description = "Resize window (" .. dir .. ")" })
 	end
-	hl.bind("escape", hl.dsp.submap("reset"))
+	hl.bind("escape", hl.dsp.submap("reset"), { description = "Exit resize submap" })
 end)
 
 -- Mouse-cursor submap: vim-style hjkl pointer movement, escape to leave
@@ -532,7 +533,7 @@ hl.bind(mod .. " + M", function()
 	-- so disable it while in this submap or the cursor vanishes mid-use.
 	hl.config({ cursor = { inactive_timeout = 0 } })
 	hl.dispatch(hl.dsp.submap("move"))
-end)
+end, { description = "Enter mouse-cursor submap" })
 hl.define_submap("move", function()
 	local deltas = {
 		h = { x = -25, y = 0 },
@@ -547,23 +548,23 @@ hl.define_submap("move", function()
 		end
 	end
 	for key, dir in pairs(directions) do
-		hl.bind(key, nudge(deltas[key]), { repeating = true })
-		hl.bind(dir, nudge(deltas[key]), { repeating = true })
+		hl.bind(key, nudge(deltas[key]), { repeating = true, description = "Move cursor (" .. dir .. ")" })
+		hl.bind(dir, nudge(deltas[key]), { repeating = true, description = "Move cursor (" .. dir .. ")" })
 	end
 	-- ydotool wheel units are discrete clicks: REL_WHEEL +y = up.
 	-- (wlrctl scroll is broken on Hyprland 0.55: axis events arrive with value120 = 0,
 	-- so toolkits ignore them; ydotool injects real uinput events instead.
 	-- Must be unmodified keys: holding SHIFT makes apps treat the wheel as horizontal scroll.)
-	hl.bind("u", hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y 1.5"), { repeating = true })
-	hl.bind("d", hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y -1.5"), { repeating = true })
-	hl.bind("space", hl.dsp.exec_cmd("wlrctl pointer click left"))
-	hl.bind("return", hl.dsp.exec_cmd("wlrctl pointer click left"))
-	hl.bind("SHIFT + space", hl.dsp.exec_cmd("wlrctl pointer click right"))
-	hl.bind("SHIFT + return", hl.dsp.exec_cmd("wlrctl pointer click right"))
+	hl.bind("u", hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y 1.5"), { repeating = true, description = "Scroll wheel up (cursor submap)" })
+	hl.bind("d", hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y -1.5"), { repeating = true, description = "Scroll wheel down (cursor submap)" })
+	hl.bind("space", hl.dsp.exec_cmd("wlrctl pointer click left"), { description = "Left click (cursor submap)" })
+	hl.bind("return", hl.dsp.exec_cmd("wlrctl pointer click left"), { description = "Left click (cursor submap)" })
+	hl.bind("SHIFT + space", hl.dsp.exec_cmd("wlrctl pointer click right"), { description = "Right click (cursor submap)" })
+	hl.bind("SHIFT + return", hl.dsp.exec_cmd("wlrctl pointer click right"), { description = "Right click (cursor submap)" })
 	hl.bind("escape", function()
 		hl.config({ cursor = { inactive_timeout = cursor_inactive_timeout } })
 		hl.dispatch(hl.dsp.submap("reset"))
-	end)
+	end, { description = "Exit cursor submap" })
 end)
 
 -- wl-kbptr (vimium-style mouse control)
@@ -571,7 +572,8 @@ hl.bind(
 	mod .. " + SHIFT + f",
 	hl.dsp.exec_cmd(
 		"wl-kbptr -o modes=floating,click -o mode_floating.source=detect --config=/home/dani/.config/wl-kbptr.yaml"
-	)
+	),
+	{ description = "Keyboard-driven mouse control (wl-kbptr)" }
 )
 -- Volume / Brightness
 -- The nvidia driver registers a phantom `nvidia_0` backlight for its own
@@ -580,28 +582,28 @@ hl.bind(
 -- (card1-eDP-1, on the iGPU). Writes to nvidia_0 succeed and do nothing, so
 -- the device has to be named explicitly.
 local backlight = "brightnessctl -d intel_backlight"
-hl.bind(mod .. " + F2", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true })
-hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd(backlight .. " set 1%"), { repeating = true })
-hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true })
-hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true })
-hl.bind(mod .. " + F6", hl.dsp.exec_cmd("pw-volume change -5%"), { repeating = true })
-hl.bind(mod .. " + F7", hl.dsp.exec_cmd("pw-volume change +5%"), { repeating = true })
-hl.bind(mod .. " + F5", hl.dsp.exec_cmd("pw-volume mute toggle"))
-hl.bind(mod .. " + XF86AudioNext", hl.dsp.exec_cmd("playerctl next"))
-hl.bind(mod .. " + XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"))
-hl.bind(mod .. " + XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"))
+hl.bind(mod .. " + F2", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true, description = "Decrease brightness" })
+hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd(backlight .. " set 1%"), { repeating = true, description = "Set minimum brightness" })
+hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, description = "Increase brightness" })
+hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true, description = "Set maximum brightness" })
+hl.bind(mod .. " + F6", hl.dsp.exec_cmd("pw-volume change -5%"), { repeating = true, description = "Decrease volume" })
+hl.bind(mod .. " + F7", hl.dsp.exec_cmd("pw-volume change +5%"), { repeating = true, description = "Increase volume" })
+hl.bind(mod .. " + F5", hl.dsp.exec_cmd("pw-volume mute toggle"), { description = "Mute/unmute volume" })
+hl.bind(mod .. " + XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { description = "Next track" })
+hl.bind(mod .. " + XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { description = "Play/pause" })
+hl.bind(mod .. " + XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { description = "Previous track" })
 
 -- Speech-to-text
-hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record start"))
-hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record stop"), { release = true })
+hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record start"), { description = "Start speech-to-text recording" })
+hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record stop"), { release = true, description = "Stop speech-to-text recording" })
 
 -- Magnifier (cursor:zoom_factor; `magnify` script, was pypr's magnify plugin)
-hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("magnify -0.5"), { repeating = true })
-hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("magnify +0.5"), { repeating = true })
-hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify")) -- toggle zoom
+hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("magnify -0.5"), { repeating = true, description = "Zoom out (magnifier)" })
+hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("magnify +0.5"), { repeating = true, description = "Zoom in (magnifier)" })
+hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify"), { description = "Toggle magnifier zoom" }) -- toggle zoom
 
 -- Projector: mirror this panel onto whatever external display is attached
-hl.bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("present toggle"))
+hl.bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("present toggle"), { description = "Present: mirror screen to projector / external display" })
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Layout: hy3 (plugin) config
