@@ -37,58 +37,22 @@ local fg_dim = "rgb(b8b0a0)" -- secondary text (tmux @color_fg1)
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Monitors
 -- ─────────────────────────────────────────────────────────────────────────────
--- Desk layout: the two HP panels side by side on top, laptop tucked underneath
--- straddling the seam between them.
+-- Layout lives in kanshi (hyprland/kanshi.nix), not here: it picks a profile
+-- for whatever set of screens is plugged in (Dell above the laptop at the desk,
+-- any other screen to the laptop's right, laptop alone) and pushes positions
+-- over wlr-output-management. Hyprland keeps those as per-output overrides on
+-- top of the rule below, so they survive a reload.
 --
---        0        2560      5120
---   0    ┌─────────┬─────────┐
---        │  DP-1   │ HDMI-A-1│   2× HP E27q G4, 2560x1440
---   1440 └───┬─────┴───┬─────┘
---            │  eDP-1  │           1920x1200@165, at 1774x1440
---   2640     └─────────┘
---
--- The two HPs are the same model, so they're matched on `desc:` *including the
--- serial* — that keeps each panel on its own side no matter which port it lands
--- on. Only positions are pinned; `preferred` still picks each panel's native
--- mode (165Hz on the laptop, 1440p60 on the HPs).
---
--- Rules are matched name > desc > "" (the wildcard is a fallback for any display
--- not listed here, e.g. a projector), so this ordering is safe.
---
--- A projector therefore lands here as an *extended* display. There is no mirror
--- rule on purpose: mirroring is on demand via the `present` script (SUPER+SHIFT+D),
--- which registers a name-keyed rule at runtime that outranks the wildcard below.
+-- This wildcard is the fallback: it covers the instant before kanshi applies
+-- and any setup no profile matches. Monitor rules are matched name > desc > "",
+-- so the `present` script's name-keyed mirror rule (SUPER+SHIFT+D) still
+-- outranks it, and kanshi's override leaves the mirror setting alone.
 
 -- monitor =,preferred,auto,1
 hl.monitor({
 	output = "",
 	mode = "preferred",
 	position = "auto",
-	scale = "1",
-})
-
--- Left HP (serial ...JD)
-hl.monitor({
-	output = "desc:HP Inc. HP E27q G4 CNK22910JD",
-	mode = "preferred",
-	position = "0x0",
-	scale = "1",
-})
-
--- Right HP (serial ...JM)
-hl.monitor({
-	output = "desc:HP Inc. HP E27q G4 CNK22910JM",
-	mode = "preferred",
-	position = "2560x0",
-	scale = "1",
-})
-
--- Built-in panel, below and between the two HPs. 1774 rather than a dead-centre
--- 1600 — it overlaps both HPs' bottom edges either way, so the cursor can cross.
-hl.monitor({
-	output = "eDP-1",
-	mode = "preferred",
-	position = "1774x1440",
 	scale = "1",
 })
 

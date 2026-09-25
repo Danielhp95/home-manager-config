@@ -133,7 +133,7 @@ let
       live=$(hyprctl monitors -j) || { say "hyprctl unavailable"; exit 1; }
 
       # The target is whatever external display is attached. Named explicitly as
-      # $2 when more than one is (at the desk both HPs are), since mirroring the
+      # $2 when more than one is, since mirroring the
       # wrong panel mid-talk is worse than refusing.
       target="''${2:-}"
       if [ -z "$target" ]; then
@@ -193,7 +193,10 @@ let
     '';
 in
 {
-  imports = [ ./theming.nix ];
+  imports = [
+    ./theming.nix
+    ./kanshi.nix
+  ];
   wayland.windowManager.hyprland = {
     enable = true;
     # Hyprland >= 0.55 / nixpkgs 26.05 default: config is written in lua.
