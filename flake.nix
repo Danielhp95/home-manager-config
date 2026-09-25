@@ -9,6 +9,9 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    omnibin.url = "github:fzakaria/omnibin";
+    omnibin.inputs.nixpkgs.follows = "nixpkgs";
+
     multiverse.url = "github:fzakaria/nixpkgs-multiverse";
 
     # Weekly prebuilt nix-index database. Without it programs.nix-index and

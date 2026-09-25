@@ -800,6 +800,26 @@
         "url": "https://github.com/noctalia-dev/noctalia"
       }
     },
+    "omnibin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790347734,
+        "narHash": "sha256-yk+7EzQxsRledgYCUnGA2mBwyTp5+Zxdt83kBgvv718=",
+        "owner": "fzakaria",
+        "repo": "omnibin",
+        "rev": "559fe648d7fe0e068739be713e387c897c25cdb9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "fzakaria",
+        "repo": "omnibin",
+        "type": "github"
+      }
+    },
     "plugins-color-refs": {
       "flake": false,
       "locked": {
@@ -852,6 +872,7 @@
         "nix-index-database": "nix-index-database",
         "nixpkgs": "nixpkgs_2",
         "noctalia": "noctalia",
+        "omnibin": "omnibin",
         "socratic-skills": "socratic-skills",
         "spicetify-nix": "spicetify-nix",
         "stable": "stable_2",

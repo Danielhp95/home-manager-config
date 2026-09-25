@@ -135,6 +135,11 @@ in
     # chromium and firefox are installed by their own modules (./chromium.nix,
     # ./firefox), which also carry their theming.
     nvd # Nix version diff tool
+    # Lazy store of every binary nixpkgs ever shipped, scoped to a mount
+    # namespace that dies with the shell (the NixOS module would replace
+    # /nix/store system-wide, which is meant for VMs).
+    inputs.omnibin.packages.${pkgs.system}.omnibin-shell
+    inputs.omnibin.packages.${pkgs.system}.omnibin
     manix # NixOS/home-manager options search (backs `tv nix-options`)
 
     python3
