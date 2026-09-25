@@ -5,13 +5,29 @@
   ...
 }:
 let
+  # Bare hex: in the slurp wrapper's flags a leading '#' would start a comment.
+  c = import ../palette.nix;
+  f = import ../fonts.nix;
+
+  # slurp in Ember, wrapped so every caller gets it (wl-ocr, the share
+  # picker's region button, ad-hoc use). A caller's own flags still win.
+  slurp = pkgs.symlinkJoin {
+    name = "slurp-ember";
+    paths = [ pkgs.slurp ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    meta.mainProgram = "slurp";
+    postBuild = ''
+      wrapProgram $out/bin/slurp --add-flags \
+        "-b ${c.bgDeep}80 -c ${c.accent}ff -B ${c.accentDim}40"
+    '';
+  };
+
   # use OCR and copy to clipboard
   ocrScript =
     let
       inherit (pkgs)
         grim
         libnotify
-        slurp
         tesseract5
         wl-clipboard
         ;
@@ -246,7 +262,7 @@ in
     presentScript
 
     # This should really live on its own package
-    slurp
+    slurp # Ember wrapper from the let block
     # wf-recorder
 
     wl-kbptr # Mouse control with keyboard in wayland
@@ -262,12 +278,106 @@ in
   # plain `wl-mirror` need no picker either way.
   home.sessionVariables.WL_PRESENT_DMENU = "vicinae dmenu";
 
-  # Battery notifications
-  xdg.configFile."wl-kbptr.yaml".source = ./wl-kbptr.yaml;
+  # INI despite the name; hyprland.lua passes it with --config. Unset keys
+  # take wl-kbptr's defaults.
+  xdg.configFile."wl-kbptr.yaml".text = ''
+    [general]
+    modes=floating,click
+
+    [mode_tile]
+    label_color=#${c.fg}
+    label_select_color=#${c.gold}
+    unselectable_bg_color=#${c.bgDeep}66
+    selectable_bg_color=#${c.ash}
+    selectable_border_color=#${c.fgDim}
+
+    [mode_floating]
+    source=detect
+    label_color=#${c.fg}
+    label_select_color=#${c.gold}
+    unselectable_bg_color=#${c.bgDeep}66
+    selectable_bg_color=#${c.ash}
+    selectable_border_color=#${c.fgDim}
+    label_font_family=${f.monoSemiBold}
+    label_font_size=16 80% 100
+
+    [mode_bisect]
+    label_color=#${c.fg}
+    pointer_color=#${c.accent}
+    unselectable_bg_color=#${c.bgDeep}
+    even_area_bg_color=#${c.ash}
+    even_area_border_color=#${c.fgDim}
+    odd_area_bg_color=#${c.muted}
+    odd_area_border_color=#${c.fgSoft}
+    history_border_color=#${c.gold}
+
+    [mode_split]
+    pointer_color=#${c.accent}
+    bg_color=#${c.bgDeep}
+    area_bg_color=#${c.ash}
+    vertical_color=#${c.muted}
+    horizontal_color=#${c.fgDim}
+    history_border_color=#${c.gold}
+
+    [mode_click]
+    button=left
+  '';
   xdg.configFile."hypr/xdph.conf".text = ''
     screencopy {
       custom_picker_binary = hyprland-preview-share-picker
       allow_token_by_default = true
+    }
+  '';
+  # Colours only, over WhiteSur's GTK4 widgets. `.window > box` is needed
+  # because the picker's css_classes() drops GTK's `background` class.
+  xdg.configFile."hyprland-preview-share-picker/config.yaml".text = ''
+    stylesheets: [ember.css]
+  '';
+  xdg.configFile."hyprland-preview-share-picker/ember.css".text = ''
+    .window, .window > box, .notebook > stack, .page {
+      background-color: #${c.bg};
+      color: #${c.fg};
+    }
+    .notebook > header {
+      background-color: #${c.bgDeep};
+      border-color: #${c.border};
+    }
+    .tab-label { color: #${c.fgDim}; }
+    .notebook > header > tabs > tab:hover .tab-label { color: #${c.fg}; }
+    .notebook > header > tabs > tab:checked .tab-label { color: #${c.accent}; }
+    .notebook > header > tabs > tab:checked { box-shadow: inset 0 -2px #${c.accent}; }
+
+    .page flowboxchild, .page button {
+      background: none;
+      border: none;
+      box-shadow: none;
+      outline: none;
+    }
+    .card {
+      background-color: #${c.bgAlt};
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 5px;
+    }
+    flowboxchild:hover > .card, button:hover > .card { background-color: #${c.surface}; }
+    flowboxchild:selected > .card, flowboxchild:focus > .card,
+    button:focus > .card, button:active > .card { border-color: #${c.accent}; }
+    .image-label { color: #${c.fgSoft}; }
+
+    .region-button {
+      background: #${c.accent};
+      color: #${c.bg};
+      border: none;
+      box-shadow: none;
+    }
+    .region-button:hover, .region-button:focus { background: #${c.accentBright}; }
+    .region-button:disabled { background: #${c.border}; color: #${c.muted}; }
+
+    .restore-button { color: #${c.fgSoft}; }
+    .restore-button check:checked {
+      background: #${c.accent};
+      border-color: #${c.accent};
+      color: #${c.bg};
     }
   '';
   services.batsignal = {
