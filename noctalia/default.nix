@@ -291,6 +291,7 @@ in
         { type = "bluetooth"; }
         { type = "notification"; }
         { type = "dark_mode"; }
+        { type = "noctalia/screen_recorder:toggle"; }
       ];
 
       # auto_update is plugins-wide. Off: it made the bar git-fetch both plugin
@@ -352,7 +353,19 @@ in
         # the complete set. Overlaps jrohland/claudecode (usage telemetry);
         # drop whichever earns less bar space.
         "lowcache/claude-companion"
+
+        # gpu-screen-recorder front end (official source). Deliberately no bar
+        # widget: its headless service runs regardless, Super+Shift+R drives it
+        # over IPC (hyprland.lua) and the control-center tile below mirrors it.
+        # gpu-screen-recorder comes from programs.gpu-screen-recorder in
+        # configuration.nix.
+        "noctalia/screen_recorder"
       ];
+
+      # Super+Shift+R leaves the saved recording on the clipboard as a file://
+      # URI (text/uri-list), so it pastes into apps as the file itself; a
+      # terminal won't paste it. Plugin-wide, so the control-center tile too.
+      plugin_settings."noctalia/screen_recorder".copy_to_clipboard = true;
 
       wallpaper = {
         enabled = true;

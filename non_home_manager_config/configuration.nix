@@ -21,6 +21,10 @@
 
   programs.ydotool.enable = true;
 
+  # Backend for the noctalia/screen_recorder plugin (Super+Shift+R). The NixOS
+  # module adds the setcap'd gsr-kms-server wrapper it needs for KMS capture.
+  programs.gpu-screen-recorder.enable = true;
+
   # Move to gaming folder
   programs.gamescope = {
     enable = true;

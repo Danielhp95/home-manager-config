@@ -375,7 +375,7 @@ hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"), { descriptio
 -- this config having to, and the actual opacity lives in one window rule down
 -- with the rest of them (opacity-opaque-tag). Global opacity is untouched.
 hl.bind(mod .. " + SHIFT + o", hl.dsp.window.tag({ tag = "opaque", action = "toggle" }), { description = "Toggle window opaque tag" })
-hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("bash /home/dani/nix_config/zsh/scripts/video/record_video.sh"), { description = "Toggle screen recording" })
+hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("noctalia msg plugin noctalia/screen_recorder:service all toggle"), { description = "Toggle screen recording" })
 -- Region screenshot through noctalia's annotation editor (shell.screenshot.annotate
 -- in noctalia/default.nix); Enter/Done copies to the clipboard, Ctrl+S saves.
 hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia msg screenshot-region"), { description = "Screenshot region (annotate)" })
