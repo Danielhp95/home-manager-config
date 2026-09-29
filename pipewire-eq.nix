@@ -6,19 +6,23 @@
 # (EasyEffects only ever processes one output, which is why outputs moved
 # here; it keeps the mic, see easyeffects.nix.)
 #
-# They run in their own `pipewire -c` client rather than as a pipewire.conf.d
-# drop-in, so changing a curve restarts this unit only, not the audio daemon.
+# Each EQ sink exists only while its device does: WirePlumber's software-dsp
+# hook loads the filter-chain when the device's node appears and unloads it
+# when the node goes, so a headset's "(EQ)" entry is hidden until it connects
+# (and the OMEN speaker rule is inert on any other machine). Pick the "(EQ)"
+# entry to hear the correction; the raw device next to it is still there for
+# A/B.
 #
-# Pick the "(EQ)" entry to hear the correction; the raw device next to it is
-# still there for A/B. A sink whose headphones are disconnected stays listed
-# but silent, rather than falling back to the speakers, and reattaches when
-# they reconnect.
+# When a headset drops, its EQ sink goes with it. WirePlumber pauses MPRIS
+# players that were feeding it (linking.pause-playback, on by default) before
+# relinking their streams; anything else falls back to the default sink, as
+# with the raw device. If the EQ sink was the default, it becomes the default
+# again when the headset reconnects.
+#
+# The chains run inside WirePlumber, so a curve change needs
+# `systemctl --user restart wireplumber` after the switch (a switch does not
+# restart it), which briefly drops Bluetooth audio.
 let
-  lv2Path = lib.makeSearchPath "lib/lv2" [
-    pkgs.lsp-plugins
-    pkgs.calf
-  ];
-
   # Same filter list on both channels (param_eq "In 1"/"In 2").
   peq = name: filters: {
     type = "builtin";
@@ -71,8 +75,9 @@ let
       pairs = lib.zipLists (lib.init nodes) (lib.tail nodes);
     in
     {
-      name = "libpipewire-module-filter-chain";
-      args = {
+      matches = [ { "node.name" = target; } ];
+      # The filter-chain module's args.
+      actions.create-filter.filter-graph = {
         "node.description" = description;
         "media.name" = description;
         "audio.channels" = 2;
@@ -100,10 +105,10 @@ let
           "node.name" = "eq_${id}_out";
           "target.object" = target;
           "node.passive" = true;
-          # Wait for the device instead of falling back to the default sink
-          # (Shokz EQ must never play through the speakers). Without linger,
-          # WirePlumber destroys a dont-fallback stream whose target is absent
-          # (find-defined-target.lua), and it would never come back.
+          # Covers the moment between the device going away and WirePlumber
+          # unloading this chain: the output must not blip onto the default
+          # sink (the speakers). Without linger, WirePlumber destroys a
+          # dont-fallback stream whose target is absent (find-defined-target.lua).
           "node.dont-fallback" = true;
           "node.linger" = true;
         };
@@ -317,52 +322,26 @@ let
       (limiter { })
     ];
   };
-
-  # A standalone client config: pipewire.conf syntax accepts plain JSON.
-  conf = pkgs.writeText "pipewire-eq-sinks.conf" (
-    builtins.toJSON {
-      "context.properties" = {
-        "log.level" = 2;
-      };
-      "context.spa-libs" = {
-        "audio.convert.*" = "audioconvert/libspa-audioconvert";
-        "support.*" = "support/libspa-support";
-      };
+in
+{
+  services.pipewire.wireplumber = {
+    extraLv2Packages = [
+      pkgs.lsp-plugins
+      pkgs.calf
+    ];
+    extraConfig."60-eq-sinks" = {
+      "wireplumber.profiles".main."node.software-dsp" = "required";
+      # WirePlumber's own context loads neither, and a filter-chain cannot
+      # create its streams without them ("no adapter factory found").
       "context.modules" = [
-        {
-          name = "libpipewire-module-rt";
-          flags = [
-            "ifexists"
-            "nofail"
-          ];
-        }
-        { name = "libpipewire-module-protocol-native"; }
         { name = "libpipewire-module-client-node"; }
         { name = "libpipewire-module-adapter"; }
+      ];
+      "node.software-dsp.rules" = [
         laptopSpeakers
         shokz
         sony
       ];
-    }
-  );
-in
-{
-  systemd.user.services.pipewire-eq-sinks = {
-    Unit = {
-      Description = "Per-device EQ sinks (PipeWire filter-chain)";
-      After = [ "pipewire.service" ];
-      BindsTo = [ "pipewire.service" ];
-      X-Restart-Triggers = [ "${conf}" ];
     };
-    Service = {
-      ExecStart = "${pkgs.pipewire}/bin/pipewire -c ${conf}";
-      Environment = [ "LV2_PATH=${lv2Path}" ];
-      Restart = "on-failure";
-      RestartSec = 2;
-    };
-    # default.target, not pipewire.service: a switch only starts units the
-    # session target wants, so WantedBy=pipewire.service was installed but
-    # never started (BindsTo still pulls pipewire in and stops with it).
-    Install.WantedBy = [ "default.target" ];
   };
 }

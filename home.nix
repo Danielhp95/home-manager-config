@@ -54,7 +54,6 @@ in
     ./spotify.nix
 
     ./easyeffects.nix
-    ./pipewire-eq.nix
 
     ./lnav
 
