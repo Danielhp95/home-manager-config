@@ -5,7 +5,7 @@
 -- hl.plugin.hy3.* and the hy3 config values are available below. Session/env
 -- systemd integration is home-manager's own systemd hook (wayland.windowManager
 -- .hyprland.systemd, see hyprland/default.nix); greetd launches the compositor
--- via start-hyprland (tuigreet.nix).
+-- via start-hyprland (non_home_manager_config/noctalia-greeter.nix).
 --
 -- Reference: https://wiki.hypr.land/Configuring/Start/
 

@@ -207,10 +207,11 @@ in
       hy3
     ];
     # greetd launches the compositor via `start-hyprland` (Hyprland's own
-    # crash-watchdog binary, see tuigreet.nix) instead of uwsm now. Session
-    # lifecycle is back on this module's own systemd integration: on
-    # hyprland.start it runs `dbus-update-activation-environment --systemd`
-    # then the *default* extraCommands (stop/start hyprland-session.target,
+    # crash-watchdog binary, see non_home_manager_config/noctalia-greeter.nix)
+    # instead of uwsm now. Session lifecycle is back on this module's own
+    # systemd integration: on hyprland.start it runs
+    # `dbus-update-activation-environment --systemd` then the *default*
+    # extraCommands (stop/start hyprland-session.target,
     # which activates graphical-session.target). Do NOT override extraCommands
     # to stop graphical-session.target directly — that was the old hand-rolled
     # hook and it silently killed hyprpolkitagent/gpg-agent.socket every login

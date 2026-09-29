@@ -12,7 +12,7 @@
 
 {
   imports = [
-    ../tuigreet.nix
+    ./noctalia-greeter.nix
     ./esp-check.nix
     ./grub-generation-label.nix
     ./fonts.nix
@@ -230,7 +230,7 @@
     ];
   };
 
-  # kitty.conf's color0-15, so the greeter, LUKS prompt and ttys are Ember.
+  # kitty.conf's color0-15, so the LUKS prompt and ttys are Ember.
   # Set via kernel params: takes effect on the next boot.
   console.colors =
     let
@@ -254,20 +254,6 @@
       c.sageBright
       "ffffff"
     ];
-
-  khome = {
-    tuigreet = {
-      enable = true;
-      enableWaylandEnvs = true;
-      defaultSession = "hyprland";
-      # Sans pixel art (plain half-blocks, colored by the theme's `greet`)
-      greetingFile = ../tuigreet_theme/sans.txt;
-      sessions = {
-        hyprland.enable = true;
-        zsh.enable = true; # drop-to-tty login shell on the greeter's VT
-      };
-    };
-  };
 
   # Set your time zone.
   # services.automatic-timezoned.enable = true;
@@ -297,12 +283,12 @@
     };
   };
 
-  # tuigreet's hyprland session execs `start-hyprland` directly
-  # (Hyprland's own crash-watchdog binary, tuigreet.nix), and session
+  # The greeter's Hyprland session execs `start-hyprland` directly
+  # (Hyprland's own crash-watchdog binary, noctalia-greeter.nix), and session
   # lifecycle goes through home-manager's own systemd integration instead
   # (wayland.windowManager.hyprland.systemd, hyprland/default.nix):
   #
-  #   greetd session script (exports fcitx/wayland env)
+  #   greeter session script (exports fcitx/wayland env)
   #     -> start-hyprland execs Hyprland, restarts it if it dies non-cleanly
   #     -> hyprland.start hook: dbus-update-activation-environment --systemd
   #        --all, then stop/start hyprland-session.target
@@ -326,7 +312,7 @@
   services.udisks2.enable = true; # yazi mount menu
   services.gnome.evolution-data-server.enable = true; # gnome-calendar storage daemons (no mail client pulled in)
   services.gnome.gnome-online-accounts.enable = true; # online calendars
-  services.gnome.gnome-keyring.enable = true; # GOA/EDS secrets; PAM unlock wired in tuigreet.nix
+  services.gnome.gnome-keyring.enable = true; # GOA/EDS secrets; unlocked at login via greetd's PAM stack (substacks login)
   services.gnome.glib-networking.enable = true; # TLS for libsoup: map tiles, OAuth, https calendars
   services.geoclue2.enable = true; # maps/weather location; demo agent replaces gnome-shell's
   services.gnome.at-spi2-core.enable = true; # a11y bus; silences GTK warnings

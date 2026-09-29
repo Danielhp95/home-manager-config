@@ -179,7 +179,7 @@ in
 
   # Kernels >= 6.8 already pick a 16x32 console font on high-res panels (why
   # nixos-hardware's common-hidpi is a no-op here), but on 3840x2400 that is
-  # half the size fell-omen's TTY, LUKS prompt and tuigreet render at today.
+  # half the size fell-omen's TTY and LUKS prompt render at today.
   # Spleen's 32x64 restores the same 120x37 grid:
   # console = {
   #   earlySetup = true;
@@ -237,8 +237,8 @@ in
 
   security.pam.services = {
     # A fingerprint login can't unlock gnome-keyring (pam_gnome_keyring needs
-    # the password; tuigreet.nix wires it), and pam_fprintd would sit in
-    # front of the password prompt until it times out.
+    # the password), and pam_fprintd would sit in front of the greeter's
+    # password prompt until it times out.
     greetd.fprintAuth = false;
     # noctalia's lockscreen checks passwords against "login" while it drives
     # the reader itself over D-Bus (lockscreen.fingerprint, on by default);

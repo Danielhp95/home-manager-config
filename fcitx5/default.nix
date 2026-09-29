@@ -20,7 +20,8 @@ let
   #  * `home.packages` puts the same package on the user profile, i.e. on
   #    every *application's* XDG_DATA_DIRS. That is needed because the
   #    fcitx5-gtk and fcitx5-qt IM plugins (Firefox, Telegram: anything that
-  #    honours GTK_IM_MODULE/QT_IM_MODULE=fcitx from tuigreet.nix) do not let
+  #    honours GTK_IM_MODULE/QT_IM_MODULE=fcitx from the greeter's session
+  #    script, non_home_manager_config/noctalia-greeter.nix) do not let
   #    the daemon draw the candidate window on Wayland. They advertise a
   #    "client side input panel", draw the popup inside the app, read Theme=
   #    from ~/.config/fcitx5/conf/classicui.conf and then look that theme up

@@ -229,6 +229,11 @@ in
         clipboard_enabled = true;
         # Alt+Tab switcher lists windows most-recently-used first.
         window_switcher.mru = true;
+        # Push wallpaper changes to Noctalia Greeter. Passwordless via the
+        # Polkit rule from passwordlessSyncUsers in
+        # non_home_manager_config/noctalia-greeter.nix; the greeter keeps its
+        # own declared Ember palette.
+        greeter_sync.auto_sync = true;
 
         # Screenshots replace hyprshot + satty: every capture opens the
         # annotation editor, and Enter/Done copies to the clipboard only.
