@@ -227,6 +227,25 @@ in
     # pam_fprintd for every PAM service (sudo, polkit, ...); the two below
     # opt out.
     fprintd.enable = true;
+
+    # Hide the dGPU's audio (GB203 "HDA NVidia", 01:00.1) from PipeWire: its
+    # HDMI/DP outputs never show up as sinks. The card is disabled whole, so
+    # WirePlumber doesn't open it either. Trade-off: the HDMI port (and the
+    # USB-C/DP ports wired to the dGPU) then carry video only; drop this rule
+    # to get monitor audio there.
+    pipewire.wireplumber.extraConfig."51-hide-dgpu-audio"."monitor.alsa.rules" = [
+      {
+        matches = [ { "device.name" = "alsa_card.pci-0000_01_00.1"; } ];
+        actions.update-props."device.disabled" = true;
+      }
+      # Likewise the iGPU's three HDMI/DP sinks, so device pickers list only
+      # the speakers and headsets. Drop this rule for audio to an external
+      # monitor or TV.
+      {
+        matches = [ { "node.name" = "~alsa_output.pci-0000_80_1f.3-platform-sof_sdw.HiFi__HDMI.*"; } ];
+        actions.update-props."node.disabled" = true;
+      }
+    ];
   };
 
   # hyprland.lua checks for this file to also open the NVIDIA card for

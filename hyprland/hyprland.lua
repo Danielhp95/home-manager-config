@@ -56,6 +56,20 @@ hl.monitor({
 	scale = "1",
 })
 
+-- The built-in panel: 3840x2400 at 16", so scale 2 (1920x1200 logical, the
+-- width kanshi's layouts assume). The ICC profile is Lenovo's for this panel
+-- (hyprland/default.nix installs it): the panel is P3-wide, so without it
+-- sRGB content is stretched over the wider gamut and looks oversaturated.
+-- An icc overrides the rule's other colour-management settings (cm, sdr*).
+-- kanshi's overrides only touch mode/position/scale, so they keep it.
+hl.monitor({
+	output = "eDP-1",
+	mode = "preferred",
+	position = "auto",
+	scale = "2",
+	icc = os.getenv("HOME") .. "/.local/share/icc/TPLCD_41BE_HDR.icm",
+})
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- General / Misc / Input / Cursor / Decoration / Animations / Binds / dwindle
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -603,9 +617,9 @@ hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = 
 hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true, description = "Set maximum brightness" })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true, locked = true, description = "Decrease brightness" })
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, locked = true, description = "Increase brightness" })
--- `volume-all-sinks` (noctalia/default.nix) steps every *hardware* sink at once
--- -- speakers plus each paired headset, skipping the easyeffects / eq_* virtual
--- sinks audio flows through -- so the keys do the same thing as scrolling the
+-- `volume-all-sinks` (noctalia/default.nix) steps every output at once
+-- -- the speakers' and each paired headset's EQ sink, plus any hardware sink
+-- without one -- so the keys do the same thing as scrolling the
 -- bar's volume pill, instead of only touching whichever sink is default.
 local volume = "volume-all-sinks"
 hl.bind(mod .. " + F6", hl.dsp.exec_cmd(volume .. " 5%-"), { repeating = true, description = "Decrease volume" })

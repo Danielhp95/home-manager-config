@@ -57,6 +57,16 @@ let
   };
 in
 {
+  # The greeter takes user avatars only from AccountsService's IconFile, and
+  # AccountsService's default (~/.face) sits behind dani's 0700 home. Point
+  # Icon= at the store copy instead, which the greeter user can read. `f+`
+  # rewrites the whole keyfile on each boot/switch, so anything else
+  # AccountsService stored there (Language, Session, …) is dropped; the
+  # greeter keeps its own last-session state, and SystemAccount is restated.
+  systemd.tmpfiles.rules = [
+    "f+ /var/lib/AccountsService/users/dani 0600 root root - [User]\\nIcon=${../avatars/ratchet.png}\\nSystemAccount=false\\n"
+  ];
+
   environment.systemPackages = [ hyprlandSession ];
   environment.pathsToLink = [ "/share/wayland-sessions" ];
 

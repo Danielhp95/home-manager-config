@@ -33,9 +33,32 @@ in
 {
   # settings.json is deliberately NOT managed here: Claude Code rewrites it at
   # runtime (model switches, /config, permission setup), and a store symlink
-  # would either break those writes or be silently replaced by them. The
-  # statusLine entry inside it just calls `claude-statusline`, which this
+  # would either break those writes or be silently replaced by them. Instead,
+  # activation merges just the statusLine key into whatever is there, so a
+  # fresh machine (or a settings.json Claude Code rewrote without it) still
+  # gets the statusline. It calls `claude-statusline` by name, which this
   # module keeps on PATH and up to date across generations.
+  home.activation.claudeStatusLine = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    settings="${config.home.homeDirectory}/.claude/settings.json"
+    statusLine='{"type":"command","command":"claude-statusline","padding":0}'
+    tmp=$(mktemp)
+    if [ -s "$settings" ]; then
+      src="$settings"
+    else
+      echo '{}' > "$tmp.empty"
+      src="$tmp.empty"
+    fi
+    if ${lib.getExe pkgs.jq} --argjson s "$statusLine" '.statusLine = $s' "$src" > "$tmp"; then
+      if ! cmp -s "$tmp" "$settings"; then
+        run mkdir -p "$(dirname "$settings")"
+        run cp "$tmp" "$settings"
+      fi
+    else
+      warnEcho "claude-code: $settings is not valid JSON; statusLine not set"
+    fi
+    rm -f "$tmp" "$tmp.empty"
+  '';
+
   programs.claude-code = {
     enable = true;
 

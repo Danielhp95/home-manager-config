@@ -53,8 +53,6 @@ in
     ./element.nix
     ./spotify.nix
 
-    ./easyeffects.nix
-
     ./lnav
 
     ./terminal

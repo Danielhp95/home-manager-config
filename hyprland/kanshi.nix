@@ -6,9 +6,12 @@
   #
   # Hyprland keeps what kanshi sets as a per-output override on top of its own
   # monitor rules (OutputManagement's m_monitorStates, never cleared), so a
-  # Hyprland reload does not undo the layout. hyprland.lua keeps only the ""
+  # Hyprland reload does not undo the layout. hyprland.lua keeps the ""
   # wildcard rule, which covers the moment before kanshi applies and any setup
-  # no profile matches (e.g. two unknown screens at once).
+  # no profile matches (e.g. two unknown screens at once), plus an eDP-1 rule
+  # for the panel's scale (2, so 1920 logical wide, as the positions below
+  # assume) and ICC profile. The override only patches mode/position/scale,
+  # so the profile survives it.
   #
   # Order matters: profiles are tried top to bottom, and `desk` also satisfies
   # `any-external` (whose "*" matches the Dell too).

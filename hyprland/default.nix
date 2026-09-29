@@ -293,6 +293,12 @@ in
   # plain `wl-mirror` need no picker either way.
   home.sessionVariables.WL_PRESENT_DMENU = "vicinae dmenu";
 
+  # Lenovo's profile for the T16g's panel (BOE NE160QAM-N62, P3-class, 800
+  # nit), from Lenovo's ICC package. A matrix profile: the panel's EDID
+  # primaries, D65, gamma 2.19, no VCGT. hyprland.lua points the eDP-1 rule at
+  # it; ~/.local/share/icc is where colord and other ICC-aware apps look too.
+  xdg.dataFile."icc/TPLCD_41BE_HDR.icm".source = ./icc/TPLCD_41BE_HDR.icm;
+
   # INI despite the name; hyprland.lua passes it with --config. Unset keys
   # take wl-kbptr's defaults.
   xdg.configFile."wl-kbptr.yaml".text = ''

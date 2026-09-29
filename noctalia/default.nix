@@ -36,12 +36,12 @@ let
         ' $assets/translations/en.json > $out/translations/en.json
       '';
 
-  # Step the volume of every hardware sink at once (speakers + each paired
-  # headset), so the bar's volume pill changes what is actually playing rather
-  # than only the currently-default sink. Virtual sinks (easyeffects_sink, the
-  # eq_* filter chains) are skipped on purpose: audio flows *through* them into
-  # a hardware sink, so stepping them too would apply the change 2-3 times.
-  # Hardware sinks are the ones that carry a device.id.
+  # Step the volume of every output at once (speakers + each paired headset),
+  # so the bar's volume pill changes what is actually playing rather than only
+  # the currently-default sink. An output is an eq_* filter chain or a
+  # hardware sink (one that carries a device.id). The hardware sink behind an
+  # EQ chain is hidden from clients (pipewire-eq.nix), so pw-dump never lists
+  # it and the step can't apply twice.
   #
   # `volume-all-sinks 5%+` / `5%-` steps them; `volume-all-sinks mute` toggles
   # them as one group (mute all unless every one is already muted, then unmute
@@ -53,7 +53,7 @@ let
   volumeAllSinks = pkgs.writeShellScriptBin "volume-all-sinks" ''
     wpctl=${pkgs.wireplumber}/bin/wpctl
     ids=$(${pkgs.pipewire}/bin/pw-dump \
-      | ${pkgs.jq}/bin/jq -r '.[] | select(.info.props."media.class" == "Audio/Sink" and .info.props."device.id" != null) | .id')
+      | ${pkgs.jq}/bin/jq -r '.[] | select(.info.props."media.class" == "Audio/Sink" and (.info.props."device.id" != null or (.info.props."node.name" | startswith("eq_")))) | .id')
     case "$1" in
       mute)
         target=1
@@ -203,6 +203,11 @@ in
   # from the pre-nix dev install, `rm` it first or activation fails.
   xdg.dataFile."noctalia/plugins/dart".source =
     config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/dart-plugin";
+
+  # Avatar read by shell.avatar_path below. The login screen can't reach it
+  # (home is 0700); it gets the same image through AccountsService in
+  # non_home_manager_config/noctalia-greeter.nix.
+  home.file.".face".source = ../avatars/ratchet.png;
 
   systemd.user.services.noctalia.Service.Environment = [
     "NOCTALIA_ASSETS_DIR=${stormlightAssets}"
