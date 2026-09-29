@@ -31,11 +31,21 @@ let
   '';
 in
 {
-  # settings.json is deliberately NOT managed here: Claude Code rewrites it at
-  # runtime (model switches, /config, permission setup), and a store symlink
-  # would either break those writes or be silently replaced by them. The
-  # statusLine entry inside it just calls `claude-statusline`, which this
-  # module keeps on PATH and up to date across generations.
+  # settings.json is deliberately NOT a store symlink: Claude Code rewrites it
+  # at runtime (model switches, /config, permission setup), and a symlink
+  # would either break those writes or be silently replaced by them. Instead
+  # ./settings.json seeds a fresh machine once, and Claude Code owns the file
+  # from then on. The seed omits autoMode (work details; this repo is public).
+  # Its hooks call the noctalia claude-companion plugin's pulse.py, which is
+  # installed imperatively.
+  home.activation.seedClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    target=${config.home.homeDirectory}/.claude/settings.json
+    if [ ! -e "$target" ]; then
+      run mkdir -p "$(dirname "$target")"
+      run install -m 644 ${./settings.json} "$target"
+    fi
+  '';
+
   programs.claude-code = {
     enable = true;
 
@@ -132,10 +142,12 @@ in
     '';
 
     # Personal, cross-project skills, sourced from upstream repos via flake
-    # inputs. neovim-news-update is deliberately absent: it writes
-    # state.json/reports/ into its own skill directory, which a read-only
-    # store symlink would break.
+    # inputs.
     skills = {
+      # A file (not a directory) links only SKILL.md, so the skill directory
+      # stays writable for the state.json and reports/ the skill writes there.
+      neovim-news-update = ./skills/neovim-news-update/SKILL.md;
+
       # obra/superpowers: brainstorm -> plan -> execute workflow and its
       # supporting disciplines.
       brainstorming = superpower "brainstorming";
