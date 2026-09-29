@@ -112,7 +112,8 @@ hl.config({
 		-- Hardware cursor plane on the Intel iGPU: moving the cursor costs
 		-- zero compositor repaints. Software cursors (the old `true`) forced
 		-- a damage+repaint on every cursor move; they're only needed when
-		-- the NVIDIA card scans out — see the dgpu-hdmi branch below.
+		-- the NVIDIA card scans out (the default boot entry) — see the
+		-- hypr-dgpu-hdmi branch below.
 		no_hardware_cursors = false,
 	},
 
@@ -191,26 +192,31 @@ hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 3.45, bezie
 -- in per-launch with `nvidia-offload <cmd>`. Caveat: display outputs wired to
 -- the NVIDIA GPU (some HDMI/DP ports) won't work while this is set.
 -- ─────────────────────────────────────────────────────────────────────────────
--- /etc/hypr-dgpu-hdmi only exists under the "dgpu-hdmi" NixOS specialisation
--- (specialisations/dgpu-hdmi.nix); when present, Hyprland also opens the
--- NVIDIA card (Intel stays the render GPU, NVIDIA only scans out) so the
--- HDMI port works — at the cost of the dGPU never suspending (~8W). Boot
--- into that specialisation from the GRUB menu to flip this (it can't take
--- effect without a fresh Hyprland start anyway).
+-- /etc/hypr-dgpu-hdmi exists in the default boot entry
+-- (hardwares/lenovo_t16g_gen3.nix) and not under the "Roadwarrior"
+-- specialisation; when present, Hyprland also opens the NVIDIA card (Intel
+-- stays the render GPU, NVIDIA only scans out) so the HDMI port works — at
+-- the cost of the dGPU never suspending (~8W). Boot "Roadwarrior" from the
+-- GRUB menu for Intel-only (it can't take effect without a fresh Hyprland
+-- start anyway).
 -- AQ_DRM_DEVICES is colon-separated, so by-path names (which contain colons)
 -- get shattered on parse — resolve them to canonical /dev/dri/cardN first.
 -- Card numbering isn't stable across boots, hence resolving at startup.
+-- A missing card resolves to nil (`readlink -e`), so a dGPU that isn't there
+-- degrades to Intel-only instead of feeding the by-path name through.
 local function resolve_card(path)
-	local p = io.popen("readlink -f " .. path)
+	local p = io.popen("readlink -e " .. path)
 	local real = p:read("*l")
 	p:close()
 	return real
 end
 local intel_card = resolve_card("/dev/dri/by-path/pci-0000:00:02.0-card")
-local nvidia_card = resolve_card("/dev/dri/by-path/pci-0000:02:00.0-card")
+local nvidia_card = resolve_card("/dev/dri/by-path/pci-0000:01:00.0-card")
 local dgpu_hdmi = io.open("/etc/hypr-dgpu-hdmi", "r")
 if dgpu_hdmi then
 	dgpu_hdmi:close()
+end
+if dgpu_hdmi and nvidia_card then
 	hl.env("AQ_DRM_DEVICES", intel_card .. ":" .. nvidia_card)
 	-- Hardware cursors glitch on NVIDIA scanout; fall back to software
 	-- rendering only in dgpu-hdmi mode.

@@ -75,6 +75,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Hardware profiles; see the imports in hardwares/lenovo_t16g_gen3.nix.
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+    nixos-hardware.inputs.nixpkgs.follows = "nixpkgs";
+
     danvim.url = "path:/home/dani/nix_config/danvim";
     danvim.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -107,10 +111,10 @@
     };
 
     # CloudBrink BrinkAgent VPN packaging (kept out of git; pulled in as source).
-    brinkagentSrc = {
-      url = "path:/home/dani/Projects/brinkagent";
-      flake = false;
-    };
+    # brinkagentSrc = {
+    #   url = "path:/home/dani/Projects/brinkagent";
+    #   flake = false;
+    # };
   };
   outputs =
     {
@@ -163,15 +167,14 @@
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {
-        fell-omen = nixpkgs.lib.nixosSystem {
+        lenovo = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs;
           }; # Pass flake inputs to our config
           # > Our main nixos configuration file <
           modules = [
             home-manager.nixosModules.default # Otherwise home-manager isn't imported
-            ./hardwares/new_fell_omen.nix
-            # ./hardwares/lenovo_t16g_gen3.nix
+            ./hardwares/lenovo_t16g_gen3.nix
             ./non_home_manager_config/configuration.nix
             ./non_home_manager_config/ollama.nix
             ./non_home_manager_config/network.nix
@@ -181,12 +184,11 @@
             ./pipewire.nix
 
             # CloudBrink BrinkAgent VPN (daemons + GUI). See /home/dani/Projects/brinkagent.
-            (inputs.brinkagentSrc + "/module.nix")
-            { services.brinkagent.enable = true; }
+            # (inputs.brinkagentSrc + "/module.nix")
+            # { services.brinkagent.enable = true; }
 
             # Specialisations
             ./specialisations/roadwarrior.nix
-            ./specialisations/dgpu-hdmi.nix
             {
               users.users.dev = {
                 isNormalUser = true;
@@ -233,7 +235,7 @@
       # Standalone home-manager configuration entrypoint
       # Available through 'home-manager --flake .#your-username@your-hostname'
       homeConfigurations = {
-        "dani@fell-omen" = home-manager.lib.homeManagerConfiguration {
+        "dani@lenovo" = home-manager.lib.homeManagerConfiguration {
           # Same overlays/config as the NixOS-managed pkgs instance
           pkgs = import nixpkgs {
             system = "x86_64-linux";

@@ -33,19 +33,6 @@
         "type": "github"
       }
     },
-    "brinkagentSrc": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1782747242,
-        "narHash": "sha256-MgZ7+x8rr5FEGa1v41u6U1XavKVLqOqufhvvoZeY9CI=",
-        "path": "/home/dani/Projects/brinkagent",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/dani/Projects/brinkagent",
-        "type": "path"
-      }
-    },
     "claude-code": {
       "inputs": {
         "nixpkgs": [
@@ -91,12 +78,11 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "plugins-color-refs": "plugins-color-refs",
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1790610028,
-        "narHash": "sha256-zYIW8MkCID6Cag0Yu7YiaF3MH1AiYxAed03RgM99R5A=",
+        "lastModified": 1790704888,
+        "narHash": "sha256-C9vAeBperQxjUo9cFzP8dgijgDwwO45OKnDDGKQxHoA=",
         "path": "/home/dani/nix_config/danvim",
         "type": "path"
       },
@@ -731,6 +717,26 @@
         "type": "github"
       }
     },
+    "nixos-hardware": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790321948,
+        "narHash": "sha256-mZGHLGi217oLIwzDM4PNRZeCNa6g2WBXURyXbNMFs7Y=",
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "rev": "30d48a0ec6035f8140d0125af274f0de95f1e9b5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1790510107,
@@ -820,19 +826,6 @@
         "type": "github"
       }
     },
-    "plugins-color-refs": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1786127152,
-        "narHash": "sha256-VDpkfaPV4mXabmW4t53YY7HFeVOFdNUodkB04IXOCCM=",
-        "path": "/home/dani/Projects/color-refs.nvim",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/dani/Projects/color-refs.nvim",
-        "type": "path"
-      }
-    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat_2",
@@ -857,7 +850,6 @@
     },
     "root": {
       "inputs": {
-        "brinkagentSrc": "brinkagentSrc",
         "claude-code": "claude-code",
         "codebase-to-course": "codebase-to-course",
         "danvim": "danvim",
@@ -870,6 +862,7 @@
         "mattpocock-skills": "mattpocock-skills",
         "multiverse": "multiverse",
         "nix-index-database": "nix-index-database",
+        "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",
         "noctalia": "noctalia",
         "omnibin": "omnibin",

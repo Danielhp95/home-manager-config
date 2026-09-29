@@ -6,7 +6,7 @@
     impala # iwd TUI. needs conman
     iwgtk # iwd GUI
   ];
-  networking.hostName = "fell-omen"; # Define your hostname.
+  networking.hostName = "lenovo"; # Must match the flake's nixosConfigurations attr.
 
   # NOTE(dani): If things fail, enable this and disable below
   # networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.

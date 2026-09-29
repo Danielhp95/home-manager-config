@@ -1,11 +1,8 @@
 # Lenovo ThinkPad T16g Gen 3, the machine replacing fell-omen.
 #
-# Written from Lenovo's order sheet before the laptop arrived, not by
-# nixos-generate-config. Values that only exist on the real hardware are
-# `throw`s in the `let` below: importing this file before filling them in
-# fails evaluation naming the missing value, instead of building a system
-# that can't find its own disks. Once installed, also diff this against
-# `nixos-generate-config --show-hardware-config` (initrd modules especially).
+# Written from Lenovo's order sheet before the laptop arrived, then filled in
+# on the machine from the stock NixOS install's hardware-configuration.nix
+# (disk UUIDs, initrd modules) and lspci (PRIME bus IDs).
 #
 # Order sheet, decoded. Starred items come from the ThinkPad P16 Gen 3 spec,
 # which shares this board ("System Unit: P16G3"); confirm them on arrival.
@@ -32,18 +29,21 @@
 }:
 
 let
-  # ---- Fill in on the machine ---------------------------------------------
-  # From `blkid` once the disk is partitioned.
-  luksUuid = throw "lenovo_t16g_gen3.nix: set luksUuid (blkid: the crypto_LUKS partition)";
-  espUuid = throw "lenovo_t16g_gen3.nix: set espUuid (blkid: the vfat ESP)";
+  # ---- Machine values -----------------------------------------------------
+  # From `blkid` on the installed disk (NixOS installer layout, 2026-09):
+  # nvme0n1p1 ESP, p2 LUKS -> ext4 root, p3 LUKS -> swap.
+  luksUuid = "6e1bc8e1-f482-4b9a-8360-674b0438ac0b";
+  swapLuksUuid = "62222a60-c16a-45da-a034-8ecfa93ef3e8";
+  espUuid = "7D69-4C07";
 
   # From `lspci -d ::03xx`, written as PCI:bus:device:function in decimal
   # (the option's type rejects hex): lspci's "0a:00.0" is "PCI:10:0:0".
-  intelBusId = throw "lenovo_t16g_gen3.nix: set intelBusId (lspci -d ::03xx)";
-  nvidiaBusId = throw "lenovo_t16g_gen3.nix: set nvidiaBusId (lspci -d ::03xx)";
+  intelBusId = "PCI:0:2:0"; # 00:02.0 Arrow Lake-S iGPU
+  nvidiaBusId = "PCI:1:0:0"; # 01:00.0 GB203M RTX 5090 Laptop
   # -------------------------------------------------------------------------
 
   luksDevice = "/dev/mapper/luks-${luksUuid}";
+  swapLuksDevice = "/dev/mapper/luks-${swapLuksUuid}";
 in
 {
   imports = [
@@ -52,28 +52,31 @@ in
 
     # ---- nixos-hardware ---------------------------------------------------
     # Nothing there matches this machine: no T16g, no P16 (only P16s), and no
-    # Arrow Lake modules (checked at rev 83bbc89). The closest composition is
-    # what lenovo-legion-16iax10h (Arrow Lake-HX + RTX 50) imports, minus its
-    # Legion-only parts, plus the generic ThinkPad profile. Needs an input:
-    #   nixos-hardware.url = "github:NixOS/nixos-hardware";
-    #   nixos-hardware.inputs.nixpkgs.follows = "nixpkgs";
+    # Arrow Lake modules (re-checked on the machine at rev 30d48a0). The
+    # closest composition is what lenovo-legion-16iax10h (Arrow Lake-HX + RTX
+    # 50) imports, minus its Legion-only parts.
     #
-    # Evaluated against this file, the four imports below only add: i915 in
-    # the initrd, vpl-gpu-rt, 32-bit intel-media-driver, and
-    # hardware.trackpoint. Everything else they set is already explicit here.
-    #
-    # hardware.trackpoint is a udev rule tuning the stick's sysfs attributes,
-    # matched on hardware.trackpoint.device ("TPPS/2 IBM TrackPoint" unless
-    # set; check `libinput list-devices`), plus X11-only wheel emulation.
-    # Also pulls in common-pc-laptop, which enables TLP (already on):
-    # inputs.nixos-hardware.nixosModules.lenovo-thinkpad
-    # Microcode + Intel iGPU userspace. Meteor Lake's module rather than
+    # Microcode + Intel iGPU. Meteor Lake's module rather than
     # common-cpu-intel: same Xe-LPG iGPU generation, and it skips the i965
-    # VA-API driver and intel-ocl the generic one adds.
-    # "${inputs.nixos-hardware}/common/cpu/intel/meteor-lake"
-    # PRIME offload, and open kernel modules for Blackwell:
-    # inputs.nixos-hardware.nixosModules.common-gpu-nvidia
-    # "${inputs.nixos-hardware}/common/gpu/nvidia/blackwell"
+    # VA-API driver and intel-ocl the generic one adds. Over this file alone it
+    # adds i915 in the initrd (early KMS: the LUKS prompt comes up at native
+    # resolution on the right driver instead of efifb), vpl-gpu-rt (Quick Sync
+    # through oneVPL), and 32-bit intel-media-driver (VA-API for 32-bit games
+    # under Steam/Wine). Its driver choice is i915, which is what binds 00:02.0
+    # today; xe on Arrow Lake still needs force_probe.
+    "${inputs.nixos-hardware}/common/cpu/intel/meteor-lake"
+    # Open kernel modules for Blackwell (already explicit below; imported so
+    # Blackwell-wide fixes land here too):
+    "${inputs.nixos-hardware}/common/gpu/nvidia/blackwell"
+    #
+    # Left out:
+    # inputs.nixos-hardware.nixosModules.lenovo-thinkpad
+    #   Only adds hardware.trackpoint (a udev rule writing the stick's sysfs
+    #   tuning at its default values, matched on "TPPS/2 IBM TrackPoint"; this
+    #   one is "TPPS/2 Elan TrackPoint") plus X11-only wheel emulation, and
+    #   common-pc-laptop's TLP, which is already on.
+    # inputs.nixos-hardware.nixosModules.common-gpu-nvidia (prime.nix)
+    #   PRIME offload, set explicitly below.
     #
     # Whole-machine profiles, and why not:
     # inputs.nixos-hardware.nixosModules.lenovo-legion-16iax10h
@@ -82,9 +85,9 @@ in
     #   and sets both bus IDs at normal priority, so any value below that
     #   isn't the identical string fails with a conflicting-definition error.
     # inputs.nixos-hardware.nixosModules.lenovo-thinkpad-p16s-intel-gen3
-    #   Nearest ThinkPad by name. Today it evaluates to exactly the same
-    #   system as the four imports above, but it's written for Meteor Lake +
-    #   RTX Ada, so whatever it gains later targets those chips, not these.
+    #   Nearest ThinkPad by name, even the same bus IDs. Today it evaluates to
+    #   the two imports above plus lenovo-thinkpad, but it's written for Meteor
+    #   Lake + RTX Ada, so whatever it gains later targets those chips.
   ];
 
   boot = {
@@ -98,31 +101,13 @@ in
     # blacklistedKernelModules = [ "spd5118" ];
 
     kernelParams = [
-      # fell-omen needs acpi_backlight=native because its EC registered
-      # nvidia_wmi_ec_backlight instead of intel_backlight. Check
-      # `ls /sys/class/backlight` in Hybrid mode before copying it. Expect a
-      # phantom `nvidia_0` here too (a BIOS Discrete mode means the dGPU has
-      # its own eDP link), which is why hyprland.lua and noctalia name
-      # intel_backlight explicitly instead of trusting brightnessctl's pick.
-      # "acpi_backlight=native"
-
-      # Serial console printk is synchronous and surprisingly slow during
-      # boot; errors still print (loglevel unaffected for warnings+).
       "quiet"
-      # Deliberate security tradeoff, accepted 2026-08-06 on fell-omen:
-      # disables Spectre-class speculative-execution mitigations for
-      # measurable syscall/IO speedup. Remove this line to restore full
-      # mitigation.
       "mitigations=off"
     ];
 
     initrd = {
-      # systemd stage 1: parallel device probing, an earlier LUKS prompt, and
-      # initrd time that decomposes in `systemd-analyze blame --initrd`.
       systemd.enable = true;
       verbose = false;
-      # fell-omen's detected list as a starting point; replace it with what
-      # nixos-generate-config finds here.
       availableKernelModules = [
         "xhci_pci"
         "thunderbolt"
@@ -130,24 +115,17 @@ in
         "usb_storage"
         "usbhid"
         "sd_mod"
+        "sdhci_pci"
       ];
       luks.devices."luks-${luksUuid}" = {
         device = "/dev/disk/by-uuid/${luksUuid}";
-        # TRIM through dm-crypt so discard=async and fstrim.timer reach the
-        # SSD. Tradeoff: the raw disk reveals which blocks are unused.
         allowDiscards = true;
       };
+      luks.devices."luks-${swapLuksUuid}".device = "/dev/disk/by-uuid/${swapLuksUuid}";
     };
 
     loader = {
-      # 5s: enough to actually read the entries (1s wasn't).
       timeout = 5;
-      # Removable-path install, same policy as new_fell_omen.nix (see the
-      # 2026-09 incident note there): /EFI/BOOT/BOOTX64.EFI is what a
-      # firmware's "internal disk" entry loads whatever NVRAM says, and
-      # esp-check (non_home_manager_config/esp-check.nix) refuses a rebuild
-      # whose ESP disagrees with the profile. The first install on this
-      # machine is a fresh one, so no --install-bootloader dance is needed.
       efi = {
         canTouchEfiVariables = false; # nixpkgs asserts this off for removable
         efiSysMountPoint = "/boot";
@@ -163,7 +141,12 @@ in
         copyKernels = true;
         useOSProber = false;
         # Must stay <= programs.nh.clean's `--keep N` (configuration.nix).
-        configurationLimit = 10;
+        # Sized for the installer's 1 GB ESP: a generation with its own kernel
+        # costs ~116 MB there (14 MB kernel + a 51 MB initrd each for the
+        # default and roadwarrior, whose initrd differs), so 6 stays under
+        # esp-check's 80% warning even if every one is distinct; 10 could
+        # fill it and fail the install.
+        configurationLimit = 6;
 
         # Undertale mirror-scene theme: the boot menu renders inside the
         # "Despite everything, it's still you." dialogue box. After an entry
@@ -203,31 +186,16 @@ in
   #   font = "${pkgs.spleen}/share/consolefonts/spleen-32x64.psfu";
   # };
 
-  # Same layout as fell-omen: an ESP plus one LUKS partition holding btrfs
-  # subvolumes @ and @home.
+  # The stock installer layout, not fell-omen's btrfs one: an ESP, one LUKS
+  # partition holding a plain ext4 root (/home included), and a LUKS swap
+  # partition.
   # noatime: no metadata write per file read (store scans, builds, greps).
-  # compress=zstd:1: cheap transparent compression, new writes only.
-  # discard=async: batched TRIM (needs allowDiscards on the LUKS device).
-  # Mount options are per-device on btrfs, so keep both subvol mounts identical.
+  # No `discard` mount option: TRIM comes from the weekly fstrim.timer (on by
+  # default), which reaches the SSD through allowDiscards on the LUKS device.
   fileSystems."/" = {
     device = luksDevice;
-    fsType = "btrfs";
-    options = [
-      "subvol=@"
-      "noatime"
-      "compress=zstd:1"
-      "discard=async"
-    ];
-  };
-  fileSystems."/home" = {
-    device = luksDevice;
-    fsType = "btrfs";
-    options = [
-      "subvol=@home"
-      "noatime"
-      "compress=zstd:1"
-      "discard=async"
-    ];
+    fsType = "ext4";
+    options = [ "noatime" ];
   };
 
   fileSystems."/boot" = {
@@ -245,61 +213,58 @@ in
     ];
   };
 
-  swapDevices = [ ];
+  # 8.8 GB, well under RAM, so it can't hold a hibernation image; it backs up
+  # zram (configuration.nix), which keeps the higher priority.
+  swapDevices = [ { device = swapLuksDevice; } ];
 
   services = {
     xserver.videoDrivers = [ "nvidia" ];
     logind.settings.Login.HandleLidSwitchDocked = "suspend"; # Suspend when the lid closes while docked
     logind.settings.Login.HandleLidSwitch = "suspend"; # What to do when the laptop lid is closed
+
+    # Match-on-chip reader in the power button: Goodix 27c6:6594, libfprint's
+    # goodixmoc driver. Enrol with `fprintd-enroll`. Enabling it turns on
+    # pam_fprintd for every PAM service (sudo, polkit, ...); the two below
+    # opt out.
+    fprintd.enable = true;
   };
 
-  # Audio is SoundWire (CS42L43 codec + CS35L56 amps), not fell-omen's HDA
-  # codec. The amps load per-model firmware/tuning from linux-firmware
-  # (enableAllFirmware below); if the speakers are silent or very quiet,
-  # start with `journalctl -b -k | grep -i cs35l56`.
-  #
-  # fell-omen hides the dGPU's HDMI pro-output sinks and the codec's unplugged
-  # HDMI sinks. The node names embed the PCI address and ALSA card profile, so
-  # its patterns won't match here; take the real ones from `wpctl status`.
-  # services.pipewire.wireplumber.extraConfig."51-hide-unwanted-sinks" = {
-  #   "monitor.alsa.rules" = [
-  #     {
-  #       matches = [
-  #         { "node.name" = "~alsa_output.pci-0000_<dgpu>.1.pro-output-.*"; }
-  #         { "node.name" = "~alsa_output.<codec HDMI sinks>"; }
-  #       ];
-  #       actions.update-props."node.disabled" = true;
-  #     }
-  #   ];
-  # };
+  # hyprland.lua checks for this file to also open the NVIDIA card for
+  # scanout (Intel stays the render GPU), so outputs wired to the dGPU (HDMI,
+  # some USB-C/DP ports) work. Costs ~8W: the dGPU never runtime-suspends
+  # while Hyprland holds it open. The Roadwarrior boot entry removes it.
+  environment.etc."hypr-dgpu-hdmi".text = "";
 
-  # Match-on-chip reader in the power button. Check its `lsusb` ID against
-  # libfprint's supported devices before enabling; enrol with fprintd-enroll.
-  # services.fprintd.enable = true;
+  security.pam.services = {
+    # A fingerprint login can't unlock gnome-keyring (pam_gnome_keyring needs
+    # the password; tuigreet.nix wires it), and pam_fprintd would sit in
+    # front of the password prompt until it times out.
+    greetd.fprintAuth = false;
+    # noctalia's lockscreen checks passwords against "login" while it drives
+    # the reader itself over D-Bus (lockscreen.fingerprint, on by default);
+    # pam_fprintd in that stack would fight it for the sensor. Costs
+    # fingerprint on a bare TTY login.
+    login.fprintAuth = false;
+  };
 
   hardware = {
     enableAllFirmware = true; # Enable firmware that is not free
-    # Early microcode from the initrd. nixos-generate-config emits this line;
-    # fell-omen's hardware file lost it, so it evaluates to false there.
+    cpu.intel.npu.enable = true;
     cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     graphics = {
       enable = true;
+      # intel-media-driver (iHD, 64- and 32-bit), intel-compute-runtime and
+      # vpl-gpu-rt come from nixos-hardware's meteor-lake import. iHD is not
+      # optional: the session forces LIBVA_DRIVER_NAME=iHD
+      # (hyprland/hyprland.lua), so without it VA-API fails outright and video
+      # decodes on CPU.
       extraPackages = with pkgs; [
         libva-vdpau-driver
         libvdpau-va-gl
-        intel-compute-runtime
-        # iHD VA-API driver: video decode on the iGPU media block. The session
-        # already forces LIBVA_DRIVER_NAME=iHD (hyprland/hyprland.lua), so
-        # without this package VA-API fails outright and video decodes on CPU.
-        intel-media-driver
       ];
       enable32Bit = true;
     };
     nvidia = {
-      # fell-omen's current choice. It spent a while on legacy_580 because
-      # 595.84 crashed Proton/Wine clients in libnvidia-ptxjitcompiler (see
-      # `git log -- hardwares/new_fell_omen.nix`); fall back the same way if
-      # that comes back.
       package = config.boot.kernelPackages.nvidiaPackages.latest;
       modesetting.enable = true;
       powerManagement = {
@@ -308,8 +273,6 @@ in
       };
       open = true; # Blackwell is only supported by the open kernel modules
       nvidiaSettings = true;
-      # Offload assumes the BIOS Graphics Device setting is Hybrid, with the
-      # panel on the iGPU. Discrete mode disables the iGPU this depends on.
       prime = {
         offload = {
           enable = true;
@@ -320,8 +283,6 @@ in
     };
   };
 
-  # Not hardware-specific, but fell-omen keeps these in its hardware file, so
-  # they come along rather than silently disappearing with the move.
   nix.settings = {
     substituters = [
       # Cache for CUDA things
@@ -334,11 +295,14 @@ in
       "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
     ];
-    # The default 64 MiB download buffer stalls substitution of big closures
-    # (nvidia/cuda paths) with "download buffer is full" warnings.
     download-buffer-size = 268435456;
     http-connections = 50;
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+
+  # The release this machine was installed with (NixOS 26.05, 2026-09), not
+  # fell-omen's 23.05: stateful defaults must match what's on this disk.
+  # Never bump it.
+  system.stateVersion = "26.05";
 }

@@ -59,7 +59,7 @@ let
     };
   };
 
-  laptopMic = "alsa_input.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__Mic1__source";
+  laptopMic = "alsa_input.pci-0000_80_1f.3-platform-sof_sdw.HiFi__Mic__source";
 in
 {
   services.easyeffects = {

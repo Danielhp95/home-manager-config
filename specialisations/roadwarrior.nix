@@ -8,6 +8,9 @@
     boot.loader.grub.configurationName = "Roadwarrior";
 
     imports = [ ../hardwares/disable_nvidia.nix ];
+    # disable_nvidia.nix removes the dGPU from the PCI bus, so there's no card
+    # for Hyprland to open (hardwares/lenovo_t16g_gen3.nix).
+    environment.etc."hypr-dgpu-hdmi".enable = false;
     home-manager.users.dani.wayland.windowManager.hyprland = {
       enable = true;
       configType = "lua";

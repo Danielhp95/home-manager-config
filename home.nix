@@ -268,7 +268,7 @@ in
       whisper.language = "en";
       backend = "vulkan";
       # find the name via `pactl list sources` and look for the microphone you want to use
-      device = "alsa_input.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__Mic1__source";
+      device = "alsa_input.pci-0000_80_1f.3-platform-sof_sdw.HiFi__Mic__source";
     };
   };
 }
