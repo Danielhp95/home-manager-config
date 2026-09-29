@@ -166,14 +166,6 @@ in
     # path (see dart-plugin/panel.luau openLogs).
     pkgs.grafana-loki
 
-    # localsend-plugin's three helpers. noctalia itself cannot do any of this:
-    # it has no UDP sockets (socat carries multicast discovery), it cannot be a
-    # Wayland drop target (ripdrag provides the drop window), and it has no
-    # file dialog (zenity provides the pickers).
-    pkgs.socat
-    pkgs.ripdrag
-    pkgs.zenity
-
     # jrohland/claudecode gates its service on `commandExists("jq")`. jq was
     # only ever reachable as an interpolated store path (hyprland/default.nix),
     # never on PATH, so the plugin would have silently reported no data.
@@ -211,15 +203,6 @@ in
   # from the pre-nix dev install, `rm` it first or activation fails.
   xdg.dataFile."noctalia/plugins/dart".source =
     config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/dart-plugin";
-
-  # localsend-plugin: send files over LocalSend without opening the app —
-  # drop target / file picker / clipboard on one side, multicast device
-  # discovery and the v2 upload handshake on the other. Same out-of-store
-  # symlink so .luau edits hot-reload without a rebuild.
-  # NOTE same first-switch trap as above: if the path already exists as a
-  # hand-made symlink, `rm` it before switching or activation fails.
-  xdg.dataFile."noctalia/plugins/localsend".source =
-    config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/localsend-plugin";
 
   systemd.user.services.noctalia.Service.Environment = [
     "NOCTALIA_ASSETS_DIR=${stormlightAssets}"
@@ -357,7 +340,6 @@ in
       # wholesale — delete the [plugins] block there if this list stops applying.
       plugins.enabled = [
         "dani/dart"
-        "dani/localsend"
 
         # Community plugins. The source clone is a `blob:none` partial clone and
         # noctalia's git calls do not lazy-fetch: if a newly enabled plugin shows
@@ -417,6 +399,15 @@ in
 
       notification = {
         enable_daemon = true;
+        # Silence every notification without touching the other UI sounds
+        # (volume click, screenshot, plug/unplug) that audio.enable_sounds
+        # would also kill. Filters are first-match; "^" is a regex that
+        # matches any summary/body, so this one catches everything. Any
+        # per-app filter added later must sort before it to take effect.
+        filter.silent = {
+          match_content = "^";
+          play_sound = false;
+        };
       };
 
       # First low-battery warning; noctalia adds fixed 5% and 2% levels.
@@ -458,9 +449,10 @@ in
         #
         # Semantic grouping (2026-09-22): the clock+weather pill leads the bar
         # since time/date is the thing you glance at first. Right side leads
-        # with the tray pill (tray, notifications), then claudecode usage, the
+        # with the tray pill (tray, notifications), then the
         # bluetooth/volume/brightness pill, and the machine-state pill (cpu,
-        # ram, gpu, battery) anchors the far right edge.
+        # ram, gpu, battery) anchors the far right edge. claudecode usage sits
+        # in the center, left of the workspaces (2026-09-28).
         start = [
           "group:clockweather"
           "active_window"
@@ -468,14 +460,13 @@ in
         ];
         center = [
           "privacy"
+          "claudecode"
           "hypr-submap"
           "workspaces"
           "dart"
-          "localsend"
         ];
         end = [
           "group:tray"
-          "claudecode"
           "group:volbright"
           "group:sysmon"
         ];
@@ -604,6 +595,14 @@ in
           hide_when_no_connected_device = false;
         };
 
+        tray = {
+          hide_passive = true;
+          drawer = true;
+          pinned = [
+            "org.twosheds.iwgtk"
+          ];
+        };
+
         # Hyprland submap chip (k4n4t4/hypr-submap), left of the workspaces.
         # Hidden in the default map so it only shows while resize/move is on.
         hypr-submap = {
@@ -618,23 +617,11 @@ in
           hide_inactive = true;
         };
 
-        # NOTE: there is deliberately no wifi widget here. noctalia's builtin
-        # network widget only speaks NetworkManager / wpa_supplicant and this
-        # setup is connman+iwd, and the impala custom_button that stood in for
-        # it was redundant with iwgtk's tray icon (iwgtk-indicator, autostarted
-        # via xdg-desktop-autostart — see configuration.nix).
-
         # DART run manager (local Luau plugin, see dart-plugin/). Same alias
         # idiom as the custom_buttons above: bare "dart" in the bar list
         # resolves through this table to the plugin widget entry.
         dart = {
           type = "dani/dart:widget";
-        };
-
-        # LocalSend sender (local Luau plugin, see localsend-plugin/).
-        # Left-click opens the send panel, right-click opens a drop target.
-        localsend = {
-          type = "dani/localsend:widget";
         };
 
         # Claude Code subscription usage (jrohland/claudecode). Stays blank
