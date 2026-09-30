@@ -205,8 +205,8 @@ in
     # Left on because the same release added a real gate — spec/
     # cobra_complete.go now reads the Go build info out of the binary and only
     # probes if it genuinely imports spf13/cobra, on top of the pre-existing
-    # setsid isolation and 300ms timeout. Shell scripts (sie-vpn-connect,
-    # davinci, the writeShellScriptBin wrappers) have no build info and are
+    # setsid isolation and 300ms timeout. Shell scripts (sie-vpn-connect and
+    # the other writeShellScriptBin wrappers) have no build info and are
     # never probed at all. Set false if that trade ever stops being worth it.
     cobra-probe-enabled = true
 
@@ -296,7 +296,7 @@ in
     debounce_ms = 800
     min_interval_ms = 5000
 
-    # Not the qwen3-coder:30b ollama.nix loads for open-webui: the
+    # Not the qwen3-coder:30b that ollama.nix also loads: the
     # budget here is debounce 400ms + a timeout on a request fired
     # mid-typing, which is a time-to-first-token problem, not a tok/s one.
     # There is no small qwen3-coder to prefer — that repo stops at 30b.
@@ -444,7 +444,7 @@ in
         # VRAM forever the way keep_alive = -1 would.
         #
         # Re-sent at most every five minutes from precmd, which recovers from
-        # an eviction (loading qwen3-coder:30b for open-webui evicts this, since
+        # an eviction (loading qwen3-coder:30b evicts this, since
         # the two don't fit together) and from an ollama restart. A request for
         # a model that is already loaded only resets its timer. Backgrounded
         # and disowned, so a slow or absent ollama never holds up the prompt.

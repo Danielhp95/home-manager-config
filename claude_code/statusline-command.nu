@@ -59,22 +59,24 @@ def main [] {
     cd $cwd
   }
 
-  let color_ash = "138;90;60"
-  let color_bg0 = "28;27;25"
-  let color_bg1 = "42;40;37"
-  let color_ember = "224;128;96"
-  let color_ember_dim = "184;101;76"
+  # The at-sign placeholders are Ember palette.nix colours, filled in by
+  # replaceVars in default.nix. The three hotter effort embers have no
+  # palette slot.
+  let color_ash = "@ash@"
+  let color_bg0 = "@bg@"
+  let color_bg1 = "@surface@"
+  let color_ember = "@accent@"
+  let color_ember_dim = "@accentDim@"
   let color_ember_high = "232;110;58"
   let color_ember_xhigh = "245;90;46"
   let color_ember_max = "255;66;46"
-  let color_error = "224;82;82"
-  let color_fg1 = "154;146;136"
-  let color_fg_soft = "184;176;160"
-  let color_gold = "200;180;104"
-  let color_mauve = "152;128;144"
-  let color_olive = "138;152;104"
-  let color_sage = "122;168;138"
-  let color_steel = "239;127;56"
+  let color_error = "@error@"
+  let color_fg1 = "@fgDim@"
+  let color_fg_soft = "@fgSoft@"
+  let color_gold = "@gold@"
+  let color_mauve = "@mauve@"
+  let color_sage = "@sage@"
+  let color_steel = "@steel@"
 
   let glyph_pill_open = (char -u "e0b6")
   let glyph_pill_close = (char -u "e0b4")
@@ -124,16 +126,12 @@ def main [] {
   if ($git_root | is-not-empty) {
     let ancestor_path = (truncate_path_segments (collapse_home_prefix ($git_root | path dirname) $env.HOME) 3)
     let repo_name = ($git_root | path basename)
-    mut path_within_repo = ($current_dir | str replace $git_root "")
-    $path_within_repo = ($path_within_repo | str trim -c "/" -l)
-    $path_within_repo = (truncate_path_segments $path_within_repo 3)
 
     $line = $line + (pill_open $color_ash)
     $line = $line + (pill_text $" ($ancestor_path)" $color_bg0 $color_ash true)
     $line = $line + (pill_wedge $color_ash $color_ember_dim)
     $line = $line + (pill_text $" ($repo_name)" $color_bg0 $color_ember_dim true)
     $line = $line + (pill_wedge $color_ember_dim $color_ember)
-    # $line = $line + (pill_text $" ($path_within_repo)($read_only_marker)" $color_bg0 $color_ember true)
     mut last_pill_color = $color_ember
     if ($model_name | is-not-empty) {
       $line = $line + (pill_wedge $last_pill_color $color_gold)

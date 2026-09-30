@@ -1,6 +1,5 @@
 {
   pkgs,
-  inputs,
   config,
   lib,
   ...
@@ -14,10 +13,14 @@ let
   # keeping a shadow vt100, which is what lets the Ctrl-R popup draw *over*
   # your previous output and then restore it. Without it atuin has to pick
   # between clearing the scrollback (inline) or taking the whole screen (alt
-  # screen); inline_height = 40 above is the setting that trade-off comes from.
+  # screen); atuin's default inline_height = 40 is where that trade-off shows.
   #
-  # There is no config.toml switch for it — activation is purely this shell
-  # snippet, which `exec`s the proxy and lets it respawn zsh underneath.
+  # atuin 18.21 also has a config.toml switch (`[pty_proxy] enabled`), which
+  # makes `atuin init` itself re-exec into the proxy. It is not used: that
+  # would run from home-manager's `atuin init` line near the end of .zshrc,
+  # after compinit and the plugins, and outside the tty guard and the tmux
+  # exemption below. This snippet `exec`s the proxy from the top of .zshrc
+  # instead and lets it respawn zsh underneath.
   #
   # Generated at build time rather than `eval "$(atuin pty-proxy init zsh)"`,
   # for the same reason the IRIS hook in iris.nix is inlined: that eval is a
@@ -26,12 +29,14 @@ let
   # what we want, since a silent upstream change to an `exec` line in .zshrc
   # is exactly the kind of thing that should be reviewed, not absorbed.
   #
-  # The sed pins `atuin` to the store path. The snippet runs at the very top
-  # of .zshrc, before anything here has touched PATH, so a bare `atuin` would
-  # depend on the login environment having already exported it.
+  # The substitution pins `atuin` to the store path. The snippet runs at the
+  # very top of .zshrc, before anything here has touched PATH, so a bare
+  # `atuin` would depend on the login environment having already exported it.
+  # --replace-fail: if upstream rewrites those exec lines, the build breaks.
   atuinPtyProxyZsh = pkgs.runCommand "atuin-pty-proxy-init.zsh" { } ''
-    ${config.programs.atuin.package}/bin/atuin pty-proxy init zsh > $out
-    sed -i 's|exec atuin pty-proxy|exec ${config.programs.atuin.package}/bin/atuin pty-proxy|g' $out
+    ${lib.getExe config.programs.atuin.package} pty-proxy init zsh > $out
+    substituteInPlace $out \
+      --replace-fail 'exec atuin pty-proxy' 'exec ${lib.getExe config.programs.atuin.package} pty-proxy'
   '';
 in
 {
@@ -45,7 +50,6 @@ in
   };
 
   home.packages = with pkgs; [
-    nix-search-tv
     rsync
   ];
   # Do NOT force TERM globally: the terminal emulator sets its own TERM, and inside
@@ -167,7 +171,7 @@ in
           legend_text.color = p.fgDim;
         };
         # One entry per core, cycled. Deliberately a short rotation of the
-        # cool half of the palette: with 22 threads on this machine a wide
+        # cool half of the palette: with 24 threads on this machine a wide
         # rainbow is unreadable, and the warm half is reserved for the
         # avg/all lines so they stay findable in the pile.
         cpu = {
@@ -221,19 +225,20 @@ in
     # Really nice shell history
     atuin = {
       enable = true;
-      # package = inputs.stable.legacyPackages.x86_64-linux.atuin;
       flags = [ "--disable-up-arrow" ];
       enableZshIntegration = true;
+      # The history daemon as a systemd user service, socket-activated on
+      # $XDG_RUNTIME_DIR/atuin.sock; the module sets settings.daemon.enabled
+      # and .systemd_socket itself. This replaces settings.daemon.autostart,
+      # whose socket lived in $TMPDIR: a shell inside a bwrap sandbox with a
+      # private /tmp (Steam's FHS env) autostarted a second daemon in there,
+      # which held the pid lock and made every host command wait 4 s.
+      daemon.enable = true;
       settings = {
         enter_accept = true; # Enter to execute, tab to select
         show_help = false;
         show_tabs = false;
         invert = true;
-        # search_mode = "daemon-fuzzy";
-        daemon = {
-          autostart = true;
-          enabled = true;
-        };
         ai = {
           enabled = true;
         };
@@ -247,7 +252,8 @@ in
         # that is ever revisited.
       };
     };
-    # Activate the PTY proxy (see atuinPtyProxyZsh above for what it buys).
+    # Activate the PTY proxy (see atuinPtyProxyZsh above for what it buys) in
+    # shells that sit directly in a terminal window. tmux panes get plain zsh.
     #
     # mkOrder 100 puts this ahead of every other initContent block, including
     # the mkBefore ones in iris.nix and zsh/default.nix. Ordering is about cost,
@@ -257,16 +263,18 @@ in
     # sourcing, starship. First in the file means the wasted half is nothing.
     #
     # The re-exec is self-limiting: the snippet exports ATUIN_PTY_PROXY_ACTIVE
-    # and skips when it is already set. Two consequences worth knowing:
+    # and skips when it is already set. IRIS is therefore unaffected: `i` execs
+    # a wrapper that spawns its own child zsh, and that child inherits the
+    # variable, so it does not stack a second proxy inside the first. The
+    # chain is proxy -> zsh -> iris -> zsh, with one shadow vt100 at the outside.
     #
-    #   - IRIS is unaffected. `i` execs a wrapper that spawns its own child
-    #     zsh, and that child inherits the variable, so it does not stack a
-    #     second proxy inside the first. The chain is proxy -> zsh -> iris ->
-    #     zsh, with one shadow vt100 at the outside.
-    #   - tmux is deliberately *not* exempt. The snippet also re-execs when
-    #     $TMUX changes, so panes get their own proxy rather than inheriting
-    #     the outer one — that is what keeps the popup's redraw aligned with
-    #     the pane's scrollback rather than the outer terminal's.
+    # tmux panes are exempt: with $TMUX set the snippet is never sourced (left
+    # alone, it would re-exec a proxy per pane, since it also re-execs when
+    # $TMUX changes), and atuin runs unproxied there. A pane still inherits the
+    # proxy variables of the terminal the tmux server was started from, so
+    # they are dropped: an inherited ATUIN_PTY_PROXY_SOCKET names a proxy that
+    # owns a different terminal, which is the failure the tty guard below is
+    # about.
     #
     # `source` rather than inlining the text with builtins.readFile: readFile
     # on a derivation is import-from-derivation, which drags a build into
@@ -275,13 +283,13 @@ in
     #
     # The wrapper around the source is a tty guard. The snippet's own re-exec
     # test is `ACTIVE unset || $TMUX changed` — it is blind to a change of
-    # *terminal*. A shell started on a new tty under the same $TMUX (nvim's
-    # `:terminal`, script(1), any nested pty) therefore skips the exec but
-    # still inherits ATUIN_PTY_PROXY_SOCKET, which now names a proxy owning a
-    # *different* terminal. atuin's Ctrl-R attaches to that foreign proxy and
-    # replays its shadow vt100 into this one: the outer tmux status bar, the
-    # nvim tabline and a stack of old prompts painted in as text, and no
-    # search UI at all. Verified 2026-08-20 by A/B on the socket alone.
+    # *terminal*. A shell started on a new tty (nvim's `:terminal`, script(1),
+    # any nested pty) therefore skips the exec but still inherits
+    # ATUIN_PTY_PROXY_SOCKET, which now names a proxy owning a *different*
+    # terminal. atuin's Ctrl-R attaches to that foreign proxy and replays its
+    # shadow vt100 into this one: the other terminal's screen painted in as
+    # text, and no search UI at all. Verified 2026-08-20 by A/B on the socket
+    # alone.
     #
     # Dropping the stale socket rather than re-exec'ing a proxy for the new tty
     # is deliberate: a proxy per `:terminal` costs a process and a thrown-away
@@ -290,20 +298,25 @@ in
     #
     # Clearing ATUIN_PTY_PROXY_TTY *before* the source and re-exporting it
     # after is load-bearing, and is why the guard cannot simply sit after the
-    # source: when the snippet does exec (a new tmux pane), the proxy's child
-    # would otherwise inherit this shell's tty, see a mismatch, and throw away
-    # its own brand-new and entirely legitimate socket. Only a shell that
-    # reaches the last line without exec'ing owns the socket it is holding.
+    # source: when the snippet does exec, the proxy's child would otherwise
+    # inherit this shell's tty, see a mismatch, and throw away its own
+    # brand-new and entirely legitimate socket. Only a shell that reaches the
+    # last line without exec'ing owns the socket it is holding.
     zsh.initContent = lib.mkOrder 100 ''
-      _atuin_pty_proxy_owner_tty=''${ATUIN_PTY_PROXY_TTY:-}
-      unset ATUIN_PTY_PROXY_TTY
-      if [[ -n ''${ATUIN_PTY_PROXY_SOCKET:-} && -n $_atuin_pty_proxy_owner_tty \
-            && $_atuin_pty_proxy_owner_tty != ''${TTY:-$(tty)} ]]; then
-        unset ATUIN_PTY_PROXY_SOCKET
+      if [[ -n ''${TMUX:-} ]]; then
+        unset ATUIN_PTY_PROXY_ACTIVE ATUIN_PTY_PROXY_TMUX \
+          ATUIN_PTY_PROXY_SOCKET ATUIN_PTY_PROXY_TTY
+      else
+        _atuin_pty_proxy_owner_tty=''${ATUIN_PTY_PROXY_TTY:-}
+        unset ATUIN_PTY_PROXY_TTY
+        if [[ -n ''${ATUIN_PTY_PROXY_SOCKET:-} && -n $_atuin_pty_proxy_owner_tty \
+              && $_atuin_pty_proxy_owner_tty != ''${TTY:-$(tty)} ]]; then
+          unset ATUIN_PTY_PROXY_SOCKET
+        fi
+        unset _atuin_pty_proxy_owner_tty
+        source ${atuinPtyProxyZsh}
+        export ATUIN_PTY_PROXY_TTY=''${TTY:-$(tty)}
       fi
-      unset _atuin_pty_proxy_owner_tty
-      source ${atuinPtyProxyZsh}
-      export ATUIN_PTY_PROXY_TTY=''${TTY:-$(tty)}
     '';
     # `ls` replacement
     eza.enable = true;
@@ -312,16 +325,6 @@ in
     # The one, the fuzzy searcher
     fzf = {
       enable = true;
-      # fzf 0.74's bundled nushell integration (shell/completion.nu, emitted by
-      # `fzf --nushell` and sourced into config.nu by home-manager) still uses
-      # `str downcase`, deprecated in nushell 0.114 — it warns on every nu
-      # startup. Patch it to `str lowercase`; drop once upstream fzf is fixed.
-      package = pkgs.fzf.overrideAttrs (old: {
-        postPatch = (old.postPatch or "") + ''
-          substituteInPlace shell/completion.nu \
-            --replace-quiet 'str downcase' 'str lowercase'
-        '';
-      });
       # Atuin owns Ctrl-R (sourced after fzf); disable fzf's history widget to
       # silence the HM Ctrl-R conflict warning without changing behavior.
       historyWidget.command = "";

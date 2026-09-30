@@ -224,9 +224,17 @@ Rules:
 - Don't rebuild or `git commit` unless asked. Say plainly what changed and what's left to
   verify by hand.
 
-After applying, list each edited `file:line` and what a smoke test would be — the config
-is Nix-built, so a Lua edit under `lua/danvim/` is picked up on next launch, but anything
-touching `flake.nix` / `packages/` needs a rebuild.
+After applying, list each edited `file:line` and what a smoke test would be. No edit is
+live on the next launch: the installed `nvim` is danvim's nixCats package with
+`wrapRc = true`, so it runs a store copy of the config, and `~/nix_config` pulls danvim in
+as a `path:` flake input pinned by hash. Any edit, Lua included, reaches the installed
+`nvim` only after `nix flake update danvim` in `~/nix_config` plus a rebuild; a new file
+must also be `git add`ed in danvim first, or the flake source drops it. To smoke-test
+before that, point nixCats at the repo instead of the store copy:
+
+```sh
+VIMINIT='lua local nc=require("nixCats") local store=nc.configDir local repo="/home/dani/nix_config/danvim" vim.opt.runtimepath:remove(store) vim.opt.runtimepath:remove(store.."/after") vim.opt.runtimepath:prepend(repo) vim.opt.runtimepath:append(repo.."/after") nc.configDir=repo nixCats.init_main()' nvim
+```
 
 ## Notes
 - Punch 1 (steps 1–6) is **read-only** toward the config. Punch 2 (step 7) edits it, but

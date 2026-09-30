@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ config, ... }:
 {
   # home-manager's gpg-agent snippet runs `$env.GPG_TTY = (tty)` unguarded;
   # without a TTY (scripts, editors spawning `nu -c` with the config loaded)

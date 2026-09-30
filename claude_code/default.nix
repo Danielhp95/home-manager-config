@@ -6,10 +6,38 @@
   ...
 }:
 let
+  pal = import ../palette.nix;
+  # "e08060" -> "224;128;96", the form the script's truecolor escapes take.
+  rgb =
+    hex:
+    lib.concatMapStringsSep ";" (i: toString (lib.fromHexString (builtins.substring i 2 hex))) [
+      0
+      2
+      4
+    ];
+
   # The statusline reads Claude Code's JSON payload on stdin; `--stdin` is
-  # required for piped input to reach $in when nu runs a script file.
+  # required for piped input to reach $in when nu runs a script file. The
+  # script's at-sign placeholders are Ember palette colours; replaceVars fails
+  # the build if one is left unreplaced or no longer exists in the script.
+  statuslineScript = pkgs.replaceVars ./statusline-command.nu (
+    lib.genAttrs [
+      "accent"
+      "accentDim"
+      "ash"
+      "bg"
+      "error"
+      "fgDim"
+      "fgSoft"
+      "gold"
+      "mauve"
+      "sage"
+      "steel"
+      "surface"
+    ] (name: rgb pal.${name})
+  );
   claude-statusline = pkgs.writeShellScriptBin "claude-statusline" ''
-    exec ${lib.getExe pkgs.nushell} --stdin ${./statusline-command.nu}
+    exec ${lib.getExe pkgs.nushell} --stdin ${statuslineScript}
   '';
 
   # Live repo path, not a store copy: danvim's lsp.lua reads the same file at
@@ -31,13 +59,16 @@ let
   '';
 in
 {
-  # settings.json is deliberately NOT a store symlink: Claude Code rewrites it
-  # at runtime (model switches, /config, permission setup), and a symlink
-  # would either break those writes or be silently replaced by them. Instead
-  # ./settings.json seeds a fresh machine once, and Claude Code owns the file
-  # from then on. The seed omits autoMode (work details; this repo is public).
-  # Its hooks call the noctalia claude-companion plugin's pulse.py, which is
-  # installed imperatively.
+  # Claude Code settings live in two places:
+  #   - ./managed-settings.nix (a NixOS module): statusLine and attribution,
+  #     as /etc/claude-code managed settings, re-applied on every switch and
+  #     ranked above the user file.
+  #   - ~/.claude/settings.json: the keys Claude Code rewrites at runtime
+  #     (model switches, /config, permission setup). It is deliberately NOT a
+  #     store symlink, which would either break those writes or be silently
+  #     replaced by them. ./settings.json seeds a fresh machine once, and
+  #     Claude Code owns the file from then on. The seed omits autoMode (work
+  #     details; this repo is public).
   home.activation.seedClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     target=${config.home.homeDirectory}/.claude/settings.json
     if [ ! -e "$target" ]; then
