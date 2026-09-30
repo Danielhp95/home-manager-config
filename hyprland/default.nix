@@ -9,8 +9,8 @@ let
   c = import ../palette.nix;
   f = import ../fonts.nix;
 
-  # slurp in Ember, wrapped so every caller gets it (wl-ocr, the share
-  # picker's region button, ad-hoc use). A caller's own flags still win.
+  # slurp in Ember for every caller (wl-ocr, the share picker's region button);
+  # a caller's own flags still win.
   slurp = pkgs.symlinkJoin {
     name = "slurp-ember";
     paths = [ pkgs.slurp ];
@@ -44,11 +44,8 @@ let
     '';
   };
 
-  # Screen magnifier — replaces pyprland's `magnify` plugin, which was only ever
-  # a wrapper around Hyprland's native cursor:zoom_factor. Animates the zoom in
-  # short eased steps so it doesn't snap the way a single jump would.
-  # NOTE: under configType = "lua" (Hyprland >= 0.55) `hyprctl keyword` answers
-  # "unknown request" — live config changes go through `hyprctl eval` instead.
+  # Screen magnifier on cursor:zoom_factor, eased in short steps instead of one
+  # jump. `hyprctl keyword` is a no-op under the Lua config, hence `hyprctl eval`.
   magnifyScript = pkgs.writeShellScriptBin "magnify" ''
     awk=${lib.getExe pkgs.gawk}
     steps=10
@@ -93,24 +90,10 @@ let
     done
   '';
 
-  # Projector mirroring. Hyprland's native mirror is the right tool here: its
-  # renderMirrored() scales by min(dstW/srcW, dstH/srcH) and centres, so a 16:10
-  # laptop on a 16:9 projector comes out pillarboxed rather than stretched or
-  # cropped (1920x1200 -> 1728x1080 with 96px bars either side).
-  #
-  # `hyprctl keyword` is a no-op under configType = "lua", so the monitor rule
-  # goes in through `hyprctl eval` (as magnify does above). hl.monitor()
-  # schedules the rule's re-apply itself, mirroring included.
-  #
-  # The rule lives only in the running Hyprland. A config reload (`hyprctl
-  # reload`, or a home-manager switch) re-reads hyprland.lua, whose
-  # config.unload/config.reloaded hooks carry the mirror across (its
-  # runtime-state section); logging out ends it.
-  #
-  # Escape hatch if that ever breaks: `wl-mirror --fullscreen-output <output> -s
-  # fit eDP-1` does the same letterboxed mirror out-of-process (wl-mirror is
-  # already in home.packages, and `wl-present` wraps it in a menu, see
-  # WL_PRESENT_DMENU below).
+  # Projector mirroring with Hyprland's native mirror, which letterboxes the
+  # 16:10 panel on a 16:9 screen instead of stretching it. The rule goes in
+  # through `hyprctl eval` and survives a reload via hyprland.lua's runtime-state
+  # hooks. Fallback: `wl-mirror --fullscreen-output <output> -s fit eDP-1`.
   presentScript =
     let
       jq = lib.getExe pkgs.jq;
@@ -122,24 +105,13 @@ let
 
       say() { echo "$1"; ${notify} -a present "Present" "$1"; }
 
-      # `monitors all`, not `monitors`: a monitor that is currently mirroring is
-      # omitted from the plain listing entirely, so the plain one can see how to
-      # turn mirroring on but never how to turn it back off.
-      #
-      # `all` also lists disabled outputs, but its JSON `disabled` field can't
-      # weed them out: Hyprland 0.56 serialises it as m_enabled (the text output
-      # correctly uses !m_enabled; see src/ipc/s1/Commands.cpp), so every live
-      # monitor reads `disabled: true`. Filtering on it left no candidates and
-      # `present` always said "No external display connected". Instead, "live"
-      # is taken from the plain listing, which only holds enabled, unmirrored
-      # monitors, plus whatever `all` shows as mirroring. That never touches the
-      # field, so it survives upstream fixing it.
+      # A mirroring output is missing from the plain listing, so candidates are
+      # the plain (live) outputs plus whatever `monitors all` shows mirroring.
       monitors=$(hyprctl monitors all -j) || { say "hyprctl unavailable"; exit 1; }
       live=$(hyprctl monitors -j) || { say "hyprctl unavailable"; exit 1; }
 
-      # The target is whatever external display is attached. Named explicitly as
-      # $2 when more than one is, since mirroring the
-      # wrong panel mid-talk is worse than refusing.
+      # The one attached external display, or $2 when there are several:
+      # mirroring the wrong one mid-talk is worse than refusing.
       target="''${2:-}"
       if [ -z "$target" ]; then
         candidates=$(${jq} -rn --arg b "$builtin_panel" \
@@ -158,9 +130,8 @@ let
         '.[] | select(.name == $t) | .mirrorOf')
       [ -n "$mirror_of" ] || { say "No such display: $target"; exit 1; }
 
-      # In the JSON, mirrorOf is the literal string "none" when the output stands
-      # alone, and the *id* of the source monitor (e.g. "0") when it is mirroring
-      # -- not the name the text output shows. Only the "none" test is meaningful.
+      # JSON mirrorOf is "none" or the source monitor's *id*, not its name, so
+      # only the "none" test is meaningful.
       case "''${1:-toggle}" in
         on)     want=mirror ;;
         off)    want=extend ;;
@@ -184,9 +155,8 @@ let
         source=""  # empty string is how setMirror() is told to unmirror
       fi
 
-      # mode/position/scale are restated because this creates a rule keyed on the
-      # output name, which outranks the "" wildcard in hyprland.lua -- leaving them
-      # off would silently fall back to the binding's own defaults (scale "auto").
+      # A name-keyed rule outranks hyprland.lua's "" wildcard, so it restates
+      # mode/position/scale (left off, scale falls back to "auto").
       hyprctl eval "hl.monitor({ output = \"$target\", mode = \"preferred\", position = \"auto\", scale = \"1\", mirror = \"$source\" })" >/dev/null
 
       if [ "$want" = mirror ]; then
@@ -203,13 +173,11 @@ in
   ];
   wayland.windowManager.hyprland = {
     enable = true;
-    # Hyprland >= 0.55 / nixpkgs 26.05 default: config is written in lua.
-    # hy3 (hl0.55+) exposes its dispatchers under hl.plugin.hy3 in lua.
+    # Explicit: with home.stateVersion < 26.05 the default is hyprlang.
     configType = "lua";
     extraConfig = builtins.readFile ./hyprland.lua;
-    # palette.nix's colours as Hyprland "rgb(...)" strings, and the fonts.nix
-    # families hyprland.lua uses. Each `_var` renders as a Lua local ahead of
-    # extraConfig: `local palette = { accent = "rgb(e08060)", ... }`.
+    # Each `_var` becomes a Lua local ahead of extraConfig:
+    # `local palette = { accent = "rgb(e08060)", ... }` and `fonts`.
     settings = {
       palette._var = lib.mapAttrs (_: hex: "rgb(${hex})") (lib.filterAttrs (_: lib.isString) c);
       fonts._var = { inherit (f) mono; };
@@ -221,20 +189,10 @@ in
       custom_picker_binary = "hyprland-preview-share-picker";
       allow_token_by_default = true;
     };
-    # greetd launches the compositor via `start-hyprland` (Hyprland's own
-    # crash-watchdog binary, see non_home_manager_config/noctalia-greeter.nix)
-    # instead of uwsm now. Session lifecycle is back on this module's own
-    # systemd integration: on hyprland.start it runs
-    # `dbus-update-activation-environment --systemd` then the *default*
-    # extraCommands (stop/start hyprland-session.target,
-    # which activates graphical-session.target). Do NOT override extraCommands
-    # to stop graphical-session.target directly — that was the old hand-rolled
-    # hook and it silently killed hyprpolkitagent/gpg-agent.socket every login
-    # (see graphical-session-target-dance memory): stopping
-    # graphical-session.target tears down every PartOf= unit, and only
-    # WantedBy= units come back when hyprland-session.target pulls the target
-    # back up. The module's default (stop/start hyprland-session.target, one
-    # level down) avoids that.
+    # On start the module exports the environment and restarts
+    # hyprland-session.target. Stopping it also stops graphical-session.target
+    # (PropagatesStopTo), so session daemons need WantedBy=graphical-session.target
+    # to come back; a PartOf= unit started by hand stays down.
     systemd = {
       enable = true;
       variables = [ "--all" ];
@@ -243,9 +201,7 @@ in
     xwayland.enable = true;
   };
 
-  # Polkit auth prompts. The module's WantedBy=graphical-session.target wants-symlink
-  # survives the stop/start dance in extraCommands above; a manual `systemctl start`
-  # here would be killed by the target stop (PartOf= propagation).
+  # Polkit auth prompts; the module's unit is WantedBy=graphical-session.target.
   services.hyprpolkitagent.enable = true;
 
   home.packages = with pkgs; [
@@ -259,8 +215,8 @@ in
     libnotify
 
     wdisplays # manage display positioning
-    wl-clipboard # wayland clipboard utilities
-    wl-mirror # For mirroring screens
+    wl-clipboard
+    wl-mirror
 
     ocrScript
     magnifyScript
@@ -268,23 +224,16 @@ in
 
     slurp # Ember wrapper from the let block
 
-    wl-kbptr # Mouse control with keyboard in wayland
-    wlrctl # Command line utility for miscellaneous wlroots Wayland extensions
+    wl-kbptr # keyboard-driven pointer (SUPER+SHIFT+F)
+    wlrctl # clicks in hyprland.lua's mouse-cursor submap
   ];
 
-  # wl-present (in the wl-mirror package above) shells out to a dmenu for its
-  # `set-scaling` and `custom` subcommands, auto-detecting wofi/wmenu/fuzzel/
-  # rofi/dmenu in that order — none of which are installed, so it would fall
-  # through to a bare `dmenu` that does not exist. It
-  # calls `$DMENU -p "<prompt>"`, which is exactly vicinae's dmenu interface.
-  # Only reaches things launched from a shell; the `present` script above and
-  # plain `wl-mirror` need no picker either way.
+  # wl-present (wl-mirror) needs a dmenu for `set-scaling` and `custom`, and none
+  # of the ones it probes is installed; it calls `$DMENU -p "<prompt>"`.
   home.sessionVariables.WL_PRESENT_DMENU = "vicinae dmenu";
 
-  # Lenovo's profile for the T16g's panel (BOE NE160QAM-N62, P3-class, 800
-  # nit), from Lenovo's ICC package. A matrix profile: the panel's EDID
-  # primaries, D65, gamma 2.19, no VCGT. hyprland.lua points the eDP-1 rule at
-  # it; ~/.local/share/icc is where colord and other ICC-aware apps look too.
+  # Lenovo's ICC profile for the panel (BOE NE160QAM-N62, P3-class), used by
+  # hyprland.lua's eDP-1 rule; colord and other ICC-aware apps look here too.
   xdg.dataFile."icc/TPLCD_41BE_HDR.icm".source = ./icc/TPLCD_41BE_HDR.icm;
 
   # wl-kbptr's default config path (INI). Unset keys take wl-kbptr's defaults.

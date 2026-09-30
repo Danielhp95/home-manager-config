@@ -6,14 +6,10 @@ in
 {
   gtk = {
     enable = true;
-    # Pin legacy default: 26.05 changed gtk4.theme default from config.gtk.theme to null,
-    # which would stop theming GTK4 apps with WhiteSur.
+    # The 26.05 default is null, which would leave GTK4 apps unthemed.
     gtk4.theme = config.gtk.theme;
-    # Dark mode. For GTK3 this writes gtk-application-prefer-dark-theme to
-    # settings.ini, plus the `color-scheme = prefer-dark` dconf key, which is
-    # what GTK4/libadwaita follow. Set on gtk3 only: libadwaita rejects the
-    # GTK4 settings.ini key ("...is unsupported. Please use
-    # AdwStyleManager:color-scheme instead").
+    # GTK3 prefer-dark plus the dconf color-scheme that GTK4/libadwaita follow.
+    # Not on gtk4: libadwaita rejects its settings.ini key.
     gtk3.colorScheme = "dark";
     theme = {
       package = pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
@@ -40,23 +36,15 @@ in
   };
 
   home.sessionVariables = {
-    # Make Qt apps follow the GTK theme. Only a "gtk3" platform-theme plugin
-    # exists (libqgtk3.so) — "gtk4" is not a valid value and Qt silently fell
-    # back to its default look.
+    # Qt follows the GTK theme. Not "gtk4": no such plugin, Qt silently ignores it.
     QT_QPA_PLATFORMTHEME = "gtk3";
   };
 
   dconf.settings = {
-    # libadwaita >= 1.6 reads its accent from here (1.9.3 is what is
-    # installed). The schema default is 'blue', which is what every GNOME app
-    # was drawing with — visibly foreign next to the Ember/WhiteSur orange.
-    # The key is an enum of nine named colours, not a hex value, so 'orange'
-    # is as close to palette.nix `accent` as this mechanism gets; it cannot be
-    # pointed at the exact coral.
+    # libadwaita's accent (default 'blue'). An enum of named colours, not hex,
+    # so 'orange' is the closest to palette.nix `accent`.
     "org/gnome/desktop/interface".accent-color = "orange";
-    # GNOME's monospace and document fonts, from fonts.nix. Unset, they kept
-    # whatever the dconf database held: 'Hack 10', which is not installed, so
-    # fontconfig handed "monospace" text a proportional face.
+    # GNOME's monospace and document fonts; gtk.font only sets font-name.
     "org/gnome/desktop/interface".monospace-font-name = "${f.mono} ${toString f.uiSize}";
     "org/gnome/desktop/interface".document-font-name = "${f.ui} ${toString f.uiSize}";
   };

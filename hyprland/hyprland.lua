@@ -1,33 +1,20 @@
--- Welcome to my hyprland.lua!
+-- Hyprland config in Lua. Home Manager prepends the hy3 plugin load, its
+-- session hooks and the `palette` / `fonts` locals (palette.nix and fonts.nix
+-- as "rgb(...)" colours and family names, see hyprland/default.nix).
 --
--- Lua-equivalent of hyprland.conf (Hyprland >= 0.55, hy3 with lua support).
--- Home Manager prepends `hl.plugin.load(<hy3>)` before this file, so
--- hl.plugin.hy3.* and the hy3 config values are available below. Session/env
--- systemd integration is home-manager's own systemd hook (wayland.windowManager
--- .hyprland.systemd, see hyprland/default.nix); greetd launches the compositor
--- via start-hyprland (non_home_manager_config/noctalia-greeter.nix).
---
--- `palette` (every palette.nix colour as "rgb(...)") and `fonts` (the fonts.nix
--- families) are locals that hyprland/default.nix renders ahead of this file,
--- so no hex value or font name is copied in here.
+-- hl.plugin.load only registers hy3: it loads after the first parse, which then
+-- reruns this file. On that first pass hl.plugin.hy3 is nil, so everything
+-- after the first hy3 call is skipped.
 --
 -- Reference: https://wiki.hypr.land/Configuring/Start/
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Monitors
 -- ─────────────────────────────────────────────────────────────────────────────
--- Layout lives in kanshi (hyprland/kanshi.nix), not here: it picks a profile
--- for whatever set of screens is plugged in (Dell above the laptop at the desk,
--- any other screen to the laptop's right, laptop alone) and pushes positions
--- over wlr-output-management. Hyprland keeps those as per-output overrides on
--- top of the rule below, so they survive a reload.
---
--- This wildcard is the fallback: it covers the instant before kanshi applies
--- and any setup no profile matches. Monitor rules are matched name > desc > "",
--- so the `present` script's name-keyed mirror rule (SUPER+SHIFT+D) still
--- outranks it, and kanshi's override leaves the mirror setting alone.
-
--- monitor =,preferred,auto,1
+-- Positions come from kanshi (hyprland/kanshi.nix), kept by Hyprland as
+-- per-output overrides that survive a reload. This wildcard covers the moment
+-- before kanshi applies and any setup no profile matches; name-keyed rules such
+-- as `present`'s mirror rule outrank it.
 hl.monitor({
 	output = "",
 	mode = "preferred",
@@ -35,12 +22,10 @@ hl.monitor({
 	scale = "1",
 })
 
--- The built-in panel: 3840x2400 at 16", so scale 2 (1920x1200 logical, the
--- width kanshi's layouts assume). The ICC profile is Lenovo's for this panel
--- (hyprland/default.nix installs it): the panel is P3-wide, so without it
--- sRGB content is stretched over the wider gamut and looks oversaturated.
--- An icc overrides the rule's other colour-management settings (cm, sdr*).
--- kanshi's overrides only touch mode/position/scale, so they keep it.
+-- 3840x2400 at 16": scale 2 gives the 1920x1200 logical size kanshi assumes.
+-- Without the ICC profile (hyprland/default.nix) sRGB content looks
+-- oversaturated on this P3 panel; it overrides the rule's cm/sdr settings, and
+-- kanshi only overrides mode/position/scale.
 hl.monitor({
 	output = "eDP-1",
 	mode = "preferred",
@@ -52,9 +37,7 @@ hl.monitor({
 -- ─────────────────────────────────────────────────────────────────────────────
 -- General / Misc / Input / Cursor / Decoration / Animations / Binds / Render
 -- ─────────────────────────────────────────────────────────────────────────────
--- Restored on leaving the mouse-cursor submap below, which disables the
--- timeout while active (hl.dsp.cursor.move warps don't reset Hyprland's own
--- cursor-activity timer, so the cursor would otherwise vanish mid-use).
+-- The mouse-cursor submap below disables the timeout and restores this value.
 local cursor_inactive_timeout = 5
 
 hl.config({
@@ -70,9 +53,8 @@ hl.config({
 		resize_on_border = true,
 		border_size = 5,
 		col = {
-			-- Focused window gets the coral rim; unfocused borders stay the
-			-- background color, so the 5px border reads as invisible padding
-			-- between columns rather than a drawn rim.
+			-- Unfocused borders match the background, so the 5px border reads as
+			-- padding between windows.
 			active_border = palette.accent,
 			inactive_border = palette.bg,
 		},
@@ -102,11 +84,8 @@ hl.config({
 
 	cursor = {
 		inactive_timeout = cursor_inactive_timeout,
-		-- Hardware cursor plane on the Intel iGPU: moving the cursor costs
-		-- zero compositor repaints. Software cursors (the old `true`) forced
-		-- a damage+repaint on every cursor move; they're only needed when
-		-- the NVIDIA card scans out (the default boot entry) — see the
-		-- GPU selection below.
+		-- Hardware cursor plane: no repaint per cursor move. Software cursors
+		-- only while the dGPU is open (GPU selection below).
 		no_hardware_cursors = false,
 	},
 
@@ -117,9 +96,8 @@ hl.config({
 		rounding = 5,
 		blur = {
 			enabled = true,
-			-- 8/4 is expensive on the iGPU (blur renders behind almost every
-			-- window given ignore_opacity + the transparency above), but the
-			-- lighter 4/2 look was tried and rejected — keep the perception.
+			-- Costly on the iGPU (blur sits behind almost every window), but
+			-- lighter settings were rejected on looks.
 			size = 12,
 			passes = 3,
 			ignore_opacity = true,
@@ -137,40 +115,27 @@ hl.config({
 	},
 
 	render = {
-		-- Hand eligible output commits to the DRM page-flip queue asynchronously
-		-- instead of blocking the render loop on each one (Hyprland >= 0.56's
-		-- OutputCommitCoordinator). Default is off -- it's new and opt-in. Worth
-		-- it here for the same reason borderangle is disabled and hardware
-		-- cursors are on: this iGPU has no headroom to spare, and blur behind
-		-- almost every window (ignore_opacity + the transparency above) already
-		-- makes each frame expensive. If frames start tearing or stuttering,
-		-- this is the first knob to put back to false.
+		-- Commit frames asynchronously instead of blocking the render loop (off
+		-- by default). The first knob to turn back off if frames tear or stutter.
 		async_commit = true,
 	},
 })
 
--- Animations: curves + per-leaf settings
--- `speed` is in deciseconds (4 = 400ms). Tuned so the things you hit dozens of
--- times a day (focus ring, workspace switch, panels) settle in ~300-400ms, and
--- exits are quicker than entrances.
+-- Animations. `speed` is in deciseconds (4 = 400ms); exits are quicker than
+-- entrances.
 hl.curve("myBezier", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.05 } } })
 hl.animation({ leaf = "windows", enabled = true, speed = 4, bezier = "myBezier" })
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "default", style = "popin 80%" })
 hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "default" })
--- borderangle animates the gradient forever: the compositor repaints even
--- when fully idle, so the iGPU never rests. Static gradient instead.
+-- borderangle repaints forever, even when idle.
 hl.animation({ leaf = "borderangle", enabled = false })
 hl.animation({ leaf = "fade", enabled = true, speed = 3, bezier = "default" })
--- No `layers` leaf means panels, OSDs and notifications inherit the global
--- default (speed 8, 800ms), which is slow for transient UI.
+-- Without it, panels, OSDs and notifications get the global 800ms.
 hl.animation({ leaf = "layers", enabled = true, speed = 3, bezier = "default" })
 hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "default" })
--- The special workspace drops in from the top and retracts back up. The In and
--- Out leaves are split because the style's direction word is applied per leaf,
--- and Hyprland calls Out with the opposite `left` flag from In: "top" on In
--- means enter from above, but the same word on Out would exit downward, so
--- Out uses "bottom" to leave the way it came. Out is 15% slower than a plain
--- 300ms exit (3.45) so the retract doesn't feel clipped.
+-- The special workspace drops in from the top and retracts upward. Hyprland
+-- flips the direction word for Out, so "bottom" there means back up; 3.45 is
+-- 15% slower than the other exits so the retract doesn't feel clipped.
 hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 4, bezier = "default", style = "slidefadevert top" })
 hl.animation({
 	leaf = "specialWorkspaceOut",
@@ -182,18 +147,12 @@ hl.animation({
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Environment variables (GPU selection)
--- The Intel iGPU renders. The NVIDIA card is opened too whenever it is on the
--- bus (the default boot entry), only to scan out the outputs wired to it:
--- HDMI and some USB-C/DP ports, including the one the desk Dell reaches
--- through the dock. That costs ~8W, since the dGPU never runtime-suspends
--- while Hyprland holds it open. The "Roadwarrior" boot entry takes the dGPU
--- off the bus (hardwares/disable_nvidia.nix), so there it is Intel-only.
--- GPU-hungry apps opt in per launch with `nvidia-offload <cmd>`.
+-- The iGPU renders; the NVIDIA card is also opened when present, to scan out
+-- the outputs wired to it (HDMI, some USB-C/DP, the desk dock). That keeps the
+-- dGPU awake (~8W); the Roadwarrior boot entry takes it off the bus.
 -- ─────────────────────────────────────────────────────────────────────────────
--- AQ_DRM_DEVICES is colon-separated, so by-path names (which contain colons)
--- get shattered on parse — resolve them to canonical /dev/dri/cardN first.
--- Card numbering isn't stable across boots, hence resolving at startup.
--- A missing card resolves to nil (`readlink -e`) and is left out of the list.
+-- AQ_DRM_DEVICES is colon-separated and by-path names contain colons, so they
+-- are resolved to /dev/dri/cardN (numbering varies per boot); missing is nil.
 local function resolve_card(path)
 	local p = io.popen("readlink -e " .. path)
 	local real = p:read("*l")
@@ -208,8 +167,7 @@ if intel_card then
 end
 if nvidia_card then
 	drm_devices[#drm_devices + 1] = nvidia_card
-	-- Hardware cursors glitch on NVIDIA scanout; fall back to software
-	-- rendering only while the dGPU is open.
+	-- Hardware cursors glitch on NVIDIA scanout.
 	hl.config({ cursor = { no_hardware_cursors = true } })
 end
 if #drm_devices > 0 then
@@ -219,38 +177,20 @@ hl.env("LIBVA_DRIVER_NAME", "iHD")
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Runtime state that has to survive a config reload
---
--- A reload (`hyprctl reload`, SUPER+SHIFT+C below, or a home-manager switch)
--- throws away the Lua VM entirely and re-runs this file from scratch, so
--- anything a running config put in a variable comes back nil. Two pieces of
--- state live *only* in the running compositor and would be lost on every
--- rebuild:
---
---   * the per-workspace scrolling/hy3 toggle (`scrolling_workspaces` below),
---   * the `present` script's mirror rule (hyprland/default.nix).
---
--- Hyprland >= 0.56 fires `config.unload` just before a reload, which is the
--- hook that lets us hand state forward. It can't go through a Lua variable
--- (fresh VM), so it goes through a file.
---
--- Reload vs. logout: `config.unload` fires on shutdown too, immediately
--- followed by `hyprland.shutdown` — so shutdown writes the file and then
--- deletes it again, and a fresh session starts clean (mirroring off, every
--- workspace back on hy3). Only a reload restores. A hard crash can leave a stale file behind and cause one
--- spurious restore on next login; delete it by hand if that ever bites.
+-- A reload reruns this file in a fresh Lua VM, losing the scrolling-layout
+-- toggles and `present`'s mirror rule, so config.unload writes them to a file
+-- and config.reloaded restores them. Logout also fires config.unload, then
+-- hyprland.shutdown deletes the file; after a crash, a stale file can restore
+-- once at the next login.
 -- ─────────────────────────────────────────────────────────────────────────────
 local state_dir = os.getenv("HOME") .. "/.local/state/hypr"
 local state_path = state_dir .. "/lua-runtime-state"
 
--- Forward declaration: the layout toggle populates this, and save_state below
--- reads it, but the keybinding section that owns it is further down the file.
+-- Declared here for save_state; the layout toggle bind fills it.
 local scrolling_workspaces = {} -- workspace id (number) -> true while toggled to scrolling
 
--- Which output the `present` script has mirroring, or nil. Read live from the
--- compositor rather than trusting a marker the script writes: `present` is only
--- one of the ways a mirror can be set up (hyprctl eval by hand is another), and
--- the compositor is the thing that actually knows. `all = true` because the
--- default list leaves out outputs that are mirroring.
+-- The output currently mirroring, or nil, read from the compositor.
+-- `all = true`: the default list leaves out outputs that are mirroring.
 local function mirrored_output()
 	for _, mon in ipairs(hl.get_monitors({ all = true })) do
 		if mon.is_mirror then
@@ -316,6 +256,8 @@ hl.on("hyprland.shutdown", function()
 	os.remove(state_path)
 end)
 
+-- hyprland.start fires inside the first frame's render and window.open before
+-- the new window has focus; a dispatch from either runs a tick later instead.
 local function after_event(fn)
 	hl.timer(fn, { timeout = 1, type = "oneshot" })
 end
@@ -434,7 +376,7 @@ end, { description = "Toggle workspace layout (hy3 / scrolling)" })
 -- toggled to scrolling), vim keys and arrows
 local directions = { h = "left", j = "down", k = "up", l = "right" }
 for key, dir in pairs(directions) do
-	local letter = dir:sub(1, 1) -- "left" -> "l", etc. — what hl.dsp.* direction params want
+	local letter = dir:sub(1, 1) -- hl.dsp.* direction params take "l", "d", ...
 	local function move_focus()
 		if scrolling_workspaces[active_ws_id()] then
 			hl.dispatch(hl.dsp.focus({ direction = letter }))
@@ -460,12 +402,12 @@ hl.bind(mod .. " + C", hl.dsp.window.center(), { description = "Center floating 
 hl.bind(mod .. " + s", hy3.set_swallow("toggle"), { description = "Toggle window swallow (hy3)" })
 
 hl.bind(mod .. " + t", hy3.change_group("toggletab"), { description = "Toggle tab group (hy3)" })
-hl.bind(mod .. " + CONTROL + t", hy3.lock_tab(), { description = "Lock tab group (hy3)" }) -- lock a tab so it acts as a single node
+hl.bind(mod .. " + CONTROL + t", hy3.lock_tab(), { description = "Lock tab group (hy3)" })
 hl.bind(mod .. " + g", hy3.make_group("tab"), { description = "Make tab group (hy3)" })
 
 hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.close(), { description = "Close window" })
 
-hl.bind(mod .. " + E", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" }) -- toggle horizontal/vertical split
+hl.bind(mod .. " + E", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" })
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen(), { description = "Toggle fullscreen" })
 
 -- Special workspaces
@@ -476,9 +418,7 @@ hl.bind(
 	{ description = "Move window to special workspace" }
 )
 
--- Mouse
--- NOTE: the legacy `hy3:focustab, mouse` (bindn on mouse:272) is a no-op in current
--- hy3 (focus_tab requires a direction or index), so it is intentionally omitted.
+-- Mouse. No hy3 focus_tab on click: it needs a direction or an index.
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Drag window (mouse)" })
 
 -- Resize submap
@@ -498,15 +438,11 @@ hl.define_submap("resize", function()
 	hl.bind("escape", hl.dsp.submap("reset"), { description = "Exit resize submap" })
 end)
 
--- Mouse-cursor submap: vim-style hjkl pointer movement, escape to leave
--- u / d scroll the wheel up / down
--- NOTE: movement uses hl.dsp.cursor.move (native warp), not wlrctl -- wlrctl
--- spawns a whole new Wayland client (connect/negotiate/destroy the
--- zwlr-virtual-pointer-v1 object) on every single repeat tick, which can't
--- keep up with hold-to-repeat and silently drops most of the moves.
+-- Mouse-cursor submap: hjkl moves the pointer, u / d scroll, escape leaves.
+-- Moves use the native warp: wlrctl starts a Wayland client per repeat tick
+-- and drops most of the moves.
 hl.bind(mod .. " + M", function()
-	-- Native cursor.move warps don't count as "activity" for cursor:inactive_timeout,
-	-- so disable it while in this submap or the cursor vanishes mid-use.
+	-- Warps don't count as cursor activity, so the timeout would hide it mid-use.
 	hl.config({ cursor = { inactive_timeout = 0 } })
 	hl.dispatch(hl.dsp.submap("move"))
 end, { description = "Enter mouse-cursor submap" })
@@ -527,10 +463,9 @@ hl.define_submap("move", function()
 		hl.bind(key, nudge(deltas[key]), { repeating = true, description = "Move cursor (" .. dir .. ")" })
 		hl.bind(dir, nudge(deltas[key]), { repeating = true, description = "Move cursor (" .. dir .. ")" })
 	end
-	-- ydotool wheel units are discrete clicks: REL_WHEEL +y = up.
-	-- (wlrctl scroll is broken on Hyprland 0.55: axis events arrive with value120 = 0,
-	-- so toolkits ignore them; ydotool injects real uinput events instead.
-	-- Must be unmodified keys: holding SHIFT makes apps treat the wheel as horizontal scroll.)
+	-- ydotool, not wlrctl: wlrctl's scroll events carry value120 = 0, which
+	-- toolkits ignore. Units are wheel clicks, +y = up. No modifiers: SHIFT
+	-- would turn the wheel horizontal.
 	hl.bind(
 		"u",
 		hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y 1.5"),
@@ -559,31 +494,22 @@ hl.define_submap("move", function()
 	end, { description = "Exit cursor submap" })
 end)
 
--- wl-kbptr (vimium-style mouse control), configured by wl-kbptr/config
--- (hyprland/default.nix).
+-- wl-kbptr (vimium-style mouse control; config in hyprland/default.nix).
 hl.bind(
 	mod .. " + SHIFT + f",
 	hl.dsp.exec_cmd("wl-kbptr"),
 	{ description = "Keyboard-driven mouse control (wl-kbptr)" }
 )
--- Same, but the picked target gets a right click instead of a left one
--- (wl-kbptr/config sets mode_click.button=left; overridden here).
+-- Same, with a right click instead of the config's left one.
 hl.bind(
 	mod .. " + CONTROL + SHIFT + f",
 	hl.dsp.exec_cmd("wl-kbptr -o mode_click.button=right"),
 	{ description = "Keyboard-driven mouse control — right click (wl-kbptr)" }
 )
--- Volume / Brightness
--- The nvidia driver registers a phantom `nvidia_0` backlight for its own
--- (disconnected) card0-eDP-2, and bare `brightnessctl` picks it over
--- `intel_backlight` -- which is the device actually wired to the panel
--- (card1-eDP-1, on the iGPU). Writes to nvidia_0 succeed and do nothing, so
--- the device has to be named explicitly.
+-- Volume / Brightness. The media keys arrive as bare XF86 keysyms (FN is
+-- resolved in keyboard firmware), so they take no modifier; `locked` keeps them
+-- working on the lock screen.
 local backlight = "brightnessctl -d intel_backlight"
--- The keyboard's media keys arrive as bare XF86MonBrightness*/XF86Audio*
--- keysyms (FN is resolved in keyboard firmware), so these binds and the volume
--- ones below take no modifier. `locked` keeps them live on the lock screen;
--- `repeating` lets them key-repeat.
 hl.bind(
 	"XF86MonBrightnessDown",
 	hl.dsp.exec_cmd(backlight .. " set 5%-"),
@@ -594,10 +520,8 @@ hl.bind(
 	hl.dsp.exec_cmd(backlight .. " set +5%"),
 	{ repeating = true, locked = true, description = "Increase brightness" }
 )
--- `volume-all-sinks` (noctalia/default.nix) steps every output at once
--- -- the speakers' and each paired headset's EQ sink, plus any hardware sink
--- without one -- so the keys do the same thing as scrolling the
--- bar's volume pill, instead of only touching whichever sink is default.
+-- volume-all-sinks (noctalia/default.nix) steps every output sink at once, like
+-- scrolling the bar's volume pill, not just the default sink.
 local volume = "volume-all-sinks"
 hl.bind(
 	"XF86AudioLowerVolume",
@@ -613,22 +537,19 @@ hl.bind("XF86AudioMute", hl.dsp.exec_cmd(volume .. " mute"), { locked = true, de
 hl.bind(mod .. " + XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { description = "Next track" })
 hl.bind(mod .. " + XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { description = "Play/pause" })
 hl.bind(mod .. " + XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { description = "Previous track" })
--- Bare transport keys. These matter more than the SUPER chords above: the Bluetooth
--- headset (WH-1000XM6, via BlueZ AVRCP) and the HP keyboard's consumer-control
--- endpoint both emit these keysyms, and you cannot hold SUPER on a headset -- so
--- with only the SUPER binds, the headphones' play/next/prev buttons did nothing.
+-- Bare transport keys too: the Bluetooth headset (AVRCP) sends these and can't
+-- hold SUPER.
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true, description = "Next track" })
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Play/pause" })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
 hl.bind("XF86AudioStop", hl.dsp.exec_cmd("playerctl stop"), { locked = true, description = "Stop playback" })
--- FN+F8 on the HP chassis, routed through the "HP WMI hotkeys" device.
 hl.bind(
 	"XF86AudioMicMute",
 	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
 	{ locked = true, description = "Toggle mic mute" }
 )
 
--- Magnifier (cursor:zoom_factor; `magnify` script, was pypr's magnify plugin)
+-- Magnifier (`magnify` script, hyprland/default.nix)
 hl.bind(
 	mod .. " + CTRL + Z",
 	hl.dsp.exec_cmd("magnify -0.5"),
@@ -639,7 +560,7 @@ hl.bind(
 	hl.dsp.exec_cmd("magnify +0.5"),
 	{ repeating = true, description = "Zoom in (magnifier)" }
 )
-hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify"), { description = "Toggle magnifier zoom" }) -- toggle zoom
+hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify"), { description = "Toggle magnifier zoom" })
 
 -- Projector: mirror this panel onto whatever external display is attached
 hl.bind(
@@ -650,7 +571,6 @@ hl.bind(
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Layout: hy3 (plugin) config
--- (schema for hy3 built against Hyprland >= 0.55: tabs.colors.*, tabs.radius)
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.config({
 	plugin = {
@@ -664,7 +584,7 @@ hl.config({
 				height = 20,
 				padding = 5,
 				from_top = false,
-				radius = 5, -- was `rounding` in old hy3; renamed to `radius`
+				radius = 5,
 				render_text = true,
 				text_center = true,
 				text_font = fonts.mono .. " Bold", -- Pango: trailing Bold = weight
@@ -694,8 +614,7 @@ hl.config({
 				ephemeral_groups = true,
 				trigger_width = 0,
 				trigger_height = 0,
-				-- Don't autotile workspace 9 (where messaging apps live).
-				-- (the conf referenced an undefined $messaging_apps variable here)
+				-- Not on ws9: the auto-tab below needs its windows flat.
 				workspaces = "not:9",
 			},
 		},
@@ -707,12 +626,9 @@ hl.config({
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.layer_rule({ name = "vicinae-blur", match = { namespace = "vicinae" }, blur = true, ignore_alpha = 0 })
 hl.layer_rule({ name = "vicinae-no-animation", match = { namespace = "vicinae" }, no_anim = true })
--- noctalia asks the compositor to blur the whole bar rect (ext-background-effect
--- protocol) even where the bar paints nothing, which frosted the transparent gaps
--- between the capsule islands. A protocol blur region bypasses layer-rule blur
--- toggles entirely (Renderer::shouldBlur returns before consulting rules);
--- ignore_alpha is the one rule still honored, and it confines the blur to pixels
--- the bar actually draws. 0.1 rather than 0: a 0 threshold left the gaps blurred.
+-- noctalia requests protocol blur over its whole bar rect, which layer-rule blur
+-- toggles can't override. ignore_alpha still applies and keeps the blur to drawn
+-- pixels, so the gaps between capsules stay clear (0 didn't; 0.1 does).
 hl.layer_rule({ name = "noctalia-bar-gap-noblur", match = { namespace = "noctalia-bar-default" }, ignore_alpha = 0.1 })
 -- slurp's region overlay ("selection"): without the layers fade-out, the dimmed
 -- overlay is already gone when grim captures right after slurp exits (wl-ocr).
@@ -753,8 +669,6 @@ hl.window_rule({
 	float = true,
 })
 hl.window_rule({ name = "float-zoom-host", match = { initial_title = "zoom" }, float = true })
--- NOTE: the original `pavucontrol` rule had NO match (would apply to every window —
--- almost certainly a bug). A class match is added here so it only targets pavucontrol.
 hl.window_rule({
 	name = "pavucontrol",
 	match = { class = "org.pulseaudio.pavucontrol" },
@@ -785,9 +699,8 @@ hl.window_rule({
 	match = { initial_title = "zoom" },
 	opacity = "1.0 override 1.0 override",
 })
--- The target of the Super+Shift+O toggle. Nothing carries this tag until that
--- bind puts it there, so the rule is inert by default; `override` on both slots
--- is what lets it beat the global active/inactive opacity in decoration above.
+-- Set by the Super+Shift+O tag toggle; `override` beats the global
+-- active/inactive opacity.
 hl.window_rule({
 	name = "opacity-opaque-tag",
 	match = { tag = "opaque" },
@@ -806,25 +719,14 @@ hl.window_rule({ name = "no-gaps-f1", match = { float = false, workspace = "f[1]
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Auto-tab the messaging workspace (ws9)
---
--- Slack / Telegram / Element are pinned to ws9 by the "messaging-apps" window rule
--- above. We want ws9 to behave as a tabbed workspace, so multiple chat apps stack
--- into tabs instead of tiling side-by-side.
---
--- hy3 has no per-workspace "always tab" setting, so we drive it from events. The
--- changegroup dispatcher acts on the *focused* workspace, and chat apps are often
--- auto-assigned to ws9 in the background while another workspace is focused — so we
--- only convert when ws9 is the active workspace to avoid tabbing the wrong one.
--- autotile is disabled on ws9 (see hy3.autotile.workspaces = "not:9"), so its
--- windows are flat children of the workspace root group and a single
--- `changegroup tab` tabs the whole workspace. Once the root is a tab group, any
--- window that subsequently opens on ws9 is added as a new tab automatically.
+-- hy3 has no per-workspace "always tab", so events tab ws9's root group. The
+-- dispatcher acts on the focused workspace, hence only while ws9 is active. With
+-- autotile off there, one change_group tabs every window; later ones join as tabs.
 -- ─────────────────────────────────────────────────────────────────────────────
 local MESSAGING_WS = 9
 
 local function tab_messaging_workspace()
-	-- Deferred (after_event, above) so a window that just opened has taken
-	-- focus, and is counted, before the check runs.
+	-- Deferred, so a window that just opened is focused and counted.
 	after_event(function()
 		local ws = hl.get_active_workspace()
 		if ws and ws.id == MESSAGING_WS and ws.windows > 0 then
