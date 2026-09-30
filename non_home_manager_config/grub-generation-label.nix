@@ -1,5 +1,5 @@
 # Stamps the current generation number onto the GRUB menu's top-level NixOS
-# entries ("NixOS - Default", "NixOS - dGPU HDMI", ...).
+# entries ("NixOS - Default", "NixOS - Roadwarrior").
 #
 # Why a hook and not an option: install-grub.pl builds those entries with
 # addGeneration("NixOS", "", $defaultConfig, ..., 1) — a hardcoded name and an
@@ -59,7 +59,7 @@ let
 
       # Every row of the "All configurations" submenu already carries its own
       # number, so branch past those and append to the rest. `submenu` lines are
-      # left alone by the anchor, as is the Ubuntu entry.
+      # left alone by the anchor.
       sed -E '/^menuentry "NixOS - Configuration [0-9]/b
               s/^menuentry "(NixOS[^"]*)"/menuentry "\1 (generation '"$gen"')"/' "$conf" > "$tmp"
 

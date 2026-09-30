@@ -5,9 +5,8 @@
     # (1969-12-31).
     boot.loader.grub.configurationName = "Roadwarrior";
 
+    # Removes the dGPU from the PCI bus; hyprland.lua then finds no NVIDIA
+    # card and runs on the Intel iGPU alone.
     imports = [ ../hardwares/disable_nvidia.nix ];
-    # disable_nvidia.nix removes the dGPU from the PCI bus, so there is no card
-    # for Hyprland to open (hardwares/lenovo_t16g_gen3.nix).
-    environment.etc."hypr-dgpu-hdmi".enable = false;
   };
 }

@@ -1,4 +1,4 @@
-{ ... }:
+{ options, ... }:
 {
   # Tailscale: WireGuard mesh between your own machines. The daemon only
   # provides the plumbing — enrolling this host in a tailnet is a one-off
@@ -23,14 +23,9 @@
 
   # connman enumerates every interface it sees and would happily try to run
   # DHCP on the tailscale tun device. Entries are matched as prefixes, so
-  # "tailscale" covers tailscale0. The rest of the list is the NixOS default,
-  # which defining this option at all would otherwise discard.
-  services.connman.networkInterfaceBlacklist = [
-    "vmnet"
-    "vboxnet"
-    "virbr"
-    "ifb"
-    "ve"
-    "tailscale"
-  ];
+  # "tailscale" covers tailscale0. Appended to the option's default, which
+  # any definition here would otherwise replace.
+  services.connman.networkInterfaceBlacklist =
+    options.services.connman.networkInterfaceBlacklist.default
+    ++ [ "tailscale" ];
 }

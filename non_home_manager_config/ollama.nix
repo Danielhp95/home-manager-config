@@ -2,7 +2,6 @@
 {
   pkgs,
   config,
-  inputs,
   ...
 }:
 {
@@ -16,8 +15,11 @@
       # the 64k window below. Needs flash attention to be on.
       OLLAMA_FLASH_ATTENTION = "1";
       OLLAMA_KV_CACHE_TYPE = "q8_0";
-      # Keep the whole 24GB budget for one model/request at a time instead of
-      # splitting VRAM across concurrent loads or parallel request slots.
+      # Up to two models resident at once (the IRIS model next to a bigger
+      # one) and two request slots per model. Every slot reserves its own
+      # context window, so a model's KV cache doubles: qwen3-coder:30b at 64k
+      # then needs ~24.4 GiB, spills ~1.7 GiB of experts to CPU and evicts
+      # the IRIS model.
       OLLAMA_MAX_LOADED_MODELS = "2";
       OLLAMA_NUM_PARALLEL = "2";
       OLLAMA_LOAD_TIMEOUT = "15m";
@@ -26,7 +28,8 @@
       # measured 119.5 vs 119.6 tok/s, 21385 MiB resident with ~3GB still
       # spare. 128k also fits and fully offloads, but costs ~27% of generation
       # speed (87 tok/s) — worth passing num_ctx explicitly for, not worth
-      # making the default.
+      # making the default. (Measured with a single request slot; see
+      # OLLAMA_NUM_PARALLEL above.)
       OLLAMA_CONTEXT_LENGTH = "65536";
     };
     loadModels = [
@@ -72,44 +75,5 @@
         http://127.0.0.1:${toString config.services.ollama.port}/api/create \
         -d '{"model":"iris-qwen3-4b","from":"qwen3:4b-instruct-2507-q4_K_M","parameters":{"num_ctx":4096},"stream":false}'
     '';
-  };
-
-  services.open-webui = {
-    enable = true;
-    host = "0.0.0.0";
-    # options: https://docs.openwebui.com/getting-started/advanced-topics/env-configuration
-    environment = {
-      OLLAMA_BASE_URL = "http://127.0.0.1:${toString config.services.ollama.port}";
-      # Qwen3's chat template already supports tool calling; this just wires
-      # up a "web search" tool the model can invoke, backed by the local
-      # SearXNG instance below (loopback-only, never leaves the box).
-      ENABLE_RAG_WEB_SEARCH = "True";
-      RAG_WEB_SEARCH_ENGINE = "searxng";
-      SEARXNG_QUERY_URL = "http://127.0.0.1:${toString config.services.searx.settings.server.port}/search?q=<query>";
-      RAG_WEB_SEARCH_RESULT_COUNT = "5";
-      RAG_WEB_SEARCH_CONCURRENT_REQUESTS = "10";
-    };
-  };
-
-  # Local meta-search backend for open-webui's web-search tool. Loopback-only
-  # (no openFirewall, no nginx) since only open-webui on the same host talks
-  # to it.
-  services.searx = {
-    enable = true;
-    settings = {
-      server = {
-        port = 8888;
-        bind_address = "127.0.0.1";
-        # Not sensitive: only signs CSRF-style tokens for a service that
-        # never leaves loopback and has no accounts of its own.
-        secret_key = "f02884e092fa373713e6278b768dda51f40715527abb7d1274f0b603fbae5b37";
-      };
-      # json is required for open-webui to consume results via the API;
-      # html is kept so `searx` is still browsable directly for debugging.
-      search.formats = [
-        "html"
-        "json"
-      ];
-    };
   };
 }

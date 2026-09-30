@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ pkgs, ... }:
 {
   # Per-device output EQ, as WirePlumber-managed filter-chain sinks.
   imports = [ ./pipewire-eq.nix ];
@@ -19,7 +19,6 @@
     alsa.enable = true;
     alsa.support32Bit = true;
 
-    wireplumber.enable = true;
     pulse.enable = true;
     jack.enable = true;
   };

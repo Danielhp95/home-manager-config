@@ -1,4 +1,4 @@
-{pkgs, lib, ...}:
+{ pkgs, ... }:
 {
   # systemPackages, not defaultPackages: the latter is the NixOS default set
   # (perl/rsync/strace) and assigning to it removes those from the system.
@@ -76,11 +76,4 @@
   # it isn't true. A `networking.useDHCP = lib.mkDefault true;` line survives the
   # build (the module's plain `false` outranks mkDefault) but is dead config that
   # would break evaluation the moment the mkDefault were dropped.
-
-  # Open ports in the firewall.
-  networking.firewall.allowedUDPPorts = [ 53317 ];  # for localsend discovery (multicast)
-  networking.firewall.allowedTCPPorts = [ 53317 ];  # for localsend transfer (HTTPS upload)
-
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 }

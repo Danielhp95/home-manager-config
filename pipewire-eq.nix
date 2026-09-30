@@ -1,5 +1,4 @@
 {
-  inputs,
   pkgs,
   lib,
   ...
@@ -606,7 +605,7 @@ let
     ];
   };
 
-  # ThinkPad T16g Gen 3 digital mic, for calls and voxtype dictation. RNNoise
+  # ThinkPad T16g Gen 3 digital mic, for calls and dictation. RNNoise
   # first (its model expects the raw signal), then a high-pass for desk rumble
   # and fan hum, less mud, a presence lift for intelligibility, a gentle
   # compressor to even out distance from the mic, and a safety limiter. No
@@ -670,7 +669,7 @@ in
     # is restarted. Every chain unload hit it, i.e. every headset disconnect.
     # 0.5.14 has no client context. Unpin once a release after 0.5.17 fixes
     # wp_impl_module_unload().
-    package = inputs.stable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.wireplumber;
+    package = pkgs.stable.wireplumber;
     extraLv2Packages = [
       pkgs.lsp-plugins
       pkgs.calf

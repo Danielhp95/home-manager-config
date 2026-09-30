@@ -5,15 +5,18 @@
 # GRUB re-renders it below with the real game font, so the label, the menu
 # entries and the countdown all share the same typeface.
 #
-# background.png is authored at 1920x1200 (the 1920x1080 screenshot with
-# 60px black bars top/bottom to match the laptop panel's 16:10 aspect).
-# All coordinates are percentages so other modes of the same aspect line up.
-# Dialogue box interior on that canvas: x 116-1787, y 700-1114.
+# background.png is 1920x1200 (the 1920x1080 screenshot with 60px black bars
+# top/bottom to match the laptop panel's 16:10 aspect); GRUB stretches it to
+# the screen. All coordinates are percentages, so the layout follows it. The
+# fonts, row heights and the heart are fixed pixel sizes, authored for the
+# panel's native 3840x2400, the mode the firmware gives GRUB.
+# Dialogue box interior on the 1920x1200 canvas: x 116-1787, y 700-1114
+# (x 232-3574, y 1400-2228 at 3840x2400).
 
 desktop-image: "background.png"
 desktop-color: "#000000"
 title-text: ""
-terminal-font: "Determination Mono Web Regular 36"
+terminal-font: "Determination Mono Web Regular 72"
 
 # After choosing an entry (or pressing Esc/c) GRUB swaps the menu for its
 # gfxterm terminal. Without these, the terminal defaults to a smaller
@@ -32,30 +35,31 @@ terminal-border: "0"
     width = 84%
     align = "left"
     color = "#ffffff"
-    font = "Determination Mono Web Regular 76"
+    font = "Determination Mono Web Regular 152"
     text = "* Despite everything, it's still you."
 }
 
 # Boot entries as dialogue choices: white text, Undertale-yellow selection,
 # and the SOUL heart as the selection cursor. The heart lives in the west
-# slice of the selected-item pixmap (select_w.png, 48x56 — width must equal
-# icon_width and height must equal item_height so it renders 1:1); the icon
-# column reserves that space on every row so text never overlaps it.
+# slice of the selected-item pixmap (select_w.png, 96x112: the 48x56 source
+# upscaled 2x at build time; width must equal icon_width and height must
+# equal item_height so it renders 1:1); the icon column reserves that space
+# on every row so text never overlaps it.
 + boot_menu {
     left = 8%
     top = 67%
     width = 84%
     height = 20%
-    item_font = "Determination Mono Web Regular 52"
+    item_font = "Determination Mono Web Regular 104"
     item_color = "#ffffff"
     selected_item_color = "#ffff00"
     selected_item_pixmap_style = "select_*.png"
-    item_height = 56
-    item_spacing = 4
+    item_height = 112
+    item_spacing = 8
     item_padding = 0
-    icon_width = 48
-    icon_height = 48
-    item_icon_space = 8
+    icon_width = 96
+    icon_height = 96
+    item_icon_space = 16
     scrollbar = false
 }
 
@@ -65,6 +69,6 @@ terminal-border: "0"
     left = 8%
     top = 89%
     color = "#ffffff"
-    font = "Determination Mono Web Regular 36"
+    font = "Determination Mono Web Regular 72"
     text = "* (It boots by itself in %d seconds.)"
 }

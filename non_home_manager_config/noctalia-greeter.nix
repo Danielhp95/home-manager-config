@@ -35,8 +35,19 @@ let
   # restarts it if it dies non-cleanly. It is called by name because Hyprland
   # comes from home-manager (hyprland/default.nix), not the system profile.
   # stdout/stderr go to the journal under the `hyprland` identifier.
+  #
+  # Before that, the user's home.sessionVariables (hm-session-vars.sh, in the
+  # per-user profile under useUserPackages) are sourced, so they reach
+  # Hyprland and, through its dbus-update-activation-environment hook, every
+  # systemd user service. Sourced after the exports above: where both set a
+  # variable, the Home Manager value wins.
   startHyprland = pkgs.writeShellScript "start-hyprland-session" ''
     ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=${lib.escapeShellArg v}") sessionEnv)}
+    hm_vars="/etc/profiles/per-user/''${USER:-$(${pkgs.coreutils}/bin/id -un)}/etc/profile.d/hm-session-vars.sh"
+    if [ -r "$hm_vars" ]; then
+      # shellcheck source=/dev/null
+      . "$hm_vars"
+    fi
     exec systemd-cat --identifier=hyprland start-hyprland "$@"
   '';
 

@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   inputs,
@@ -8,6 +9,7 @@
 {
   imports = [
     inputs.home-manager.nixosModules.default
+    ../claude_code/managed-settings.nix
     ../pipewire.nix
     ./network.nix
     ./tailscale.nix
@@ -16,7 +18,6 @@
     ./esp-check.nix
     ./grub-generation-label.nix
     ./fonts.nix
-    ./voxtype.nix
   ];
 
   nixpkgs.config.allowUnfree = true;
@@ -38,6 +39,11 @@
         inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
         # Without mbrola: its voices are ~645 MB and nothing here uses them.
         espeak-ng = prev.espeak-ng.override { mbrolaSupport = false; };
+        # The release branch, for packages pinned to it (pkgs.stable.<name>).
+        stable = import inputs.stable {
+          inherit (final.stdenv.hostPlatform) system;
+          config.allowUnfree = true;
+        };
       }
     )
   ];
@@ -60,13 +66,19 @@
   # module adds the setcap'd gsr-kms-server wrapper it needs for KMS capture.
   programs.gpu-screen-recorder.enable = true;
 
-  # Move to gaming folder
-  programs.gamescope = {
-    enable = true;
-    capSysNice = true;
-  };
   programs.steam.enable = true;
-  programs.steam.gamescopeSession.enable = true;
+
+  # Nautilus' "Open in Terminal" context entry, opening kitty.
+  programs.nautilus-open-any-terminal = {
+    enable = true;
+    terminal = "kitty";
+  };
+
+  # Installs LocalSend and opens its port (53317, TCP + UDP) for receiving.
+  programs.localsend = {
+    enable = true;
+    openFirewall = true;
+  };
 
   # Authenticator manager
   security.polkit.enable = true;
@@ -124,9 +136,9 @@
       # `nix.gc.options = "--delete-older-than 30d"`: a blanket `-d`/
       # `--delete-old` is what stripped the running kernel's modules out from
       # under it after a rebuild silently failed to reach the ESP.
-      # `--keep 10` must stay >= boot.loader.grub.configurationLimit (10, in
-      # hardwares/*.nix): GC must never delete a generation GRUB still lists.
-      extraArgs = "--keep-since 3d --keep 10";
+      # `--keep` never drops below boot.loader.grub.configurationLimit (the
+      # hardware file): GC must never delete a generation GRUB still lists.
+      extraArgs = "--keep-since 3d --keep ${toString (lib.max 10 config.boot.loader.grub.configurationLimit)}";
     };
   };
 
@@ -135,19 +147,6 @@
   # the matching kernel straight from the store after a wrong-kernel boot),
   # so it is pinned here rather than left to an upstream default.
   boot.kexec.enable = true;
-
-  # gcr provides the D-Bus prompter that gnome-keyring and gcr-ssh-agent use
-  # for unlock/PIN dialogs; without it keyring prompts silently fail.
-  #
-  # Explicitly gcr_3, not gcr_4: nixpkgs removed the unversioned `gcr` alias
-  # (it now throws, demanding an explicit ABI), and the two are not
-  # interchangeable for this purpose. gcr_3 is what ships
-  # org.gnome.keyring.SystemPrompter.service and PrivatePrompter.service;
-  # gcr_4 ships no D-Bus service files at all, so naming it here would leave
-  # this line syntactically fine and functionally empty — the silent failure
-  # above, back again. gcr_3 is also the ABI gnome-keyring itself links
-  # (gcr-3.41.2), so the prompter matches its consumer.
-  services.dbus.packages = [ pkgs.gcr_3 ];
 
   # Compressed in-RAM swap. The machine had no swap at all: systemd-oomd
   # degraded to pressure-only mode and nix-daemon died with SIGABRT during
@@ -196,25 +195,6 @@
       USB_AUTOSUSPEND = 1;
     };
   };
-  # Intel thermal management: keeps the CPU in efficient thermal envelopes.
-  services.thermald.enable = true;
-
-  # Let the tlp-mode bar widget force/unforce battery mode without a password.
-  security.sudo.extraRules = [
-    {
-      users = [ "dani" ];
-      commands = [
-        {
-          command = "/run/current-system/sw/bin/tlp";
-          options = [ "NOPASSWD" ];
-        }
-        {
-          command = "/run/current-system/sw/bin/tlp-stat";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-    }
-  ];
 
   services.upower = {
     enable = true;
@@ -228,54 +208,8 @@
     criticalPowerAction = "PowerOff";
   };
 
-  # To get PS5 controller working in proton
-  services.udev.packages = [
-    (pkgs.writeTextFile {
-      name = "70-ps5-controller.rules";
-      text = ''
-        KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", MODE="0660", TAG+="uaccess"
-        KERNEL=="hidraw*", KERNELS=="*054C:0CE6*", MODE="0660", TAG+="uaccess"
-      '';
-      destination = "/etc/udev/rules.d/70-ps5-controller.rules";
-    })
-  ];
-
   programs.dconf.enable = true;
   programs.nix-ld.enable = true;
-
-  # Enables docker
-  # From https://nixos.wiki/wiki/Nvidia
-  # Warning keeps telling me to:
-  virtualisation.docker = {
-    enable = true;
-    # Socket activation instead of boot start: docker.service and the CDI
-    # generator below were ~4.8s of the chain greetd waits behind. The first
-    # `docker` command after boot pays that cost instead.
-    enableOnBoot = false;
-    daemon.settings = {
-      features.cdi = true;
-      # Clean up on restart
-      live-restore = false; # Don't try to restore containers on restart
-    };
-    # Auto-prune old containers. Deliberately NOT "--all": that flag removes
-    # every *unused* image and stopped container, not just dangling ones —
-    # silently, on a timer. Same failure shape as the kernel-module GC bug
-    # (kernel-bootloader-drift memory): automated cleanup deleting something
-    # you meant to keep. Plain prune only touches dangling layers/containers.
-    autoPrune = {
-      enable = true;
-      dates = "weekly";
-    };
-  };
-  hardware.nvidia-container-toolkit.enable = true;
-  # The CDI generator probes the dGPU (waking it from D3cold) and sat on the
-  # boot critical chain via multi-user.target. Tie it to docker's actual
-  # start instead: it still always runs before dockerd needs the CDI spec.
-  systemd.services.nvidia-container-toolkit-cdi-generator = {
-    wantedBy = lib.mkForce [ ];
-    requiredBy = [ "docker.service" ];
-    before = [ "docker.service" ];
-  };
 
   xdg.portal = {
     enable = true; # home-manager's portal module asserts on the pathsToLink this sets
@@ -286,36 +220,12 @@
     ];
   };
 
-  # kitty.conf's color0-15, so the LUKS prompt and ttys are Ember.
+  # The terminals' ANSI 0-15, so the LUKS prompt and ttys are Ember.
   # Set via kernel params: takes effect on the next boot.
-  console.colors =
-    let
-      c = import ../palette.nix;
-    in
-    [
-      c.bg
-      c.accent
-      c.olive
-      c.gold
-      c.steel
-      c.mauve
-      c.sage
-      c.fg
-      c.muted
-      c.accentBright
-      c.oliveBright
-      c.goldBright
-      c.steelBright
-      c.mauveBright
-      c.sageBright
-      "ffffff"
-    ];
+  console.colors = (import ../palette.nix).ansi;
 
   # Set your time zone.
-  # services.automatic-timezoned.enable = true;
-  # For manual timezones
   time.timeZone = "America/New_York";
-  # time.timeZone = "Europe/Madrid";
 
   # From https://wiki.nixos.org/wiki/Locales
   i18n = {
@@ -344,7 +254,8 @@
   # lifecycle goes through home-manager's own systemd integration instead
   # (wayland.windowManager.hyprland.systemd, hyprland/default.nix):
   #
-  #   greeter session script (exports fcitx/wayland env)
+  #   greeter session script (exports fcitx/wayland env, then sources
+  #   home.sessionVariables from hm-session-vars.sh)
   #     -> start-hyprland execs Hyprland, restarts it if it dies non-cleanly
   #     -> hyprland.start hook: dbus-update-activation-environment --systemd
   #        --all, then stop/start hyprland-session.target
@@ -366,10 +277,8 @@
   # Services a GNOME desktop would normally enable
   services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
   services.udisks2.enable = true; # yazi mount menu
-  services.gnome.evolution-data-server.enable = true; # gnome-calendar storage daemons (no mail client pulled in)
-  services.gnome.gnome-online-accounts.enable = true; # online calendars
-  services.gnome.gnome-keyring.enable = true; # GOA/EDS secrets; unlocked at login via greetd's PAM stack (substacks login)
-  services.gnome.glib-networking.enable = true; # TLS for libsoup: map tiles, OAuth, https calendars
+  services.gnome.gnome-keyring.enable = true; # Secret Service for apps; unlocked at login via greetd's PAM stack (substacks login)
+  services.gnome.glib-networking.enable = true; # TLS for libsoup (GNOME apps such as gnome-weather)
   services.geoclue2.enable = true; # maps/weather location; demo agent replaces gnome-shell's
   services.gnome.at-spi2-core.enable = true; # a11y bus; silences GTK warnings
 
@@ -392,14 +301,6 @@
     "/share/zsh"
   ]; # Make sure that home-manager installed `zsh` picks up system installed programs
 
-  # Commented out because we are not using X
-  # Configure keymap in X11
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
   programs.zsh.enable = true;
   # Home-manager runs compinit with the full fpath (plugins included); running
   # it here too makes the two fight over ~/.config/zsh/.zcompdump, rebuilding
@@ -410,18 +311,10 @@
     isNormalUser = true;
     extraGroups = [
       "wheel"
-      "docker"
       "ydotool" # access to the ydotoold socket (keyboard-driven scrolling)
-      "adbusers" # USB debugging (dart-android phone installs)
     ]; # group "wheel" -> sudo access
-    packages = [ ];
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
-
-  # Copy the NixOS configuration file and link it from the resulting system
-  # (/run/current-system/configuration.nix). This is useful in case you
-  # accidentally delete configuration.nix.
-  # system.copySystemConfiguration = true;
 
   # system.stateVersion is per machine: it lives in the hardware file
   # (hardwares/lenovo_t16g_gen3.nix).

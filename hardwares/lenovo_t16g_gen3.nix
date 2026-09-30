@@ -95,11 +95,11 @@ in
     kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [ "kvm-intel" ];
 
-    # fell-omen blacklists spd5118 (the DDR5 SPD temperature sensor): on that
-    # board the chip stopped answering on the SMBus after suspend, flooding
-    # resume with -ENXIO and sometimes wedging it. Suspend/resume here first;
-    # copy it only if `journalctl -b -k | grep spd5118` shows the same thing.
-    # blacklistedKernelModules = [ "spd5118" ];
+    # spd5118 (the DDR5 SPD temperature sensors) stops answering on the SMBus
+    # across s2idle: every resume logs "spd5118_resume returns -6 ... failed
+    # to resume async" (3 of 3 on 2026-09-29). Costs only the DIMM
+    # temperature readout.
+    blacklistedKernelModules = [ "spd5118" ];
 
     kernelParams = [
       "quiet"
@@ -141,7 +141,7 @@ in
         # verifies (/boot/kernels/<store-name>) never depends on detection.
         copyKernels = true;
         useOSProber = false;
-        # Must stay <= programs.nh.clean's `--keep N` (configuration.nix).
+        # programs.nh.clean's `--keep` is derived from this (configuration.nix).
         # Sized for the installer's 1 GB ESP: a generation with its own kernel
         # costs ~116 MB there (14 MB kernel + a 51 MB initrd each for the
         # default and roadwarrior, whose initrd differs), so 6 stays under
@@ -156,36 +156,13 @@ in
         theme = pkgs.callPackage ../grub_theme { };
         splashImage = "${config.boot.loader.grub.theme}/background-selected.png";
         splashMode = "stretch";
-        # The theme is authored at 1920x1200, exactly half this panel on each
-        # axis. Its layout is in percentages but its fonts and heart cursor
-        # are fixed pixel sizes, so at native 3840x2400 they draw at half
-        # scale. "auto" is the fallback if the firmware's GOP doesn't list
-        # 1920x1200 (`videoinfo` at the GRUB prompt shows what it offers).
-        gfxmodeEfi = "1920x1200,auto";
-
-        # fell-omen's Ubuntu chainload entry isn't carried: that install lives
-        # on fell-omen's disk. If Windows 11 is kept on this one, chainload its
-        # boot manager from the shared ESP:
-        # extraEntries = ''
-        #   menuentry "Windows 11" {
-        #     insmod part_gpt
-        #     insmod fat
-        #     search --set=root --fs-uuid ${espUuid}
-        #     chainloader /EFI/Microsoft/Boot/bootmgfw.efi
-        #   }
-        # '';
+        # gfxmodeEfi stays at its default, "auto": the firmware's GOP offers
+        # no 1920x1200, so GRUB runs at the panel's native 3840x2400 (the
+        # kernel inherits that mode through gfxpayload=keep). The theme's
+        # fixed pixel sizes (fonts, rows, heart) are authored for it.
       };
     };
   };
-
-  # Kernels >= 6.8 already pick a 16x32 console font on high-res panels (why
-  # nixos-hardware's common-hidpi is a no-op here), but on 3840x2400 that is
-  # half the size fell-omen's TTY and LUKS prompt render at today.
-  # Spleen's 32x64 restores the same 120x37 grid:
-  # console = {
-  #   earlySetup = true;
-  #   font = "${pkgs.spleen}/share/consolefonts/spleen-32x64.psfu";
-  # };
 
   # The stock installer layout, not fell-omen's btrfs one: an ESP, one LUKS
   # partition holding a plain ext4 root (/home included), and a LUKS swap
@@ -234,7 +211,7 @@ in
     # WirePlumber doesn't open it either. Trade-off: the HDMI port (and the
     # USB-C/DP ports wired to the dGPU) then carry video only; drop this rule
     # to get monitor audio there.
-    pipewire.wireplumber.extraConfig."51-hide-dgpu-audio"."monitor.alsa.rules" = [
+    pipewire.wireplumber.extraConfig."51-hide-hdmi-sinks"."monitor.alsa.rules" = [
       {
         matches = [ { "device.name" = "alsa_card.pci-0000_01_00.1"; } ];
         actions.update-props."device.disabled" = true;
@@ -248,12 +225,6 @@ in
       }
     ];
   };
-
-  # hyprland.lua checks for this file to also open the NVIDIA card for
-  # scanout (Intel stays the render GPU), so outputs wired to the dGPU (HDMI,
-  # some USB-C/DP ports) work. Costs ~8W: the dGPU never runtime-suspends
-  # while Hyprland holds it open. The Roadwarrior boot entry removes it.
-  environment.etc."hypr-dgpu-hdmi".text = "";
 
   security.pam.services = {
     # A fingerprint login can't unlock gnome-keyring (pam_gnome_keyring needs
@@ -270,7 +241,6 @@ in
   hardware = {
     enableAllFirmware = true; # Enable firmware that is not free
     cpu.intel.npu.enable = true;
-    cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     graphics = {
       enable = true;
       # intel-media-driver (iHD, 64- and 32-bit), intel-compute-runtime and
