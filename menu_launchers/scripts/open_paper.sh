@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
-# Pick a paper out of ~/papers and open it in zathura. Bound to Super+Shift+P
-# (hyprland/hyprland.lua).
+# Pick a paper out of ~/papers and open it in zathura. Packaged as
+# `open-paper` by ../default.nix (writeShellApplication supplies the shebang,
+# strict mode and PATH).
 PAPERS_LOCATION=~/papers
 
 # vicinae's dmenu quick-look only renders real content for image/* and text
@@ -9,7 +9,7 @@ PAPERS_LOCATION=~/papers
 # a generic file-type icon. So instead of feeding PDF paths directly, render
 # each one's first page to a cached PNG and feed *that*: the preview panel
 # then shows real page content, and the selection is mapped back to the
-# source PDF below. Needs poppler-utils (pdftoppm), added in home.nix.
+# source PDF below. pdftoppm comes from poppler-utils (runtimeInputs).
 THUMB_DIR=~/.cache/paper-thumbnails
 mkdir -p "$THUMB_DIR"
 
@@ -23,7 +23,7 @@ while IFS= read -r -d '' pdf; do
 
 	# Regenerate only if missing or the source PDF changed since.
 	if [ ! -e "$thumb" ] || [ "$pdf" -nt "$thumb" ]; then
-		pdftoppm -f 1 -l 1 -png -singlefile -scale-to 1000 "$pdf" "$THUMB_DIR/$base" 2>/dev/null
+		pdftoppm -f 1 -l 1 -png -singlefile -scale-to 1000 "$pdf" "$THUMB_DIR/$base" 2>/dev/null || true
 	fi
 
 	if [ -e "$thumb" ]; then
@@ -44,7 +44,9 @@ done < <(find "$PAPERS_LOCATION" -maxdepth 1 -type f -name '*.pdf' -print0)
 # vicinae does not clamp a wider request to the monitor, it just overflows.
 choice=$(printf '%s\n' "${entries[@]}" | vicinae dmenu -p "Choose paper" -W 1850)
 
-# Guard on the selection, not on $?: the pipeline's status is printf's, which
-# is always 0, and vicinae exits 0 when dismissed without a choice as well
-# (verified). Either way, cancelling would run zathura on ~/papers itself.
-[ -n "$choice" ] && exec zathura "${thumb_to_pdf[$choice]:-$choice}"
+# Guard on the selection, not on the exit status: vicinae exits 0 when
+# dismissed without a choice as well (verified), and an empty choice would run
+# zathura on ~/papers itself.
+if [ -n "$choice" ]; then
+	exec zathura "${thumb_to_pdf[$choice]:-$choice}"
+fi

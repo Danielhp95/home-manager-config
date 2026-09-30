@@ -9,8 +9,8 @@
        loses the outline to antialiasing on the coral plate. 0.7 is the point
        where both states still hold. -->
   <path d="M 0.9 1.8 L 5.2 6 L 0.9 10.2 Z"
-        fill="#e08060"
-        stroke="#141312"
+        fill="@accent@"
+        stroke="@bgDeep@"
         stroke-width="0.7"
         stroke-linejoin="round"/>
 </svg>

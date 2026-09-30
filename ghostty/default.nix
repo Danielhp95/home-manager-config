@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 
 # Ghostty configuration — a faithful equivalent of kitty/kitty.conf.
 # Validated against ghostty 1.3.1 with `ghostty +validate-config`.
@@ -14,6 +14,9 @@
 # NOTE ON ICONS: unlike kitty, ghostty bundles a Nerd Font fallback, so kitty's
 # `symbol_map` blocks are unnecessary here and intentionally omitted.
 
+let
+  p = (import ../palette.nix).hash;
+in
 {
   programs.ghostty = {
     enable = true;
@@ -24,33 +27,15 @@
       # kitty `adjust_line_height 117%`; ghostty adds on top of base → 17% = 117%.
       adjust-cell-height = "17%";
 
-      # ── Colors: EMBER theme (ported from kitty.conf) ────────────────────────
-      background = "#1c1b19";
-      foreground = "#d8d0c0";
-      # palette.nix `border`; the old #3c3b39 matched no palette attribute.
-      selection-background = "#3a342d";
-      selection-foreground = "#d8d0c0";
-      cursor-color = "#e08060";
-      cursor-text = "#1c1b19";
+      # ── Colors: EMBER theme, from ../palette.nix (same slots as kitty) ──────
+      background = p.bg;
+      foreground = p.fg;
+      selection-background = p.border;
+      selection-foreground = p.fg;
+      cursor-color = p.accent;
+      cursor-text = p.bg;
       # 16 ANSI colors (kitty color0–color15). ghostty `palette = N=#hex`.
-      palette = [
-        "0=#1c1b19" # black
-        "8=#6e6a66"
-        "1=#e08060" # red (coral)
-        "9=#ff8f66"
-        "2=#8a9868" # green (olive)
-        "10=#acc66d"
-        "3=#c8b468" # yellow (gold)
-        "11=#e3cc75"
-        "4=#ef7f38" # blue (palette.nix steel — magma orange since 2026-08)
-        "12=#fb9c5f"
-        "5=#988090" # magenta (mauve)
-        "13=#c586b0"
-        "6=#7aa88a" # cyan (sage)
-        "14=#84d19f"
-        "7=#d8d0c0" # white
-        "15=#ffffff"
-      ];
+      palette = lib.imap0 (i: c: "${toString i}=${c}") p.ansi;
 
       # ── Cursor ──────────────────────────────────────────────────────────────
       cursor-style = "block";

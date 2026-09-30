@@ -4,9 +4,9 @@
 # toolkit apps and apps that theme themselves (terminals, firefox, spotify,
 # element, the greeter, the lock screen) read as one system.
 #
-# Already-existing consumers that predate this file and still carry their own
-# copies of these values: kitty/kitty.conf, ghostty/default.nix,
-# hyprland/hyprland.lua, menu_launchers (vicinae).
+# Consumers that can't import this file and carry their own copies of these
+# values: hyprland/hyprland.lua (read verbatim) and
+# kitty/shaders/ember-blaze.pipeline (linear RGB).
 #
 # danvim/lua/danvim/palette.lua is a hand-kept mirror by necessity rather than
 # by history: danvim is a standalone flake whose luaPath is its own directory,
@@ -14,7 +14,8 @@
 # ones below exactly.
 #
 # Attributes are bare hex (no leading '#'); `hash` holds the same set prefixed
-# with '#' for config formats that require it. `light` holds the light-mode
+# with '#' for config formats that require it. `ansi` is the 16-colour
+# terminal palette built from them (see below). `light` holds the light-mode
 # counterpart under the same attribute names (and its own `hash`) — see the
 # note above lightColors below.
 let
@@ -83,8 +84,9 @@ let
   # reached by going darker), and `accentDim`/`ash` stay decorative-only.
   #
   # Written for noctalia's light mode (noctalia/default.nix builds the Ember
-  # palette JSON from both halves); nothing else consumes it yet, so treat the
-  # ANSI tail as provisional — no terminal has been retuned against it.
+  # palette JSON from both halves) and also used by vicinae's light theme
+  # (menu_launchers/). No terminal uses it, so treat the ANSI tail as
+  # provisional — no terminal has been retuned against it.
   lightColors = {
     # Surfaces. Ordered the same way as the dark set: bgDeep is the sunken
     # end, divider the most prominent.
@@ -124,6 +126,28 @@ let
     sageBright = "27553c";
   };
 
-  withHash = c: c // { hash = builtins.mapAttrs (_: v: "#${v}") c; };
+  # ANSI 0-15 for the terminals (kitty, ghostty): black, red, green, yellow,
+  # blue, magenta, cyan, white, then the bright row. Dark palette only.
+  ansi = [
+    colors.bg
+    colors.accent
+    colors.olive
+    colors.gold
+    colors.steel
+    colors.mauve
+    colors.sage
+    colors.fg
+    colors.muted
+    colors.accentBright
+    colors.oliveBright
+    colors.goldBright
+    colors.steelBright
+    colors.mauveBright
+    colors.sageBright
+    "ffffff"
+  ];
+
+  hex = v: if builtins.isList v then map (x: "#${x}") v else "#${v}";
+  withHash = c: c // { hash = builtins.mapAttrs (_: hex) c; };
 in
-withHash colors // { light = withHash lightColors; }
+withHash (colors // { inherit ansi; }) // { light = withHash lightColors; }

@@ -7,48 +7,52 @@
 # nothing can be changed via fcitx5-configtool without porting it back here.
 # The `settings` below are the former user-level files transcribed verbatim
 # (config -> globalOptions, profile -> inputMethod, conf/*.conf -> addons).
-# Mutable runtime data (pinyin user dict, rime data) lives in ~/.local/share
-# and is unaffected.
+# Mutable runtime data (the pinyin user dict) lives in ~/.local/share and is
+# unaffected.
 { pkgs, ... }:
 
 let
-  # The Ember skin (./ember). It is installed twice on purpose:
+  # The Ember skin (./ember), linked into ~/.local/share/fcitx5/themes/Ember
+  # below. That one copy reaches both renderers of the candidate window:
   #
-  #  * `addons` below bakes it into the fcitx5 wrapper, which is where the
-  #    daemon's own classicui finds it. That covers every text-input-v3
-  #    client (kitty, ghostty, anything without an IM-module env var).
-  #  * `home.packages` puts the same package on the user profile, i.e. on
-  #    every *application's* XDG_DATA_DIRS. That is needed because the
-  #    fcitx5-gtk and fcitx5-qt IM plugins (Firefox, Telegram: anything that
-  #    honours GTK_IM_MODULE/QT_IM_MODULE=fcitx from the greeter's session
-  #    script, non_home_manager_config/noctalia-greeter.nix) do not let
-  #    the daemon draw the candidate window on Wayland. They advertise a
-  #    "client side input panel", draw the popup inside the app, read Theme=
-  #    from ~/.config/fcitx5/conf/classicui.conf and then look that theme up
-  #    in the app's own data dirs, silently falling back to fcitx5's stock
-  #    white "default" skin when it is not there. The wrapper's share/ is
-  #    private to the daemon, so without this second copy the terminal shows
-  #    Ember while Firefox and Telegram show the white default.
-  ember = import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg; };
+  #  * the daemon's own classicui, for every text-input-v3 client (kitty,
+  #    ghostty, anything without an IM-module env var);
+  #  * the fcitx5-gtk and fcitx5-qt IM plugins (Firefox, Telegram: anything
+  #    that honours GTK_IM_MODULE/QT_IM_MODULE=fcitx from the greeter's
+  #    session script, non_home_manager_config/noctalia-greeter.nix). On
+  #    Wayland they advertise a "client side input panel", draw the popup
+  #    inside the app, read Theme= from ~/.config/fcitx5/conf/classicui.conf
+  #    and look that theme up in the app's own data dirs, silently falling
+  #    back to fcitx5's stock white "default" skin when it is not there.
+  #
+  # XDG_DATA_HOME is searched by both. The wrapper's share/ is private to the
+  # daemon, and home.packages doesn't help either: the per-user profile only
+  # links NixOS's environment.pathsToLink, which has no /share/fcitx5.
+  ember = import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg replaceVars; };
   ui = (import ../fonts.nix).ui;
 in
 {
-  home.packages = [ ember ];
+  xdg.dataFile."fcitx5/themes/Ember".source = "${ember}/share/fcitx5/themes/Ember";
+
+  # fcitx5-daemon.service (from i18n.inputMethod below) starts fcitx5. The
+  # wrapper also ships an XDG autostart entry that systemd's generator turns
+  # into a second unit; the two race, and the loser exits on the taken D-Bus
+  # name. Hidden=true in the user's autostart dir masks the packaged entry.
+  xdg.configFile."autostart/org.fcitx.Fcitx5.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Fcitx 5
+    Hidden=true
+  '';
 
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
     fcitx5 = {
       waylandFrontend = true;
-      addons = with pkgs; [
-        rime-data
-        fcitx5-gtk # Does help with making fcitx5 work in QT apps
-        fcitx5-rime
-        qt6Packages.fcitx5-configtool
-        qt6Packages.fcitx5-chinese-addons
-        fcitx5-rose-pine
-        ember
-      ];
+      # fcitx5-gtk, both fcitx5-qt builds and fcitx5-configtool already come
+      # with qt6Packages.fcitx5-with-addons.
+      addons = [ pkgs.qt6Packages.fcitx5-chinese-addons ];
 
       settings = {
         # ~/.config/fcitx5/config

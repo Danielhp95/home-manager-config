@@ -4,7 +4,7 @@
      ~8px dot upstream's default theme draws in the same 24x24 box. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
   <circle cx="12" cy="12" r="4.3"
-          fill="#e08060"
-          stroke="#141312"
+          fill="@accent@"
+          stroke="@bgDeep@"
           stroke-width="1.6"/>
 </svg>

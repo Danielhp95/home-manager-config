@@ -39,9 +39,10 @@ let
   # Step the volume of every output at once (speakers + each paired headset),
   # so the bar's volume pill changes what is actually playing rather than only
   # the currently-default sink. An output is an eq_* filter chain or a
-  # hardware sink (one that carries a device.id). The hardware sink behind an
-  # EQ chain is hidden from clients (pipewire-eq.nix), so pw-dump never lists
-  # it and the step can't apply twice.
+  # hardware sink (one that carries a device.id). A hardware sink that an
+  # eq_*_out stream plays into is skipped, so the step can't apply twice even
+  # while pw-dump still lists it (pipewire-eq.nix's hide-parent normally hides
+  # it from clients).
   #
   # `volume-all-sinks 5%+` / `5%-` steps them; `volume-all-sinks mute` toggles
   # them as one group (mute all unless every one is already muted, then unmute
@@ -50,24 +51,37 @@ let
   # It goes on PATH (home.packages below) because the hyprland volume binds
   # call it by name too: hyprland.lua is read verbatim, so it cannot carry a
   # store path. Both the bar gesture and the keys run this one script.
-  volumeAllSinks = pkgs.writeShellScriptBin "volume-all-sinks" ''
-    wpctl=${pkgs.wireplumber}/bin/wpctl
-    ids=$(${pkgs.pipewire}/bin/pw-dump \
-      | ${pkgs.jq}/bin/jq -r '.[] | select(.info.props."media.class" == "Audio/Sink" and (.info.props."device.id" != null or (.info.props."node.name" | startswith("eq_")))) | .id')
-    case "$1" in
-      mute)
-        target=1
-        for id in $ids; do
-          "$wpctl" get-volume "$id" | grep -q MUTED || { target=1; break; }
-          target=0
-        done
-        for id in $ids; do "$wpctl" set-mute "$id" "$target"; done
-        ;;
-      *)
-        for id in $ids; do "$wpctl" set-volume -l 1.0 "$id" "$1"; done
-        ;;
-    esac
-  '';
+  volumeAllSinks = pkgs.writeShellApplication {
+    name = "volume-all-sinks";
+    runtimeInputs = [
+      pkgs.wireplumber
+      pkgs.pipewire
+      pkgs.jq
+    ];
+    text = ''
+      ids=$(pw-dump | jq -r '
+        [.[] | select((.info.props."node.name" // "") | test("^eq_.*_out$"))
+             | .info.props."target.object"] as $behindEq
+        | .[]
+        | select(.info.props."media.class" == "Audio/Sink")
+        | select(.info.props."device.id" != null or (.info.props."node.name" | startswith("eq_")))
+        | select(.info.props."node.name" | IN($behindEq[]) | not)
+        | .id')
+      case "$1" in
+        mute)
+          target=1
+          for id in $ids; do
+            [[ $(wpctl get-volume "$id") == *MUTED* ]] || { target=1; break; }
+            target=0
+          done
+          for id in $ids; do wpctl set-mute "$id" "$target" || true; done
+          ;;
+        *)
+          for id in $ids; do wpctl set-volume -l 1.0 "$id" "$1" || true; done
+          ;;
+      esac
+    '';
+  };
 
   # One half (dark or light) of a noctalia custom palette. The file format is
   # two of these under "dark"/"light": m* slots drive the whole shell, and the
@@ -80,7 +94,8 @@ let
   # ansiBlack/ansiWhite are passed in because they are the two ANSI slots whose
   # dark and light halves genuinely swap: "black" is the darkest colour in the
   # set and "white" the lightest, which is the background on dark and the
-  # foreground on light. The rest of the ANSI block mirrors kitty/kitty.conf.
+  # foreground on light. The rest of the ANSI block follows palette.nix's
+  # `ansi` (kitty, ghostty).
   emberHalf =
     {
       c,
@@ -133,66 +148,19 @@ let
         };
       };
     };
-
-  # Cycle TLP's power mode: auto (follows AC/battery) -> forced battery (low
-  # power) -> forced AC (performance) -> auto. TLP records a forced mode in
-  # /run/tlp/manual_mode; absence means auto. sudo is passwordless for tlp
-  # (see security.sudo.extraRules in configuration.nix).
-  tlp-mode = pkgs.writeShellScriptBin "tlp-mode" ''
-    manual=$(cat /run/tlp/manual_mode 2>/dev/null || true)
-    case "$manual" in
-      "")
-        sudo tlp bat >/dev/null
-        ${pkgs.libnotify}/bin/notify-send -a tlp-mode "Power mode" "Low power (forced battery)"
-        ;;
-      BAT|bat)
-        sudo tlp ac >/dev/null
-        ${pkgs.libnotify}/bin/notify-send -a tlp-mode "Power mode" "Performance (forced AC)"
-        ;;
-      *)
-        sudo tlp start >/dev/null
-        ${pkgs.libnotify}/bin/notify-send -a tlp-mode "Power mode" "Auto (follows power source)"
-        ;;
-    esac
-  '';
 in
 {
   home.packages = [
-    tlp-mode
     # Shared with the hyprland volume binds, see the definition above.
     volumeAllSinks
     # logcli for `dart logs` (the dart-plugin Logs button and terminal use).
-    # Until the switch lands, the plugin falls back to the sai FHS env's store
-    # path (see dart-plugin/panel.luau openLogs).
     pkgs.grafana-loki
 
     # jrohland/claudecode gates its service on `commandExists("jq")`. jq was
     # only ever reachable as an interpolated store path (hyprland/default.nix),
     # never on PATH, so the plugin would have silently reported no data.
     pkgs.jq
-
-    # rylos/tailnet resolves its default Taildrop directory with `xdg-user-dir
-    # DOWNLOAD`; without it the setting falls back to an unwritable path.
-    pkgs.xdg-user-dirs
   ];
-
-  # The Ember palette as a noctalia custom palette. Custom palettes are read
-  # from ~/.config/noctalia/palettes/<name>.json (the settings UI lists the
-  # directory; `theme.custom_palette` below selects by file stem) — note it is
-  # *palettes*, not the stale `colorschemes` directory an older version made.
-  # Generated from palette.nix so the shell can never drift from the terminals.
-  xdg.configFile."noctalia/palettes/Ember.json".text = builtins.toJSON {
-    dark = emberHalf {
-      c = p;
-      ansiBlack = p.hash.bg;
-      ansiWhite = p.hash.fg;
-    };
-    light = emberHalf {
-      c = p.light;
-      ansiBlack = p.light.hash.fg;
-      ansiWhite = p.light.hash.bg;
-    };
-  };
 
   # dart-plugin: noctalia v5 Luau plugin showing DART training runs in the bar
   # (dart logo + running count; panel with per-run cancel/suspend/resume/delete).
@@ -202,7 +170,7 @@ in
   # NOTE first switch: if `~/.local/share/noctalia/plugins/dart` already exists
   # from the pre-nix dev install, `rm` it first or activation fails.
   xdg.dataFile."noctalia/plugins/dart".source =
-    config.lib.file.mkOutOfStoreSymlink "/home/dani/nix_config/noctalia/dart-plugin";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix_config/noctalia/dart-plugin";
 
   # Avatar read by shell.avatar_path below. The login screen can't reach it
   # (home is 0700); it gets the same image through AccountsService in
@@ -220,8 +188,26 @@ in
     # Run noctalia as a systemd user service (restarts automatically on config changes)
     systemd.enable = true;
 
+    # The Ember palette as a noctalia custom palette, written to
+    # ~/.config/noctalia/palettes/Ember.json (the settings UI lists that
+    # directory; `theme.custom_palette` below selects by file stem); a change
+    # restarts noctalia. Generated from palette.nix so the shell can never
+    # drift from the terminals.
+    customPalettes.Ember = {
+      dark = emberHalf {
+        c = p;
+        ansiBlack = p.hash.bg;
+        ansiWhite = p.hash.fg;
+      };
+      light = emberHalf {
+        c = p.light;
+        ansiBlack = p.light.hash.fg;
+        ansiWhite = p.light.hash.bg;
+      };
+    };
+
     # Declarative defaults for noctalia v5 (written to ~/.config/noctalia/config.toml).
-    # Runtime tweaks via the settings UI still land in settings.json and win over these.
+    # Runtime tweaks via the settings UI still land in settings.toml and win over these.
     # Schema reference: example.toml in the noctalia repo.
     settings = {
       shell = {
@@ -257,29 +243,28 @@ in
         # matugen-style): the wallpaper rotates and the shell was the one
         # surface in the system not speaking the palette every other app does.
         # "custom" reads ~/.config/noctalia/palettes/Ember.json, written from
-        # palette.nix by the xdg.configFile above; it carries both halves, so
+        # palette.nix by customPalettes above; it carries both halves, so
         # the control-center dark_mode toggle has a real light theme to switch
         # to instead of an auto-derived one.
         source = "custom";
         custom_palette = "Ember";
-        # Propagate wallpaper colors to other apps' configs.
+        # Propagate the palette to other apps' configs.
         templates = {
           # No "cava": cava isn't installed, and its template's apply.sh
           # exits 1 on every palette apply ("cava config file not found").
-          builtin_ids = [
-            "hyprland"
-          ];
+          # No "hyprland": its apply.sh appends a require to hyprland.lua,
+          # a read-only store link, and fails on every start; hyprland.lua
+          # keeps its own Ember colours.
+          builtin_ids = [ ];
           community_ids = [ "telegram" ];
         };
       };
 
       # Used by nightlight sunset/sunrise scheduling (and weather widget).
-      location = {
-        address = "coruna";
-        auto_locate = true;
-      };
+      location.auto_locate = true;
 
-      nightlight.enabled = true;
+      # Off, as last chosen in the control center.
+      nightlight.enabled = false;
 
       weather = {
         enabled = true;
@@ -337,18 +322,6 @@ in
       # stalled offline. Update deliberately from the plugin manager instead.
       # The local dani/* plugins are out-of-store symlinks and unaffected.
       plugins.auto_update = "none";
-      plugins.source = [
-        {
-          name = "official";
-          kind = "git";
-          location = "https://github.com/noctalia-dev/official-plugins";
-        }
-        {
-          name = "community";
-          kind = "git";
-          location = "https://github.com/noctalia-dev/community-plugins";
-        }
-      ];
       # Plugins are opt-in per id even when present on disk. dani/dart is the
       # local dart run-manager plugin linked into ~/.local/share/noctalia/plugins
       # (see xdg.dataFile above). NB: `noctalia msg plugins enable/disable` and
@@ -366,12 +339,6 @@ in
         # before enabling. Same trap makes the whole community catalog vanish
         # from the list after a bare `git fetch` until catalog.toml is fetched.
 
-        # Tailscale status/control: peers, exit nodes, IP copy, Taildrop, and a
-        # launcher provider. Needs tailscale + ssh (system profile), gio and
-        # xdg-open (already present), and xdg-user-dirs (added to home.packages
-        # above for its Taildrop directory default).
-        "rylos/tailnet"
-
         # Claude Code subscription usage: rate limits, token burn, cost, daily
         # activity, per-model breakdown. Gates on jq and curl at runtime — jq was
         # NOT in any profile before this (only interpolated as a store path in
@@ -385,22 +352,12 @@ in
         # not used.
         "kenn/keybind-cheatsheet"
 
-        # Enabled through the GUI before this list existed, so it was only ever
-        # live via the settings.toml override. Recorded here so the nix list is
-        # the complete set. Overlaps jrohland/claudecode (usage telemetry);
-        # drop whichever earns less bar space.
-        "lowcache/claude-companion"
-
         # gpu-screen-recorder front end (official source). Deliberately no bar
         # widget: its headless service runs regardless, Super+Shift+R drives it
         # over IPC (hyprland.lua) and the control-center tile below mirrors it.
         # gpu-screen-recorder comes from programs.gpu-screen-recorder in
         # configuration.nix.
         "noctalia/screen_recorder"
-
-        # Active Hyprland submap (resize / move) as a bar chip; click resets.
-        # Event-driven off socket2 via socat, no polling.
-        "k4n4t4/hypr-submap"
       ];
 
       # Super+Shift+R leaves the saved recording on the clipboard as a file://
@@ -478,7 +435,6 @@ in
         center = [
           "privacy"
           "claudecode"
-          "hypr-submap"
           "workspaces"
           "dart"
         ];
@@ -615,21 +571,18 @@ in
         tray = {
           hide_passive = true;
           drawer = true;
+          # The list last saved from the settings GUI.
           pinned = [
+            "Fcitx"
+            "Slack_status_icon_1"
+            "Element_status_icon_1"
             "org.twosheds.iwgtk"
           ];
         };
 
-        # Hyprland submap chip (k4n4t4/hypr-submap), left of the workspaces.
-        # Hidden in the default map so it only shows while resize/move is on.
-        hypr-submap = {
-          type = "k4n4t4/hypr-submap:hypr-submap";
-          hide_when_default = true;
-        };
-
-        # Mic / camera / screen-share indicator: voxtype (mod+V), the screen
-        # recorder and xdph screencasts all capture without any other visible
-        # sign. Hidden while nothing is capturing.
+        # Mic / camera / screen-share indicator: the screen recorder and xdph
+        # screencasts capture without any other visible sign. Hidden while
+        # nothing is capturing.
         privacy = {
           hide_inactive = true;
         };

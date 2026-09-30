@@ -1,10 +1,40 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   palette = import ../palette.nix;
+  vicinae = config.programs.vicinae.package;
 
-  # Accents follow kitty.conf's ANSI mapping; steel (magma) is both blue and
-  # the palette's orange.
+  # The two dmenu-style pickers, on PATH by name (hyprland.lua binds them).
+  chooseBluetoothDevice = pkgs.writeShellApplication {
+    name = "choose-bluetooth-device";
+    runtimeInputs = [
+      pkgs.bluez
+      pkgs.gnused
+      pkgs.gawk
+      pkgs.libnotify
+      vicinae
+    ];
+    text = builtins.readFile ./scripts/choose_bluetooth_device_from_paired.sh;
+  };
+  openPaper = pkgs.writeShellApplication {
+    name = "open-paper";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.findutils
+      pkgs.poppler-utils
+      config.programs.zathura.package
+      vicinae
+    ];
+    text = builtins.readFile ./scripts/open_paper.sh;
+  };
+
+  # Theme-picker icon: a coral dot on the theme's background.
+  themeIcon =
+    c:
+    ''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${c.bg}"/><circle cx="32" cy="32" r="13" fill="${c.accent}"/></svg>'';
+
+  # Accents follow the terminals' ANSI mapping (palette.nix `ansi`); steel
+  # (magma) is both blue and the palette's orange.
   emberColors = c: {
     core = {
       background = c.bg;
@@ -34,9 +64,16 @@ in
   # Behaviour note: vicinae dmenu writes the
   # chosen line to stdout and exits 0 — and it also exits 0 when dismissed with
   # nothing chosen. Test the output, never the exit status.
-  home.packages = with pkgs; [
-      poppler-utils # pdftoppm: renders paper thumbnails for open_paper.sh's quick-look preview
+  home.packages = [
+    chooseBluetoothDevice
+    openPaper
   ];
+
+  # Next to the theme files programs.vicinae.themes writes, which name them
+  # as icons/<theme>.svg.
+  xdg.dataFile."vicinae/themes/icons/ember.svg".text = themeIcon palette.hash;
+  xdg.dataFile."vicinae/themes/icons/ember-light.svg".text = themeIcon palette.light.hash;
+
   programs.vicinae = {
     enable = true;
     systemd.enable = true;
@@ -86,7 +123,7 @@ in
           name = "Ember";
           description = "Warm graphite monochrome with a single coral spark";
           variant = "dark";
-          icon = "icons/ember.png";
+          icon = "icons/ember.svg";
           inherits = "vicinae-dark";
         };
 
@@ -99,7 +136,7 @@ in
           name = "Ember Light";
           description = "Soft parchment tones with restrained earthy accents";
           variant = "light";
-          icon = "icons/ember-light.png";
+          icon = "icons/ember-light.svg";
           inherits = "vicinae-light";
         };
 

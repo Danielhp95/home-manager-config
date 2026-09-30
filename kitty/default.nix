@@ -1,23 +1,33 @@
-{ inputs, lib, pkgs, ... }:
+{ lib, ... }:
 
+let
+  p = (import ../palette.nix).hash;
+in
 {
   programs.kitty = {
     enable = true;
     font.name = (import ../fonts.nix).mono;
+    # The Ember colours, from ../palette.nix. HM writes these ahead of
+    # kitty.conf, which no longer sets any of them.
+    settings = {
+      background = p.bg;
+      foreground = p.fg;
+      selection_background = p.border;
+      selection_foreground = p.fg;
+      cursor = p.accent;
+      cursor_text_color = p.bg;
+      url_color = p.steel;
+      # Magma (palette.nix steel): the quiet-metadata slot, same as the old blue.
+      active_border_color = p.steel;
+      # Gold, not coral: magma active borders are equiluminant with coral
+      # (1.05:1), so a coral bell would be invisible next to them. Gold is the
+      # system-wide attention color (hy3 urgent tabs, tmux copy badge).
+      bell_border_color = p.gold;
+    }
+    // lib.listToAttrs (lib.imap0 (i: c: lib.nameValuePair "color${toString i}" c) p.ansi);
     extraConfig = builtins.readFile ./kitty.conf;
-    # themeFile = "Dracula";
   };
 
   # Pipelines for `custom_shaders` in kitty.conf.
   xdg.configFile."kitty/shaders".source = ./shaders;
-
-  # kitty runs single-instance (`kitty -1` in hyprland.lua), so new windows
-  # reuse the long-lived process and never re-read kitty.conf on their own.
-  # SIGUSR1 tells the running instance to reload its config, which follows the
-  # ~/.config/kitty/kitty.conf symlink to the freshly-switched store path —
-  # so every `nh os switch` applies config changes to open terminals too.
-  # (A kitty *binary* upgrade still needs all kitty windows closed once.)
-  home.activation.reloadKitty = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run ${pkgs.procps}/bin/pkill -USR1 -x kitty || true
-  '';
 }
