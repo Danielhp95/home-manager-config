@@ -57,30 +57,15 @@ def tmux-out [args: list<string>] {
   $r.stdout | str trim --char "\n"
 }
 
-# ── continuum: take its save hook off the render path ──────────────────
-# continuum.tmux prepends "#(continuum_save.sh)" to status-right, and that
-# interpolation is the *only* thing that ever triggers a save -- so it
-# can't merely be deleted, the loop below has to call the same script.
-# Once a minute instead of once a second; continuum_save.sh still does its
-# own @continuum-save-interval check, so the save cadence stays 5 minutes.
-#
-# Re-run on every invocation rather than only the first, because
-# `prefix + r` re-sources tmux.conf, which reloads the plugins and lets
-# continuum put its interpolation straight back.
-def strip-save-hook [continuum_save: string] {
-  let before = (tmux-out ["show-option" "-gqv" "status-right"])
-  if $before == null { return }
-  # Concatenated rather than interpolated: "#(" would open a subexpression
-  # inside a $"..." string.
-  let hook = ("#(" + $continuum_save + ")")
-  let after = ($before | str replace $hook "")
-  if $after != $before {
-    tmux-run ["set" "-gq" "status-right" $after] | ignore
-  }
-}
+# ── continuum: its save hook runs from here ────────────────────────────
+# default.nix patches continuum so it no longer prepends "#(continuum_save.sh)"
+# to status-right, which was the *only* thing that ever triggered a save --
+# so the loop below calls the same script instead. Once a minute instead of
+# once a second; continuum_save.sh still does its own
+# @continuum-save-interval check, so the save cadence stays 5 minutes.
 
-# One feeder per server. A reload re-runs this script; that copy strips the
-# hook above and then gets out of the way of the feeder already running.
+# One feeder per server. A reload (`prefix + r`) re-runs this script; that
+# copy gets out of the way of the feeder already running.
 # /proc rather than `kill -0` so the check spawns nothing, and the cmdline
 # test stops a recycled pid from passing for a live feeder.
 def feeder-running [] {
@@ -223,7 +208,6 @@ def main [sock: string, continuum_save: string, tmux_bin: string] {
   $env.ST_TMUX = $tmux_bin
   $env.ST_SOCKET = $sock
 
-  strip-save-hook $continuum_save
   if (feeder-running) { return }
   tmux-run ["set" "-gq" "@st_daemon_pid" ($nu.pid | into string)] | ignore
 

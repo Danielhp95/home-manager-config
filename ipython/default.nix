@@ -37,8 +37,7 @@
     # The startup file deliberately imports nothing but the standard library
     # and prompt_toolkit — see its header. It shells out to fzf and bat off
     # PATH (from ../terminal and ../zsh) rather than having store paths baked
-    # in, so that ../sony_ai/sai_docker_config.yaml can keep bind-mounting the
-    # same file into a container with no /nix/store.
+    # in.
     ".ipython/profile_default/startup/20-fzf-history.py".source = ./startup-fzf-history.py;
   };
 }

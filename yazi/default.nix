@@ -7,7 +7,9 @@ let
   p = (import ../palette.nix).hash;
 
   # https://github.com/yazi-rs/plugins — this pin MUST track the yazi version
-  # from nixpkgs (currently 26.8.15): the plugin API is versioned, and a plugin
+  # from nixpkgs (currently 26.9.1; this rev targets 26.8.15 and was
+  # smoke-tested on 26.9.1: git signs, full-border and the mediainfo preview
+  # all render): the plugin API is versioned, and a plugin
   # built for an older yazi fails at runtime, not at build time. 26.8.15 reworked
   # the fetcher API (yazi #4235) — fetchers now return a `ya.co(...)` coroutine
   # instead of a boolean, so the older git.yazi died with
@@ -23,10 +25,14 @@ in
 
   programs.yazi = {
     enable = true;
-    # Pin legacy wrapper name (26.05 changed the default from "yy" to "y").
+    # No cd-on-exit wrapper function in any shell: zsh has the plain `fm`
+    # alias instead, and neither atuin's nor nushell's history has a single
+    # `yy`. The name stays pinned only so HM's stateVersion warning about its
+    # 26.05 default change ("yy" -> "y") can never fire.
     shellWrapperName = "yy";
+    enableZshIntegration = false;
+    enableNushellIntegration = false;
     initLua = ./init.lua;
-    enableZshIntegration = true;
     plugins = {
       toggle-pane = "${officialPlugins}/toggle-pane.yazi";
       mount = "${officialPlugins}/mount.yazi";

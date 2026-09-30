@@ -39,70 +39,67 @@ let
   # (the editor convention), paths gold (by request — the thing you typed
   # `cd` for deserves the emphasis color), options/interpolation steel
   # (magma), structure mauve, comments legible fgDim.
-  syntax-highlight-conf = ''
-    typeset -A ZSH_HIGHLIGHT_STYLES
-    ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
-
+  syntaxHighlightStyles = {
     # The command word — coral, where the eye lands
-    ZSH_HIGHLIGHT_STYLES[command]='fg=${p.accent}'
-    ZSH_HIGHLIGHT_STYLES[builtin]='fg=${p.accent}'
-    ZSH_HIGHLIGHT_STYLES[function]='fg=${p.accent}'
-    ZSH_HIGHLIGHT_STYLES[alias]='fg=${p.accent}'
-    ZSH_HIGHLIGHT_STYLES[suffix-alias]='fg=${p.accent}'
-    ZSH_HIGHLIGHT_STYLES[global-alias]='fg=${p.accent}'
-    ZSH_HIGHLIGHT_STYLES[precommand]='fg=${p.accentBright},italic'
-    ZSH_HIGHLIGHT_STYLES[autodirectory]='fg=${p.accentDim},italic'
+    command = "fg=${p.accent}";
+    builtin = "fg=${p.accent}";
+    function = "fg=${p.accent}";
+    alias = "fg=${p.accent}";
+    suffix-alias = "fg=${p.accent}";
+    global-alias = "fg=${p.accent}";
+    precommand = "fg=${p.accentBright},italic";
+    autodirectory = "fg=${p.accentDim},italic";
     # error is near-equiluminant with accent, so it never rides on hue alone
-    ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=${p.error},bold'
+    unknown-token = "fg=${p.error},bold";
 
     # Strings — olive, the editor convention
-    ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=${p.olive}'
-    ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=${p.olive}'
-    ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='fg=${p.olive}'
-    ZSH_HIGHLIGHT_STYLES[rc-quote]='fg=${p.olive}'
+    single-quoted-argument = "fg=${p.olive}";
+    double-quoted-argument = "fg=${p.olive}";
+    dollar-quoted-argument = "fg=${p.olive}";
+    rc-quote = "fg=${p.olive}";
 
     # Interpolation inside strings — steel, so it reads through the olive
-    ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=${p.steel}'
-    ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=${p.steel}'
-    ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]='fg=${p.steel}'
-    ZSH_HIGHLIGHT_STYLES[back-dollar-quoted-argument]='fg=${p.steel}'
+    dollar-double-quoted-argument = "fg=${p.steel}";
+    back-quoted-argument = "fg=${p.steel}";
+    back-double-quoted-argument = "fg=${p.steel}";
+    back-dollar-quoted-argument = "fg=${p.steel}";
 
     # Injected/dynamic values — sage
-    ZSH_HIGHLIGHT_STYLES[assign]='fg=${p.sage}'
-    ZSH_HIGHLIGHT_STYLES[named-fd]='fg=${p.sage}'
-    ZSH_HIGHLIGHT_STYLES[numeric-fd]='fg=${p.sage}'
+    assign = "fg=${p.sage}";
+    named-fd = "fg=${p.sage}";
+    numeric-fd = "fg=${p.sage}";
 
     # Paths — gold (the cd argument is the point of the command); options
     # stay on steel with the rest of the quiet metadata
-    ZSH_HIGHLIGHT_STYLES[path]='fg=${p.gold}'
-    ZSH_HIGHLIGHT_STYLES[path_prefix]='fg=${p.gold}'
-    ZSH_HIGHLIGHT_STYLES[path_pathseparator]='fg=${p.muted}'
-    ZSH_HIGHLIGHT_STYLES[path_prefix_pathseparator]='fg=${p.muted}'
-    ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=${p.steel}'
-    ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=${p.steel}'
+    path = "fg=${p.gold}";
+    path_prefix = "fg=${p.gold}";
+    path_pathseparator = "fg=${p.muted}";
+    path_prefix_pathseparator = "fg=${p.muted}";
+    single-hyphen-option = "fg=${p.steel}";
+    double-hyphen-option = "fg=${p.steel}";
 
     # Shell structure — mauve
-    ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[globbing]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[history-expansion]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[redirection]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[process-substitution]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[process-substitution-delimiter]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[command-substitution-delimiter]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[commandseparator]='fg=${p.fgDim}'
+    reserved-word = "fg=${p.mauve}";
+    globbing = "fg=${p.mauve}";
+    history-expansion = "fg=${p.mauve}";
+    redirection = "fg=${p.mauve}";
+    process-substitution = "fg=${p.mauve}";
+    process-substitution-delimiter = "fg=${p.mauve}";
+    command-substitution-delimiter = "fg=${p.mauve}";
+    commandseparator = "fg=${p.fgDim}";
     # comments are read, not decoration: muted is 3.2:1 on bg, below AA
-    ZSH_HIGHLIGHT_STYLES[comment]='fg=${p.fgDim},italic'
-    ZSH_HIGHLIGHT_STYLES[arg0]='fg=${p.fg}'
-    ZSH_HIGHLIGHT_STYLES[default]='fg=${p.fg}'
+    comment = "fg=${p.fgDim},italic";
+    arg0 = "fg=${p.fg}";
+    default = "fg=${p.fg}";
 
     # Nested brackets cycle through the secondary hues
-    ZSH_HIGHLIGHT_STYLES[bracket-level-1]='fg=${p.steel}'
-    ZSH_HIGHLIGHT_STYLES[bracket-level-2]='fg=${p.gold}'
-    ZSH_HIGHLIGHT_STYLES[bracket-level-3]='fg=${p.sage}'
-    ZSH_HIGHLIGHT_STYLES[bracket-level-4]='fg=${p.mauve}'
-    ZSH_HIGHLIGHT_STYLES[bracket-error]='fg=${p.error}'
-    ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]='fg=${p.accentBright},bold'
-  '';
+    bracket-level-1 = "fg=${p.steel}";
+    bracket-level-2 = "fg=${p.gold}";
+    bracket-level-3 = "fg=${p.sage}";
+    bracket-level-4 = "fg=${p.mauve}";
+    bracket-error = "fg=${p.error}";
+    cursor-matchingbracket = "fg=${p.accentBright},bold";
+  };
 in
 {
   imports = [ inputs.nix-index-database.homeModules.nix-index ];
@@ -111,6 +108,10 @@ in
     fd # find alternative
     dust # du alternative. Pretty crazy
     duf # like du, but for free space
+    # Completions for nix-env, nix-build, nix-shell and friends, picked up
+    # from the profile's share/zsh/site-functions. NixOS would install it
+    # too, but configuration.nix turns its programs.zsh.enableCompletion off.
+    nix-zsh-completions
   ];
 
   # If command is not present, it tells us where it can be found. The
@@ -141,17 +142,18 @@ in
   programs.zsh = {
     enable = true;
     sessionVariables = {
-      # Default from https://github.com/zsh-users/zsh-autosuggestions
       EDITOR = "nvim";
-      ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE = "fg=8";
-      ZSH_AUTOSUGGEST_STRATEGY = "(history completion)";
-      ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE = 20; # Only suggest up to 20 characters
     };
     initContent = lib.mkMerge [
+      # Order 850: before home-manager sources the plugins (order 900), so
+      # zsh-autopair picks up these space/backspace bindings as its fallbacks
+      # instead of having them overwritten afterwards, and
+      # zsh-syntax-highlighting (order 1200, see syntaxHighlighting below)
+      # hooks into the zle-line-init/finish widgets defined here rather than
+      # being unhooked by them.
+      (lib.mkOrder 850 keyBindings)
       (
-        keyBindings
-        + fzf-tab-conf
-        + syntax-highlight-conf
+        fzf-tab-conf
         + kernelDriftCheck
         + ''
           # ctrl-w, alt-b (etc.) stop at chars like `/:` instead of just space
@@ -209,14 +211,33 @@ in
     autocd = true;
     dotDir = "${config.xdg.configHome}/zsh";
     defaultKeymap = "emacs"; # this is the default, don't get scared
-    autosuggestion.enable = true;
+    autosuggestion = {
+      enable = true;
+      # atuin's zsh init prepends its own "atuin" strategy to this list
+      strategy = [
+        "history"
+        "completion"
+      ];
+    };
     enableCompletion = true;
+    # home-manager sources it at order 1200, after every widget this file and
+    # the other integrations define, which is where the plugin has to load
+    syntaxHighlighting = {
+      enable = true;
+      # "main" is always prepended by home-manager; listing it again would
+      # run it twice
+      highlighters = [ "brackets" ];
+      styles = syntaxHighlightStyles;
+    };
     localVariables = {
       # Skip zsh-autosuggestions' per-prompt rebind of every zle widget (it
       # re-wraps the whole widget table each precmd to catch late-defined
       # widgets — all of ours exist by first prompt). Revert if suggestions
       # ever stop updating for some widget.
       ZSH_AUTOSUGGEST_MANUAL_REBIND = 1;
+      # Stop fetching suggestions once the line typed so far is longer than
+      # 20 characters
+      ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE = 20;
     };
     # `compinit -C` trusts the cached .zcompdump and skips the compaudit
     # security scan; do the full (slow: ~320ms vs ~5ms) init only when the
@@ -245,14 +266,15 @@ in
       size = 1000000;
       share = true;
     };
-    # TODO: integrate better (this silently ignores if config.themes.extraShellAliases is not set)
     shellAliases = {
       fm = fileManager;
       # git
       wow = "git status --untracked-files=no";
       # eza
       ls = "eza -lahF --git";
-      # TODO: Check if this prints the last branch from which the current branch forked
+      # Nearest ancestor of HEAD that carries an origin/* ref. That is the
+      # branch this one forked from only while this branch is unpushed; once
+      # pushed, its own upstream wins.
       git-parent = "git log --pretty=format:'%D' HEAD^ | grep 'origin/' | head -n1 | sed 's@origin/@@' | sed 's@,.*@@'";
 
     };
@@ -263,23 +285,9 @@ in
         file = "fzf-tab.plugin.zsh";
       }
       {
-        # Don't know what this is
-        name = "nix-zsh-completions";
-        src = pkgs.nix-zsh-completions;
-      }
-      {
         name = "zsh-autopair";
         file = "share/zsh/zsh-autopair/autopair.zsh";
         src = pkgs.zsh-autopair;
-      }
-      {
-        name = "zsh-autosuggestions";
-        src = "${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh";
-      }
-      {
-        name = "zsh-syntax-highlighting";
-        file = "share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh";
-        src = pkgs.zsh-syntax-highlighting;
       }
     ];
   };

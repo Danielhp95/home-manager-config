@@ -66,7 +66,6 @@ in
       palettes.ember = {
         bg0 = p.bg;
         bg1 = p.surface;
-        fg0 = p.fg;
         fg1 = p.fgDim;
         fg_soft = p.fgSoft;
         muted = p.muted;

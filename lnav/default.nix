@@ -12,11 +12,12 @@
 # and the affected element simply falls back to the default theme. A typo here
 # is therefore invisible except as one stubbornly wrong-coloured widget.
 #
-# The guard against that is to keep this an exact match for the key set in
-# lnav's own bundled samples ($out/share/lnav/*.json.sample, also copied to
-# ~/.config/lnav/configs/default on first run) — all 41 styles, 26
-# syntax-styles, 13 status-styles and 4 log-level-styles, no more and no fewer.
-# Diff against those samples after any lnav upgrade that adds a style.
+# The guard against that is to keep this an exact match for the key set of
+# lnav's own bundled themes, which it writes out as
+# ~/.config/lnav/configs/default/*.json.sample on first run (the package ships
+# no copy under $out/share). As of lnav 0.14.1 their union is 43 styles, 26
+# syntax-styles, 15 status-styles and 4 log-level-styles, no more and no
+# fewer. Diff against those samples after any lnav upgrade that adds a style.
 #
 # `vars` are arbitrary names substituted wherever a "$name" appears. They are
 # deliberately the palette.nix attribute names rather than lnav's usual
@@ -107,6 +108,10 @@ let
         background-color = "$bgAlt";
       };
       time-column.background-color = "$bgAlt";
+      # Every bundled theme only bolds this one
+      time-ago.bold = true;
+      # The default theme's teal, i.e. the cyan slot, which is sage here
+      timeline-bar.background-color = "$sage";
       adjusted-time.color = "$mauve";
       skewed-time.color = "$gold";
       offset-time.color = "$sage";
@@ -243,6 +248,13 @@ let
         background-color = "$accent";
         bold = true;
       };
+      # Inverted like the fatal level: red text on the coral title would
+      # contrast by hue alone, and the two are near-equiluminant
+      alert-title = {
+        color = "$bg";
+        background-color = "$error";
+        bold = true;
+      };
       disabled-title = {
         color = "$fgDim";
         background-color = "$bgAlt";
@@ -284,6 +296,10 @@ let
       };
       inactive = {
         color = "$muted";
+        background-color = "$bgDeep";
+      };
+      inactive-warn = {
+        color = "$gold";
         background-color = "$bgDeep";
       };
       inactive-alert = {

@@ -122,9 +122,6 @@ in
 {
   home.sessionVariables.GLAMOUR_STYLE = "${glamourEmber}";
 
-  home.packages = with pkgs; [
-    libgit2
-  ];
   # Structural diffs for `git diff`. git.enable is explicit: the module
   # stopped wiring diff.external automatically, and until this was set difft
   # was installed but git never called it.
@@ -147,6 +144,10 @@ in
   programs.git = {
     enable = true;
 
+    # Written to ~/.config/git/ignore, git's default global excludes file;
+    # this is the one entry the unmanaged file there used to hold
+    ignores = [ "**/.claude/settings.local.json" ];
+
     settings = {
       user.name = "Daniel Hernandez";
       user.email = "daniel.hernandez2@sony.com";
@@ -163,7 +164,6 @@ in
         bD = "branch -D";
         d = "diff";
         dc = "diff --cached";
-        ds = "diff --staged";
         r = "restore";
         rs = "restore --staged";
         st = "status -sb";
