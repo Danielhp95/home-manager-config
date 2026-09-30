@@ -3,12 +3,8 @@
   # Per-device output EQ, as WirePlumber-managed filter-chain sinks.
   imports = [ ./pipewire-eq.nix ];
 
-  # The pulseaudio *package* is only here for its CLI tools (pactl & co) —
-  # the server itself is pipewire-pulse below.
-  # NOTE: this must be systemPackages. defaultPackages is the small curated
-  # NixOS default set (perl, rsync, strace) meant to be *overridden to remove*
-  # those; assigning extra packages to it silently dropped strace and perl
-  # from the system.
+  # pulseaudio only for its CLI tools (pactl & co); pipewire-pulse is the
+  # server. Not defaultPackages: assigning that drops perl/rsync/strace.
   environment.systemPackages = with pkgs; [
     pulseaudio
   ];

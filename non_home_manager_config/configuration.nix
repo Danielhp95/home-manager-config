@@ -32,8 +32,7 @@
       in
       {
         inherit (inputs.iris.packages.${system}) iris;
-        # hy3 links against Hyprland's headers, so it must get the exact
-        # Hyprland build that is installed.
+        # hy3 links against Hyprland's headers: build it against this Hyprland.
         inherit hyprland;
         hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
         inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
@@ -53,34 +52,31 @@
     useUserPackages = true;
     extraSpecialArgs = { inherit inputs; };
     users.dani = ../home.nix;
-    # Apps replace some managed files with real ones (mimeapps.list, GTK
-    # settings); HM moves those aside, and a .backup left by an earlier
-    # activation would otherwise abort the next one.
+    # Apps overwrite some managed files (mimeapps.list, GTK settings); a stale
+    # .backup from an earlier activation would otherwise abort the next one.
     backupFileExtension = "backup";
     overwriteBackup = true;
   };
 
   programs.ydotool.enable = true;
 
-  # Backend for the noctalia/screen_recorder plugin (Super+Shift+R). The NixOS
-  # module adds the setcap'd gsr-kms-server wrapper it needs for KMS capture.
+  # Backend for noctalia's screen_recorder plugin; the module adds the
+  # setcap'd gsr-kms-server wrapper that KMS capture needs.
   programs.gpu-screen-recorder.enable = true;
 
   programs.steam.enable = true;
 
-  # Nautilus' "Open in Terminal" context entry, opening kitty.
   programs.nautilus-open-any-terminal = {
     enable = true;
     terminal = "kitty";
   };
 
-  # Installs LocalSend and opens its port (53317, TCP + UDP) for receiving.
+  # openFirewall: 53317 TCP + UDP, for receiving.
   programs.localsend = {
     enable = true;
     openFirewall = true;
   };
 
-  # Authenticator manager
   security.polkit.enable = true;
 
   nix = {
@@ -89,12 +85,10 @@
         "flakes"
         "nix-command"
       ];
-      # This flake's working tree is dirty nearly always, so the "Git tree is
-      # dirty" line on every `nh os switch` / `nix fmt` carried no information.
+      # The working tree is nearly always dirty; the warning carries no signal.
       warn-dirty = false;
       substituters = [
         # cache.nixos.org builds no CUDA; this serves ollama-cuda and its libs.
-        # (Replaces cuda-maintainers.cachix.org, gone since 2025-11.)
         "https://cache.nixos-cuda.org"
         # neovim-nightly-overlay builds (danvim) and other nix-community projects.
         "https://nix-community.cachix.org"
@@ -106,77 +100,53 @@
       download-buffer-size = 268435456; # 256 MiB
       http-connections = 50;
     };
-    # `nixpkgs#` already resolves to the pinned nixpkgs; these add the short
-    # `nixos#` alias for it and `stable#` for the release branch.
+    # `nixpkgs#` is already pinned; add `nixos#` (alias) and `stable#`.
     registry = {
       nixos.flake = inputs.nixpkgs;
       stable.flake = inputs.stable;
     };
-    optimise.automatic = true; # periodically run `nix store optimise`
-    # Garbage collection is handled by `programs.nh.clean` below (the NixOS nh
-    # module asserts that nix.gc.automatic and nh.clean must not both be on).
+    optimise.automatic = true;
+    # No nix.gc: programs.nh.clean below does GC (nh asserts only one is on).
 
-    # Keep 24-core rebuilds from competing with the desktop: build processes
-    # yield CPU to interactive work and only use idle disk bandwidth.
+    # Builds yield CPU and disk bandwidth to interactive work.
     daemonCPUSchedPolicy = "batch";
     daemonIOSchedClass = "idle";
   };
 
-  # nh: ergonomic `nixos-rebuild` frontend. `nh os switch` builds with
-  # nix-output-monitor output and a generation diff; `nh clean` replaces nix.gc.
   programs.nh = {
     enable = true;
     flake = "/home/dani/nix_config";
     clean = {
       enable = true;
-      # 15d/5 was retaining ~57 generations (~83 GB of store), and even 7d kept
-      # ~60 around with frequent switching on a 91%-full disk. Three days of
-      # rollback targets plus the last 10 generations is plenty in practice.
-      # Age-based on purpose, same reasoning as the classic
-      # `nix.gc.options = "--delete-older-than 30d"`: a blanket `-d`/
-      # `--delete-old` is what stripped the running kernel's modules out from
-      # under it after a rebuild silently failed to reach the ESP.
-      # `--keep` never drops below boot.loader.grub.configurationLimit (the
-      # hardware file): GC must never delete a generation GRUB still lists.
+      # Not `--delete-old`: after a rebuild that silently missed the ESP it
+      # deletes the running kernel's modules. `--keep` >= GRUB's
+      # configurationLimit, so GC never removes a generation GRUB lists.
       extraArgs = "--keep-since 3d --keep ${toString (lib.max 10 config.boot.loader.grub.configurationLimit)}";
     };
   };
 
-  # kexec-tools on PATH. NixOS's kexec module enables this by default, but it
-  # is what made the 2026-09 recovery possible without a USB stick (booting
-  # the matching kernel straight from the store after a wrong-kernel boot),
-  # so it is pinned here rather than left to an upstream default.
+  # On by default upstream; pinned because it can boot a kernel straight from
+  # the store when the one on the ESP is wrong (recovery without a USB stick).
   boot.kexec.enable = true;
 
-  # Compressed in-RAM swap. The machine had no swap at all: systemd-oomd
-  # degraded to pressure-only mode and nix-daemon died with SIGABRT during
-  # large rebuilds (30G+ peak on 2026-08-02).
+  # Compressed in-RAM swap; its higher priority puts it ahead of the LUKS swap.
   zramSwap.enable = true;
 
-  # BBR keeps throughput up on lossy/high-latency paths where cubic backs
-  # off hard (substitution downloads, video calls on hotel wifi). fq is the
-  # pacing-aware qdisc BBR wants.
+  # BBR keeps throughput on lossy/high-latency links; fq is the qdisc it wants.
   boot.kernelModules = [ "tcp_bbr" ];
 
-  # Tune the VM for zram being the only swap. Mostly matters under the
-  # memory pressure of large rebuilds (the SIGABRT scenario above).
   boot.kernel.sysctl = {
     "net.ipv4.tcp_congestion_control" = "bbr";
     "net.core.default_qdisc" = "fq";
-    # Swap-in readahead is free on disk but pure waste on zram: decompressing
-    # 8 pages to service a 1-page fault. 0 = fault exactly what's needed.
+    # No swap-in readahead: on zram it decompresses 8 pages per 1-page fault.
     "vm.page-cluster" = 0;
-    # Swapping to zram is nearly free compared to dropping page cache that
-    # must be re-read from disk; 180 is the upstream zram recommendation.
+    # Usual for zram: swapping to it beats re-reading dropped page cache.
     "vm.swappiness" = 180;
-    # Watermark boosting defends against fragmentation by reclaiming early —
-    # counterproductive here: it starts swapping under mild pressure.
+    # Boosting reclaims early (anti-fragmentation), i.e. swaps under mild load.
     "vm.watermark_boost_factor" = 0;
   };
 
-  # TLP replaces power-profiles-daemon (the two conflict; the NixOS module
-  # asserts they're not both enabled). TLP applies the *_ON_AC settings when
-  # plugged in and *_ON_BAT when on battery automatically on plug/unplug.
+  # TLP instead of power-profiles-daemon (they conflict).
   services.power-profiles-daemon.enable = false;
   services.tlp = {
     enable = true;
@@ -202,9 +172,8 @@
     percentageCritical = 10;
     # noctalia's last battery warning fires at 2%; any higher pre-empts it.
     percentageAction = 2;
-    # There is no swap device (only zram), so Hibernate has nowhere to write the
-    # image: the action fails and the battery drains to a hard power loss.
-    # PowerOff is the only action here that can't lose the filesystem state.
+    # Not Hibernate: the 8.8 GB swap partition can't hold a 64 GB RAM image,
+    # and no resume device is set.
     criticalPowerAction = "PowerOff";
   };
 
@@ -224,14 +193,12 @@
   # Set via kernel params: takes effect on the next boot.
   console.colors = (import ../palette.nix).ansi;
 
-  # Set your time zone.
   time.timeZone = "America/New_York";
 
-  # From https://wiki.nixos.org/wiki/Locales
   i18n = {
     defaultLocale = "en_US.UTF-8";
     supportedLocales = [
-      "C.UTF-8/UTF-8" # What is this
+      "C.UTF-8/UTF-8"
       "en_US.UTF-8/UTF-8"
       "en_GB.UTF-8/UTF-8"
       "es_ES.UTF-8/UTF-8"
@@ -249,41 +216,20 @@
     };
   };
 
-  # The greeter's Hyprland session execs `start-hyprland` directly
-  # (Hyprland's own crash-watchdog binary, noctalia-greeter.nix), and session
-  # lifecycle goes through home-manager's own systemd integration instead
-  # (wayland.windowManager.hyprland.systemd, hyprland/default.nix):
-  #
-  #   greeter session script (exports fcitx/wayland env, then sources
-  #   home.sessionVariables from hm-session-vars.sh)
-  #     -> start-hyprland execs Hyprland, restarts it if it dies non-cleanly
-  #     -> hyprland.start hook: dbus-update-activation-environment --systemd
-  #        --all, then stop/start hyprland-session.target
-  #     -> graphical-session.target goes active; every service WantedBy
-  #        it (fcitx5-daemon, hyprpolkitagent, vicinae, noctalia,
-  #        gpg-agent.socket...) starts with the wayland env guaranteed.
-  #   Compositor exit stops hyprland-session.target and everything bound to it.
-  #
-  # Gotchas:
-  #   - Session daemons must be systemd units WantedBy=graphical-session.
-  #     target. exec-once / manual `systemctl start` in the startup path
-  #     killed the polkit agent and gpg-agent silently before this was
-  #     fixed — see graphical-session-target-dance memory.
-  #   - Never override wayland.windowManager.hyprland.systemd.extraCommands
-  #     to stop graphical-session.target directly — that's the exact
-  #     hand-rolled hook that caused the above. Leave it at the module
-  #     default (stop/start hyprland-session.target, one level down).
+  # Session start: greeter script (noctalia-greeter.nix) -> start-hyprland;
+  # Hyprland's start hook pushes the env to systemd (hyprland/default.nix).
+  # Session daemons must be units WantedBy=graphical-session.target, never
+  # exec-once; leave hyprland.systemd.extraCommands at the module default.
 
   # Services a GNOME desktop would normally enable
   services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
   services.udisks2.enable = true; # yazi mount menu
-  services.gnome.gnome-keyring.enable = true; # Secret Service for apps; unlocked at login via greetd's PAM stack (substacks login)
+  services.gnome.gnome-keyring.enable = true; # Secret Service; unlocked at login by greetd's PAM stack
   services.gnome.glib-networking.enable = true; # TLS for libsoup (GNOME apps such as gnome-weather)
   services.geoclue2.enable = true; # maps/weather location; demo agent replaces gnome-shell's
   services.gnome.at-spi2-core.enable = true; # a11y bus; silences GTK warnings
 
   services.xserver = {
-    # Enable the X11 windowing system.
     enable = true;
     excludePackages = [ pkgs.xterm ];
 
@@ -299,12 +245,11 @@
 
   environment.pathsToLink = [
     "/share/zsh"
-  ]; # Make sure that home-manager installed `zsh` picks up system installed programs
+  ]; # completions of system packages, for Home Manager's zsh
 
   programs.zsh.enable = true;
-  # Home-manager runs compinit with the full fpath (plugins included); running
-  # it here too makes the two fight over ~/.config/zsh/.zcompdump, rebuilding
-  # it twice on every shell launch (~1s of terminal startup time).
+  # Home Manager's zsh already runs compinit (with the plugin fpath); a second
+  # run here rebuilds ~/.config/zsh/.zcompdump on every shell launch (~1s).
   programs.zsh.enableCompletion = false;
   users.users.dani = {
     shell = pkgs.zsh;
@@ -312,10 +257,9 @@
     extraGroups = [
       "wheel"
       "ydotool" # access to the ydotoold socket (keyboard-driven scrolling)
-    ]; # group "wheel" -> sudo access
+    ];
     hashedPassword = "$y$j9T$BS53tFZ/aYhulnHaIPdfV1$RgynhBpss3Mkz6Rliz3nn4KsTaQ9RI1mdB8qLb5OdxC";
   };
 
-  # system.stateVersion is per machine: it lives in the hardware file
-  # (hardwares/lenovo_t16g_gen3.nix).
+  # system.stateVersion is per machine: it lives in the hardware file.
 }

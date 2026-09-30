@@ -3,38 +3,10 @@
   lib,
   ...
 }:
-# Per-device EQ as PipeWire filter-chain sinks: "Laptop Speakers (EQ)",
-# "Shokz OpenRun (EQ)", "WH-1000XM6 (EQ)". Each is an ordinary Audio/Sink
-# that plays into its hardware device, so any app can be moved to any of them
-# from pavucontrol / Noctalia / the app itself, and several can run at once.
-# The laptop mic gets the same treatment in the other direction: "Laptop
-# Microphone" is an Audio/Source that records through its chain. (This used
-# to be EasyEffects, which only processes one output and adds its own sink
-# and source to every device list.)
-#
-# Each chain exists only while its device does: WirePlumber's software-dsp
-# hook loads the filter-chain when the device's node appears and unloads it
-# when the node goes, so a headset's "(EQ)" entry is hidden until it connects.
-#
-# The chain also hides its device (hide-parent): every client but WirePlumber
-# loses sight of the raw node, so apps (Slack's pickers, pavucontrol,
-# Noctalia, wpctl) list only the processed entry, and PulseAudio apps lose the
-# raw sink's "Monitor of" source too. The raw volume is then out of reach, so
-# it stays where it was when the chain loaded; volume is the chain's own. For
-# A/B, drop hide-parent and restart WirePlumber.
-#
-# The chains carry priority.session above any hardware node, so WirePlumber
-# never falls back to a hidden device as the default.
-#
-# When a headset drops, its EQ sink goes with it. WirePlumber pauses MPRIS
-# players that were feeding it (linking.pause-playback, on by default) before
-# relinking their streams; anything else falls back to the default sink, as
-# with the raw device. If the EQ sink was the default, it becomes the default
-# again when the headset reconnects.
-#
-# The chains run inside WirePlumber, so a curve change needs
-# `systemctl --user restart wireplumber` after the switch (a switch does not
-# restart it), which briefly drops Bluetooth audio.
+# Per-device EQ as WirePlumber software-dsp chains ("(EQ)" sinks, "Laptop
+# Microphone"), each present only while its device is. hide-parent hides the
+# raw device from all clients but WirePlumber (its volume stays fixed; drop it
+# to A/B). A switch doesn't reload curves: restart the user wireplumber.
 let
   # Same filter list on both channels (param_eq "In 1"/"In 2").
   peq = name: filters: {
@@ -54,7 +26,7 @@ let
   };
 
   # Stereo FIR from a 2-channel .irs. The builtin convolver is mono, so this
-  # is a stage of two nodes, one per channel (see `stage` in `sink`).
+  # is a stage of two nodes, one per channel (see `stage` in `chain`).
   convolver =
     name: file:
     let
@@ -84,10 +56,9 @@ let
       ];
     };
 
-  # LSP's 16-band parametric EQ with the same bands on both channels; bands
-  # past the list are off. Band keys drop the channel letter (ft, f, g, q, s,
-  # ...): ft 1 = bell, 2 = high-pass; s is the slope (0 = x1, 1 = x2); g is
-  # linear.
+  # LSP's 16-band parametric EQ, same bands on both channels, the rest off.
+  # Band keys omit the channel letter: ft 1 = bell, 2 = high-pass; s = slope
+  # (0 = x1, 1 = x2); g is linear.
   lspPeq =
     {
       name,
@@ -173,9 +144,8 @@ let
     ];
   };
 
-  # A software-dsp rule running `nodes` in order on the device `target`, with
-  # the chain's two streams' props: `capture` is the side audio enters,
-  # `playback` the side it leaves.
+  # A software-dsp rule running `nodes` in order on device `target`; `capture`
+  # props are for the side audio enters, `playback` for the side it leaves.
   chain =
     {
       target,
@@ -230,12 +200,9 @@ let
       };
     };
 
-  # The stream that talks to the device. It follows only its device: covers
-  # the moment between the device going away and WirePlumber unloading this
-  # chain, so a sink's output can't blip onto the default sink (the
-  # speakers), nor a source record another mic. Without linger, WirePlumber
-  # destroys a dont-fallback stream whose target is absent
-  # (find-defined-target.lua).
+  # The stream to the device follows only it, so output can't blip onto
+  # another sink while the chain unloads; linger keeps WirePlumber from
+  # destroying that dont-fallback stream meanwhile (find-defined-target.lua).
   deviceStream = target: {
     "target.object" = target;
     "node.passive" = true;
@@ -283,27 +250,15 @@ let
       };
     };
 
-  # Output priorities: the laptop's chain above every visible hardware sink
-  # (the USB adapter's is 1109), a headset's above the laptop's. They only
-  # decide when no sink you picked is present; then a connected headset wins.
+  # Speakers above every hardware sink (the USB adapter's is 1109), headsets
+  # above the speakers; they only decide when no sink you picked is present.
   speakerPriority = 1500;
   headsetPriority = 2500;
 
-  # ThinkPad T16g Gen 3 (21V6, subsystem 17aa:2347; CS35L56 amps on
-  # SoundWire): Lenovo's own Dolby Atmos (DAX3) speaker tuning, the processing
-  # Windows runs on top of the Cirrus amp tuning, which Linux already loads
-  # (cirrus/cs35l56-b0-dsp1-misc-17aa2347*). Source: the Windows audio driver
-  # (AUD_N4FAO 1.0.569.57807, download.lenovo.com/pccbbs/mobiles/n4fao15w.exe),
-  # file Dolby/dax3/ext_thinkpad_AIO_cirrus_*/SOUNDWIRE_MAN_01FA_FUNC_3556_SUBSYS_234717AA.xml,
-  # converted by speaker-tuning-to-easyeffects (commit 95ffa65) with its
-  # defaults: `dolby_to_pipewire.py <xml>`, Dolby's "Balanced" voicing. The FIR
-  # (the per-device speaker correction) is in the .irs; the rest is:
-  #   bass enhancer (+12 dB harmonics from 160 Hz) -> 80 Hz high-pass
-  #   (3 stacked, x2 slope) + 120 Hz +2 dB -> dialog lift 2.5 kHz +1.9 dB ->
-  #   Dolby's volume leveler (-26 LUFS) -> 8-band regulator (+6 dB volmax
-  #   boost, per-band ceilings) -> -1 dBFS limiter.
-  # If quiet passages swell and then duck, drop "autogain": the converter
-  # can't rebuild the leveler's companion compressor (its [leveler-gap]).
+  # Lenovo's Dolby "Balanced" speaker tuning for this model, from the Windows
+  # driver (n4fao15w.exe: SOUNDWIRE_MAN_01FA_FUNC_3556_SUBSYS_234717AA.xml) via
+  # speaker-tuning-to-easyeffects 95ffa65; the FIR is in the .irs. If quiet
+  # passages swell then duck, drop "autogain" (its compressor isn't rebuilt).
   speakers = sink {
     id = "laptop_speakers";
     description = "Laptop Speakers (EQ)";
@@ -470,11 +425,9 @@ let
     ];
   };
 
-  # OpenRun Pro 2: AutoEq's RTINGS (B&K 5128) result, filters 1–6 at half
-  # gain. Half, because an ear simulator mostly hears a bone-conduction
-  # headset's air leakage — the raw ±11 dB correction is harsh and buzzes
-  # through the transducers. The 40 Hz high-pass keeps the lifted bass from
-  # rattling; the limiter is only a safety.
+  # OpenRun Pro 2: AutoEq's RTINGS result, filters 1–6 at half gain (the ear
+  # simulator mostly hears bone-conduction leakage; full gain buzzes). The
+  # 40 Hz high-pass keeps the lifted bass from rattling.
   shokz = sink {
     id = "shokz_openrun";
     description = "Shokz OpenRun (EQ)";
@@ -529,9 +482,8 @@ let
     ];
   };
 
-  # WH-1000XM6: AutoEq's full 10-filter correction to the Harman target
-  # (Kuulokenurkka measurement). Assumes the Sony app's EQ is flat and
-  # DSEE/360 Upmix are off, otherwise the headphone's own DSP stacks on top.
+  # WH-1000XM6: AutoEq's 10-filter Harman correction (Kuulokenurkka). Assumes
+  # the Sony app's EQ is flat and DSEE/360 Upmix are off.
   sony = sink {
     id = "sony_wh1000xm6";
     description = "WH-1000XM6 (EQ)";
@@ -605,13 +557,9 @@ let
     ];
   };
 
-  # ThinkPad T16g Gen 3 digital mic, for calls and dictation. RNNoise
-  # first (its model expects the raw signal), then a high-pass for desk rumble
-  # and fan hum, less mud, a presence lift for intelligibility, a gentle
-  # compressor to even out distance from the mic, and a safety limiter. No
-  # gate: it clips the starts of words, which hurts transcription. Its
-  # priority beats every other input (the USB adapter's mic is 2109, the
-  # headset's 2010), so it stays the default mic.
+  # Laptop mic: RNNoise first (its model wants the raw signal), then EQ,
+  # compressor, limiter. No gate: it clips word onsets, hurting dictation.
+  # 2200 beats every other input (USB adapter 2109, headset 2010).
   thinkpadMic = source {
     id = "laptop_mic";
     description = "Laptop Microphone";
@@ -661,14 +609,9 @@ let
 in
 {
   services.pipewire.wireplumber = {
-    # Pinned to stable (0.5.14). Since 0.5.16, WirePlumber hosts in-process
-    # modules on a separate client-context thread but unloads them from its
-    # main thread; a chain's filter-chain module schedules its own destroy
-    # mid-teardown, gets destroyed twice, and the main thread spins at 100% CPU,
-    # wedging every graph client (pactl, pavucontrol, wpctl) until WirePlumber
-    # is restarted. Every chain unload hit it, i.e. every headset disconnect.
-    # 0.5.14 has no client context. Unpin once a release after 0.5.17 fixes
-    # wp_impl_module_unload().
+    # Stable's 0.5.14: 0.5.16+ destroys a chain's module twice on unload (every
+    # headset disconnect), spinning WirePlumber at 100% CPU and hanging pactl
+    # and wpctl. Unpin once a release fixes wp_impl_module_unload().
     package = pkgs.stable.wireplumber;
     extraLv2Packages = [
       pkgs.lsp-plugins

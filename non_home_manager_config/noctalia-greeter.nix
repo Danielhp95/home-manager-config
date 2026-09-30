@@ -1,18 +1,11 @@
-# Noctalia Greeter as the display manager: greetd launches
-# noctalia-greeter-session, which runs the greeter inside its own bundled
-# wlroots compositor. The nixpkgs module enables greetd, AccountsService (the
-# greeter's user list and avatars) and Polkit, and writes `settings` to
-# /var/lib/noctalia-greeter/greeter.toml. Configuration reference:
+# Noctalia Greeter as the display manager (greetd). Settings reference:
 # https://docs.noctalia.dev/greeter/configuration/
 { lib, pkgs, ... }:
 let
   p = import ../palette.nix;
 
-  # Same environment the old tuigreet hyprland session exported. The greeter
-  # itself only sets XDG_SESSION_TYPE and derives XDG_CURRENT_DESKTOP /
-  # XDG_SESSION_DESKTOP from the entry's DesktopNames=; everything else (the
-  # fcitx IM modules, the wayland toolkit switches) still has to come from
-  # here.
+  # The greeter sets only XDG_SESSION_TYPE and the XDG_*_DESKTOP pair (from
+  # DesktopNames=); the IM and wayland toolkit variables come from here.
   sessionEnv = {
     MOZ_ENABLE_WAYLAND = "1";
     QT_QPA_PLATFORM = "wayland";
@@ -31,16 +24,10 @@ let
     GSK_RENDERER = "gl";
   };
 
-  # start-hyprland is Hyprland's own watchdog binary: it execs Hyprland and
-  # restarts it if it dies non-cleanly. It is called by name because Hyprland
-  # comes from home-manager (hyprland/default.nix), not the system profile.
-  # stdout/stderr go to the journal under the `hyprland` identifier.
-  #
-  # Before that, the user's home.sessionVariables (hm-session-vars.sh, in the
-  # per-user profile under useUserPackages) are sourced, so they reach
-  # Hyprland and, through its dbus-update-activation-environment hook, every
-  # systemd user service. Sourced after the exports above: where both set a
-  # variable, the Home Manager value wins.
+  # start-hyprland is Hyprland's crash watchdog, called by name because
+  # Hyprland comes from home-manager; output goes to the journal as
+  # `hyprland`. home.sessionVariables are sourced last, so they win and reach
+  # every systemd user service through Hyprland's env hook.
   startHyprland = pkgs.writeShellScript "start-hyprland-session" ''
     ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=${lib.escapeShellArg v}") sessionEnv)}
     hm_vars="/etc/profiles/per-user/''${USER:-$(${pkgs.coreutils}/bin/id -un)}/etc/profile.d/hm-session-vars.sh"
@@ -51,9 +38,8 @@ let
     exec systemd-cat --identifier=hyprland start-hyprland "$@"
   '';
 
-  # The greeter discovers sessions from wayland-sessions directories, among
-  # them /run/current-system/sw/share (hence the pathsToLink below). Name= is
-  # both the picker label and what [session].default matches.
+  # Found via /run/current-system/sw/share/wayland-sessions (pathsToLink
+  # below). Name= is what [session].default matches.
   hyprlandSession = pkgs.writeTextFile {
     name = "hyprland-session";
     destination = "/share/wayland-sessions/hyprland.desktop";
@@ -68,12 +54,9 @@ let
   };
 in
 {
-  # The greeter takes user avatars only from AccountsService's IconFile, and
-  # AccountsService's default (~/.face) sits behind dani's 0700 home. Point
-  # Icon= at the store copy instead, which the greeter user can read. `f+`
-  # rewrites the whole keyfile on each boot/switch, so anything else
-  # AccountsService stored there (Language, Session, …) is dropped; the
-  # greeter keeps its own last-session state, and SystemAccount is restated.
+  # The greeter reads avatars only via AccountsService, whose default (~/.face)
+  # is behind a 0700 home, so Icon= points at the store copy. `f+` rewrites
+  # the whole keyfile each boot, dropping anything else stored there.
   systemd.tmpfiles.rules = [
     "f+ /var/lib/AccountsService/users/dani 0600 root root - [User]\\nIcon=${../avatars/ratchet.png}\\nSystemAccount=false\\n"
   ];
@@ -84,10 +67,8 @@ in
   services.displayManager.noctalia-greeter = {
     enable = true;
 
-    # noctalia's Settings -> Security -> Sync Now / auto-sync
-    # (shell.greeter_sync in noctalia/default.nix) pushes the current
-    # wallpaper to the greeter without a password prompt. The palette below
-    # is complete, so it wins over whatever colours Sync sends.
+    # noctalia's greeter sync (shell.greeter_sync) pushes the wallpaper with no
+    # password prompt; the complete palette below still wins over its colours.
     passwordlessSyncUsers = [ "dani" ];
 
     # Same cursor as the session (hyprland/theming.nix).

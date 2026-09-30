@@ -1,24 +1,5 @@
-# Lenovo ThinkPad T16g Gen 3, the machine replacing fell-omen.
-#
-# Written from Lenovo's order sheet before the laptop arrived, then filled in
-# on the machine from the stock NixOS install's hardware-configuration.nix
-# (disk UUIDs, initrd modules) and lspci (PRIME bus IDs).
-#
-# Order sheet, decoded. Starred items come from the ThinkPad P16 Gen 3 spec,
-# which shares this board ("System Unit: P16G3"); confirm them on arrival.
-#   CPU          Core Ultra 9 285HX, 24C/24T, Arrow Lake-HX (fell-omen: 275HX)
-#   dGPU         GeForce RTX 5090 Laptop, 24 GB GDDR7 (Blackwell)
-#   Panel        16" 3840x2400, 800 nit, HDR, P3, factory calibrated; 60 Hz*
-#   RAM          64 GB DDR5-5600, 2x32 GB SO-DIMM; 4 slots*
-#   Storage      2 TB M.2 2280 PCIe Gen5 TLC, Opal; 3 M.2 slots*
-#   WLAN / BT    Intel BE200 (Wi-Fi 7) + Bluetooth
-#   Ethernet     Intel I226* (igc, in-tree)
-#   Audio        Cirrus CS42L43 codec + CS35L56 amps* (SoundWire, not HDA)
-#   Camera       5 MP RGB+IR with computer vision; USB*
-#   Fingerprint  match-on-chip, in the power button*
-#   Thunderbolt  2x TB5 + 1x TB4*
-#   Security     discrete TPM 2.0, vPro Enterprise (AMT)
-#   Power        99.9 Wh battery, 180 W USB-C charger
+# Lenovo ThinkPad T16g Gen 3 (21V6): Core Ultra 9 285HX (Arrow Lake-HX),
+# RTX 5090 Laptop (Blackwell), 3840x2400 panel, SoundWire audio.
 {
   config,
   lib,
@@ -29,18 +10,15 @@
 }:
 
 let
-  # ---- Machine values -----------------------------------------------------
-  # From `blkid` on the installed disk (NixOS installer layout, 2026-09):
   # nvme0n1p1 ESP, p2 LUKS -> ext4 root, p3 LUKS -> swap.
   luksUuid = "6e1bc8e1-f482-4b9a-8360-674b0438ac0b";
   swapLuksUuid = "62222a60-c16a-45da-a034-8ecfa93ef3e8";
   espUuid = "7D69-4C07";
 
-  # From `lspci -d ::03xx`, written as PCI:bus:device:function in decimal
-  # (the option's type rejects hex): lspci's "0a:00.0" is "PCI:10:0:0".
+  # PCI:bus:device:function in decimal (the option rejects hex):
+  # lspci's "0a:00.0" is "PCI:10:0:0".
   intelBusId = "PCI:0:2:0"; # 00:02.0 Arrow Lake-S iGPU
   nvidiaBusId = "PCI:1:0:0"; # 01:00.0 GB203M RTX 5090 Laptop
-  # -------------------------------------------------------------------------
 
   luksDevice = "/dev/mapper/luks-${luksUuid}";
   swapLuksDevice = "/dev/mapper/luks-${swapLuksUuid}";
@@ -51,54 +29,20 @@ in
     ../bluetooth.nix
     ../specialisations/roadwarrior.nix # boot entry with the dGPU off
 
-    # ---- nixos-hardware ---------------------------------------------------
-    # Nothing there matches this machine: no T16g, no P16 (only P16s), and no
-    # Arrow Lake modules (re-checked on the machine at rev 30d48a0). The
-    # closest composition is what lenovo-legion-16iax10h (Arrow Lake-HX + RTX
-    # 50) imports, minus its Legion-only parts.
-    #
-    # Microcode + Intel iGPU. Meteor Lake's module rather than
-    # common-cpu-intel: same Xe-LPG iGPU generation, and it skips the i965
-    # VA-API driver and intel-ocl the generic one adds. Over this file alone it
-    # adds i915 in the initrd (early KMS: the LUKS prompt comes up at native
-    # resolution on the right driver instead of efifb), vpl-gpu-rt (Quick Sync
-    # through oneVPL), and 32-bit intel-media-driver (VA-API for 32-bit games
-    # under Steam/Wine). Its driver choice is i915, which is what binds 00:02.0
-    # today; xe on Arrow Lake still needs force_probe.
+    # nixos-hardware has no T16g or Arrow Lake profile; these are the parts
+    # that fit. Meteor Lake (same Xe-LPG iGPU): microcode, i915 in the initrd
+    # (early KMS for the LUKS prompt), iHD, vpl-gpu-rt. Not the same-silicon
+    # lenovo-legion-16iax10h: its EC module, HDA quirk and bus IDs are Legion's.
     "${inputs.nixos-hardware}/common/cpu/intel/meteor-lake"
-    # Open kernel modules for Blackwell (already explicit below; imported so
-    # Blackwell-wide fixes land here too):
     "${inputs.nixos-hardware}/common/gpu/nvidia/blackwell"
-    #
-    # Left out:
-    # inputs.nixos-hardware.nixosModules.lenovo-thinkpad
-    #   Only adds hardware.trackpoint (a udev rule writing the stick's sysfs
-    #   tuning at its default values, matched on "TPPS/2 IBM TrackPoint"; this
-    #   one is "TPPS/2 Elan TrackPoint") plus X11-only wheel emulation, and
-    #   common-pc-laptop's TLP, which is already on.
-    # inputs.nixos-hardware.nixosModules.common-gpu-nvidia (prime.nix)
-    #   PRIME offload, set explicitly below.
-    #
-    # Whole-machine profiles, and why not:
-    # inputs.nixos-hardware.nixosModules.lenovo-legion-16iax10h
-    #   Same silicon, wrong machine: adds the Legion EC kernel module, an HDA
-    #   speaker quirk (this has SoundWire), dpi = 189 for a 2560x1600 panel,
-    #   and sets both bus IDs at normal priority, so any value below that
-    #   isn't the identical string fails with a conflicting-definition error.
-    # inputs.nixos-hardware.nixosModules.lenovo-thinkpad-p16s-intel-gen3
-    #   Nearest ThinkPad by name, even the same bus IDs. Today it evaluates to
-    #   the two imports above plus lenovo-thinkpad, but it's written for Meteor
-    #   Lake + RTX Ada, so whatever it gains later targets those chips.
   ];
 
   boot = {
     kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [ "kvm-intel" ];
 
-    # spd5118 (the DDR5 SPD temperature sensors) stops answering on the SMBus
-    # across s2idle: every resume logs "spd5118_resume returns -6 ... failed
-    # to resume async" (3 of 3 on 2026-09-29). Costs only the DIMM
-    # temperature readout.
+    # spd5118 (DDR5 DIMM temperature sensors) fails every s2idle resume with
+    # -ENXIO; blacklisting costs only the DIMM temperature readout.
     blacklistedKernelModules = [ "spd5118" ];
 
     kernelParams = [
@@ -136,40 +80,27 @@ in
         device = "nodev";
         efiSupport = true;
         efiInstallAsRemovable = true;
-        # The installer turns this on by itself when /boot is a different
-        # filesystem from the store; pinned so the ESP layout esp-check
-        # verifies (/boot/kernels/<store-name>) never depends on detection.
+        # Pinned rather than auto-detected: esp-check verifies the
+        # /boot/kernels/<store-name> copies.
         copyKernels = true;
         useOSProber = false;
-        # programs.nh.clean's `--keep` is derived from this (configuration.nix).
-        # Sized for the installer's 1 GB ESP: a generation with its own kernel
-        # costs ~116 MB there (14 MB kernel + a 51 MB initrd each for the
-        # default and roadwarrior, whose initrd differs), so 6 stays under
-        # esp-check's 80% warning even if every one is distinct; 10 could
-        # fill it and fail the install.
+        # 1 GB ESP: a generation with its own kernel costs ~116 MB (kernel +
+        # two initrds), so 6 stays under esp-check's 80% warning. nh.clean's
+        # `--keep` is derived from this (configuration.nix).
         configurationLimit = 6;
 
-        # Undertale mirror-scene theme: the boot menu renders inside the
-        # "Despite everything, it's still you." dialogue box. After an entry
-        # is chosen GRUB shows its terminal background; pointing that at the
-        # scene with the SOUL heart in the corner reads as the soul jumping.
+        # The splash is the scene with the SOUL heart in the corner, shown once
+        # an entry is picked, so the heart seems to jump from the menu.
         theme = pkgs.callPackage ../grub_theme { };
         splashImage = "${config.boot.loader.grub.theme}/background-selected.png";
         splashMode = "stretch";
-        # gfxmodeEfi stays at its default, "auto": the firmware's GOP offers
-        # no 1920x1200, so GRUB runs at the panel's native 3840x2400 (the
-        # kernel inherits that mode through gfxpayload=keep). The theme's
-        # fixed pixel sizes (fonts, rows, heart) are authored for it.
+        # gfxmodeEfi stays "auto": the GOP offers no 1920x1200, so GRUB runs at
+        # native 3840x2400, the mode the theme's pixel sizes are authored for.
       };
     };
   };
 
-  # The stock installer layout, not fell-omen's btrfs one: an ESP, one LUKS
-  # partition holding a plain ext4 root (/home included), and a LUKS swap
-  # partition.
-  # noatime: no metadata write per file read (store scans, builds, greps).
-  # No `discard` mount option: TRIM comes from the weekly fstrim.timer (on by
-  # default), which reaches the SSD through allowDiscards on the LUKS device.
+  # No `discard`: the weekly fstrim.timer TRIMs through LUKS allowDiscards.
   fileSystems."/" = {
     device = luksDevice;
     fsType = "ext4";
@@ -182,43 +113,31 @@ in
     options = [
       "fmask=0077"
       "dmask=0077"
-      # Fail fast (5s) instead of systemd's long default wait if the ESP
-      # doesn't show up. Deliberately NOT "nofail": nofail is what let a
-      # rebuild report success against a missing /boot, leaving the
-      # bootloader on a stale kernel whose modules a later GC then deleted
-      # out from under it (kernel-bootloader-drift incident).
+      # Fail fast if the ESP is missing. Not "nofail": a rebuild would then
+      # "succeed" without writing the bootloader.
       "x-systemd.device-timeout=5s"
     ];
   };
 
-  # 8.8 GB, well under RAM, so it can't hold a hibernation image; it backs up
-  # zram (configuration.nix), which keeps the higher priority.
+  # 8.8 GB, behind zram in priority; too small for a hibernation image.
   swapDevices = [ { device = swapLuksDevice; } ];
 
   services = {
     xserver.videoDrivers = [ "nvidia" ];
-    logind.settings.Login.HandleLidSwitchDocked = "suspend"; # Suspend when the lid closes while docked
-    logind.settings.Login.HandleLidSwitch = "suspend"; # What to do when the laptop lid is closed
+    logind.settings.Login.HandleLidSwitchDocked = "suspend";
+    logind.settings.Login.HandleLidSwitch = "suspend";
 
-    # Match-on-chip reader in the power button: Goodix 27c6:6594, libfprint's
-    # goodixmoc driver. Enrol with `fprintd-enroll`. Enabling it turns on
-    # pam_fprintd for every PAM service (sudo, polkit, ...); the two below
-    # opt out.
+    # Goodix 27c6:6594 in the power button (enrol: fprintd-enroll). Turns on
+    # pam_fprintd for every PAM service; greetd and login opt out below.
     fprintd.enable = true;
 
-    # Hide the dGPU's audio (GB203 "HDA NVidia", 01:00.1) from PipeWire: its
-    # HDMI/DP outputs never show up as sinks. The card is disabled whole, so
-    # WirePlumber doesn't open it either. Trade-off: the HDMI port (and the
-    # USB-C/DP ports wired to the dGPU) then carry video only; drop this rule
-    # to get monitor audio there.
+    # Keep HDMI/DP audio out of device pickers: the dGPU's HDA card (01:00.1)
+    # whole, then the SOF card's HDMI sinks. Drop a rule for monitor audio.
     pipewire.wireplumber.extraConfig."51-hide-hdmi-sinks"."monitor.alsa.rules" = [
       {
         matches = [ { "device.name" = "alsa_card.pci-0000_01_00.1"; } ];
         actions.update-props."device.disabled" = true;
       }
-      # Likewise the iGPU's three HDMI/DP sinks, so device pickers list only
-      # the speakers and headsets. Drop this rule for audio to an external
-      # monitor or TV.
       {
         matches = [ { "node.name" = "~alsa_output.pci-0000_80_1f.3-platform-sof_sdw.HiFi__HDMI.*"; } ];
         actions.update-props."node.disabled" = true;
@@ -227,27 +146,21 @@ in
   };
 
   security.pam.services = {
-    # A fingerprint login can't unlock gnome-keyring (pam_gnome_keyring needs
-    # the password), and pam_fprintd would sit in front of the greeter's
-    # password prompt until it times out.
+    # A fingerprint login can't unlock gnome-keyring, and pam_fprintd would
+    # stall the greeter's password prompt until it times out.
     greetd.fprintAuth = false;
-    # noctalia's lockscreen checks passwords against "login" while it drives
-    # the reader itself over D-Bus (lockscreen.fingerprint, on by default);
-    # pam_fprintd in that stack would fight it for the sensor. Costs
-    # fingerprint on a bare TTY login.
+    # noctalia's lockscreen checks passwords against "login" and drives the
+    # reader itself over D-Bus; pam_fprintd there would fight it for the sensor.
     login.fprintAuth = false;
   };
 
   hardware = {
-    enableAllFirmware = true; # Enable firmware that is not free
+    enableAllFirmware = true;
     cpu.intel.npu.enable = true;
     graphics = {
       enable = true;
-      # intel-media-driver (iHD, 64- and 32-bit), intel-compute-runtime and
-      # vpl-gpu-rt come from nixos-hardware's meteor-lake import. iHD is not
-      # optional: the session forces LIBVA_DRIVER_NAME=iHD
-      # (hyprland/hyprland.lua), so without it VA-API fails outright and video
-      # decodes on CPU.
+      # iHD, compute-runtime and vpl-gpu-rt come from the meteor-lake import;
+      # hyprland.lua forces LIBVA_DRIVER_NAME=iHD, so VA-API depends on it.
       extraPackages = with pkgs; [
         libva-vdpau-driver
         libvdpau-va-gl
@@ -275,8 +188,6 @@ in
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
-  # The release this machine was installed with (NixOS 26.05, 2026-09), not
-  # fell-omen's 23.05: stateful defaults must match what's on this disk.
-  # Never bump it.
+  # The release this disk was installed with; never bump it.
   system.stateVersion = "26.05";
 }

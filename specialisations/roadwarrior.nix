@@ -1,12 +1,10 @@
 {
   specialisation.roadwarrior.configuration = {
-    # GRUB entry title. Without it install-grub.pl dates the row from the
-    # specialisation's store-path mtime, which Nix pins to epoch+1
-    # (1969-12-31).
+    # GRUB entry title; without it the row is dated from the specialisation's
+    # store-path mtime, i.e. 1969-12-31.
     boot.loader.grub.configurationName = "Roadwarrior";
 
-    # Removes the dGPU from the PCI bus; hyprland.lua then finds no NVIDIA
-    # card and runs on the Intel iGPU alone.
+    # Takes the dGPU off the PCI bus; hyprland.lua then runs Intel-only.
     imports = [ ../hardwares/disable_nvidia.nix ];
   };
 }

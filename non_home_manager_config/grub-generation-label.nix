@@ -1,21 +1,7 @@
-# Stamps the current generation number onto the GRUB menu's top-level NixOS
-# entries ("NixOS - Default", "NixOS - Roadwarrior").
-#
-# Why a hook and not an option: install-grub.pl builds those entries with
-# addGeneration("NixOS", "", $defaultConfig, ..., 1) — a hardcoded name and an
-# empty suffix. Only the "All configurations" submenu is numbered, because
-# there the number comes from the profile symlink's own name (system-N-link).
-#
-# It cannot come from the build either. Nix realises the system closure before
-# `nix-env --set` hands it a generation number, so no file under /nix/store can
-# name it — the same reason the specialisation rows used to read 1969-12-31
-# (every store timestamp is pinned to epoch+1). The number is first knowable at
-# bootloader-install time, which is where this puts it in.
-#
-# Cosmetic only, so it never fails the install: it refuses to write unless the
-# rewrite provably touched nothing but `menuentry` title strings. The kernel,
-# initrd and init= lines esp-check verifies right afterwards come through
-# byte-identical or the original file stays.
+# Stamps the generation number onto the GRUB menu's top-level entries
+# ("NixOS - Default", "NixOS - Roadwarrior"). install-grub.pl hardcodes those
+# names and the build can't know the number, so this runs at install time.
+# Cosmetic: it never fails, and writes only if nothing but titles changed.
 {
   config,
   lib,
@@ -77,8 +63,7 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    # mkBefore: esp-check.nix appends its own commands to this option and has to
-    # validate the grub.cfg that ends up on disk, so this must run first.
+    # mkBefore: esp-check.nix must validate the grub.cfg this rewrites.
     boot.loader.grub.extraInstallCommands = lib.mkBefore ''
       ${grub-stamp-generation}/bin/grub-stamp-generation "$1"
     '';

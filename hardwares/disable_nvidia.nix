@@ -1,10 +1,8 @@
 { lib, inputs, ... }:
 {
-  # Blacklists nouveau and the nvidia modules, and has udev remove every NVIDIA
-  # PCI function (GPU, HDMI audio, USB-C) as it appears.
+  # Blacklists nouveau/nvidia and has udev remove every NVIDIA PCI function.
   imports = [ inputs.nixos-hardware.nixosModules.common-gpu-nvidia-disable ];
 
-  # The main config sets videoDrivers = [ "nvidia" ]; with the card gone, the
-  # nvidia driver stack must not be enabled at all.
+  # Overrides the main config's [ "nvidia" ]: the driver stack must stay off.
   services.xserver.videoDrivers = lib.mkForce [ "modesetting" ];
 }

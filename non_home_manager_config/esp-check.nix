@@ -1,19 +1,7 @@
-# `esp-check`: proves that what the firmware will load at the next boot matches
-# the system profile. It runs at the end of every bootloader install (`nh os
-# boot` / `nh os switch`), where a failure aborts the install with a non-zero
-# exit, and it is on PATH for a manual look (it re-execs itself through sudo:
-# the ESP is mounted fmask/dmask 0077, so unprivileged every file below reads
-# as absent).
-#
-# Why: a plain `nixos-rebuild` reports success whatever the firmware will
-# actually boot. In 2026-09 the previous laptop dropped to `grub rescue>`
-# ("symbol 'grub_memcpy' not found") because an older GRUB core elsewhere on
-# its ESP shared this install's module directory, and a leftover systemd-boot
-# fell back to a closure deleted months before.
-#
-# This machine boots GRUB through the removable path: with
-# canTouchEfiVariables = false no NVRAM entry points at NixOS, and the
-# firmware's generic NVMe entry loads /EFI/BOOT/BOOTX64.EFI.
+# `esp-check`: proves the firmware will boot this system profile, which
+# `nixos-rebuild` never checks. Runs after every bootloader install (failure
+# aborts it) and on demand (re-execs via sudo: /boot is mounted 0077). GRUB
+# boots via the removable path; no NVRAM entry points at NixOS.
 {
   config,
   lib,
@@ -25,8 +13,7 @@ let
   cfg = config.boot.loader.grub;
   esp = config.boot.loader.efi.efiSysMountPoint;
   espDevice = config.fileSystems.${esp}.device;
-  # grub-install --removable writes here; the firmware's generic NVMe entry
-  # loads it without consulting NVRAM.
+  # From grub-install --removable; loaded by the firmware's generic NVMe entry.
   loaderImage = "${esp}/EFI/BOOT/BOOTX64.EFI";
 
   esp-check = pkgs.writeShellApplication {
@@ -90,11 +77,9 @@ let
         fi
       done
 
-      # 5. Other loaders on the ESP. Every extra GRUB core shares
-      #    $esp/grub/x86_64-efi with ours and breaks on the next nixpkgs bump,
-      #    whatever its file is called; systemd-boot leftovers list closures
-      #    that no longer exist. Warnings only: nothing may load them (6.
-      #    checks that), and removing them is a manual root step.
+      # 5. Other loaders (warnings; 6. checks nothing loads them). A foreign
+      #    GRUB core shares $esp/grub/x86_64-efi with ours and breaks on the
+      #    next nixpkgs bump; systemd-boot leftovers list dead closures.
       while IFS= read -r -d "" f; do
         if ! cmp -s "$f" "$img" && grep -a -q 'grub_' "$f"; then
           warn "GRUB core not written by this install: $f"
@@ -109,9 +94,8 @@ let
         fi
       done
 
-      # 6. What every firmware entry loads. The check is on the file, not the
-      #    entry (firmware can re-create a deleted entry by itself, as the
-      #    previous laptop's did): a GRUB core other than ours behind any entry
+      # 6. What every firmware entry loads, checked on the file since firmware
+      #    may re-create a deleted entry: a foreign GRUB core behind any entry
       #    fails the install.
       if order="$(efibootmgr 2>/dev/null)"; then
         echo "$order" | grep -E '^(BootOrder|Boot[0-9A-F]{4})' | sed 's/^/  /'
@@ -156,13 +140,11 @@ in
 
     environment.systemPackages = [
       esp-check
-      # `efibootmgr` (and `bootctl status`) answer "what will the firmware
-      # load?", the question a successful rebuild never answers.
+      # Answers "what will the firmware load?"
       pkgs.efibootmgr
     ];
 
-    # install-grub.sh runs under `set -e`, so a failing check here fails the
-    # bootloader install and the rebuild reports it.
+    # install-grub.sh runs under `set -e`: a failing check fails the install.
     boot.loader.grub.extraInstallCommands = ''
       ${esp-check}/bin/esp-check
     '';
