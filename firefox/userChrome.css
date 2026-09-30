@@ -1,19 +1,10 @@
-/* Firefox chrome in the Ember / WhiteSur-Dark-orange palette.
- *
- * The color values themselves are injected ahead of this file as `--ember-*`
- * custom properties on :root (see ./default.nix, which reads them out of
- * ../palette.nix) — this file only decides where each one is used.
- *
- * Requires toolkit.legacyUserProfileCustomizations.stylesheets = true, which
- * default.nix sets. Firefox occasionally renames internal parts, so if a rule
- * here stops applying after an update, check the element name in the Browser
- * Toolbox (ctrl+shift+alt+i) rather than assuming the whole sheet broke.
+/* Firefox chrome in the Ember palette; ./default.nix prepends the `--ember-*`
+ * colours from ../palette.nix. Firefox renames parts and variables between
+ * versions: if a rule stops applying, look it up in the Browser Toolbox.
  */
 
 /* ── Lightweight-theme variables ─────────────────────────────────────────────
- * Setting these is what actually recolors the browser: the built-in themes
- * feed the same variables, so overriding them here keeps every dependent
- * surface (tab strip, toolbars, sidebar headers) consistent for free.
+ * Firefox's own theme variables, so every surface that reads them follows.
  */
 :root {
   --lwt-accent-color: var(--ember-bg) !important;
@@ -46,8 +37,7 @@
 }
 
 /* ── Tab strip ─────────────────────────────────────────────────────────────
- * WhiteSur's tabs are rounded and the active one is marked by an accent line
- * rather than by a hard color break.
+ * WhiteSur-style: rounded tabs, the active one marked by an accent line.
  */
 .tabbrowser-tab .tab-background {
   border-radius: 8px 8px 0 0 !important;
@@ -103,18 +93,15 @@ findbar {
   border-top: 1px solid var(--ember-border) !important;
 }
 
-/* Menu/panel hover, so context menus match the rest instead of falling back
- * to the platform accent. */
+/* Menu hover in Ember rather than the platform accent. */
 menupopup > menuitem:hover,
 menupopup > menu:hover {
   background-color: var(--ember-surface) !important;
 }
 
 /* ── Pre-render backdrop ──────────────────────────────────────────────────
- * The surface behind page content, visible only before a page's first paint.
- * Painting it here kills the white loading flash without touching the
- * document canvas itself (browser.display.background_color would recolor
- * actual unstyled websites).
+ * Visible only before a page's first paint: no white flash, and unlike
+ * browser.display.background_color it leaves unstyled pages alone.
  */
 #tabbrowser-tabpanels,
 #webextpanels-window {

@@ -1,15 +1,9 @@
 { inputs, pkgs, ... }:
 
-# Spotify is built on CEF (the Chromium Embedded Framework) and ignores every
-# desktop theme, so it needs spicetify to patch its web bundle. Theme is Sleek
-# (flat, close to WhiteSur's restraint) driven by a custom color scheme in the
-# shared Ember palette (./palette.nix).
-#
-# NOTE spicetify installs its own wrapped spotify into home.packages — plain
-# pkgs.spotify must NOT also be installed (see home.nix).
-#
-# NOTE spicetify patches Spotify's app bundle, so a Spotify update can leave it
-# briefly broken until this input is bumped: `nix flake update spicetify-nix`.
+# Spotify (CEF) ignores desktop themes, so spicetify patches its web bundle:
+# Sleek with an Ember colour scheme. spicetify installs its own wrapped spotify;
+# don't add pkgs.spotify too. A Spotify update can break the patch until
+# `nix flake update spicetify-nix`.
 
 let
   p = (import ./palette.nix);
@@ -23,10 +17,8 @@ in
 
     theme = spicePkgs.themes.sleek;
 
-    # Extensions patch behaviour, not looks — none of these fight Sleek's flat
-    # palette. spicyLyrics replaces Spotify's own lyrics pane with a
-    # word-synced one; the rest fill in gaps vanilla never had (vim-style
-    # navigation, a numeric volume readout, queue-top insertion).
+    # Behaviour only: vim-style keys, a volume readout, play-next, and
+    # word-synced lyrics.
     enabledExtensions = with spicePkgs.extensions; [
       keyboardShortcut
       volumePercentage
@@ -34,8 +26,7 @@ in
       spicyLyrics
     ];
 
-    # Sleek's color.ini keys. Values are bare hex — spicetify writes them into
-    # an ini and adds the '#' itself.
+    # Sleek's color.ini keys, in bare hex (spicetify adds the '#').
     customColorScheme = {
       text = p.fg;
       subtext = p.fgDim;
@@ -62,9 +53,8 @@ in
       notification-error = p.error;
       misc = p.fg;
 
-      # Not part of Sleek's own color.ini, but spicetify emits them anyway and
-      # would otherwise fall back to its generic dark defaults — including a
-      # pure-white selected row.
+      # Not Sleek keys, but spicetify emits them; unset, they fall back to its
+      # generic defaults (a pure-white selected row).
       selected-row = p.fg;
       highlight = p.bgAlt;
       highlight-elevated = p.surface;

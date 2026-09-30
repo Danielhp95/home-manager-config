@@ -1,11 +1,7 @@
-// The start page's only script: clock, polling, rendering, search, todo.
-//
-// Two rules shape all of it:
-//   1. Nothing here listens for a keypress. Vimium owns the keyboard, and the
-//      only reachable controls are real <a>, <input> and <button> elements so
-//      that `f` hints land on them.
-//   2. Text from the todo file, from git and from GitHub is only ever written
-//      with textContent. Nothing builds HTML out of it.
+// The start page's only script. Two rules: nothing listens for keypresses
+// (Vimium owns the keyboard; controls are real <a>/<input>/<button> so `f`
+// hints reach them), and text from the todo file, git and GitHub is only ever
+// written with textContent.
 
 import { expandSearch, parseAliases } from "./search.js";
 
@@ -43,8 +39,7 @@ function joined(nodes, separator = " · ") {
 const pad = (n) => String(n).padStart(2, "0");
 const fmtClock = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-/** Wall-clock time at the weather location, which may not be this machine's
- *  timezone — the laptop travels, the painted coastline does not. */
+/** Wall-clock time at the weather location, not the machine's timezone. */
 function fmtAtOffset(epochSeconds, offsetSeconds) {
   const shifted = new Date((epochSeconds + offsetSeconds) * 1000);
   return `${pad(shifted.getUTCHours())}:${pad(shifted.getUTCMinutes())}`;
@@ -385,9 +380,8 @@ async function main() {
   tickClock();
   setInterval(tickClock, 1000);
 
-  // The catch belongs on the fetch, not on .json(): the service restarts on
-  // every switch, and a rejected fetch here would abort main() and leave a
-  // page that ticks its clock but whose search box and panels do nothing.
+  // Catch on the fetch, not .json(): the service restarts on every switch, and
+  // a rejected fetch would abort main(), leaving dead search and panels.
   const aliases = parseAliases(
     await fetch("/assets/aliases.json")
       .then((response) => response.json())

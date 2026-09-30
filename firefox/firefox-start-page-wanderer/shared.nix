@@ -1,10 +1,5 @@
-# Values that the start page, its backend service and the rest of the Firefox
-# modules all have to agree on. Plain data, no `pkgs`, imported the same way
-# ../../palette.nix is — so ./default.nix (the service), ./package.nix (the
-# built page) and ../vimium.nix cannot drift apart.
-#
-# Paths are relative to $HOME; ./default.nix prefixes them with
-# config.home.homeDirectory.
+# Values the start page, its service and ../vimium.nix must agree on. Plain
+# data, no `pkgs`; paths are relative to $HOME.
 
 let
   port = 47818;
@@ -12,20 +7,13 @@ in
 {
   inherit port;
 
-  # The page's own origin. Spelled with 127.0.0.1 rather than localhost
-  # because the service checks the Host header against this exact string (a
-  # DNS-rebinding guard), and "localhost" would not match it.
+  # 127.0.0.1, not localhost: the service checks the Host header against this
+  # exact string (a DNS-rebinding guard).
   url = "http://127.0.0.1:${toString port}/";
 
-  # `o`/`O`/`b`/`B` search aliases, shared with Vimium. Format is
-  # `alias: url description`, with %s as the query placeholder.
-  #
-  # Two of these are kept verbatim despite looking wrong, because fixing them
-  # silently would change what the keys do:
-  #   sgn  has no %s at all — the query lands nowhere
-  #   sg   has no %s and its context: value is truncated ("globa")
-  # Fix or delete them deliberately, not as a side effect of a port. The start
-  # page treats a %s-less alias the same way Vimium does: it just opens the URL.
+  # `alias: url description`, %s = the query. sgn and sg have no %s (sg's
+  # context is also truncated), so they just open the URL; fixing them changes
+  # what the keys do.
   searchAliases = [
     "w: https://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia"
     "gh: https://github.com/%s GitHub"
@@ -51,42 +39,29 @@ in
     "saicode: https://github.com/search?q=repo%3ASonyResearch%2Fsai%20%s&type=code SAI code search"
   ];
 
-  # Fallback when the first word of a query is not an alias. Same engine as
-  # Vimium's `searchUrl` and Firefox's default engine (../default.nix).
+  # For queries without an alias; also Vimium's `.` and Firefox's default.
   defaultSearchUrl = "https://duckduckgo.com/?q=";
 
-  # Repositories the `code` panel watches. It only reads the working tree — it
-  # never fetches — so listing a repo here costs one `git status` a minute.
+  # The `code` panel's repos: one `git status` a minute, never a fetch.
   repos = [
     "nix_config"
     "nix_config/danvim"
   ];
 
-  # This flake's checkout, for the `machine` panel: ./result versus
-  # /run/current-system, and flake.lock's nixpkgs age.
+  # For the `machine` panel: ./result vs /run/current-system, flake.lock age.
   nixConfigDir = "nix_config";
 
-  # Markdown checklist behind the `today` panel. Created empty on first run.
-  # Lines that are not `- [ ] `/`- [x] ` items are preserved untouched, so
-  # headings and notes in the same file survive the page editing it.
+  # The `today` panel's checklist, created on first run. Lines other than
+  # `- [ ] `/`- [x] ` items are left untouched.
   todoFile = "notes/todo.md";
 
-  # Weather and the sun that drive the fog and the tint.
-  #
-  # New York, where this machine's clock is (America/New_York), rather than
-  # A Coruña, which is what ../../noctalia/default.nix still says — noctalia's
-  # weather widget and nightlight schedule therefore disagree with this page
-  # until that one is changed too.
-  #
-  # Fixed coordinates: auto-location is not wired up, so this goes wrong while
-  # travelling (see the T16g migration).
+  # Drives the fog and tint. Fixed; noctalia auto-locates on its own.
   weather = {
     place = "New York";
     latitude = 40.7128;
     longitude = -74.006;
   };
 
-  # PRs come from the personal account only. `gh auth token --user` picks this
-  # one out of the two the keyring holds (the other is the work account).
+  # The personal account; `gh auth token --user` picks it over the work one.
   githubUser = "Danielhp95";
 }

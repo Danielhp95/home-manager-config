@@ -1,18 +1,9 @@
 { pkgs, ... }:
 let
-  # Split-tunnel vpnc-script for the SIE VPN.
-  #
-  # The gateway is full-tunnel by design: it pushes a default route through the
-  # VPN plus a long list of "split-exclude" SaaS ranges (Teams/Zoom/etc.) that go
-  # direct. openconnect's vpnc-script only skips installing the default route when
-  # CISCO_SPLIT_INC is set, so here we inject it to flip the model: keep the normal
-  # default route on the LAN, and send ONLY corporate networks through tun0.
-  #
-  #   10.0.0.0/8      -- corp internal (our tunnel IP is 10.94.x)
-  #   162.49.0.0/16   -- Sony/SIE space (corp DNS 162.49.100.253/254 + internal web)
-  #
-  # If an internal host turns out unreachable, find its IP range and add another
-  # CISCO_SPLIT_INC_N_ entry below (bump CISCO_SPLIT_INC accordingly).
+  # Split tunnel for the SIE VPN, whose gateway pushes a full tunnel: with
+  # CISCO_SPLIT_INC set, vpnc-script keeps the LAN default route and sends only
+  # corp networks through tun0 (10/8 internal; 162.49/16 SIE, incl. corp DNS).
+  # For an unreachable internal host, add its range (and bump CISCO_SPLIT_INC).
   sieVpncSplit = pkgs.writeShellScript "sie-vpnc-split" ''
     export CISCO_SPLIT_INC=2
 
@@ -45,7 +36,7 @@ in
     awscli2
 
     gpclient
-    # Split tunnel: only corp networks go through the VPN (see sieVpncSplit above).
+    # Split tunnel: only corp networks use the VPN (see sieVpncSplit).
     (writeShellScriptBin "sie-vpn-connect" ''
       ${connectCmd} --script ${sieVpncSplit} ${portal}
     '')

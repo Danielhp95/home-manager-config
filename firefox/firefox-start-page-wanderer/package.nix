@@ -1,12 +1,7 @@
-# The two store paths behind the start page: the page itself and the backend
-# that serves it. Split out of ./default.nix so both can be built (and their
-# test suites run) without evaluating the whole Home Manager configuration:
-#
+# The start page and its backend, buildable (tests included, in checkPhase)
+# without evaluating Home Manager:
 #   nix build --impure --expr 'let p = import <nixpkgs> {}; in
 #     (p.callPackage ./firefox/firefox-start-page-wanderer/package.nix {}).page'
-#
-# Both derivations run their tests in checkPhase, so a broken parser or a
-# broken search-alias rule fails `nh os build` instead of the new tab.
 {
   lib,
   cormorant,
@@ -20,17 +15,14 @@
 }:
 
 let
-  # Imported rather than taken as arguments: nixpkgs has a package called
-  # `palette`, and callPackage would inject *that* over a defaulted argument
-  # of the same name. It does, and the failure is a puzzling "attribute 'hash'
-  # missing" a long way from here.
+  # Imported, not an argument: callPackage would inject nixpkgs' own `palette`
+  # package instead ("attribute 'hash' missing").
   palette = import ../../palette.nix;
   shared = import ./shared.nix;
 
   art = import ./art.nix { inherit fetchurl imagemagick runCommand; };
 
-  # bgDeep -> --ember-bg-deep. Digits and punctuation pass through, since for
-  # them toUpper and toLower are both the character itself.
+  # bgDeep -> bg-deep; digits and punctuation pass through.
   toKebab =
     name:
     lib.concatMapStrings (
@@ -38,8 +30,7 @@ let
       if char == lib.toUpper char && char != lib.toLower char then "-${lib.toLower char}" else char
     ) (lib.stringToCharacters name);
 
-  # The same trick ../userChrome.css uses: nix owns the palette, the
-  # stylesheet stays a plain stylesheet with no interpolation inside it.
+  # As with ../userChrome.css: nix owns the palette, the stylesheet stays plain.
   paletteCss = writeText "palette.css" ''
     /* Generated from ../../palette.nix — do not edit. */
     :root {

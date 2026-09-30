@@ -14,8 +14,7 @@ in
 
   home.sessionVariables = {
     BROWSER = "firefox";
-    # ghostty is installed too, and noctalia's runInTerminal would otherwise
-    # prefer it.
+    # noctalia's runInTerminal would otherwise pick ghostty.
     TERMINAL = "kitty";
   };
 
@@ -29,7 +28,7 @@ in
     pinentry.package = pkgs.pinentry-curses;
   };
 
-  # To allow bluetooth devices buttons to control media things (like stop / play)
+  # Bluetooth headset buttons control MPRIS playback.
   services.mpris-proxy.enable = true;
 
   imports = [
@@ -45,8 +44,7 @@ in
     ./git
     ./menu_launchers
 
-    # Apps that draw their own UI and so need theming of their own, rather
-    # than picking up WhiteSur-Dark-orange from GTK/Qt.
+    # Apps that draw their own UI, so GTK/Qt theming does not reach them.
     ./firefox
     ./chromium.nix
     ./element.nix
@@ -76,15 +74,9 @@ in
   programs.mpv = {
     enable = true;
     config = {
-      # OSD only — the same chrome-vs-content line firefox/default.nix draws.
-      # sub-color and friends are deliberately absent: subtitles are part of
-      # what is being watched, not part of the player's UI, and recolouring
-      # them would be the video equivalent of forcing a website's palette.
-      #
-      # The letterbox that mpv paints around a non-matching aspect ratio is
-      # `background`, whose default is `tiles` (a light checkerboard); pinning
-      # it to a flat palette colour is what keeps a 21:9 film from sitting in
-      # a grey grid. Colors are AARRGGBB, alpha first.
+      # OSD only: subtitles are content and keep their own colours.
+      # `background` is the letterbox (default: a light checkerboard).
+      # Colours are AARRGGBB.
       osd-color = "#FF${pal.fg}";
       osd-outline-color = "#FF${pal.bgDeep}";
       osd-back-color = "#AF${pal.bg}";
@@ -93,27 +85,17 @@ in
 
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true; # Don't close mpv when video is done
-      # Decode on the iGPU media block (iHD VA-API) instead of CPU cores.
-      # auto-safe only picks whitelisted-stable hwdec backends.
+      # VA-API on the iGPU (iHD); auto-safe only uses whitelisted backends.
       hwdec = "auto-safe";
-      # libplacebo's default Vulkan device pick is the discrete GPU, but
-      # Hyprland composites on the Intel iGPU (first in hyprland.lua's
-      # AQ_DRM_DEVICES; the NVIDIA card only scans out the HDMI/DP ports
-      # wired to it). Rendering on the dGPU would push every frame across
-      # PCIe into the compositor. Pin to the iGPU that's actually compositing;
-      # the name is Mesa's for this Arrow Lake iGPU (8086:7d67).
+      # libplacebo defaults to the dGPU, but Hyprland composites on the iGPU
+      # (AQ_DRM_DEVICES in hyprland.lua), so render there instead of copying
+      # every frame across PCIe. The name is Mesa's for this iGPU.
       vulkan-device = "Intel(R) Graphics (ARL)";
     };
   };
 
-  # The lightweight image viewer. imv paints a checkerboard behind anything
-  # with transparency or a non-matching aspect ratio by default, which is the
-  # brightest thing on the screen in a dark session; `background` replaces it
-  # with a flat palette colour. imv takes bare hex with no leading '#', which
-  # is palette.nix's native form.
-  #
-  # The overlay is imv's own status line (filename, dimensions, index) — UI,
-  # not image data. Nothing here touches how the image itself is decoded.
+  # A flat background instead of imv's default checkerboard, and an Ember
+  # status line. imv takes bare hex, palette.nix's native form.
   programs.imv = {
     enable = true;
     settings.options = {
@@ -125,13 +107,10 @@ in
   };
 
   home.packages = with pkgs; [
-    ### Browsers
-    # chromium and firefox are installed by their own modules (./chromium.nix,
-    # ./firefox), which also carry their theming.
+    # chromium and firefox come from ./chromium.nix and ./firefox.
     nvd # Nix version diff tool
-    # Lazy store of every binary nixpkgs ever shipped, scoped to a mount
-    # namespace that dies with the shell (the NixOS module would replace
-    # /nix/store system-wide, which is meant for VMs).
+    # Any binary nixpkgs ever shipped, in a per-shell mount namespace. Not the
+    # NixOS module: it replaces /nix/store system-wide (meant for VMs).
     inputs.omnibin.packages.${pkgs.stdenv.hostPlatform.system}.omnibin-shell
     inputs.omnibin.packages.${pkgs.stdenv.hostPlatform.system}.omnibin
     manix # NixOS/home-manager options search (backs `tv nix-options`)
@@ -141,9 +120,8 @@ in
     ### Communication
     slack
     telegram-desktop
-    # Element comes via programs.element-desktop in ./element.nix.
-    # services.nextcloud-client below runs the client; the package is here
-    # for its launcher entry, which the service does not install.
+    # Element comes from ./element.nix.
+    # For the launcher entry; services.nextcloud-client below runs the client.
     nextcloud-client
 
     # From the release branch (pkgs.stable, the overlay in configuration.nix).
@@ -153,7 +131,7 @@ in
     ### Basic utilities
     ripgrep # better grep
     # tldr comes from programs.tealdeer in ./terminal
-    acpi # To meassure laptop battery levels
+    acpi # Laptop battery levels
     brightnessctl # Control brightness via CLI
     unzip
     wget
@@ -163,12 +141,10 @@ in
     ### Media viewing
     # video (mpv comes via programs.mpv above)
 
-    # music / video
-    # spotify comes from ./spotify.nix (spicetify-wrapped); installing
-    # pkgs.spotify as well would shadow it.
+    # spotify comes from ./spotify.nix; a plain pkgs.spotify would shadow it.
 
     # Images
-    # imv comes via programs.imv below, which carries its Ember colors.
+    # imv comes via programs.imv above.
     gthumb # Viewer for multiple images
 
     # Best youtube downloader
@@ -176,8 +152,7 @@ in
     ###
 
     ### debugging utils
-    # lnav comes via ./lnav, which carries its Ember theme. Use it to pipe
-    # `journalctl | lnav` for syntax highlighting / filtering.
+    # lnav comes from ./lnav (`journalctl | lnav`).
     pciutils # For `lspci` command.
     nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
     powertop # Analyze power consumption for intel based processors
@@ -198,19 +173,16 @@ in
     adwaita-icon-theme # symbolic-icon fallback for GNOME apps (MoreWaita expects it)
     gparted
 
-    # "Open in Terminal" comes from programs.nautilus-open-any-terminal in
-    # configuration.nix.
+    # Its "Open in Terminal" entry comes from configuration.nix.
     nautilus
 
     android-tools
 
-    # Process management: btop and bottom both come from ./terminal, which
-    # carries their Ember themes.
+    # btop and bottom come from ./terminal.
 
     bluetui # Bluetooth tui
   ];
 
-  # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
   # Started with the graphical session, in the tray.

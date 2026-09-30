@@ -1,18 +1,10 @@
-// Turning what you type in the search box into a URL, using the same alias
-// list Vimium's `o` uses (../shared.nix -> assets/aliases.json).
-//
-// Pure on purpose: search.test.js runs this under `node --test` during the nix
-// build, against the real generated aliases.json. There is no second copy of
-// these rules anywhere — the service never parses a query.
+// Search-box input -> URL, with the alias list Vimium's `o` uses (../shared.nix
+// -> assets/aliases.json). Pure, so search.test.js runs it in the nix build.
 
 /** Fallback engine, matching Vimium's `searchUrl` and Firefox's default. */
 export const DEFAULT_SEARCH = "https://duckduckgo.com/?q=";
 
-/**
- * Parse Vimium's `alias: url description` lines.
- * Unparseable lines are skipped rather than throwing: the list is
- * hand-maintained and one bad line should not empty the whole cheat sheet.
- */
+/** Parse `alias: url description` lines; bad lines are skipped, not fatal. */
 export function parseAliases(lines) {
   const out = new Map();
   for (const line of lines) {
@@ -23,15 +15,9 @@ export function parseAliases(lines) {
 }
 
 /**
- * @returns the URL to navigate to, or null when there is nothing to search.
- *
- * Rules, in order:
- *   ""                  -> null
- *   "https://…"         -> itself, so pasting a URL works
- *   "<alias> <query>"   -> the alias URL with %s replaced
- *   "<alias>"           -> the alias URL with %s replaced by nothing
- *   an alias with no %s -> opened as-is (Vimium does the same; `sg`/`sgn`)
- *   anything else       -> DuckDuckGo
+ * The URL for a query, or null if empty. URLs pass through; `<alias> <query>`
+ * fills the alias's %s (an alias without %s opens as-is, as in Vimium);
+ * anything else goes to defaultSearch.
  */
 export function expandSearch(input, aliases, defaultSearch = DEFAULT_SEARCH) {
   const query = input.trim();

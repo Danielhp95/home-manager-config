@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
 """Backend for the Firefox start page (*Wanderer above the Sea of Fog*).
 
-Serves two things on 127.0.0.1 and nothing else:
+Serves, on 127.0.0.1 only, the built page and /api/state (one section per
+panel: {"data", "fetchedAt", "error", "staleAfter"}) plus the /api/todo/*
+writes. Standard library only; it runs just `git` and `gh`, by store path. A
+failing collector keeps its last good data and sets `error`, so its panel goes
+stale instead of blank.
 
-  * the page itself, built by ../package.nix into an immutable store path
-  * /api/state, one JSON object with a section per panel, plus the three
-    /api/todo/* writes behind it
-
-Everything here is Python's standard library. The only processes it starts are
-`git` and `gh`, both as absolute store paths handed over in the config file.
-
-Shape of a section:  {"data": …, "fetchedAt": epoch, "error": str|None,
-"staleAfter": seconds|None}. A collector that throws keeps its last good
-`data` and fills in `error`, so a panel degrades to "stale" instead of
-vanishing, and one broken collector can never take the server down.
-
-Why the Host and Origin checks matter (they are not ceremony): any website you
-visit can make your browser send requests to 127.0.0.1. Reading is already
-blocked by never emitting CORS headers, but a plain form POST needs no
-permission, so the writes demand application/json (which forces a preflight
-this server never approves) plus the exact Origin. The Host check blocks DNS
-rebinding, where a hostile name resolves to 127.0.0.1 and thus counts as a
-different origin with the same address.
+Any website can make the browser hit 127.0.0.1. Reads are safe without CORS
+headers; writes demand application/json (a preflight this server never
+approves) plus the exact Origin; the Host check blocks DNS rebinding.
 """
 
 from __future__ import annotations
@@ -46,9 +34,8 @@ from pathlib import Path
 
 USER_AGENT = "firefox-start-page-wanderer/1.0"
 
-# How often each collector runs, and how old its data may get before the page
-# calls it stale. Stale is generous on purpose: a 15-minute weather reading is
-# still worth showing, it just says so.
+# Collector intervals and staleness limits; generous, as old data still shows
+# (marked stale).
 SKY_INTERVAL, SKY_STALE = 15 * 60, 45 * 60
 MACHINE_INTERVAL, MACHINE_STALE = 60, 5 * 60
 CODE_INTERVAL, CODE_STALE = 60, 15 * 60
@@ -135,9 +122,8 @@ def collect_forever(section: Section, collect, interval: float, stop: threading.
             delay = interval
         except Exception as exc:  # noqa: BLE001 - a panel may fail; the server may not
             section.fail(describe_error(exc))
-            # Retry sooner than the normal interval. Otherwise a login with
-            # the network still coming up leaves the sky blank, and the art
-            # without weather, for the whole 15 minutes.
+            # Retry sooner, or a login before the network is up leaves the sky
+            # blank for the whole interval.
             delay = min(interval, RETRY_AFTER_ERROR)
         stop.wait(delay)
 
@@ -213,9 +199,8 @@ def parse_open_meteo(doc: dict, place: str) -> dict:
         "isFog": code in FOG_CODES,
         "cloudCover": current.get("cloud_cover"),
         "visibilityM": current.get("visibility"),
-        # Sunrise and sunset belong to the *place*, which is not necessarily
-        # the timezone this machine is set to (the laptop travels). The page
-        # formats them with this offset rather than the browser's.
+        # Sunrise and sunset belong to the place, not the machine's timezone;
+        # the page formats them with this offset.
         "utcOffsetSeconds": offset,
         "sun": [
             {"sunrise": local_epoch(rise, offset), "sunset": local_epoch(set_, offset)}
@@ -236,11 +221,8 @@ def system_state(
 ) -> dict:
     """What `./result` and /run say about switching and rebooting.
 
-    `switchPending` only ever sees builds that leave a ./result symlink behind
-    (`nixos-rebuild build`, or `nh os build --out-link result`); an `nh os
-    build` into a temporary link is invisible here. The basename check keeps a
-    ./result left over from building some *package* from being read as a
-    system that is waiting to be switched to.
+    Only builds that leave ./result count (not `nh os build` to a temp link),
+    and a ./result that is not a NixOS system is ignored.
     """
     result_link = os.path.join(nix_config_dir, "result")
     current_path = os.path.realpath(current)
@@ -267,11 +249,8 @@ def system_state(
 
 
 def flake_lock_modified(lock_path: str) -> int | None:
-    """`lastModified` of whatever the root's `nixpkgs` input resolves to.
-
-    The indirection is the point: in this flake.lock the root input named
-    "nixpkgs" points at a node called "nixpkgs_2".
-    """
+    """`lastModified` of the node the root's `nixpkgs` input resolves to (its
+    name can differ, e.g. "nixpkgs_2")."""
     doc = json.loads(Path(lock_path).read_text(encoding="utf-8"))
     nodes = doc.get("nodes", {})
     name = nodes.get("root", {}).get("inputs", {}).get("nixpkgs")
@@ -413,11 +392,8 @@ def parse_gh_prs(doc: list) -> list[dict]:
 
 
 def github_state(gh_bin: str, user: str, timeout: float = 15.0, limit: int = 5) -> dict:
-    """Open PRs for `user`, via a token taken fresh from gh's keyring.
-
-    The token lives in this function's `env` and nowhere else: not on disk, not
-    in the state document, not in a log line.
-    """
+    """Open PRs for `user`, via a token taken fresh from gh's keyring and kept
+    only in this call's `env` (never on disk, in the state, or in a log)."""
     try:
         token = run([gh_bin, "auth", "token", "--user", user], timeout).strip()
     except Exception as exc:  # noqa: BLE001
@@ -460,9 +436,8 @@ class Conflict(Exception):
 class TodoStore:
     """Reads and writes `- [ ] …` lines, leaving every other line alone.
 
-    Concurrency with nvim is optimistic: each write carries the version (a
-    hash) the page last saw. A mismatch raises Conflict rather than
-    overwriting an edit made in the editor.
+    Writes carry the version (a hash) the page saw; a mismatch raises Conflict
+    instead of overwriting an edit made in the editor.
     """
 
     def __init__(self, path: str):
@@ -664,10 +639,8 @@ class App:
         try:
             payload["todo"] = fresh(self.todo.state())
         except (OSError, ValueError) as exc:
-            # ValueError covers UnicodeDecodeError: a latin-1 paste into
-            # ~/notes/todo.md from the editor sharing this file must degrade
-            # to one panel showing an error, not take /api/state down and
-            # blank every panel.
+            # ValueError covers UnicodeDecodeError: a bad byte in the todo file
+            # must break one panel, not /api/state.
             payload["todo"] = fresh(None, describe_error(exc))
         return payload
 
@@ -786,9 +759,8 @@ def make_handler(app: App):
                 self._finish(404, b"not found\n")
                 return
 
-            # Read the body *before* any rejection. On a keep-alive
-            # connection an unread body is parsed as the next request line,
-            # which breaks the following request rather than this one.
+            # Read the body before any rejection: on keep-alive, an unread body
+            # is parsed as the next request line.
             try:
                 length = int(self.headers.get("Content-Length") or 0)
             except ValueError:

@@ -1,19 +1,14 @@
 { ... }:
 
-# Element is Electron: its window frame follows GTK, but everything inside it
-# is web content that only Element's own theme system can color. It reads
-# ~/.config/Element/config.json at startup, and `custom_themes` there behaves
-# exactly like the themes shipped in the app.
-#
-# NOTE the theme still has to be selected once in Settings -> Appearance
-# ("Ember"). `default_theme` below only applies to a profile that has never had
-# a theme chosen, since a user choice is stored in account data and wins.
+# Only Element's own theme system colours its web content, via `custom_themes`.
+# Pick "Ember" once in Settings -> Appearance: `default_theme` only applies to a
+# profile that never chose a theme (the choice lives in account data).
 
 let
   p = (import ./palette.nix).hash;
 in
 {
-  # Installs element-desktop and writes `settings` to that config.json.
+  # Installs Element and writes `settings` to ~/.config/Element/config.json.
   programs.element-desktop = {
     enable = true;
     settings = {

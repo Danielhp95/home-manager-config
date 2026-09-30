@@ -1,14 +1,8 @@
-/* The "gallery wall": Friedrich's canvas hung on the right edge, fading into
- * a graphite column that holds the dashboard.
- *
- * Every colour comes from assets/palette.css, which nix generates from
- * ../../../palette.nix — the same trick userChrome.css uses. No hex codes
- * here except the fog, which is a light *veil* rather than a palette slot.
- *
- * The fog and tint are driven by custom properties that app.js sets from the
- * weather:  --fog-low, --fog-high, --glow-strength, --glow-colour,
- * --art-brightness. Their defaults below are a calm, overcast afternoon, so
- * the page looks right even if the service never answers.
+/* The "gallery wall": the canvas on the right edge, fading into a graphite
+ * column that holds the dashboard. Colours come from assets/palette.css (nix
+ * generates it from palette.nix); only the fog is a raw veil. app.js sets the
+ * fog and tint variables from the weather; the defaults are a calm, overcast
+ * afternoon, for when the service never answers.
  */
 
 @font-face {
@@ -31,8 +25,7 @@
   --fog-high: 0.28;
   --glow-strength: 0;
   --glow-colour: var(--ember-accent);
-  /* Under 1 even at noon: the page is a dark room, and the canvas is lit
-   * from within it rather than being a window onto a brighter day. */
+  /* Under 1 even at noon: the canvas is lit from within a dark room. */
   --art-brightness: 0.88;
 
   --mono: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
