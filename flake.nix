@@ -18,8 +18,6 @@
     omnibin.url = "github:fzakaria/omnibin";
     omnibin.inputs.nixpkgs.follows = "nixpkgs";
 
-    multiverse.url = "github:fzakaria/nixpkgs-multiverse";
-
     # hy3 builds against Hyprland's headers: pin both revs and move them
     # together, to a Hyprland rev hy3 supports.
     hyprland = {
@@ -65,8 +63,6 @@
       rev = "ac1cfe72820bbbb0f0eb3fb017a6b1e7f3fcb2fe";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    voxtype.url = "github:peteonrails/voxtype";
-    voxtype.inputs.nixpkgs.follows = "nixpkgs";
     # Separate repo, gitignored here. A commit there reaches a rebuild only
     # after `nix flake update danvim`.
     danvim.url = "path:/home/dani/nix_config/danvim";
