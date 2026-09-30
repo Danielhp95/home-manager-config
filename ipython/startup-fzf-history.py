@@ -1,20 +1,10 @@
 # Replaces IPython's Ctrl-R reverse-i-search with an fzf picker over the
-# history database. Descended from https://stackoverflow.com/questions/48203949
-# (the same lineage as the ipython-ctrlr-fzf package on PyPI), rewritten to
-# drop its pyfzf dependency.
+# history database (after https://stackoverflow.com/questions/48203949,
+# minus its pyfzf dependency).
 #
-# Installed as startup/20-fzf-history.py by ./default.nix.
-#
-# HARD CONSTRAINT: this file must import nothing outside the standard library
-# and prompt_toolkit. It lives in ~/.ipython/profile_default/startup/, which
-# every IPython on this machine loads — including the ones inside project
-# virtualenvs — but its imports resolve against whichever venv is active. Any
-# third-party import here (pyfzf was the original offender) turns a one-time
-# install into a `pip install` in every environment. prompt_toolkit is safe
-# because IPython's terminal frontend depends on it.
-#
-# Nothing here may raise past module scope either: a traceback in a startup
-# file is printed at every single IPython launch, in every venv.
+# Standard library and prompt_toolkit imports only: every venv's IPython
+# loads this file, and any other import would need installing in each venv.
+# Nothing may raise past module scope either, or every launch prints it.
 import shutil
 import subprocess
 
@@ -42,17 +32,15 @@ def fzf_i_search(event):
 
     buf = event.current_buffer
 
-    # bat is optional; fall back to plain cat when it is not on PATH
+    # bat is optional; without it the preview is the plain text
     if shutil.which("bat"):
         preview = "printf '%s' {} | bat --color=always --style=numbers -l py"
     else:
         preview = "printf '%s' {}"
 
-    # --read0/--print0 let entries contain newlines verbatim: fzf renders
-    # multi-line items natively since 0.54, so no separator smuggling is
-    # needed. FZF_DEFAULT_OPTS is inherited (that is where the Ember colours
-    # come from), but its ctrl-e binding opens the selection in nvim as a
-    # filename, which is nonsense for a history line — bind it away.
+    # --read0/--print0 keep multi-line entries intact (fzf >= 0.54 renders
+    # them). FZF_DEFAULT_OPTS brings the Ember colours, but its ctrl-e opens
+    # the selection in nvim as a filename, so bind that away.
     argv = [
         "fzf",
         "--read0",
@@ -95,8 +83,7 @@ def fzf_i_search(event):
 
 
 def _install():
-    # Startup files are also loaded by Jupyter kernels, which have no
-    # prompt_toolkit application — there is simply no Ctrl-R to rebind there.
+    # Jupyter kernels load startup files too, but have no prompt_toolkit app
     if not getattr(ipython, "pt_app", None):
         return
     if not shutil.which("fzf"):
@@ -106,8 +93,7 @@ def _install():
     from prompt_toolkit.filters import HasFocus, HasSelection
     from prompt_toolkit.keys import Keys
 
-    # prompt_toolkit resolves conflicts last-registered-wins, so this shadows
-    # IPython's own Ctrl-R without having to unbind it first.
+    # Last-registered wins, so this shadows IPython's own Ctrl-R
     ipython.pt_app.key_bindings.add_binding(
         Keys.ControlR, filter=(HasFocus(DEFAULT_BUFFER) & ~HasSelection())
     )(fzf_i_search)

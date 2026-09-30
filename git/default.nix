@@ -1,11 +1,9 @@
 { pkgs, ... }:
 let
-  # gh's markdown style (glamour, via GLAMOUR_STYLE): glamour's dark.json with
-  # Ember colours. Text uses ANSI slot numbers, so the terminal's Ember 16
-  # apply. Code blocks go through chroma's fixed 256-colour table, where only
-  # the xterm values of slots 1-7 map back to those slots exactly (bright
-  # ones and slot 8 tie with other entries), so comments use grey 242, the
-  # nearest to muted. Token roles follow ../ipython/ipython_config.py.
+  # gh's markdown style (GLAMOUR_STYLE): glamour's dark.json in Ember, token
+  # roles as in ../ipython/ipython_config.py. Text uses ANSI slots; chroma's
+  # fixed 256-colour table maps only the xterm values of slots 1-7 back exactly
+  # (bright ones and slot 8 tie), so code comments use grey 242, nearest muted.
   slot = {
     accent = "#800000";
     olive = "#008000";
@@ -122,17 +120,14 @@ in
 {
   home.sessionVariables.GLAMOUR_STYLE = "${glamourEmber}";
 
-  # Structural diffs for `git diff`. git.enable is explicit: the module
-  # stopped wiring diff.external automatically, and until this was set difft
-  # was installed but git never called it.
+  # Structural diffs for `git diff`; git.enable must be explicit, the module
+  # no longer sets diff.external on its own.
   programs.difftastic = {
     enable = true;
     git.enable = true;
   };
-  # Installs gh and declares the credential helper in the HM git config, so
-  # it no longer depends on the ~/.gitconfig that `gh auth setup-git` wrote
-  # (that file can be deleted; hosts.yml with the token stays gh's own).
-  # settings mirrors what ~/.config/gh/config.yml already held.
+  # gh plus its credential helper in the HM git config (no ~/.gitconfig from
+  # `gh auth setup-git`; the token stays in gh's own hosts.yml).
   programs.gh = {
     enable = true;
     gitCredentialHelper.enable = true;
@@ -144,8 +139,7 @@ in
   programs.git = {
     enable = true;
 
-    # Written to ~/.config/git/ignore, git's default global excludes file;
-    # this is the one entry the unmanaged file there used to hold
+    # ~/.config/git/ignore, git's default global excludes file
     ignores = [ "**/.claude/settings.local.json" ];
 
     settings = {
@@ -184,7 +178,7 @@ in
         # Short summary of changes from 1 day ago
         tlog = "log --stat --since='1 Day Ago' --graph --pretty=oneline --abbrev-commit --date=relative";
 
-        # Something like showing desdencindg lists of commit merges
+        # Commit counts per author
         rank = "shortlog --summary --numbered --no-merges";
 
         # delete merged branches

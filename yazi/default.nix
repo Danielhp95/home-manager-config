@@ -6,14 +6,9 @@
 let
   p = (import ../palette.nix).hash;
 
-  # https://github.com/yazi-rs/plugins — this pin MUST track the yazi version
-  # from nixpkgs (currently 26.9.1; this rev targets 26.8.15 and was
-  # smoke-tested on 26.9.1: git signs, full-border and the mediainfo preview
-  # all render): the plugin API is versioned, and a plugin
-  # built for an older yazi fails at runtime, not at build time. 26.8.15 reworked
-  # the fetcher API (yazi #4235) — fetchers now return a `ya.co(...)` coroutine
-  # instead of a boolean, so the older git.yazi died with
-  # "error converting lua boolean to function" on every fetch.
+  # https://github.com/yazi-rs/plugins — this pin MUST track nixpkgs' yazi
+  # (26.9.1; this rev targets 26.8.15 and runs clean on 26.9.1): the plugin API
+  # is versioned and a mismatch only fails at runtime (e.g. yazi #4235's fetchers).
   officialPlugins = pkgs.fetchFromGitHub {
     owner = "yazi-rs";
     repo = "plugins";
@@ -25,10 +20,8 @@ in
 
   programs.yazi = {
     enable = true;
-    # No cd-on-exit wrapper function in any shell: zsh has the plain `fm`
-    # alias instead, and neither atuin's nor nushell's history has a single
-    # `yy`. The name stays pinned only so HM's stateVersion warning about its
-    # 26.05 default change ("yy" -> "y") can never fire.
+    # No cd-on-exit wrapper in any shell (zsh has `fm`; `yy` went unused). The
+    # name stays pinned so HM's 26.05 default-change warning can't fire.
     shellWrapperName = "yy";
     enableZshIntegration = false;
     enableNushellIntegration = false;
@@ -68,18 +61,15 @@ in
         rev = "7bfcfcbda078b7e51d1ff9a62db9c654a3952fa4";
         hash = "sha256-pmyS1rU5C6U9LloGoDFB8s6GwoMqG1Jve5OFooI64tU=";
       };
-      # Thumbnail + metadata (ISO, aperture, codec, bitrate, ...) preview for
-      # images/videos/audio. Needs mediainfo, ffmpeg and imagemagick.
+      # Thumbnail + metadata preview (needs mediainfo, ffmpeg and imagemagick)
       mediainfo = pkgs.fetchFromGitHub {
         owner = "boydaihungst";
         repo = "mediainfo.yazi";
         rev = "e079a001f4fefd69007e515bbede4e16b95a811e";
         hash = "sha256-RIVcKJO89R4oaE6sJuFcV8pFK4nvWtq6ILAXehu4FIY=";
       };
-      # Mount Android phones (MTP), cameras and network shares via GVfs
-      # (successor of simple-mtpfs.yazi). The system side — gvfsd, gvfsd-mtp,
-      # libmtp udev rules, udisks2 — comes from services.gvfs and
-      # services.udisks2, enabled explicitly in configuration.nix.
+      # Phones (MTP), cameras and network shares via GVfs; the system side is
+      # services.gvfs and services.udisks2 in configuration.nix.
       gvfs = pkgs.fetchFromGitHub {
         owner = "boydaihungst";
         repo = "gvfs.yazi";
@@ -111,17 +101,9 @@ in
         on = [ "<C-g>" ];
         run = "plugin tv text";
       }
-      # Mounting: every mount action lives under the M prefix (which-key menu),
-      # and nothing else does. M is the only free prefix in yazi's preset keymap
-      # — g (goto) and m (linemode) are both taken, and the g c / m p bindings
-      # here already shadow theirs — so jump-to-device moved off g m, and
-      # jump-back off the ` ` chord, to keep the whole set in one menu.
-      #
-      # M m opens the classic mount.yazi UI (udisks disks/partitions), so the
-      # pre-gvfs muscle memory of "M then m" still lands there; phones and
-      # other GVfs devices are on M p. Order matters: the which-key menu lists
-      # candidates in binding order, so it reads mount, navigate, unmount,
-      # manage rather than alphabetical scramble.
+      # Every mount action lives under M (a which-key menu), the only free
+      # prefix in yazi's preset keymap: M m is mount.yazi's udisks UI, M p the
+      # GVfs devices. The menu lists candidates in binding order.
       {
         desc = "Mount disks/partitions (udisks)";
         on = [
@@ -324,16 +306,9 @@ in
         run = "plugin yamb -- delete_all";
       }
     ];
-    # Ember, straight from ../palette.nix — yazi ran on stock colors before.
-    # Key names are validated against yazi 26.5.6 by actually running it: yazi
-    # silently ignores unknown theme keys (no warning, no error), so a typo or
-    # a renamed key just quietly reverts that element to the preset. Notably
-    # v26 moved the hovered-row styles out of [mgr] (hovered/preview_hovered)
-    # into [indicator] (parent/current/preview) — the old names still "work"
-    # in the sense that nothing complains.
-    #
-    # No [app].overall bg: the terminal already paints the ember background
-    # (with its opacity), yazi shouldn't repaint it opaque.
+    # Ember from ../palette.nix. yazi silently ignores unknown theme keys, so a
+    # typo or renamed key just reverts to the preset (v26 moved the hover styles
+    # from [mgr] to [indicator]). No [app].overall bg: the terminal paints it.
     theme = {
       mgr = {
         cwd = {
@@ -380,17 +355,13 @@ in
           bg = p.accent;
         };
         border_symbol = "│";
-        # accentDim, not p.border: same lesson as the nvim float borders — kitty
-        # rasterizes the border glyphs as antialiased shapes, and a border a few
-        # percent lightness above the background loses its partial-coverage
-        # pixels (worse here, through background_opacity). p.border reads as
-        # barely-there dashes; accentDim matches the danvim FloatBorder pick.
+        # accentDim, not p.border: kitty antialiases border glyphs, and a border
+        # barely lighter than the background fades to dashes (as in danvim).
         border_style.fg = p.accentDim;
       };
 
-      # The hovered row: file's own filetype fg kept, surface bg behind it —
-      # same recipe as the fzf/television selected row. The preset default is
-      # reversed video, which turns every hover into a loud full-color pill.
+      # Hovered row: filetype fg on a surface bg, like fzf/television; the
+      # preset's reverse video turns every hover into a loud pill.
       indicator = {
         parent.bg = p.surface;
         current.bg = p.surface;
@@ -533,10 +504,8 @@ in
         };
       };
 
-      # The help menu is a command palette (yazi #4074): `chord` is the key
-      # column (20 cells wide), `action` the row (the description, falling back
-      # to the raw command), and its filter line is an Input, styled by [input]
-      # above. Unknown keys are silently ignored.
+      # Help is a command palette (yazi #4074): `chord` is the key column,
+      # `action` the description; its filter line is styled by [input].
       help = {
         border.fg = p.accentDim;
         chord.fg = p.accent;
@@ -549,8 +518,7 @@ in
 
       # First match wins; `is` conditions go before the broad mime globs.
       filetype.rules = [
-        # Gold, not steel: folders are what you navigate by, so they carry
-        # the emphasis color (same request as zsh paths).
+        # Gold: folders are what you navigate by (as with zsh paths)
         {
           url = "*/";
           fg = p.gold;
@@ -586,14 +554,9 @@ in
         }
       ];
 
-      # Folder icons in burnt orange instead of the preset's blues. Two rules
-      # because the preset colors dirs in two places with different priority:
-      # a cond (`if = "dir"` → #03a9f4) for generic folders, and per-name
-      # `dirs` entries (Desktop, Downloads, ... → #00bcd4 cyan) that outrank
-      # any cond — so the XDG home set is re-pinned here with the preset's own
-      # glyphs. .git and .config are re-pinned the same way (their preset
-      # colors were cyan and orange). Other named dev dirs (node_modules,
-      # .github, ...) keep their distinctive preset icons and colors.
+      # Folder icons in burnt orange instead of the preset's blues. The preset
+      # colors dirs twice, via an `if = "dir"` cond and via per-name `dirs` that
+      # outrank any cond, so the XDG set, .git and .config are re-pinned here.
       icon = {
         # Icon rules don't merge — an entry without `text` would blank the
         # glyph — so these carry the preset's own glyphs, recolored.
@@ -638,9 +601,8 @@ in
                 t = "";
               }
             ];
-        # Prepended, so these outrank the preset's own dir conds. Order matters
-        # within the pair: the specific "dir & hovered" (open folder) must
-        # precede plain "dir" (closed folder) or it would never match.
+        # Prepended, so these outrank the preset's dir conds; "dir & hovered"
+        # must precede "dir" or it never matches.
         prepend_conds = [
           {
             "if" = "dir & hovered";
@@ -685,11 +647,9 @@ in
             group = "git";
           }
         ];
-        # mediainfo.yazi: thumbnail + metadata preview; replaces the built-in
-        # image/video previewers (it renders the image itself, then the info).
-        # GVfs mounts (MTP phones, network shares) are too slow to preload or
-        # preview files from — noop them first (first match wins). Absolute
-        # path because env vars don't expand here; 1000 = dani's uid.
+        # mediainfo.yazi replaces the built-in image/video previewers. GVfs
+        # mounts are too slow to preview from, so noop them first (first match
+        # wins); an absolute path because env vars don't expand here (uid 1000).
         prepend_preloaders = [
           {
             url = "/run/user/1000/gvfs/**/*";
@@ -724,10 +684,8 @@ in
     lazygit # g l binding
     trash-cli # required by restore.yazi
     mediainfo # required by mediainfo.yazi (ffmpeg comes from home.nix)
-    # `gio`, which every gvfs.yazi action shells out to (it aborts with
-    # "gio not found" without it). services.gvfs only installs the daemons
-    # and backends; the CLI lives in glib, which nothing else here pulls
-    # into PATH.
+    # `gio`, which every gvfs.yazi action shells out to: services.gvfs ships
+    # only the daemons, the CLI lives in glib.
     glib
   ];
 }

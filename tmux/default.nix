@@ -2,8 +2,7 @@
 
 let
   p = (import ../palette.nix).hash;
-  # The @color_* variables tmux.conf renders with, generated from palette.nix
-  # so tmux, starship and the rest of the system share one source of truth.
+  # The @color_* variables tmux.conf renders with, from palette.nix
   emberColors = ''
     # ── Ember palette — GENERATED from palette.nix by default.nix ──
     # Surfaces
@@ -25,9 +24,7 @@ let
     set -g prompt-cursor-colour "${p.accent}"
   '';
 
-  # Plugin *options* are plain `set -g @…` and cost nothing, so they stay up
-  # top where they read like configuration. The plugins' own entrypoints are
-  # loaded at the very bottom instead — see loadPlugins.
+  # Plugin options only; the plugins themselves load last (see loadPlugins)
   pluginOptions = ''
     # ── tmux-resurrect ──
     set -g @resurrect-strategy-vim 'session'
@@ -49,17 +46,10 @@ let
     set -g @floax-text-color '${p.fg}'
   '';
 
-  # continuum with two calls cut out of its entrypoint (the functions stay):
-  # - handle_tmux_automatic_start: with @continuum-boot on it writes
-  #   ~/.config/systemd/user/tmux.service once and never updates it; with it
-  #   off it runs `systemctl --user disable tmux.service` on every server
-  #   start. That unit started its own server on /tmp/tmux-1000/default,
-  #   while HM's secureSocket puts the shells' server under $XDG_RUNTIME_DIR,
-  #   so it ran a second server nobody attached to.
-  # - add_resurrect_save_interpolation: prepends `#(continuum_save.sh)` to
-  #   status-right, which re-runs the script on every status redraw.
-  #   status-daemon.nu calls it instead (see continuumSave).
-  # The count check fails the build if upstream renames either call.
+  # continuum minus two calls: handle_tmux_automatic_start manages a
+  # tmux.service whose server sits in /tmp, not HM's $XDG_RUNTIME_DIR (an
+  # orphaned second server); add_resurrect_save_interpolation adds a #() hook
+  # (status-daemon.nu calls the script). The grep fails the build if either moves.
   continuum = pkgs.tmuxPlugins.continuum.overrideAttrs (o: {
     postPatch = (o.postPatch or "") + ''
       calls='^[[:space:]]+(handle_tmux_automatic_start|add_resurrect_save_interpolation)$'
@@ -74,40 +64,20 @@ let
     pkgs.tmuxPlugins.tmux-floax
   ];
 
-  # With the status-right interpolation patched out, nothing in continuum
-  # calls its save script any more — status-daemon.nu does, once a minute.
-  # The script keeps doing its own @continuum-save-interval check, so the
-  # save cadence is still 5 minutes.
+  # status-daemon.nu calls this once a minute; the script's own
+  # @continuum-save-interval check keeps the saves 5 minutes apart.
   continuumSave = "${continuum}/share/tmux-plugins/continuum/scripts/continuum_save.sh";
 
-  # The one process that now computes the bar's dynamic segments. See the
-  # header of status-daemon.nu for the measurements that motivated it.
-  #
-  # writeNuBin runs it under `nu --no-config-file`, so none of the shell's
-  # own startup (starship, atuin, zoxide, television) is in the picture —
-  # this is nushell the scripting language, not the interactive shell from
-  # ../terminal/nushell.nix. The tmux binary is handed over as argv rather
-  # than found on PATH, so the feeder always drives the same tmux the rest
-  # of this module was built against.
+  # Computes the bar's dynamic segments (see status-daemon.nu). writeNuBin runs
+  # it with --no-config-file; tmux comes in as argv, pinning the one built here.
   statusDaemon = pkgs.writers.writeNuBin "tmux-status-daemon" (
     builtins.readFile ./status-daemon.nu
   );
 
-  # Loaded last, and in the background. `programs.tmux.plugins` would emit a
-  # bare `run-shell <plugin>.tmux` per plugin *above* extraConfig, which gets
-  # both of those wrong:
-  #
-  # 1. Ordering. The plugins read the @options in pluginOptions when they
-  #    load (floax binds @floax-bind then), so they have to run after them.
-  #
-  # 2. Cost. Each entrypoint is a bash script that talks back to the server
-  #    over dozens of synchronous show-option/set-option round-trips: ~236ms
-  #    added to every cold server start (250ms -> 14ms once moved off the
-  #    critical path).
-  #
-  # One chained `-b` rather than one `-b` per plugin, because the order still
-  # matters between them: continuum reads @resurrect-restore-script-path,
-  # which resurrect only sets when it itself loads.
+  # Last and in the background, not via programs.tmux.plugins (which runs them
+  # above extraConfig): they read pluginOptions at load time, and their
+  # synchronous round-trips cost ~236ms of a cold start. One chained -b keeps
+  # the order: continuum needs the script paths resurrect sets when it loads.
   loadPlugins = ''
 
     run-shell -b '${lib.concatMapStringsSep "; " (pl: pl.rtp) plugins}; ${statusDaemon}/bin/tmux-status-daemon #{socket_path} ${continuumSave} ${lib.getExe config.programs.tmux.package}'
@@ -124,19 +94,16 @@ in
     mouse = true;
     # Forward focus events so nvim gets FocusGained/FocusLost (autoread, gitsigns)
     focusEvents = true;
-    # Size a window to the largest client looking at *that window*, not the
-    # largest client attached to the session
+    # Size windows to the clients viewing them, not to every client of the session
     aggressiveResize = true;
-    # The default scrollback is a measly 2000 lines
+    # The default scrollback is 2000 lines
     historyLimit = 50000;
     # Small nonzero value: 0 makes tmux misread a lone Esc in escape sequences over ssh
     escapeTime = 10;
-    # Apps inside tmux should see tmux's own terminfo; truecolor/extkeys are
-    # granted via terminal-features in tmux.conf, independent of the outer terminal.
+    # tmux's own terminfo inside; truecolor/extkeys come from terminal-features
+    # in tmux.conf
     terminal = "tmux-256color";
     # Order matters here — see loadPlugins.
-    # Too look at some point, i3 style automatic layouts in tmux
-    # https://github.com/jabirali/tmux-tilish
     extraConfig = pluginOptions + emberColors + builtins.readFile ./tmux.conf + loadPlugins;
   };
 }

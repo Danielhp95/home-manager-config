@@ -1,6 +1,4 @@
-# I honestly never use history sububstitutions
-# (!! for last command, !$ for last argument, !n for nth last command, !<string> for command that matches string)
-bindkey ' ' magic-space  # magic-space` expands valid history substitutions or inserts a space if none were found
+bindkey ' ' magic-space  # expands history substitutions (!!, !$, ...) before the space
 
 # Edit the current command line in $EDITOR with control+alt+e
 autoload -U edit-command-line
@@ -8,8 +6,7 @@ zle -N edit-command-line
 bindkey '^[^E' edit-command-line
 
 
-# Make sure that the terminal is in application mode when zle is active, since
-# only then values from $terminfo are valid
+# Application mode while zle is active: only then are the $terminfo keys valid
 if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
   function zle-line-init() {
     echoti smkx
@@ -21,7 +18,7 @@ if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
   zle -N zle-line-finish
 fi
 
-# Start typing + [Up-Arrow] - fuzzy find history forward
+# [Up-Arrow] - search history for the typed prefix
 if [[ -n "${terminfo[kcuu1]}" ]]; then
   autoload -U up-line-or-beginning-search
   zle -N up-line-or-beginning-search
@@ -30,7 +27,7 @@ if [[ -n "${terminfo[kcuu1]}" ]]; then
   bindkey -M viins "${terminfo[kcuu1]}" up-line-or-beginning-search
   bindkey -M vicmd "${terminfo[kcuu1]}" up-line-or-beginning-search
 fi
-# [Down-Arrow] - walk back down the same prefix-filtered history
+# [Down-Arrow] - the same prefix search, back down
 if [[ -n "${terminfo[kcud1]}" ]]; then
   autoload -U down-line-or-beginning-search
   zle -N down-line-or-beginning-search
@@ -80,9 +77,7 @@ bindkey -M emacs '^[[1;5D' backward-word
 bindkey -M viins '^[[1;5D' backward-word
 bindkey -M vicmd '^[[1;5D' backward-word
 
-# NOTE: this requires television!
-# Single tab is a prefix of this binding, so zsh waits KEYTIMEOUT (in 10ms
-# units, default 40 = 400ms) before falling through to fzf-tab completion.
-# 12 = 120ms: single-tab completion feels instant, double-tab needs a quick tap.
+# Double Tab: television's autocomplete. A single Tab now waits KEYTIMEOUT (10ms
+# units, default 40) for a second one before fzf-tab; 120ms still feels instant.
 KEYTIMEOUT=12
 bindkey '\t\t' tv-smart-autocomplete

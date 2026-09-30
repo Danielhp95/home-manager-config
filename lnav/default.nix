@@ -1,35 +1,12 @@
 { pkgs, ... }:
 
-# lnav draws a full-screen log viewer with its own theme system, so it picks up
-# nothing from the terminal palette on its own — out of the box it uses the
-# built-in "default" theme (blue/cyan status bars, standard 256-colour
-# syntax highlighting).
-#
-# A theme here is a JSON document dropped into
-# ~/.config/lnav/configs/<dir>/config.json, which lnav globs at startup. It has
-# four style sections, and lnav does NOT validate their contents: an unknown
-# style key and a reference to an undefined $var are both accepted in silence,
-# and the affected element simply falls back to the default theme. A typo here
-# is therefore invisible except as one stubbornly wrong-coloured widget.
-#
-# The guard against that is to keep this an exact match for the key set of
-# lnav's own bundled themes, which it writes out as
-# ~/.config/lnav/configs/default/*.json.sample on first run (the package ships
-# no copy under $out/share). As of lnav 0.14.1 their union is 43 styles, 26
-# syntax-styles, 15 status-styles and 4 log-level-styles, no more and no
-# fewer. Diff against those samples after any lnav upgrade that adds a style.
-#
-# `vars` are arbitrary names substituted wherever a "$name" appears. They are
-# deliberately the palette.nix attribute names rather than lnav's usual
-# dracula-style colour names, so a reader can diff this against ../palette.nix
-# without a translation table in their head.
-#
-# NOTE lnav's `semantic()` colour function is *not* used, though the upstream
-# themes use it for `identifier` and `object-key`. It hashes each token to a
-# colour drawn from the full 256-colour cube — only the first 16 of which the
-# terminal remaps to Ember — so it is the one lnav feature that reliably emits
-# off-palette colour. Swap either style back to { color = "semantic()"; } to
-# trade palette discipline for per-identifier distinctness.
+# lnav ignores the terminal palette, so this is a full Ember theme. lnav does
+# NOT validate a theme's body: an unknown style key or undefined $var silently
+# falls back to the default. Keep the keys equal to the union of the bundled
+# themes (written to ~/.config/lnav/configs/default/*.json.sample on first
+# run; 43/26/15/4 per section as of 0.14.1) and re-diff after lnav upgrades.
+# `vars` reuse palette.nix's names. semantic() stays unused: it hashes tokens
+# into the full 256-colour cube, off-palette.
 
 let
   p = (import ../palette.nix).hash;
@@ -181,11 +158,9 @@ let
       indent-guide.color = "$divider";
     };
 
-    # Syntax highlighting of message bodies. The hue assignments mirror the
-    # ANSI mapping the terminals already use (kitty/kitty.conf colors 0-15):
-    # coral is red, olive is green, gold is yellow, steel is blue, mauve is
-    # magenta, sage is cyan. A log line therefore highlights the same way
-    # whether lnav or a plain `grep --color` renders it.
+    # Syntax highlighting of message bodies, with the terminals' ANSI mapping
+    # (kitty/kitty.conf): coral red, olive green, gold yellow, steel blue,
+    # mauve magenta, sage cyan.
     syntax-styles = {
       inline-code = {
         color = "$olive";
@@ -214,8 +189,7 @@ let
       diff-delete.color = "$error";
       diff-add.color = "$sage";
       diff-section.color = "$steel";
-      # The three-band histogram down the left edge. Same calm -> hot ramp as
-      # the btop gradients in ../terminal/default.nix.
+      # The three-band histogram down the left edge, calm -> hot
       spectrogram-low = {
         color = "$bg";
         background-color = "$sage";
@@ -309,10 +283,8 @@ let
       suggestion.color = "$muted";
     };
 
-    # Only the levels above INFO get a colour; DEBUG/INFO stay in the body
-    # colour so that a screen full of INFO lines is not a wall of hue. fatal
-    # inverts rather than just brightening, because by then the colour is the
-    # only thing that has to survive being skimmed past.
+    # Only levels above INFO get a colour, so a screen of INFO lines isn't a
+    # wall of hue; fatal inverts, so it survives being skimmed past.
     log-level-styles = {
       warning.color = "$gold";
       error.color = "$error";
@@ -339,13 +311,9 @@ in
 {
   home.packages = [ pkgs.lnav ];
 
-  # lnav globs ~/.config/lnav/configs/*/*.json at startup, so the directory
-  # name is free-form; only the theme-defs key has to match `ui.theme`.
-  #
-  # Setting ui.theme here makes Ember the default, but lnav also persists a
-  # theme chosen at runtime (`:config /ui/theme <name>`) into its own writable
-  # ~/.config/lnav/config.json, and that file wins. If lnav ever comes up in
-  # the wrong theme, that stale runtime override is why.
+  # lnav globs ~/.config/lnav/configs/*/*.json, so the directory name is free.
+  # A theme picked at runtime (`:config /ui/theme`) is saved to the writable
+  # ~/.config/lnav/config.json and wins over this one.
   xdg.configFile."lnav/configs/ember/config.json".source =
     (pkgs.formats.json { }).generate "lnav-ember.json" config;
 }
