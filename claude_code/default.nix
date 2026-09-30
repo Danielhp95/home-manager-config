@@ -31,32 +31,19 @@ let
   '';
 in
 {
-  # settings.json is deliberately NOT managed here: Claude Code rewrites it at
-  # runtime (model switches, /config, permission setup), and a store symlink
-  # would either break those writes or be silently replaced by them. Instead,
-  # activation merges just the statusLine key into whatever is there, so a
-  # fresh machine (or a settings.json Claude Code rewrote without it) still
-  # gets the statusline. It calls `claude-statusline` by name, which this
-  # module keeps on PATH and up to date across generations.
-  home.activation.claudeStatusLine = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    settings="${config.home.homeDirectory}/.claude/settings.json"
-    statusLine='{"type":"command","command":"claude-statusline","padding":0}'
-    tmp=$(mktemp)
-    if [ -s "$settings" ]; then
-      src="$settings"
-    else
-      echo '{}' > "$tmp.empty"
-      src="$tmp.empty"
+  # settings.json is deliberately NOT a store symlink: Claude Code rewrites it
+  # at runtime (model switches, /config, permission setup), and a symlink
+  # would either break those writes or be silently replaced by them. Instead
+  # ./settings.json seeds a fresh machine once, and Claude Code owns the file
+  # from then on. The seed omits autoMode (work details; this repo is public).
+  # Its hooks call the noctalia claude-companion plugin's pulse.py, which is
+  # installed imperatively.
+  home.activation.seedClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    target=${config.home.homeDirectory}/.claude/settings.json
+    if [ ! -e "$target" ]; then
+      run mkdir -p "$(dirname "$target")"
+      run install -m 644 ${./settings.json} "$target"
     fi
-    if ${lib.getExe pkgs.jq} --argjson s "$statusLine" '.statusLine = $s' "$src" > "$tmp"; then
-      if ! cmp -s "$tmp" "$settings"; then
-        run mkdir -p "$(dirname "$settings")"
-        run cp "$tmp" "$settings"
-      fi
-    else
-      warnEcho "claude-code: $settings is not valid JSON; statusLine not set"
-    fi
-    rm -f "$tmp" "$tmp.empty"
   '';
 
   programs.claude-code = {
@@ -155,10 +142,12 @@ in
     '';
 
     # Personal, cross-project skills, sourced from upstream repos via flake
-    # inputs. neovim-news-update is deliberately absent: it writes
-    # state.json/reports/ into its own skill directory, which a read-only
-    # store symlink would break.
+    # inputs.
     skills = {
+      # A file (not a directory) links only SKILL.md, so the skill directory
+      # stays writable for the state.json and reports/ the skill writes there.
+      neovim-news-update = ./skills/neovim-news-update/SKILL.md;
+
       # obra/superpowers: brainstorm -> plan -> execute workflow and its
       # supporting disciplines.
       brainstorming = superpower "brainstorming";
