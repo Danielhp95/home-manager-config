@@ -15,8 +15,7 @@
 #
 # Each chain exists only while its device does: WirePlumber's software-dsp
 # hook loads the filter-chain when the device's node appears and unloads it
-# when the node goes, so a headset's "(EQ)" entry is hidden until it connects
-# (and each laptop's speaker rule is inert on the other).
+# when the node goes, so a headset's "(EQ)" entry is hidden until it connects.
 #
 # The chain also hides its device (hide-parent): every client but WirePlumber
 # loses sight of the raw node, so apps (Slack's pickers, pavucontrol,
@@ -291,82 +290,6 @@ let
   speakerPriority = 1500;
   headsetPriority = 2500;
 
-  # OMEN MAX 16 (16-ah000) speakers, fitted to Notebookcheck's pink-noise
-  # measurement of this model (relative to its 64.1 dB median):
-  #   100 Hz -29 | 160 -7.6 | 200 -4.1 | 250–630 ±1.3 | 800 +3.0
-  #   1 kHz +4.9 | 2 kHz +3.7 | 4 kHz +3.9 | 8 kHz -2.9 | 10–16 kHz -3.6
-  # Nothing below ~150 Hz is boosted (the drivers can't play it, boosting
-  # only distorts): high-pass there and let Calf's bass enhancer imply it with
-  # harmonics. Narrow cuts flatten the 1/2/4 kHz peaks, a shelf restores the
-  # top octave; simulated result stays within ±1.3 dB from 200 Hz to 16 kHz.
-  # The limiter turns the -3.5 dB preamp back into loudness (78 dB(A) max).
-  # Caveat: measured under Windows with HP's driver tuning; Linux has none.
-  laptopSpeakers = sink {
-    id = "laptop_speakers";
-    description = "Laptop Speakers (EQ)";
-    priority = speakerPriority;
-    target = "alsa_output.pci-0000_80_1f.3-platform-skl_hda_dsp_generic.HiFi__Speaker__sink";
-    nodes = [
-      (peq "eq" [
-        (preamp (-3.5))
-        {
-          type = "bq_highpass";
-          freq = 110;
-          q = 0.707;
-        }
-        {
-          type = "bq_highpass";
-          freq = 110;
-          q = 0.707;
-        }
-        {
-          type = "bq_peaking";
-          freq = 180;
-          gain = 3.0;
-          q = 1.4;
-        }
-        {
-          type = "bq_peaking";
-          freq = 1000;
-          gain = -3.5;
-          q = 1.8;
-        }
-        {
-          type = "bq_peaking";
-          freq = 2000;
-          gain = -2.5;
-          q = 3.0;
-        }
-        {
-          type = "bq_peaking";
-          freq = 4000;
-          gain = -3.0;
-          q = 2.5;
-        }
-        {
-          type = "bq_highshelf";
-          freq = 7000;
-          gain = 3.5;
-          q = 0.707;
-        }
-      ])
-      {
-        type = "lv2";
-        name = "bass";
-        plugin = "http://calf.sourceforge.net/plugins/BassEnhancer";
-        control = {
-          amount = 1.5849; # +4 dB
-          drive = 8.5;
-          blend = 0.0;
-          freq = 180.0;
-          floor_active = 1;
-          floor = 40.0;
-        };
-      }
-      (limiter { inputGain = 1.7783; }) # +5 dB
-    ];
-  };
-
   # ThinkPad T16g Gen 3 (21V6, subsystem 17aa:2347; CS35L56 amps on
   # SoundWire): Lenovo's own Dolby Atmos (DAX3) speaker tuning, the processing
   # Windows runs on top of the Cirrus amp tuning, which Linux already loads
@@ -382,7 +305,7 @@ let
   #   boost, per-band ceilings) -> -1 dBFS limiter.
   # If quiet passages swell and then duck, drop "autogain": the converter
   # can't rebuild the leveler's companion compressor (its [leveler-gap]).
-  thinkpadSpeakers = sink {
+  speakers = sink {
     id = "laptop_speakers";
     description = "Laptop Speakers (EQ)";
     priority = speakerPriority;
@@ -761,8 +684,7 @@ in
         { name = "libpipewire-module-adapter"; }
       ];
       "node.software-dsp.rules" = [
-        laptopSpeakers
-        thinkpadSpeakers
+        speakers
         shokz
         sony
         thinkpadMic
