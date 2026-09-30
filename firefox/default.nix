@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 
 # Firefox's chrome is drawn by Firefox itself, not by GTK — the WhiteSur GTK
 # theme only ever reached its native file dialogs. This module paints the
@@ -10,7 +15,8 @@
 # one: `path` is the pre-existing profile directory (~/.mozilla/firefox/
 # 1t50d90o.default), so history, logins and extensions are untouched. Home
 # Manager does rewrite ~/.mozilla/firefox/profiles.ini (the old one is kept as
-# profiles.ini.backup by the backupFileExtension setting in flake.nix).
+# profiles.ini.backup by the backupFileExtension setting in
+# ../non_home_manager_config/configuration.nix).
 #
 # The split of responsibilities is deliberate:
 #   nix owns  — the add-on set, the prefs below, the default search engine
@@ -44,6 +50,69 @@ let
   # The profile directory, spelled once — `path` below and the profile-scoped
   # files at the bottom of this module have to agree.
   profilePath = "1t50d90o.default";
+
+  # Firenvim's native-messaging host: the launcher and manifest that
+  # `:call firenvim#install(0)` would write imperatively, built here and run on
+  # danvim's nvim, which ships the firenvim plugin itself (loaded eagerly when
+  # g:started_by_firenvim is set).
+  firenvimHost =
+    let
+      nvim = "${inputs.danvim.packages.${pkgs.stdenv.hostPlatform.system}.nvim}/bin/nvim";
+
+      # Verbatim from firenvim's s:get_executable_content(): take stdin before
+      # the config loads, and route print() to stderr plus a message for the
+      # browser, so nothing the config prints can corrupt the protocol.
+      earlyStdio = lib.concatStringsSep "|" [
+        "let g:firenvim_config={'globalSettings':{},'localSettings':{'.*':{}}}"
+        "let g:firenvim_i=[]"
+        "let g:firenvim_o=[]"
+        "let g:Firenvim_oi={i,d,e->add(g:firenvim_i,d)}"
+        "let g:Firenvim_oo={t->[chansend(2,t)]+add(g:firenvim_o,t)}"
+        "let g:firenvim_c=stdioopen({'on_stdin':{i,d,e->g:Firenvim_oi(i,d,e)},'on_print':{t->g:Firenvim_oo(t)}})"
+      ];
+
+      # Also verbatim: a failure reaches the browser as a message.
+      run = lib.concatStringsSep "|" [
+        "try"
+        "call firenvim#run()"
+        "catch /Unknown function/"
+        ''call chansend(g:firenvim_c,["f\n\n\n"..json_encode({"messages":["Your plugin manager did not load the Firenvim plugin for Neovim."],"version":"0.0.0"})])''
+        ''call chansend(2,["Firenvim not in runtime path. &rtp="..&rtp])''
+        "qall!"
+        "catch"
+        ''call chansend(g:firenvim_c,["l\n\n\n"..json_encode({"messages": ["Something went wrong when running firenvim. See troubleshooting guide."],"version":"0.0.0"})])''
+        "call chansend(2,[v:exception])"
+        "qall!"
+        "endtry"
+      ];
+
+      launcher = pkgs.writeShellScript "firenvim" ''
+        dir="''${XDG_RUNTIME_DIR:-/run/user/$UID}/firenvim"
+        mkdir -p "$dir"
+        chmod 700 "$dir"
+        cd "$dir"
+        unset NVIM_LISTEN_ADDRESS
+        if [ -n "$VIM" ] && [ ! -d "$VIM" ]; then
+          unset VIM
+        fi
+        if [ -n "$VIMRUNTIME" ] && [ ! -d "$VIMRUNTIME" ]; then
+          unset VIMRUNTIME
+        fi
+        exec ${nvim} --headless \
+          --cmd ${lib.escapeShellArg earlyStdio} \
+          --cmd 'let g:started_by_firenvim = v:true' \
+          -c ${lib.escapeShellArg run}
+      '';
+    in
+    pkgs.writeTextDir "lib/mozilla/native-messaging-hosts/firenvim.json" (
+      builtins.toJSON {
+        name = "firenvim";
+        description = "Turn your browser into a Neovim GUI.";
+        path = "${launcher}";
+        type = "stdio";
+        allowed_extensions = [ "firenvim@lacamb.re" ];
+      }
+    );
 in
 {
   imports = [
@@ -58,9 +127,12 @@ in
     # Home Manager's default moved to $XDG_CONFIG_HOME/mozilla/firefox and it
     # warns on every build while home.stateVersion < 26.05. Pinned to the legacy
     # path rather than migrated: the profile below is an existing on-disk one,
-    # and the move is manual (Home Manager relocates neither the profile
-    # directory nor the native messaging hosts firenvim relies on).
+    # and the move is manual (Home Manager does not relocate the profile
+    # directory).
     configPath = ".mozilla/firefox";
+
+    # Linked into ~/.mozilla/native-messaging-hosts; see firenvimHost above.
+    nativeMessagingHosts = [ firenvimHost ];
 
     profiles.default = {
       id = 0;

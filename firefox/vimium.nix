@@ -26,6 +26,8 @@
 # round-trips. Do not "clean" them up; the restore reads them literally.
 
 let
+  startPage = import ./firefox-start-page-wanderer/shared.nix;
+
   vimiumSettings = {
     # Sites where Vimium keeps its hands off entirely (empty passKeys = the
     # whole keymap is suppressed, not just some keys). Editors, canvases and
@@ -59,9 +61,7 @@ let
     # expands exactly the same aliases, and two hand-kept copies would drift
     # the first time one is edited. The commentary on the malformed `sg`/`sgn`
     # entries moved there with them.
-    searchEngines = builtins.concatStringsSep "\n" (
-      import ./firefox-start-page-wanderer/shared.nix
-    ).searchAliases;
+    searchEngines = builtins.concatStringsSep "\n" startPage.searchAliases;
 
     # Custom key mappings. Empty: the snapshot's only entry was
     #   map c-k file:///home/sarios/Pictures/test.html
@@ -70,8 +70,9 @@ let
     # than carried forward; add real mappings under the comment line.
     keyMappings = "# Insert your preferred key mappings here.\n";
 
-    # `.` (default search) — matches the Firefox default in ./default.nix.
-    searchUrl = "https://duckduckgo.com/?q=";
+    # `.` (default search) — the start page's fallback engine, which matches
+    # the Firefox default in ./default.nix.
+    searchUrl = startPage.defaultSearchUrl;
 
     # `/` searches by JavaScript regex rather than literal text.
     regexFindMode = true;

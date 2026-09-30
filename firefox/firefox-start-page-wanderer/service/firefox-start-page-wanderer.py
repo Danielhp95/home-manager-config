@@ -31,6 +31,7 @@ import hashlib
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import tempfile
@@ -621,6 +622,7 @@ class App:
     def collect_machine(self) -> dict:
         nix_dir = self.config["nixConfigDir"]
         state = system_state(nix_dir)
+        state["host"] = socket.gethostname()
         state["flakeLockModified"] = flake_lock_modified(os.path.join(nix_dir, "flake.lock"))
         state["disk"] = disk_usage(str(Path.home()))
         state["battery"] = read_battery()

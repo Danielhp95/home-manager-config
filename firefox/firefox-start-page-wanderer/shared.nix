@@ -3,9 +3,7 @@
 # ../../palette.nix is — so ./default.nix (the service), ./package.nix (the
 # built page) and ../vimium.nix cannot drift apart.
 #
-# Paths are relative to $HOME on purpose: ../../home.nix is imported by both
-# the `dani` and `dev` users (flake.nix), so an absolute /home/dani would be a
-# lie in one of them. ./default.nix prefixes them with
+# Paths are relative to $HOME; ./default.nix prefixes them with
 # config.home.homeDirectory.
 
 let
@@ -91,9 +89,4 @@ in
   # PRs come from the personal account only. `gh auth token --user` picks this
   # one out of the two the keyring holds (the other is the work account).
   githubUser = "Danielhp95";
-
-  # services.ollama in ../../non_home_manager_config/ollama.nix listens here.
-  # Spelled out rather than read from osConfig: home.nix is also used by the
-  # standalone home-manager entrypoint, which has no NixOS config to read.
-  ollamaUrl = "http://127.0.0.1:11434";
 }

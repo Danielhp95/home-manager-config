@@ -8,6 +8,10 @@
 # For the theme to actually be picked, Chromium's own Appearance setting must
 # be "GTK" (chrome://settings/appearance -> Theme -> Use GTK). That is stored
 # in the profile, not in a flag, so it is a one-time manual step.
+#
+# Native Wayland needs no flags here: nixpkgs' chromium wrapper already adds
+# --ozone-platform-hint=auto and --enable-features=WaylandWindowDecorations
+# whenever NIXOS_OZONE_WL is set, as it is in this session.
 
 {
   programs.chromium = {
@@ -15,12 +19,6 @@
 
     commandLineArgs = [
       "--gtk-version=4"
-
-      # Native Wayland, matching the session (NIXOS_OZONE_WL is exported for
-      # electron apps; chromium needs it spelled out to also get server-side
-      # decorations, which is what makes the titlebar follow the GTK theme).
-      "--ozone-platform-hint=auto"
-      "--enable-features=WaylandWindowDecorations"
     ];
   };
 }

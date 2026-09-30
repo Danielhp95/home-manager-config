@@ -1,12 +1,12 @@
 {
   inputs,
   pkgs,
-  lib,
   ...
 }:
 
 let
-  pal = (import ./palette.nix).hash;
+  # Bare hex (no leading '#'), palette.nix's native form.
+  pal = import ./palette.nix;
 in
 {
 
@@ -14,6 +14,9 @@ in
 
   home.sessionVariables = {
     BROWSER = "firefox";
+    # ghostty is installed too, and noctalia's runInTerminal would otherwise
+    # prefer it.
+    TERMINAL = "kitty";
   };
 
   programs.gpg.enable = true;
@@ -23,11 +26,7 @@ in
     enableExtraSocket = true;
     defaultCacheTtl = 1800;
     enableSshSupport = true;
-    pinentry = {
-      package = pkgs.pinentry-all;
-      # Use pinentry-gnome3 for GUI environments instead of curses
-      program = "pinentry-curses";
-    };
+    pinentry.package = pkgs.pinentry-curses;
   };
 
   # To allow bluetooth devices buttons to control media things (like stop / play)
@@ -72,8 +71,6 @@ in
 
     ./writing.nix
     ./default_applications.nix
-    # Import voxtype HM module
-    inputs.voxtype.homeManagerModules.default
   ];
 
   programs.mpv = {
@@ -88,23 +85,23 @@ in
       # `background`, whose default is `tiles` (a light checkerboard); pinning
       # it to a flat palette colour is what keeps a 21:9 film from sitting in
       # a grey grid. Colors are AARRGGBB, alpha first.
-      osd-color = "#FF${builtins.substring 1 6 pal.fg}";
-      osd-outline-color = "#FF${builtins.substring 1 6 pal.bgDeep}";
-      osd-back-color = "#AF${builtins.substring 1 6 pal.bg}";
+      osd-color = "#FF${pal.fg}";
+      osd-outline-color = "#FF${pal.bgDeep}";
+      osd-back-color = "#AF${pal.bg}";
       background = "color";
-      background-color = "#FF${builtins.substring 1 6 pal.bgDeep}";
+      background-color = "#FF${pal.bgDeep}";
 
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true; # Don't close mpv when video is done
       # Decode on the iGPU media block (iHD VA-API) instead of CPU cores.
       # auto-safe only picks whitelisted-stable hwdec backends.
       hwdec = "auto-safe";
-      # libplacebo's default Vulkan device pick is the discrete GPU, but on
-      # this PRIME-offload laptop only the Intel iGPU drives the physical
-      # displays. Rendering on the nvidia dGPU meant every frame crossed
-      # PCIe into the compositor (stutter/tearing) and device creation on
-      # the dGPU cold-started in >1s ("(slow!)" in -v output). Pin to the
-      # iGPU that's actually compositing.
+      # libplacebo's default Vulkan device pick is the discrete GPU, but
+      # Hyprland composites on the Intel iGPU (first in hyprland.lua's
+      # AQ_DRM_DEVICES; the NVIDIA card only scans out the HDMI/DP ports
+      # wired to it). Rendering on the dGPU would push every frame across
+      # PCIe into the compositor. Pin to the iGPU that's actually compositing;
+      # the name is Mesa's for this Arrow Lake iGPU (8086:7d67).
       vulkan-device = "Intel(R) Graphics (ARL)";
     };
   };
@@ -112,17 +109,17 @@ in
   # The lightweight image viewer. imv paints a checkerboard behind anything
   # with transparency or a non-matching aspect ratio by default, which is the
   # brightest thing on the screen in a dark session; `background` replaces it
-  # with a flat palette colour. imv takes bare hex with no leading '#', unlike
-  # every other consumer of palette.nix, hence the substring.
+  # with a flat palette colour. imv takes bare hex with no leading '#', which
+  # is palette.nix's native form.
   #
   # The overlay is imv's own status line (filename, dimensions, index) — UI,
   # not image data. Nothing here touches how the image itself is decoded.
   programs.imv = {
     enable = true;
     settings.options = {
-      background = builtins.substring 1 6 pal.bgDeep;
-      overlay_text_color = builtins.substring 1 6 pal.fg;
-      overlay_background_color = builtins.substring 1 6 pal.bg;
+      background = pal.bgDeep;
+      overlay_text_color = pal.fg;
+      overlay_background_color = pal.bg;
       overlay_background_alpha = "e0";
     };
   };
@@ -144,51 +141,20 @@ in
     ### Communication
     slack
     telegram-desktop
-    element-desktop
+    # Element comes via programs.element-desktop in ./element.nix.
+    # services.nextcloud-client below runs the client; the package is here
+    # for its launcher entry, which the service does not install.
     nextcloud-client
 
-    # zoom-us
-
-    (
-      (inputs.multiverse.lib.mkMultiverse {
-        system = "x86_64-linux";
-        config.allowUnfree = true;
-      }).at
-      "26.05"
-    ).grayjay # video platform aggregator
-    (
-      (inputs.multiverse.lib.mkMultiverse {
-        system = "x86_64-linux";
-        config.allowUnfree = true;
-      }).at
-      "26.05"
-    ).discord # video platform aggregator
-
-    openconnect
-
-    ## Videography
-    (writeScriptBin "davinci" ''
-      QT_QPA_PLATFORM=xcb ${
-        (
-          (inputs.multiverse.lib.mkMultiverse {
-            system = "x86_64-linux";
-            config.allowUnfree = true;
-          }).at
-          "26.05"
-        ).davinci-resolve
-      }/bin/davinci-resolve
-    '')
+    # From the release branch (pkgs.stable, the overlay in configuration.nix).
+    pkgs.stable.grayjay # video platform aggregator
+    pkgs.stable.discord
 
     ### Basic utilities
     ripgrep # better grep
-    zenith # better top
     # tldr comes from programs.tealdeer in ./terminal
     acpi # To meassure laptop battery levels
     brightnessctl # Control brightness via CLI
-    coreutils
-    gzip
-    gawk
-    gnugrep
     unzip
     wget
     ffmpeg
@@ -196,7 +162,6 @@ in
 
     ### Media viewing
     # video (mpv comes via programs.mpv above)
-    vlc
 
     # music / video
     # spotify comes from ./spotify.nix (spicetify-wrapped); installing
@@ -214,40 +179,33 @@ in
     # lnav comes via ./lnav, which carries its Ember theme. Use it to pipe
     # `journalctl | lnav` for syntax highlighting / filtering.
     pciutils # For `lspci` command.
-    lshw # list hardware. For instance `lshw -c display` shows all graphics cards
     nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
     powertop # Analyze power consumption for intel based processors
 
     ### Audio
     crosspipe # visual audio mixer
-    pamixer # cli for pulseaudio
-    pavucontrol # not working!
+    pavucontrol
     playerctl # MPRIS media control, used by hyprland media-key binds
 
     translate-shell
 
     # THE nvim
-    inputs.danvim.packages.x86_64-linux.nvim
+    inputs.danvim.packages.${pkgs.stdenv.hostPlatform.system}.nvim
 
     # Weather app
     gnome-weather
 
-    gnome-calendar
     adwaita-icon-theme # symbolic-icon fallback for GNOME apps (MoreWaita expects it)
     gparted
-    decibels # audio playing with nice waveform graphics
 
+    # "Open in Terminal" comes from programs.nautilus-open-any-terminal in
+    # configuration.nix.
     nautilus
-    nautilus-open-any-terminal
-    lingot # Instrument tuner
 
     android-tools
 
     # Process management: btop and bottom both come from ./terminal, which
     # carries their Ember themes.
-
-    # File sharing (Like AirDrop)
-    localsend
 
     bluetui # Bluetooth tui
   ];
@@ -255,18 +213,9 @@ in
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  # Voxtype Home Manager configuration
-  programs.voxtype = {
-    enable = false;
-    package = inputs.voxtype.packages.x86_64-linux.vulkan;
-    model.name = "large-v3-turbo";
-    service.enable = true;
-    settings = {
-      hotkey.enabled = false;
-      whisper.language = "en";
-      backend = "vulkan";
-      # find the name via `pactl list sources` and look for the microphone you want to use
-      device = "alsa_input.pci-0000_80_1f.3-platform-sof_sdw.HiFi__Mic__source";
-    };
+  # Started with the graphical session, in the tray.
+  services.nextcloud-client = {
+    enable = true;
+    startInBackground = true;
   };
 }

@@ -20,29 +20,29 @@
   --lwt-accent-color-inactive: var(--ember-bg) !important;
   --lwt-text-color: var(--ember-fg) !important;
 
-  --toolbar-bgcolor: var(--ember-bg-alt) !important;
-  --toolbar-color: var(--ember-fg) !important;
+  --toolbar-background-color: var(--ember-bg-alt) !important;
+  --toolbar-text-color: var(--ember-fg) !important;
   --toolbar-field-background-color: var(--ember-bg-deep) !important;
-  --toolbar-field-color: var(--ember-fg) !important;
-  --toolbar-field-focus-background-color: var(--ember-bg-deep) !important;
-  --toolbar-field-focus-color: var(--ember-fg) !important;
+  --toolbar-field-text-color: var(--ember-fg) !important;
+  --toolbar-field-background-color-focus: var(--ember-bg-deep) !important;
+  --toolbar-field-text-color-focus: var(--ember-fg) !important;
   --toolbar-field-border-color: transparent !important;
-  --toolbar-field-focus-border-color: var(--ember-accent) !important;
+  --toolbar-field-border-color-focus: var(--ember-accent) !important;
 
-  --tab-selected-bgcolor: var(--ember-surface) !important;
+  --tab-background-color-selected: var(--ember-surface) !important;
   --tab-selected-textcolor: var(--ember-fg) !important;
 
   --chrome-content-separator-color: var(--ember-border) !important;
   --focus-outline-color: var(--ember-accent) !important;
 
-  --arrowpanel-background: var(--ember-bg-alt) !important;
-  --arrowpanel-color: var(--ember-fg) !important;
-  --arrowpanel-border-color: var(--ember-border) !important;
+  --panel-background-color: var(--ember-bg-alt) !important;
+  --panel-text-color: var(--ember-fg) !important;
+  --panel-border-color: var(--ember-border) !important;
 
   --panel-separator-color: var(--ember-border) !important;
-  --button-primary-bgcolor: var(--ember-accent) !important;
-  --button-primary-hover-bgcolor: var(--ember-accent-bright) !important;
-  --button-primary-color: var(--ember-bg) !important;
+  --button-background-color-primary: var(--ember-accent) !important;
+  --button-background-color-primary-hover: var(--ember-accent-bright) !important;
+  --button-text-color-primary: var(--ember-bg) !important;
 }
 
 /* ── Tab strip ─────────────────────────────────────────────────────────────
@@ -68,11 +68,11 @@
 }
 
 /* ── Address bar ──────────────────────────────────────────────────────────── */
-#urlbar[focused="true"] > #urlbar-background {
+#urlbar[focused] > .urlbar-background {
   outline: 1px solid var(--ember-accent) !important;
 }
 
-#urlbar-background,
+#urlbar > .urlbar-background,
 #searchbar {
   border-radius: 8px !important;
   border-color: var(--ember-border) !important;

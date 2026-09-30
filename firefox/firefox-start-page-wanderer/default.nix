@@ -18,7 +18,12 @@
 # WantedBy=default.target, deliberately not graphical-session.target: the
 # backend needs no Wayland, and hyprland's extraCommands stop/start of that
 # target takes PartOf= units down with it.
-{ config, pkgs, ... }:
+{
+  config,
+  osConfig,
+  pkgs,
+  ...
+}:
 
 let
   shared = import ./shared.nix;
@@ -35,8 +40,9 @@ let
         port
         weather
         githubUser
-        ollamaUrl
         ;
+      # services.ollama is configured in non_home_manager_config/ollama.nix.
+      ollamaUrl = "http://127.0.0.1:${toString osConfig.services.ollama.port}";
       pageDir = "${wanderer.page}";
       nixConfigDir = "${home}/${shared.nixConfigDir}";
       repos = map (repo: "${home}/${repo}") shared.repos;

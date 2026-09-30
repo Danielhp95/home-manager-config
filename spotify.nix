@@ -1,8 +1,9 @@
 { inputs, pkgs, ... }:
 
-# Spotify is Electron and ignores every desktop theme, so it needs spicetify to
-# patch its web bundle. Theme is Sleek (flat, close to WhiteSur's restraint)
-# driven by a custom color scheme in the shared Ember palette (./palette.nix).
+# Spotify is built on CEF (the Chromium Embedded Framework) and ignores every
+# desktop theme, so it needs spicetify to patch its web bundle. Theme is Sleek
+# (flat, close to WhiteSur's restraint) driven by a custom color scheme in the
+# shared Ember palette (./palette.nix).
 #
 # NOTE spicetify installs its own wrapped spotify into home.packages — plain
 # pkgs.spotify must NOT also be installed (see home.nix).

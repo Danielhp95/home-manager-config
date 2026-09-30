@@ -168,6 +168,8 @@ function renderMachine(section) {
   const m = section?.data;
   if (!m) return;
 
+  if (m.host) document.getElementById("machine-host").textContent = m.host;
+
   const system = [];
   if (m.switchPending) {
     system.push(el("span", { class: "warn", text: "● switch pending" }));

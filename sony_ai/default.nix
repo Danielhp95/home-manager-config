@@ -1,12 +1,5 @@
-{
-  pkgs,
-  lib,
-  inputs,
-  ...
-}:
+{ pkgs, ... }:
 let
-  pathToSaiRepo = "$HOME/Projects/sai";
-
   # Split-tunnel vpnc-script for the SIE VPN.
   #
   # The gateway is full-tunnel by design: it pushes a default route through the
@@ -40,54 +33,28 @@ let
 
     exec ${pkgs.vpnc-scripts}/bin/vpnc-script "$@"
   '';
+
+  # The GlobalProtect command line the connect scripts below share.
+  gpclientCmd = "sudo -E ${pkgs.gpclient}/bin/gpclient";
+  connectCmd = "${gpclientCmd} connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER";
+  portal = "portal.global-vpn.sie.sony.com --hip";
 in
 {
-  # Salt minion: services.salt.minion.enable is a NixOS (system) option, so it
-  # lives in ../non_home_manager_config/salt.nix, imported from flake.nix.
-
-  # git comes from programs.git.enable (../git), the docker CLI from the
-  # system-level virtualisation.docker.enable.
+  # git comes from programs.git.enable (../git).
   home.packages = with pkgs; [
     awscli2
-    amazon-ecr-credential-helper
-
-    # NOTE no cudaPackages.cudatoolkit here on purpose: it is ~3.3 GB of closure
-    # and nothing on the host links against it. CUDA reaches the workloads through
-    # the container images instead, via hardware.nvidia-container-toolkit
-    # (../non_home_manager_config/configuration.nix). Only add it back if you need
-    # to compile CUDA code directly on the host, outside Docker.
-
-    steam-run # To run proton via Steam's FHS
 
     gpclient
     # Split tunnel: only corp networks go through the VPN (see sieVpncSplit above).
     (writeShellScriptBin "sie-vpn-connect" ''
-      sudo -E ${pkgs.gpclient}/bin/gpclient connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER --script ${sieVpncSplit} portal.global-vpn.sie.sony.com --hip
+      ${connectCmd} --script ${sieVpncSplit} ${portal}
     '')
     # Original full-tunnel behavior, kept as a fallback.
     (writeShellScriptBin "sie-vpn-connect-full" ''
-      sudo -E ${pkgs.gpclient}/bin/gpclient connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER portal.global-vpn.sie.sony.com --hip
+      ${connectCmd} ${portal}
     '')
     (writeShellScriptBin "sie-vpn-disconnect" ''
-      sudo -E ${pkgs.gpclient}/bin/gpclient disconnect
+      ${gpclientCmd} disconnect
     '')
-
-    # gtc demo
-    goose-cli
-    libxcb-cursor
-
   ];
-
-  # ansi = the terminal's 16 colours (Ember). Overrides goose's config.yaml.
-  home.sessionVariables.GOOSE_CLI_THEME = "ansi";
-
-  home.file.".docker/config.json".source = ./docker_config.json;
-  home.file.".config/sai_docker/config.yaml".source = ./sai_docker_config.yaml;
-
-  # environment.etc."fixuid/config.yml".source = ./fixuid_config.yml
-  # home.activation.cloneRepo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-  #   if [ ! -d "${pathToSaiRepo}" ]; then
-  #     ${pkgs.git}/bin/git clone https://github.com/user/repo.git ${pathToSaiRepo}
-  #   fi
-  # '';
 }

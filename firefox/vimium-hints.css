@@ -16,11 +16,6 @@ div > .vimiumHintMarker span {
   text-shadow: none;
 }
 
-/* Link hint matching characters */
-div > .vimiumHintMarker > .matchingCharacter {
-  color: #E9873A;
-}
-
 input#vomnibarInput.vimiumReset {
 	color: #E9873A !important;
   background-color: #111 !important;

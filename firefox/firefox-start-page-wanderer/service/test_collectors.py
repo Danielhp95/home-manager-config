@@ -158,21 +158,21 @@ class MachineTest(unittest.TestCase):
         self.assertIsNone(state["builtAt"])
 
     def test_a_built_but_unswitched_system(self):
-        current = self._system("nixos-system-fell-omen-26.11.now")
-        built = self._system("nixos-system-fell-omen-26.11.next")
+        current = self._system("nixos-system-lenovo-26.11.now")
+        built = self._system("nixos-system-lenovo-26.11.next")
         os.symlink(built, self.root / "result")
         state = w.system_state(str(self.root), str(current), str(current))
         self.assertTrue(state["switchPending"])
         self.assertIsNotNone(state["builtAt"])
 
     def test_result_pointing_at_the_running_system_is_not_pending(self):
-        current = self._system("nixos-system-fell-omen-26.11.now")
+        current = self._system("nixos-system-lenovo-26.11.now")
         os.symlink(current, self.root / "result")
         state = w.system_state(str(self.root), str(current), str(current))
         self.assertFalse(state["switchPending"])
 
     def test_a_result_from_building_some_package_is_ignored(self):
-        current = self._system("nixos-system-fell-omen-26.11.now")
+        current = self._system("nixos-system-lenovo-26.11.now")
         package = self._system("hello-2.12.1")
         os.symlink(package, self.root / "result")
         state = w.system_state(str(self.root), str(current), str(current))
