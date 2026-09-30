@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  inputs,
+  pkgs,
+  lib,
+  ...
+}:
 # Per-device EQ as PipeWire filter-chain sinks: "Laptop Speakers (EQ)",
 # "Shokz OpenRun (EQ)", "WH-1000XM6 (EQ)". Each is an ordinary Audio/Sink
 # that plays into its hardware device, so any app can be moved to any of them
@@ -734,6 +739,15 @@ let
 in
 {
   services.pipewire.wireplumber = {
+    # Pinned to stable (0.5.14). Since 0.5.16, WirePlumber hosts in-process
+    # modules on a separate client-context thread but unloads them from its
+    # main thread; a chain's filter-chain module schedules its own destroy
+    # mid-teardown, gets destroyed twice, and the main thread spins at 100% CPU,
+    # wedging every graph client (pactl, pavucontrol, wpctl) until WirePlumber
+    # is restarted. Every chain unload hit it, i.e. every headset disconnect.
+    # 0.5.14 has no client context. Unpin once a release after 0.5.17 fixes
+    # wp_impl_module_unload().
+    package = inputs.stable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.wireplumber;
     extraLv2Packages = [
       pkgs.lsp-plugins
       pkgs.calf
