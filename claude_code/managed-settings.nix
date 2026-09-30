@@ -1,17 +1,7 @@
-# Claude Code managed settings. A NixOS module, not a home-manager one: on
-# Linux Claude Code reads managed settings only from /etc/claude-code (2.1.284
-# has no working per-user override), so non_home_manager_config/configuration.nix
-# imports this file while ./default.nix stays home-manager.
-#
-# Managed settings rank above ~/.claude/settings.json and `--settings`, so the
-# keys here always track this repo and cannot be overridden from the user file
-# or with /statusline. Everything Claude Code changes at runtime (model,
-# effort, permissions, theme) stays in the user file, seeded by ./default.nix.
-#
-# The drop-in is an environment.etc symlink into the store. Claude Code
-# accepts symlinked *.json files in managed-settings.d and merges them after
-# managed-settings.json in file-name order. It applies to every user on the
-# machine; `claude-statusline` is on each home-manager user's PATH.
+# Claude Code managed settings. A NixOS module: on Linux they are only read
+# from /etc/claude-code (symlinked drop-ins are fine). They outrank the user
+# file, which keeps the runtime-owned keys (seeded by ./default.nix), and
+# apply to every user on the machine.
 { ... }:
 {
   environment.etc."claude-code/managed-settings.d/50-dani.json".text = builtins.toJSON {
@@ -21,9 +11,8 @@
       command = "claude-statusline";
       refreshInterval = 5;
     };
-    # Empty strings drop the Co-Authored-By trailer and the PR line.
-    # sessionUrl = false drops the Claude-Session trailer and PR link that
-    # Remote Control sessions (remoteControlAtStartup) add otherwise.
+    # No Co-Authored-By trailer or PR line; sessionUrl = false also drops the
+    # Claude-Session trailer that Remote Control sessions add.
     attribution = {
       commit = "";
       pr = "";

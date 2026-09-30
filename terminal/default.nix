@@ -7,32 +7,10 @@
 let
   p = (import ../palette.nix).hash;
 
-  # Atuin's PTY proxy — the feature that shipped as `atuin hex` in v18.13 and
-  # was renamed to `atuin pty-proxy` before this version. It is a minimal
-  # tmux-alike: it proxies bytes between the terminal and the shell while
-  # keeping a shadow vt100, which is what lets the Ctrl-R popup draw *over*
-  # your previous output and then restore it. Without it atuin has to pick
-  # between clearing the scrollback (inline) or taking the whole screen (alt
-  # screen); atuin's default inline_height = 40 is where that trade-off shows.
-  #
-  # atuin 18.21 also has a config.toml switch (`[pty_proxy] enabled`), which
-  # makes `atuin init` itself re-exec into the proxy. It is not used: that
-  # would run from home-manager's `atuin init` line near the end of .zshrc,
-  # after compinit and the plugins, and outside the tty guard and the tmux
-  # exemption below. This snippet `exec`s the proxy from the top of .zshrc
-  # instead and lets it respawn zsh underneath.
-  #
-  # Generated at build time rather than `eval "$(atuin pty-proxy init zsh)"`,
-  # for the same reason the IRIS hook in iris.nix is inlined: that eval is a
-  # subprocess on every single interactive zsh start. The cost of pinning it
-  # is that upstream changes to the snippet only land on rebuild — which is
-  # what we want, since a silent upstream change to an `exec` line in .zshrc
-  # is exactly the kind of thing that should be reviewed, not absorbed.
-  #
-  # The substitution pins `atuin` to the store path. The snippet runs at the
-  # very top of .zshrc, before anything here has touched PATH, so a bare
-  # `atuin` would depend on the login environment having already exported it.
-  # --replace-fail: if upstream rewrites those exec lines, the build breaks.
+  # atuin's PTY proxy keeps a shadow vt100, so the Ctrl-R popup draws over the
+  # scrollback and restores it. Not atuin's `[pty_proxy] enabled`: that execs
+  # from home-manager's late `atuin init` line, so most of .zshrc would run
+  # twice. The exec lines are pinned to the store path; PATH isn't set yet.
   atuinPtyProxyZsh = pkgs.runCommand "atuin-pty-proxy-init.zsh" { } ''
     ${lib.getExe config.programs.atuin.package} pty-proxy init zsh > $out
     substituteInPlace $out \
@@ -40,8 +18,7 @@ let
   '';
 in
 {
-  # Zoxide database hygiene. Literal paths (not $HOME) because the nushell
-  # module loads sessionVariables without shell expansion.
+  # Zoxide hygiene. Literal paths, not $HOME: nushell loads these unexpanded.
   home.sessionVariables = {
     # Skip ~ itself (jumping "home" is trivial), the store, and .git internals
     _ZO_EXCLUDE_DIRS = "${config.home.homeDirectory}:/nix/store/*:*/.git/*";
@@ -52,10 +29,8 @@ in
   home.packages = with pkgs; [
     rsync
   ];
-  # Do NOT force TERM globally: the terminal emulator sets its own TERM, and inside
-  # tmux it must stay tmux-256color. Forcing "kitty" makes nvim emit kitty-specific
-  # sequences through tmux, which corrupts rendering (e.g. scrolling one split
-  # visually scrolls all windows).
+  # Never set TERM globally: inside tmux it must stay tmux-256color, and a forced
+  # "kitty" makes nvim send kitty sequences through tmux and corrupt rendering.
   programs = {
     btop = {
       package = pkgs.btop-cuda;
@@ -64,27 +39,13 @@ in
         shown_boxes = "cpu proc";
         vim_keys = true;
         rounded_corners = true;
-        # Selects themes/ember.theme below. btop ships ~40 themes but has no
-        # notion of "follow the terminal palette" — without this it draws its
-        # built-in Default (green/cyan gradients), which is the one full-screen
-        # TUI here that looked like a different machine.
+        # themes.ember below; btop can't follow the terminal palette.
         color_theme = "ember";
-        # The gradients are 24-bit hex, so truecolor has to stay on for them to
-        # land; btop would otherwise quantise them to the 256-colour cube.
+        # The theme's gradients are 24-bit; without this btop quantises them.
         truecolor = true;
       };
-      # Written to $XDG_CONFIG_HOME/btop/themes/ember.theme.
-      #
-      # btop's *_start/_mid/_end triples are three-stop gradients, and their
-      # direction carries meaning: temp/cpu/used/process ramp calm -> hot
-      # (sage -> gold -> error) because a high reading is bad, while
-      # free/available run the other way because a high reading is good. gold
-      # sits in the middle of every ramp, which is the "needs attention"
-      # role it already has in the fzf colors above.
-      #
-      # The mem and net gradients are defined for completeness but are not
-      # visible under `shown_boxes = "cpu proc"` — they only appear if the
-      # boxes are toggled on at runtime with the number keys.
+      # Gradients run calm -> hot (sage -> gold -> error) where a high reading
+      # is bad, and the other way for free/available.
       themes.ember = ''
         theme[main_bg]="${p.bg}"
         theme[main_fg]="${p.fg}"
@@ -140,14 +101,8 @@ in
         theme[proc_banner_fg]="${p.fg}"
       '';
     };
-    # `btm` — the other process monitor. It was a bare home.packages entry with
-    # no config at all until now; moved here so its theming sits next to
-    # btop's. bottom has no notion of following the terminal palette either,
-    # and its stock look is the usual blue/green ratatui default.
-    #
-    # TextStyle-valued keys take a table ({ color, bg_color, bold, italics });
-    # the plain *_color keys take a bare string. Mixing those up is a hard
-    # parse error at startup, not a warning.
+    # `btm`. TextStyle keys take a table ({ color, bg_color, bold, italics }),
+    # plain *_color keys a bare string; mixing them up fails at startup.
     bottom = {
       enable = true;
       settings.styles = {
@@ -170,10 +125,8 @@ in
           graph_color = p.border;
           legend_text.color = p.fgDim;
         };
-        # One entry per core, cycled. Deliberately a short rotation of the
-        # cool half of the palette: with 24 threads on this machine a wide
-        # rainbow is unreadable, and the warm half is reserved for the
-        # avg/all lines so they stay findable in the pile.
+        # Cycled per core: a short cool rotation (24 threads make a rainbow
+        # unreadable); warm colours are kept for the avg/all lines.
         cpu = {
           all_entry_color = p.accent;
           avg_entry_color = p.accentBright;
@@ -207,17 +160,13 @@ in
         };
       };
     };
-    # Per-project shells. starship's format already carried a $direnv module
-    # long before direnv was installed. nix-direnv caches the evaluated shell
-    # and GC-roots it under .direnv/, so `use flake` is instant on re-entry
-    # and survives `nh clean` without needing nix.settings.keep-outputs.
+    # Per-project shells. nix-direnv GC-roots the evaluated shell in .direnv/,
+    # so `use flake` is instant on re-entry and survives `nh clean`.
     direnv = {
       enable = true;
       nix-direnv.enable = true;
     };
-    # tldr client (the binary is still `tldr`). Replaces pkgs.tldr: cached
-    # pages, no python startup. enableAutoUpdates refreshes the cache instead
-    # of failing with "cache is stale" after a few weeks.
+    # tldr client (binary `tldr`); auto-updates keep the page cache fresh.
     tealdeer = {
       enable = true;
       enableAutoUpdates = true;
@@ -227,12 +176,9 @@ in
       enable = true;
       flags = [ "--disable-up-arrow" ];
       enableZshIntegration = true;
-      # The history daemon as a systemd user service, socket-activated on
-      # $XDG_RUNTIME_DIR/atuin.sock; the module sets settings.daemon.enabled
-      # and .systemd_socket itself. This replaces settings.daemon.autostart,
-      # whose socket lived in $TMPDIR: a shell inside a bwrap sandbox with a
-      # private /tmp (Steam's FHS env) autostarted a second daemon in there,
-      # which held the pid lock and made every host command wait 4 s.
+      # Socket-activated user service on $XDG_RUNTIME_DIR/atuin.sock. Not
+      # settings.daemon.autostart: its $TMPDIR socket let a sandboxed shell with
+      # a private /tmp start a second daemon, which stalled every command.
       daemon.enable = true;
       settings = {
         enter_accept = true; # Enter to execute, tab to select
@@ -242,66 +188,19 @@ in
         ai = {
           enabled = true;
         };
-        # Ctrl-R opens filtered to the current git repo (cycle out with
-        # Ctrl-R); with ~34k unique commands the repo cut is usually the
-        # right first guess.
+        # Ctrl-R opens filtered to the current git repo (Ctrl-R cycles out).
         workspaces = true;
-        # No theme here on purpose: atuin's built-in colors were preferred to
-        # an Ember-derived theme (tried and reverted 2026-08-18). It has full
-        # theme support via programs.atuin.themes + settings.theme.name if
-        # that is ever revisited.
+        # No theme on purpose: atuin's built-in colours beat an Ember one.
       };
     };
-    # Activate the PTY proxy (see atuinPtyProxyZsh above for what it buys) in
-    # shells that sit directly in a terminal window. tmux panes get plain zsh.
-    #
-    # mkOrder 100 puts this ahead of every other initContent block, including
-    # the mkBefore ones in iris.nix and zsh/default.nix. Ordering is about cost,
-    # not correctness: the snippet `exec`s a proxy that respawns zsh, so that
-    # second zsh re-reads .zshrc from the top. Everything sourced before the
-    # exec is therefore paid for twice and thrown away — compinit, the plugin
-    # sourcing, starship. First in the file means the wasted half is nothing.
-    #
-    # The re-exec is self-limiting: the snippet exports ATUIN_PTY_PROXY_ACTIVE
-    # and skips when it is already set. IRIS is therefore unaffected: `i` execs
-    # a wrapper that spawns its own child zsh, and that child inherits the
-    # variable, so it does not stack a second proxy inside the first. The
-    # chain is proxy -> zsh -> iris -> zsh, with one shadow vt100 at the outside.
-    #
-    # tmux panes are exempt: with $TMUX set the snippet is never sourced (left
-    # alone, it would re-exec a proxy per pane, since it also re-execs when
-    # $TMUX changes), and atuin runs unproxied there. A pane still inherits the
-    # proxy variables of the terminal the tmux server was started from, so
-    # they are dropped: an inherited ATUIN_PTY_PROXY_SOCKET names a proxy that
-    # owns a different terminal, which is the failure the tty guard below is
-    # about.
-    #
-    # `source` rather than inlining the text with builtins.readFile: readFile
-    # on a derivation is import-from-derivation, which drags a build into
-    # every evaluation of this flake. Sourcing a store path costs one cached
-    # file read per shell and keeps eval pure.
-    #
-    # The wrapper around the source is a tty guard. The snippet's own re-exec
-    # test is `ACTIVE unset || $TMUX changed` — it is blind to a change of
-    # *terminal*. A shell started on a new tty (nvim's `:terminal`, script(1),
-    # any nested pty) therefore skips the exec but still inherits
-    # ATUIN_PTY_PROXY_SOCKET, which now names a proxy owning a *different*
-    # terminal. atuin's Ctrl-R attaches to that foreign proxy and replays its
-    # shadow vt100 into this one: the other terminal's screen painted in as
-    # text, and no search UI at all. Verified 2026-08-20 by A/B on the socket
-    # alone.
-    #
-    # Dropping the stale socket rather than re-exec'ing a proxy for the new tty
-    # is deliberate: a proxy per `:terminal` costs a process and a thrown-away
-    # .zshrc pass on each one. Without the socket atuin just runs unproxied,
-    # which is all it could ever do there anyway.
-    #
-    # Clearing ATUIN_PTY_PROXY_TTY *before* the source and re-exporting it
-    # after is load-bearing, and is why the guard cannot simply sit after the
-    # source: when the snippet does exec, the proxy's child would otherwise
-    # inherit this shell's tty, see a mismatch, and throw away its own
-    # brand-new and entirely legitimate socket. Only a shell that reaches the
-    # last line without exec'ing owns the socket it is holding.
+    # The proxy runs only for shells sitting directly in a terminal window;
+    # tmux panes get plain zsh and drop the proxy variables the server
+    # inherited. mkOrder 100: the exec re-reads .zshrc, so anything sourced
+    # before it runs twice.
+    # Tty guard: a shell on a new tty (nvim's :terminal) must drop a socket
+    # owned by another terminal, or Ctrl-R replays that terminal's screen. The
+    # TTY variable is cleared before the source so a fresh proxy keeps its own.
+    # `source`, not builtins.readFile of a derivation (import-from-derivation).
     zsh.initContent = lib.mkOrder 100 ''
       if [[ -n ''${TMUX:-} ]]; then
         unset ATUIN_PTY_PROXY_ACTIVE ATUIN_PTY_PROXY_TMUX \
@@ -325,24 +224,15 @@ in
     # The one, the fuzzy searcher
     fzf = {
       enable = true;
-      # Atuin owns Ctrl-R (sourced after fzf); disable fzf's history widget to
-      # silence the HM Ctrl-R conflict warning without changing behavior.
+      # Atuin owns Ctrl-R; this only silences home-manager's conflict warning.
       historyWidget.command = "";
       historyWidget.nushell.command = "";
-      # Open the selection in an editor. This has to be set declaratively here
-      # rather than appended from shell init: FZF_DEFAULT_OPTS is exported, so
-      # an `export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --bind=..."` in zshrc
-      # re-appends at every nesting level and the binding accumulates (a shell
-      # three levels deep — terminal, tmux, subshell — carried three copies).
-      # home-manager writes this into the session vars for zsh and nushell
-      # alike, as a plain assignment, so it lands exactly once.
-      #
-      # Literal `nvim`, not `$EDITOR`: nushell loads these without shell
-      # expansion. Both shells set EDITOR = "nvim" anyway.
+      # Set here, not appended in zshrc, where the exported variable would gain
+      # a copy of the binding per nesting level. Literal `nvim`, not $EDITOR:
+      # nushell loads session variables unexpanded.
       defaultOptions = [ "--bind='ctrl-e:execute(nvim {} > /dev/tty)+abort'" ];
-      # Ember colors from palette.nix — coral for match highlights and the
-      # pointer, steel for neutral chrome (gold is rationed for
-      # needs-attention states, and at 8.4:1 it would outshine the coral)
+      # Coral for matches and the pointer, steel for neutral chrome; gold is
+      # kept for needs-attention states.
       colors = {
         bg = p.bg;
         "bg+" = p.surface;

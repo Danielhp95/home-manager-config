@@ -16,10 +16,9 @@ let
       4
     ];
 
-  # The statusline reads Claude Code's JSON payload on stdin; `--stdin` is
-  # required for piped input to reach $in when nu runs a script file. The
-  # script's at-sign placeholders are Ember palette colours; replaceVars fails
-  # the build if one is left unreplaced or no longer exists in the script.
+  # `--stdin`, or piped input never reaches $in in a nu script. The script's
+  # at-sign placeholders are palette colours; replaceVars fails the build on a
+  # missing or leftover one.
   statuslineScript = pkgs.replaceVars ./statusline-command.nu (
     lib.genAttrs [
       "accent"
@@ -40,18 +39,16 @@ let
     exec ${lib.getExe pkgs.nushell} --stdin ${statuslineScript}
   '';
 
-  # Live repo path, not a store copy: danvim's lsp.lua reads the same file at
-  # runtime, and pinning it here would let the two drift between rebuilds.
+  # The live repo file, not a store copy, so it can't drift from the one
+  # danvim's lsp.lua reads.
   noctaliaLuauDefs = "${config.home.homeDirectory}/nix_config/noctalia/noctalia.d.luau";
 
-  # Skill sources are flake inputs (see flake.nix); each value is a store path
-  # to the skill's directory, which the module symlinks whole.
+  # Skill directories from the flake inputs; the module symlinks each whole.
   superpower = name: "${inputs.superpowers}/skills/${name}";
   pocock = category: name: "${inputs.mattpocock-skills}/skills/${category}/${name}";
   socratic = name: "${inputs.socratic-skills}/skills/${name}";
 
-  # Upstream names its file `skill.md`; Claude Code only discovers `SKILL.md`,
-  # so wrap it in a directory with the expected name.
+  # Upstream ships `skill.md`; Claude Code only discovers `SKILL.md`.
   walkthrough-skill = pkgs.runCommandLocal "claude-code-skill-walkthrough" { } ''
     mkdir -p "$out"
     ln -s ${inputs.walkthrough-skill}/skills/walkthrough/skill.md "$out/SKILL.md"
@@ -59,16 +56,10 @@ let
   '';
 in
 {
-  # Claude Code settings live in two places:
-  #   - ./managed-settings.nix (a NixOS module): statusLine and attribution,
-  #     as /etc/claude-code managed settings, re-applied on every switch and
-  #     ranked above the user file.
-  #   - ~/.claude/settings.json: the keys Claude Code rewrites at runtime
-  #     (model switches, /config, permission setup). It is deliberately NOT a
-  #     store symlink, which would either break those writes or be silently
-  #     replaced by them. ./settings.json seeds a fresh machine once, and
-  #     Claude Code owns the file from then on. The seed omits autoMode (work
-  #     details; this repo is public).
+  # statusLine and attribution are managed settings (./managed-settings.nix).
+  # Claude Code rewrites the rest of ~/.claude/settings.json at runtime, so it
+  # is seeded once, never a store symlink. The seed omits autoMode (work
+  # details; this repo is public).
   home.activation.seedClaudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     target=${config.home.homeDirectory}/.claude/settings.json
     if [ ! -e "$target" ]; then
@@ -172,15 +163,13 @@ in
         version, digest, last_seen); paths (digest, name, nar_url, nar_size).
     '';
 
-    # Personal, cross-project skills, sourced from upstream repos via flake
-    # inputs.
+    # Personal, cross-project skills.
     skills = {
       # A file (not a directory) links only SKILL.md, so the skill directory
       # stays writable for the state.json and reports/ the skill writes there.
       neovim-news-update = ./skills/neovim-news-update/SKILL.md;
 
-      # obra/superpowers: brainstorm -> plan -> execute workflow and its
-      # supporting disciplines.
+      # obra/superpowers: brainstorm -> plan -> execute, plus its disciplines.
       brainstorming = superpower "brainstorming";
       writing-plans = superpower "writing-plans";
       executing-plans = superpower "executing-plans";

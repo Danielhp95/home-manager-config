@@ -2,133 +2,47 @@
 let
   p = (import ../palette.nix).hash;
 
-  # The ollama model IRIS completes with. ollama-iris-model.service in
-  # ../non_home_manager_config/ollama.nix creates it under this exact name.
+  # Created under this exact name by ollama-iris-model.service
+  # (../non_home_manager_config/ollama.nix).
   aiModel = "iris-qwen3-4b";
 
-  # Colours and box width are configured below; these substitutions cover the
-  # behaviours that have no knob. Every replacement is --replace-fail: if upstream moves
-  # a line, the build breaks loudly instead of silently reverting.
-  #
-  # All three re-applied unchanged across the v0.5.x -> v0.6.3 -> v0.7.0
-  # bumps, both of which reworked this same file heavily (v0.6: pty.Open +
-  # Setctty instead of pty.Start, an alt-screen guard, the watchdog cwd relay;
-  # v0.7: word motion on ctrl+arrow, core.navigate-closed, a deferred-draw
-  # repaint queue). The anchors and their surrounding control flow were
-  # re-read against each new tree, not assumed.
+  # Behaviour with no config knob. --replace-fail breaks the build if upstream
+  # moves an anchor; re-read the control flow around each one on a bump.
   iris = pkgs.iris.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       ### Description column: grow it with the box #############################
-      # ui.max-width sizes the box, but descW is still `descW := 24` regardless
-      # of how wide the box ended up, so the extra room all goes to the command
-      # column. inner is in scope here (boxWidth - 2). 24 stays the floor.
+      # descW is a fixed 24 however wide ui.max-width makes the box; 24 stays
+      # the floor.
       substituteInPlace integration/overlay.go \
         --replace-fail 'descW := 24' 'descW := max(24, inner/4)'
 
       ### Select key: hand it back to the shell when no menu is open ###########
-      # keybindings.select is configurable now, but the swallow is not fixed —
-      # as of v0.7.0 it is deliberate: the matched-key branch ends in
-      # `i += consumed - 1; continue` sitting *outside* the
-      # `if overlay.IsVisible()` block, now with an upstream comment saying it
-      # should "always consume the full binding atomically, even when the
-      # overlay is hidden". So with the default select = "tab" the key is
-      # eaten and never written to the pty even when there is no menu to accept
-      # from — fzf-tab and the Tab-Tab television binding stay unreachable.
-      # Forwarding the raw bytes when the overlay is hidden restores both.
-      # Setting select = "" is not an alternative: config.Load() forces the
-      # empty string back to "tab".
-      #
-      # Deliberately does not set shouldOverlayDraw: IRIS must not redraw over
-      # fzf-tab's own output.
+      # Upstream consumes the select key (Tab) even with the menu hidden, so
+      # fzf-tab and Tab-Tab tv never see it; select = "" is forced back to
+      # "tab". No shouldOverlayDraw: IRIS must not redraw over fzf-tab.
       substituteInPlace root/wrapper.go \
         --replace-fail 'if matched, consumed := config.MatchKey(inputSlice[i:], config.Get().Keybindings.SelectSuggestion); matched && config.Get().Keybindings.SelectSuggestion != "" {' 'if matched, consumed := config.MatchKey(inputSlice[i:], config.Get().Keybindings.SelectSuggestion); matched && config.Get().Keybindings.SelectSuggestion != "" { if !overlay.IsVisible() { _, _ = ptmx.Write(inputSlice[i : i+consumed]); i += consumed - 1; continue }'
 
       ### Ctrl-J / Ctrl-K: move down/up the list, as in nvim, tv and fzf #######
-      # keybindings.navigate-up/navigate-down exist now, but pointing them at
-      # ctrl+k/ctrl+j would be a downgrade on three counts, so the keys are
-      # still added here instead:
-      #
-      #   1. There is one slot per direction, so config buys Ctrl-J/K only by
-      #      giving up the arrows. This adds them *alongside*.
-      #   2. handleNavKey's `else if suggestionsEnabled` branch opens the
-      #      history list when the overlay is hidden, and its caller's
-      #      `continue` swallows the byte either way — so Ctrl-J and Ctrl-K
-      #      would stop being zsh's accept-line and kill-line entirely. v0.7.0
-      #      softened this but did not remove it: core.navigate-closed = "shell"
-      #      now forwards the *configured* nav keys when the menu is closed, and
-      #      that is a single global switch — it cannot forward Ctrl-J/K while
-      #      still letting the arrows open the history list, which is what this
-      #      config wants (see navigate-closed below).
-      #   3. The config path matches on every byte with no paste guard, so
-      #      newlines inside a pasted block would be eaten as navigate-down.
-      #
-      # Both guards below are load-bearing and cover exactly (2) and (3).
-      # `overlay.IsVisible()` keeps the keys as zsh's own when there is no list
-      # to move through; `!inBracketedPaste` keeps a pasted block intact.
-      # Terminals send 0x0a for Ctrl-J and 0x0d for Enter, and IRIS puts stdin
-      # in raw mode (no ICRNL), so the two stay distinct here even though the
-      # enter branch further down accepts either.
-      #
-      # Falling through is what makes the hidden case correct: 0x0a reaches the
-      # enter branch and is forwarded as Enter, and 0x0b reaches the trailing
-      # `if !intercepted` write. Neither needs handling here.
+      # Not navigate-up/down: one key per direction (the arrows would go), no
+      # paste guard, and with the menu closed it would swallow zsh's
+      # accept-line/kill-line. Hence the IsVisible and bracketed-paste guards;
+      # with no menu, 0x0a falls through as Enter and 0x0b to the pty.
       substituteInPlace root/wrapper.go \
         --replace-fail 'var isNavUp, isNavDown bool' 'if overlay.IsVisible() && !inBracketedPaste && (b == 0x0b || b == 0x0a) { navDir := "down"; if b == 0x0b { navDir = "up" }; handleNavKey(navDir); continue }; var isNavUp, isNavDown bool'
     '';
   });
 in
-# IRIS (Intelligent Real-time Input Suggestion): an IntelliSense-style
-# completion overlay. `pkgs.iris` comes from the flake input via overlays in
-# flake.nix.
-#
-# HOW IT WORKS — read this before changing anything here. IRIS is *not* a zsh
-# plugin. It is a PTY wrapper: `iris` puts the terminal in raw mode, spawns a
-# fresh `zsh` as a child, mirrors your keystrokes into its own buffer, and
-# draws the suggestion menu as an inline overlay. Keys it recognises are
-# consumed by IRIS and never reach zle; everything else is forwarded to the
-# child shell untouched.
-#
-# Upstream intercepts the select key (Tab by default) unconditionally, even
-# with no menu open, which makes fzf-tab and the Tab-Tab television binding
-# unreachable. The patch above forwards Tab whenever IRIS has no menu open, so
-# both work again. Note the remaining overlap: while the suggestion menu *is*
-# up (which is most of the time you're mid-word), Tab accepts IRIS's selection.
-# Toggle the menu off to hand the key back. To make Tab always defer to zsh
-# instead, set keybindings.select below to something else — ctrl+y, say — and
-# the patch stops mattering for Tab.
-#
-# Menu navigation is patched to accept Ctrl-J / Ctrl-K alongside the arrows, to
-# match nvim, television and fzf. They only navigate while the menu is open; the
-# rest of the time zsh keeps them (accept-line and kill-line).
-#
-# Editing mid-line works properly as of v0.7.0 (#156), and needs nothing here
-# beyond the line-report hook below: Ctrl/Alt + arrow are forwarded to zsh
-# untouched, so backward-word/forward-word are still zsh's, and IRIS follows the
-# cursor instead of assuming it sits at the end of the buffer.
-#
-# This is still wired as an opt-in `i` command rather than upstream's autostart
-# hook, which `exec iris`s every interactive zsh. Plain zsh keeps fzf-tab,
-# Tab-Tab tv, atuin and autosuggestions exactly as they were.
+# IRIS: an IntelliSense-style completion overlay (pkgs.iris, from the flake
+# input). A PTY wrapper, not a zsh plugin: it runs zsh as a child and eats the
+# keys it recognises before zle sees them; while its menu is open, Tab
+# accepts the suggestion. Opt-in via `i`, not upstream's autostart hook.
 {
   home.packages = [ iris ];
 
-  # Colours live in their own file since v0.4.22 — config.toml has no [theme]
-  # section, `LoadTheme` reads $XDG_CONFIG_HOME/iris/theme.toml directly. Every
-  # field is optional and falls back individually, but all nineteen are spelled
-  # out here so a palette change can never leave a stray Aura purple behind.
-  # The names map onto what upstream's own defaults coloured, which is why the
-  # four accent roles below (key, scroll_info, sys_sel, alias_sel) share gold:
-  # they were all #a277ff, and only the border wanted to stay quiet.
-  #
-  # The names have drifted from what they paint, though: the "atuin" source
-  # badge added in v0.6.0 is drawn with alias/alias_sel rather than hist/
-  # hist_sel (integration/overlay.go's `case "atuin"`), so atuin rows come out
-  # in the alias colours. Nothing to add here — upstream still has exactly
-  # these nineteen fields, verified against the v0.7.0 tree — but don't read
-  # the field names as a source list.
-  #
-  # IRIS stats this path every second alongside config.toml and hot-reloads, so
-  # a rebuild applies to running sessions without restarting them.
+  # All 19 theme fields, so no upstream default colour survives. The names
+  # don't match what they paint (atuin rows use alias/alias_sel). Running
+  # sessions hot-reload this file.
   xdg.configFile."iris/theme.toml".text = ''
     border = "${p.border}"
     accent = "${p.accent}"
@@ -151,117 +65,56 @@ in
     alias_sel = "${p.gold}"
   '';
 
-  # Managed declaratively, so never run `iris config init` / `iris setup` /
-  # `iris theme init`: setup prepends `eval "$(iris init zsh)"` to .zshrc, which
-  # is a read-only store symlink here, and the init commands would try to write
-  # over the two store-managed files. Runtime state (last-used mode) goes to
-  # $XDG_DATA_HOME/iris/state.toml, not here, so read-only is safe.
+  # Never run `iris config init`, `iris setup` or `iris theme init`: they write
+  # over these store files and .zshrc. State lives in $XDG_DATA_HOME/iris.
   xdg.configFile."iris/config.toml".text = ''
     [core]
     version = 1
 
-    # Pinned rather than auto-detected: detection walks /proc for the parent
-    # shell and silently falls back to bash for anything it doesn't recognise
-    # (nushell included).
+    # Pinned: auto-detection falls back to bash for unknown parents (nushell).
     shell = "zsh"
 
     # Remember spec/history mode across sessions
     mode = "last"
     debug = false
 
-    # Upstream default is true, which rewrites the line as you type: `ls ` +
-    # space becomes `eza -lahF --git `, because IRIS scrapes `alias -- ls=...`
-    # out of .zshrc. Off keeps the buffer as typed; the menu still resolves
-    # aliases for its suggestions either way.
+    # Off: when on, IRIS expands aliases as you type (`ls ` turns into `eza …`).
     expand-alias = false
 
-    # On Enter, run what is typed rather than what is highlighted. True would
-    # execute the suggestion instead — so typing `nvim ~/.conf` and hitting
-    # Enter would run `nvim ~/.config`. Upstream's default, and the safe one.
+    # Enter runs what is typed, not the highlighted suggestion.
     auto-execute = false
 
-    # History mode: 0 = shell history file, 1 = atuin only, 2 = both merged.
-    # New in v0.6.0. This is the setting that matters most on this machine,
-    # because atuin is where the history actually lives: ~/.config/zsh/
-    # .zsh_history holds ~9k lines, while atuin's history.db holds ~159k. Mode
-    # 0 was therefore searching a small fraction of what has ever been typed
-    # here. 2 rather than 1 so a command run in a non-atuin shell (a plain
-    # `zsh -f`, a recovery session) is still reachable.
-    #
-    # IRIS opens the DB read-only and re-reads it when its mtime changes, so
-    # it never contends with atuin's daemon over the write lock.
+    # 0 = shell histfile, 1 = atuin, 2 = both. atuin holds most of the history;
+    # 2 also covers commands from non-atuin shells. The DB is opened read-only.
     atuin-history = 2
 
-    # Left empty on purpose. IRIS resolves $XDG_DATA_HOME/atuin/history.db and
-    # falls back to ~/.local/share/atuin/history.db, which is exactly where the
-    # atuin module in ./default.nix leaves it — spelling the path out here
-    # would just duplicate atuin's own default and rot if either side moves.
+    # Empty: IRIS finds atuin's default $XDG_DATA_HOME/atuin/history.db.
     atuin-db-path = ""
 
-    # When a command has no completion spec, IRIS runs `<binary> __complete` to
-    # see whether it is a cobra CLI. Configurable since v0.6.1, and worth
-    # knowing the shape of: this executes binaries off $PATH as you type.
-    #
-    # Left on because the same release added a real gate — spec/
-    # cobra_complete.go now reads the Go build info out of the binary and only
-    # probes if it genuinely imports spf13/cobra, on top of the pre-existing
-    # setsid isolation and 300ms timeout. Shell scripts (sie-vpn-connect and
-    # the other writeShellScriptBin wrappers) have no build info and are
-    # never probed at all. Set false if that trade ever stops being worth it.
+    # Runs `<binary> __complete` for commands without a spec, but only on
+    # binaries whose Go build info imports spf13/cobra (setsid, 300ms timeout).
     cobra-probe-enabled = true
 
-    # What the navigate keys do while the menu is *closed*. New in v0.7.0, and
-    # pinned rather than left implicit because it decides the fate of the arrow
-    # keys inside an IRIS session:
-    #
-    #   "history" — open IRIS's own merged (atuin + shell) history list.
-    #   "shell"   — forward the key to zsh, i.e. up-line-or-history.
-    #
-    # Upstream's default, and kept: with atuin-history = 2 that list is the
-    # ~159k-entry atuin DB rather than the ~9k-line zsh histfile, so it is
-    # strictly the better history here. The cost is that zsh's own
-    # up-line-or-history is unreachable while inside IRIS — acceptable because
-    # atuin already runs --disable-up-arrow (terminal/default.nix), so Up at a
-    # plain prompt is only ever zsh's small file anyway. Switch to "shell" if
-    # the displacement ever grates; Ctrl-J/K still navigate the open menu
-    # either way, which is what makes the switch cheap.
+    # With the menu closed, Up/Down open IRIS's merged history list ("shell"
+    # hands them to zsh). Ctrl-J/K navigate the open menu either way.
     navigate-closed = "history"
 
     [ui]
     style = "modern"
 
-    # A three-mode option since v0.7.0, no longer a bool: 0 = off, 1 = on,
-    # 2 = "individual" — ghost text with the menu box suppressed until
-    # shift+tab asks for it. Written as the integer rather than `true` because
-    # the bool spelling only survives as a back-compat branch in
-    # GhostTextMode.UnmarshalTOML. 1 keeps what was here; 2 is the one to try
-    # if the box ever feels like too much furniture.
+    # 0 = off, 1 = on, 2 = ghost text only until shift+tab. An int, not a bool.
     ghost-text = 1
 
     hidden-files = false
     max-suggestions = 100
 
-    # Only actually obeyed since v0.7.0 (#104) — before that the box sized
-    # itself off max-suggestions and this was decorative, so expect a shorter
-    # menu than v0.6 drew.
     max-height = 12
 
     nerd-fonts = true
 
-    # A share of the terminal, new in v0.7.0, re-resolved on every draw
-    # (Width.Resolve) rather than once at load. Replaces the old fixed 200,
-    # which was a cap chosen to mean "fill the terminal, but stop there on an
-    # ultrawide"; a percentage says that directly. The description column still
-    # does not follow it on its own — see the descW patch above.
-    #
-    # The quotes are load-bearing. Width.UnmarshalTOML accepts an int64 or a
-    # string, so a bare 80% is not valid TOML at all — and IRIS answers a parse
-    # error by discarding this *entire* file and running on upstream defaults.
-    # Measured, with the quotes off: shell = "" (detection back on, which falls
-    # back to bash), expand-alias = true, atuin-history = 0, toggle-mode =
-    # "ctrl+r" — every deliberate choice in this module silently undone, with
-    # nothing but one line on stderr at startup to say so. Worth remembering for
-    # any value edited here, not just this one.
+    # Share of the terminal width; descW follows it only via the patch above.
+    # The quotes matter: a bare 80% is invalid TOML, and a parse error makes
+    # IRIS silently drop this whole file and run on upstream defaults.
     max-width = "80%"
 
     [git]
@@ -296,34 +149,12 @@ in
     debounce_ms = 800
     min_interval_ms = 5000
 
-    # Not the qwen3-coder:30b that ollama.nix also loads: the
-    # budget here is debounce 400ms + a timeout on a request fired
-    # mid-typing, which is a time-to-first-token problem, not a tok/s one.
-    # There is no small qwen3-coder to prefer — that repo stops at 30b.
-    #
-    # ${aiModel} is qwen3:4b-instruct-2507-q4_K_M with num_ctx 4096 baked in
-    # (created by ollama-iris-model.service in ollama.nix). It has to be a
-    # derived model: this endpoint ignores both `options.num_ctx` and
-    # `keep_alive` in the request body (tested), so extra_request_body cannot
-    # carry either one, and the base tag loads at OLLAMA_CONTEXT_LENGTH x
-    # OLLAMA_NUM_PARALLEL = 131k tokens — 13040 MiB of VRAM for a 2.3 GiB
-    # model. At 4096 it is 3146 MiB, and IRIS's prompt is capped well under
-    # that (context_provider.go truncates git status/diff/help to ~3k chars).
-    #
-    # `-instruct-` in the base tag is load-bearing. Qwen3 ships split lines:
-    # -instruct-2507 emits no reasoning, while -thinking-2507 and the bare
-    # qwen3:4b do, which would blow the deadline and violate the system
-    # prompt's "no explanation, no markdown, no fences".
-    #
-    # The timeout is not the latency budget. A warm completion takes ~30ms. A
-    # cold one takes ~2.55s, measured with 4k and 64k windows alike, so that
-    # cost is llama-server/CUDA start-up rather than the KV cache. At the old
-    # 2500 that meant IRIS dropped the connection just before the model
-    # finished loading, ollama aborted the load ("client connection closed
-    # before llama-server finished loading"), and the next request started
-    # from cold again. The journal had 52 of those aborts in three days and
-    # not one completed load. 4000 lets a cold load finish. Normally there
-    # isn't one, because the precmd hook below keeps the model warm.
+    # A small model, not the qwen3-coder:30b ollama.nix also loads: the budget
+    # is time-to-first-token mid-typing. ${aiModel} bakes num_ctx 4096 into
+    # qwen3:4b-instruct-2507 (see ollama.nix), since this endpoint ignores
+    # num_ctx and keep_alive in the request. Keep `-instruct-`: thinking
+    # variants emit reasoning and miss the deadline. timeout_ms must outlast a
+    # cold model load, or ollama aborts the load when IRIS hangs up.
     [ai.providers.ollama]
     endpoint = "http://localhost:11434/v1/chat/completions"
     model = "${aiModel}"
@@ -333,90 +164,32 @@ in
   programs.zsh = {
     shellAliases.i = "iris";
 
-    # mkBefore so this lands ahead of the plugin sourcing: both opt-outs below
-    # are read by the plugins at load time, which makes the result independent
-    # of how home-manager happens to order the rest of .zshrc.
+    # mkBefore: the plugin opt-outs below must be set before the plugins load.
     initContent = lib.mkBefore ''
-      # Drop IRIS_* vars that belong to some other terminal. This is upstream's
-      # own guard from `iris init zsh`, which the inlined hook below had left
-      # out, and it matters for more than the hooks. `iris` does not look for a
-      # live session. If IRIS_PID is set at all, it SIGUSR1s that pid to
-      # "reload" it and exits, and the reload SIGKILLs the session's shell. So
-      # `i` in nvim's :terminal, when nvim was started from an IRIS session,
-      # killed that session and nvim with it. Reproduced: "[IRIS] Sent reload
-      # signal to parent session.", then nvim was gone. Any tmux pane whose
-      # server was started inside IRIS did the same to a stranger. With a
-      # stale pid, SIGUSR1's default action kills whatever process owns it now.
-      #
-      # This is looser than the hook guard below on purpose. A plain `zsh`
-      # typed inside an IRIS session is not IRIS's child but is on IRIS's tty,
-      # so the vars really do describe its terminal, and `iris` there reloading
-      # the session is what upstream intends. IRIS_WATCHDOG_CWD_FD is extra here.
-      # Upstream leaves it set, and a wrapper that inherits it writes cwd
-      # updates into whatever that fd number happens to be.
+      # Drop IRIS_* vars that belong to another terminal (upstream's guard from
+      # `iris init zsh`). With IRIS_PID set, `iris` SIGUSR1s that pid to reload
+      # it, killing that session's shell, or whatever process now owns the pid.
+      # Upstream leaves IRIS_WATCHDOG_CWD_FD set; it is dropped here too.
       if [[ -n "$IRIS_PID" && "$PPID" != "$IRIS_PID" && "$TTY" != "$IRIS_TTY" ]]; then
         unset IRIS_PID IRIS_IS_CHILD IRIS_FD IRIS_TTY IRIS_WATCHDOG_CWD_FD
       fi
 
-      # Only true in the zsh that IRIS spawned as its child. The $PPID test is
-      # load-bearing under tmux and not just belt-and-braces: IRIS_PID/IRIS_FD
-      # are plain environment variables, so a tmux server started from inside
-      # an IRIS session hands them to every pane it later spawns. Those panes
-      # are not IRIS children — their parent is the tmux server, and the fd is
-      # long closed — so without this they would silently drop autosuggestions
-      # and autopair and install an IPC hook writing into nothing.
-      #
-      # Upstream rewrote its own version of this guard in v0.6.x (#120): it no
-      # longer greps $PPID for "tmux" but unsets the vars when $PPID differs
-      # from $IRIS_PID *and* the tty differs from a new IRIS_TTY export. That
-      # is looser than what is here — it needs both to fail — so the plain
-      # $PPID == $IRIS_PID test below still covers strictly more cases and is
-      # kept (verified: IRIS execs the child shell directly, so the two match).
+      # Only in the zsh IRIS spawned: panes of a tmux server started inside IRIS
+      # inherit IRIS_PID/IRIS_FD too, but their parent is the tmux server.
       if [[ -n "$IRIS_PID" && -n "$IRIS_FD" && "$PPID" == "$IRIS_PID" ]]; then
-        # Two ghost texts on one line garbles both. IRIS draws its own (and is
-        # the AI-aware one), so zsh's yields. The plugin tests for the
-        # variable's existence, not its value.
+        # IRIS draws its own ghost text, so zsh-autosuggestions yields (the
+        # plugin only checks that this variable exists).
         typeset -g _ZSH_AUTOSUGGEST_DISABLED
 
-        # IRIS applies a suggestion by writing Ctrl-U + the full command into
-        # the pty, i.e. as if typed. autopair would then "helpfully" close any
-        # quote or paren in it, so the executed command differs from the one
-        # shown. Inhibit its keybindings for this session only.
+        # IRIS applies a suggestion by typing it into the pty; autopair would
+        # close its quotes and parens a second time.
         AUTOPAIR_INHIBIT_INIT=1
 
-        # IPC back to the wrapper, equivalent to the hook half of
-        # `iris init zsh` (root/init.go) minus its autostart block, which we
-        # deliberately don't want. Inlined rather than eval'd to keep a
-        # subprocess out of every zsh startup. Re-check on upstream bumps.
-        #
-        # line-pre-redraw feeds zle's authoritative buffer to IRIS, which
-        # otherwise only has its own naive keystroke mirror — this is what
-        # keeps the overlay honest when a widget rewrites the line.
-        #
-        # The payload is a protocol as of v0.7.0 (#156):
-        # "IRIS_LINE:<chars left of cursor>:<whole buffer>" (zsh's ''${#LBUFFER}
-        # is a character count, and Go counts runes to match). Sending a bare
-        # $LBUFFER, as this did before, still parses — parseLineReport treats an
-        # unprefixed payload as the whole line with the cursor at its end — but
-        # that is exactly the bug the prefix fixed: everything right of the
-        # cursor was invisible to IRIS, so completing mid-line truncated the
-        # tail, and ctrl+left/right word motion had no cursor to move.
-        #
-        # IRIS_CWD keeps IRIS's idea of the directory in sync: it resolves
-        # path completions itself, from its own cwd, which never moves because
-        # the `cd` happens in the child shell. chpwd covers interactive cds,
-        # precmd covers the rest (a script that cds, a subshell popping back).
-        #
-        # This hook earns more than completions since v0.6.x: #129 made the
-        # wrapper chdir to each IRIS_CWD it receives, and #143 relays it on to
-        # the outer watchdog process over a dedicated fd. Anything that locates
-        # a shell by reading its pane's foreground process — tmux's
-        # pane_current_path, most notably — therefore only tracks `cd` inside
-        # an IRIS session because these lines are here. Dropping them would now
-        # strand tmux at the directory the session started in.
-        # The exit code on IRIS_CMD_STOP feeds the rule-based "retry the last
-        # failure" suggestion, which runs with ai.enabled = false. The wrapper
-        # accepts a bare IRIS_CMD_STOP too, so both are additive.
+        # The hook half of `iris init zsh` (root/init.go), minus its autostart;
+        # re-diff it on upstream bumps. IRIS_LINE carries the cursor offset
+        # with the buffer (mid-line completion needs both), IRIS_CWD keeps
+        # IRIS's path completions and tmux's pane_current_path following `cd`,
+        # and the IRIS_CMD_STOP exit code feeds the retry-last-failure hint.
         _iris_send_lbuffer() { print -u $IRIS_FD -N -r -- "IRIS_LINE:''${#LBUFFER}:$BUFFER" 2>/dev/null }
         _iris_sync_cwd()     { print -u $IRIS_FD -N -r -- "IRIS_CWD:$PWD" 2>/dev/null }
         _iris_precmd()       {
@@ -432,22 +205,11 @@ in
         add-zsh-hook preexec _iris_preexec
         add-zsh-hook chpwd _iris_sync_cwd
 
-        # Keep the AI model loaded for as long as IRIS is in use. Ollama
-        # unloads an idle model after keep_alive, and a cold load (~2.55s)
-        # loses to the first few keystrokes anyway, since each one cancels the
-        # in-flight request and a cancelled request aborts the load with it.
-        # The OpenAI endpoint IRIS talks to cannot set keep_alive. It does
-        # *refresh* the window a model was loaded with, though (measured: 20m
-        # at load, and a request 5s later pushed expiry to 20m from then). So one
-        # native load with 30m keeps the model warm through every completion,
-        # and it unloads 30m after the last one, rather than holding 3 GiB of
-        # VRAM forever the way keep_alive = -1 would.
-        #
-        # Re-sent at most every five minutes from precmd, which recovers from
-        # an eviction (loading qwen3-coder:30b evicts this, since
-        # the two don't fit together) and from an ollama restart. A request for
-        # a model that is already loaded only resets its timer. Backgrounded
-        # and disowned, so a slow or absent ollama never holds up the prompt.
+        # Keep the model warm while IRIS is in use: each keystroke cancels the
+        # request, and a cancelled cold load is aborted. IRIS's endpoint can't
+        # set keep_alive but refreshes the one a model was loaded with, so a
+        # native 30m load is re-sent (at most every 5 min, in the background)
+        # to survive evictions and ollama restarts.
         zmodload -F zsh/datetime p:EPOCHSECONDS
         typeset -gi _iris_ai_warmed_at=0
         _iris_ai_warm() {
@@ -461,16 +223,10 @@ in
     '';
   };
 
-  # Nushell gets the binary on PATH, but IRIS cannot wrap it: there is no
-  # nushell adapter (integration/shell/adapter.go has zsh/bash/fish and
-  # defaults everything else to bash), and core.shell validation rejects "nu"
-  # outright. Even with an adapter it would misbehave — IRIS clears the line
-  # with Ctrl-U, which isn't kill-whole-line in reedline's vi insert mode, and
-  # it eats Esc for "hide menu", which vi mode needs. So `i` here is explicit
-  # about dropping into a zsh-backed IRIS session rather than pretending.
+  # IRIS can't wrap nushell (no adapter; core.shell rejects "nu"), so `i` in nu
+  # starts a zsh-backed session.
   programs.nushell.extraConfig = ''
-    # IRIS doesn't support nushell; this starts an IRIS session running zsh.
-    # Exit it to come back to nu.
+    # IRIS running zsh; exit it to return to nu.
     def --wrapped i [...args: string] {
       ^iris --shell zsh ...$args
     }

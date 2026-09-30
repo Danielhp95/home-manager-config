@@ -2,26 +2,21 @@
 let
   p = (import ../palette.nix).hash;
 
-  # dart lives in the sai project's venv, not on PATH: the same path
-  # noctalia/dart-plugin/plugin.toml defaults to.
+  # Not on PATH: the sai venv's dart, as in noctalia/dart-plugin/plugin.toml.
   dart = "${config.home.homeDirectory}/Projects/sai/.venv/bin/dart";
 in
 {
-  # Mime-dispatching previewer backing the files channel's preview (and usable
-  # anywhere else a single preview command is wanted: fzf, lf, ...).
+  # pistol: the files channel's mime-dispatching previewer.
   home.packages = with pkgs; [
     pistol
     chafa # images -> ANSI art in the preview pane
   ];
 
-  # First matching line wins. Anything not matched here falls through to
-  # pistol's built-ins: chroma-highlighted text, archive/dir listings,
-  # libmagic descriptions for binaries.
+  # First match wins; anything else falls through to pistol's built-ins.
   home.file.".config/pistol/pistol.conf".text = ''
     text/* sh: BAT_THEME=ansi bat -n --color=always --paging=never %pistol-filename%
-    # --probe off: chafa's default terminal probe writes OSC 10/11 color queries
-    # to the tty; when tv owns the tty the replies land in its input box as
-    # literal "rgb:..." text. Symbols mode gains nothing from probing anyway.
+    # --probe off: chafa's colour queries would land in tv's input box as
+    # literal "rgb:..." text.
     image/* chafa -f symbols --animate off --probe off %pistol-filename%
   '';
 
@@ -40,10 +35,8 @@ in
         preview.command = "${dart} run get --tags {}";
       };
 
-      # Pin the files channel (from television 0.15.9's cable repo) so the
-      # default source lists ALL files (hidden + gitignored, minus .git) instead
-      # of fd's default gitignore-respecting listing. <C-s> cycles to a
-      # gitignore-filtered source. `tv update-channels` won't touch this.
+      # The cable-repo files channel, but its default source lists all files
+      # (hidden and gitignored, minus .git); <C-s> cycles to the filtered one.
       files = {
         metadata = {
           name = "files";
@@ -63,9 +56,7 @@ in
             run = "fd -t f";
           }
         ];
-        # pistol dispatches by mime type (pistol.conf above): bat for text,
-        # chafa for images, built-in listings for archives/dirs, libmagic for
-        # the rest
+        # pistol dispatches by mime type (pistol.conf above).
         preview.command = "pistol '{}'";
         keybindings = {
           shortcut = "f1";
@@ -88,9 +79,8 @@ in
         };
       };
 
-      # Pin the text channel (from television 0.15.9's cable repo): its
-      # [actions.edit] on enter is what makes yazi's <C-g> open $EDITOR at the
-      # matched line. `tv update-channels` won't touch this managed file.
+      # The cable-repo text channel; its Enter action is what makes yazi's <C-g>
+      # open $EDITOR at the matched line.
       text = {
         metadata = {
           name = "text";
@@ -129,9 +119,8 @@ in
         };
       };
 
-      # Frecency-ranked directory jumps. Wired into shell_integration's
-      # channel_triggers below so `z `/`cd ` + smart-autocomplete (ctrl-t / zsh
-      # Tab-Tab) pops this instead of the fd-based dirs channel.
+      # Frecency-ranked dirs; the cd/z/zz triggers below pick this over the
+      # fd-based dirs channel.
       zoxide = {
         metadata = {
           name = "zoxide";
@@ -142,12 +131,8 @@ in
           ];
         };
         source.command = "zoxide query --list";
-        # Multi-column grid + recent commits when the dir is (in) a repo. tv gives
-        # the preview command no size info and stdout is a pipe (eza would assume
-        # 80 cols), but the command inherits the terminal's tty — stty reads the
-        # real width, which the portrait preview pane spans fully. --icons takes
-        # an optional [<WHEN>] value, so it must be =always or it swallows the
-        # next argument.
+        # tv passes no width and stdout is a pipe, so read it from the tty.
+        # --icons needs =always, or it swallows the next argument.
         preview.command = "w=$(stty size </dev/tty 2>/dev/null | cut -d' ' -f2); w=$((\${w:-100} - 6)); eza --grid --across --icons=always --color=always -w $w '{}'; echo; git -C '{}' log --oneline -5 2>/dev/null || true";
         # Stacked layout: preview below the results, full path as its header
         ui = {
@@ -160,12 +145,9 @@ in
         keybindings.shortcut = "f2";
       };
 
-      # System generation switcher backing the `ng` alias in zsh and nushell.
-      # Reads the generation links from /nix/var/nix/profiles directly: `nix-env
-      # --list-generations` without -p lists the *user* profile, and with -p the
-      # system profile it needs root (system.lock). Enter hands the selected
-      # generation link to `nh os switch` as a path installable
-      # (`-- --switch-generation N` would hand the flag to nix build).
+      # Generation switcher behind the `ng` alias. Lists the profile links
+      # directly (nix-env -p on the system profile needs root) and hands the
+      # chosen link to `nh os switch` as a path installable.
       nix-generations = {
         metadata = {
           name = "nix-generations";
@@ -187,9 +169,8 @@ in
         };
       };
 
-      # NixOS / home-manager option search via manix (installed in home.nix).
-      # manix lists matches as "# option.path (source)"; the sed strips that down
-      # to the bare option path (manix's own README fzf recipe, tv-ified).
+      # NixOS/home-manager option search via manix; the sed trims its
+      # "# option.path (source)" lines to the bare path.
       nix-options = {
         metadata = {
           name = "nix-options";
@@ -238,12 +219,8 @@ in
           sort_alphabetically = true;
         };
 
-        # Ember colors from palette.nix over tv's `default` theme. These are
-        # all nineteen keys tv 0.15.9's ThemeOverrides has; it silently ignores
-        # any other name. Coral (accent) marks the active channel's mode badge
-        # and the matches, steel is quiet metadata (counts, line numbers,
-        # preview titles), and the other two mode badges take sage and mauve so
-        # each mode reads differently.
+        # Ember over tv's `default` theme. These are all the keys tv 0.15.9's
+        # ThemeOverrides accepts; unknown names are silently ignored.
         theme_overrides = {
           background = p.bg;
           border_fg = p.border;
@@ -280,8 +257,7 @@ in
         "ctrl-down" = "select_next_history";
         tab = "select_next_entry";
         backtab = "select_prev_entry";
-        # tab is remapped to navigation above (tv's default is
-        # toggle_selection_down), so multi-select lives here instead
+        # Multi-select lives here: tab navigates instead of tv's default.
         "ctrl-space" = "toggle_selection_down";
         enter = "confirm_selection";
         pagedown = "scroll_preview_half_page_down";

@@ -59,9 +59,8 @@ def main [] {
     cd $cwd
   }
 
-  # The at-sign placeholders are Ember palette.nix colours, filled in by
-  # replaceVars in default.nix. The three hotter effort embers have no
-  # palette slot.
+  # At-sign placeholders are palette.nix colours (replaceVars in default.nix);
+  # the three hotter effort embers have no palette slot.
   let color_ash = "@ash@"
   let color_bg0 = "@bg@"
   let color_bg1 = "@surface@"
