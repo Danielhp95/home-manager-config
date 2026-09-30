@@ -618,13 +618,15 @@ in
       pkgs.calf
     ];
     extraConfig."60-eq-sinks" = {
-      "wireplumber.profiles".main."node.software-dsp" = "required";
-      # WirePlumber's own context loads neither, and a filter-chain cannot
-      # create its streams without them ("no adapter factory found").
-      "context.modules" = [
-        { name = "libpipewire-module-client-node"; }
-        { name = "libpipewire-module-adapter"; }
-      ];
+      # A filter-chain needs the adapter factory in WirePlumber's own context
+      # ("no adapter factory found"). Request it as a profile component, not a
+      # raw context.modules entry: loading client-node there too makes the
+      # pw.client-node component fail with EEXIST, and monitor.bluez (which
+      # requires it) is then skipped — no A2DP endpoints, no headsets.
+      "wireplumber.profiles".main = {
+        "node.software-dsp" = "required";
+        "pw.node-factory.adapter" = "required";
+      };
       "node.software-dsp.rules" = [
         speakers
         shokz
