@@ -135,8 +135,8 @@ in
     # Lazy store of every binary nixpkgs ever shipped, scoped to a mount
     # namespace that dies with the shell (the NixOS module would replace
     # /nix/store system-wide, which is meant for VMs).
-    inputs.omnibin.packages.${pkgs.system}.omnibin-shell
-    inputs.omnibin.packages.${pkgs.system}.omnibin
+    inputs.omnibin.packages.${pkgs.stdenv.hostPlatform.system}.omnibin-shell
+    inputs.omnibin.packages.${pkgs.stdenv.hostPlatform.system}.omnibin
     manix # NixOS/home-manager options search (backs `tv nix-options`)
 
     python3
