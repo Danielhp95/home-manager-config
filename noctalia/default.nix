@@ -296,15 +296,22 @@ in
       # an ssh session. Suspend when it does happen still locks first, via
       # lockscreen.lock_before_suspend below.
       idle = {
+        # A configured behavior replaces noctalia's default wholesale, so each
+        # needs its `action`; without it noctalia skips the behavior.
         behavior.lock = {
           enabled = true;
+          action = "lock";
           timeout = 600; # 10 min
         };
         behavior."screen-off" = {
           enabled = true;
+          action = "screen_off";
           timeout = 660; # 11 min — a minute of locked screen before it blanks
         };
-        behavior."lock-and-suspend".enabled = false;
+        behavior."lock-and-suspend" = {
+          enabled = false;
+          action = "lock_and_suspend";
+        };
       };
 
       # noctalia owns the lockscreen, so the suspend interlock is stated here
