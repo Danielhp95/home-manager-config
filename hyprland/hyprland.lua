@@ -7,32 +7,11 @@
 -- .hyprland.systemd, see hyprland/default.nix); greetd launches the compositor
 -- via start-hyprland (non_home_manager_config/noctalia-greeter.nix).
 --
+-- `palette` (every palette.nix colour as "rgb(...)") and `fonts` (the fonts.nix
+-- families) are locals that hyprland/default.nix renders ahead of this file,
+-- so no hex value or font name is copied in here.
+--
 -- Reference: https://wiki.hypr.land/Configuring/Start/
-
--- ─────────────────────────────────────────────────────────────────────────────
--- Ember theme colors (was: source = colors-hyprland.conf)
--- ─────────────────────────────────────────────────────────────────────────────
-local background = "rgb(1c1b19)"
-local foreground = "rgb(d8d0c0)"
-local color0 = "rgb(1c1b19)" -- black  / bg0
-local color1 = "rgb(e08060)" -- red    / coral
-local color2 = "rgb(8a9868)" -- green  / olive
-local color3 = "rgb(c8b468)" -- yellow / gold (hy3 urgent tabs ride this)
-local color4 = "rgb(ef7f38)" -- blue   / steel (magma orange since 2026-08)
-local color5 = "rgb(988090)" -- magenta/ mauve
-local color6 = "rgb(7aa88a)" -- cyan   / sage
-local color7 = "rgb(d8d0c0)" -- white  / fg0
-
--- Ember ramp, shared with the tmux status bar (tmux/tmux.conf). Cold to blazing:
--- the focused thing sits at full coral, everything unfocused cools toward ash and
--- graphite. Keep these in sync with the @color_ember* vars in tmux.conf.
-local ash = "rgb(8a5a3c)" -- burnt umber, the rim on a cooled tab
-local ember_dim = "rgb(b8654c)" -- banked coral
-local ember = "rgb(e08060)" -- coral (== color1)
-local ember_hot = "rgb(ff8f66)" -- blazing coral
-local surface = "rgb(2c2b29)" -- graphite slab (tmux @color_bg1)
-local surface_hi = "rgb(3c3b39)" -- lifted graphite (tmux @color_bg2)
-local fg_dim = "rgb(b8b0a0)" -- secondary text (tmux @color_fg1)
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Monitors
@@ -71,7 +50,7 @@ hl.monitor({
 })
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- General / Misc / Input / Cursor / Decoration / Animations / Binds / dwindle
+-- General / Misc / Input / Cursor / Decoration / Animations / Binds / Render
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Restored on leaving the mouse-cursor submap below, which disables the
 -- timeout while active (hl.dsp.cursor.move warps don't reset Hyprland's own
@@ -94,8 +73,8 @@ hl.config({
 			-- Focused window gets the coral rim; unfocused borders stay the
 			-- background color, so the 5px border reads as invisible padding
 			-- between columns rather than a drawn rim.
-			active_border = ember,
-			inactive_border = background,
+			active_border = palette.accent,
+			inactive_border = palette.bg,
 		},
 		gaps_in = 0,
 		gaps_out = 0,
@@ -127,7 +106,7 @@ hl.config({
 		-- zero compositor repaints. Software cursors (the old `true`) forced
 		-- a damage+repaint on every cursor move; they're only needed when
 		-- the NVIDIA card scans out (the default boot entry) — see the
-		-- hypr-dgpu-hdmi branch below.
+		-- GPU selection below.
 		no_hardware_cursors = false,
 	},
 
@@ -155,10 +134,6 @@ hl.config({
 		workspace_back_and_forth = true,
 		allow_workspace_cycles = true,
 		hide_special_on_workspace_change = true,
-	},
-
-	dwindle = {
-		preserve_split = true,
 	},
 
 	render = {
@@ -197,27 +172,28 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "default
 -- Out uses "bottom" to leave the way it came. Out is 15% slower than a plain
 -- 300ms exit (3.45) so the retract doesn't feel clipped.
 hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 4, bezier = "default", style = "slidefadevert top" })
-hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 3.45, bezier = "default", style = "slidefadevert bottom" })
+hl.animation({
+	leaf = "specialWorkspaceOut",
+	enabled = true,
+	speed = 3.45,
+	bezier = "default",
+	style = "slidefadevert bottom",
+})
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Environment variables (GPU selection)
--- Pin the compositor and all clients to the Intel iGPU so the RTX 5090 can
--- runtime-suspend to D3cold (~8W saved on battery). GPU-hungry apps opt back
--- in per-launch with `nvidia-offload <cmd>`. Caveat: display outputs wired to
--- the NVIDIA GPU (some HDMI/DP ports) won't work while this is set.
+-- The Intel iGPU renders. The NVIDIA card is opened too whenever it is on the
+-- bus (the default boot entry), only to scan out the outputs wired to it:
+-- HDMI and some USB-C/DP ports, including the one the desk Dell reaches
+-- through the dock. That costs ~8W, since the dGPU never runtime-suspends
+-- while Hyprland holds it open. The "Roadwarrior" boot entry takes the dGPU
+-- off the bus (hardwares/disable_nvidia.nix), so there it is Intel-only.
+-- GPU-hungry apps opt in per launch with `nvidia-offload <cmd>`.
 -- ─────────────────────────────────────────────────────────────────────────────
--- /etc/hypr-dgpu-hdmi exists in the default boot entry
--- (hardwares/lenovo_t16g_gen3.nix) and not under the "Roadwarrior"
--- specialisation; when present, Hyprland also opens the NVIDIA card (Intel
--- stays the render GPU, NVIDIA only scans out) so the HDMI port works — at
--- the cost of the dGPU never suspending (~8W). Boot "Roadwarrior" from the
--- GRUB menu for Intel-only (it can't take effect without a fresh Hyprland
--- start anyway).
 -- AQ_DRM_DEVICES is colon-separated, so by-path names (which contain colons)
 -- get shattered on parse — resolve them to canonical /dev/dri/cardN first.
 -- Card numbering isn't stable across boots, hence resolving at startup.
--- A missing card resolves to nil (`readlink -e`), so a dGPU that isn't there
--- degrades to Intel-only instead of feeding the by-path name through.
+-- A missing card resolves to nil (`readlink -e`) and is left out of the list.
 local function resolve_card(path)
 	local p = io.popen("readlink -e " .. path)
 	local real = p:read("*l")
@@ -226,17 +202,18 @@ local function resolve_card(path)
 end
 local intel_card = resolve_card("/dev/dri/by-path/pci-0000:00:02.0-card")
 local nvidia_card = resolve_card("/dev/dri/by-path/pci-0000:01:00.0-card")
-local dgpu_hdmi = io.open("/etc/hypr-dgpu-hdmi", "r")
-if dgpu_hdmi then
-	dgpu_hdmi:close()
+local drm_devices = {}
+if intel_card then
+	drm_devices[#drm_devices + 1] = intel_card
 end
-if dgpu_hdmi and nvidia_card then
-	hl.env("AQ_DRM_DEVICES", intel_card .. ":" .. nvidia_card)
+if nvidia_card then
+	drm_devices[#drm_devices + 1] = nvidia_card
 	-- Hardware cursors glitch on NVIDIA scanout; fall back to software
-	-- rendering only in dgpu-hdmi mode.
+	-- rendering only while the dGPU is open.
 	hl.config({ cursor = { no_hardware_cursors = true } })
-else
-	hl.env("AQ_DRM_DEVICES", intel_card)
+end
+if #drm_devices > 0 then
+	hl.env("AQ_DRM_DEVICES", table.concat(drm_devices, ":"))
 end
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 
@@ -272,9 +249,10 @@ local scrolling_workspaces = {} -- workspace id (number) -> true while toggled t
 -- Which output the `present` script has mirroring, or nil. Read live from the
 -- compositor rather than trusting a marker the script writes: `present` is only
 -- one of the ways a mirror can be set up (hyprctl eval by hand is another), and
--- the compositor is the thing that actually knows.
+-- the compositor is the thing that actually knows. `all = true` because the
+-- default list leaves out outputs that are mirroring.
 local function mirrored_output()
-	for _, mon in ipairs(hl.get_monitors()) do
+	for _, mon in ipairs(hl.get_monitors({ all = true })) do
 		if mon.is_mirror then
 			return mon.name
 		end
@@ -320,9 +298,6 @@ local function restore_state()
 		end
 	end
 
-	-- Restate mode/position/scale for the same reason the `present` script does:
-	-- a rule keyed on the output name outranks the "" wildcard above, so leaving
-	-- them off would silently fall back to scale "auto".
 	if saved.mirror and saved.mirror ~= "" then
 		hl.monitor({
 			output = saved.mirror,
@@ -331,9 +306,6 @@ local function restore_state()
 			scale = "1",
 			mirror = "eDP-1",
 		})
-		-- Monitor rules, unlike hl.config values, aren't re-read each frame —
-		-- they need an explicit re-apply. Same two-step as `present`.
-		hl.exec_cmd("hyprctl dispatch forcerendererreload")
 	end
 end
 
@@ -344,15 +316,14 @@ hl.on("hyprland.shutdown", function()
 	os.remove(state_path)
 end)
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Autostart (was: exec-once)
--- Home Manager already registers a hyprland.start hook (hl.on appends, so this
--- one runs alongside it) which does `dbus-update-activation-environment
--- --systemd --all` and starts hyprland-session.target — no need to repeat any
--- env propagation or session-target handling here.
--- ─────────────────────────────────────────────────────────────────────────────
+local function after_event(fn)
+	hl.timer(fn, { timeout = 1, type = "oneshot" })
+end
+
 hl.on("hyprland.start", function()
-	hl.exec_cmd("hyprctl dispatch workspace 2") -- start on the terminal workspace
+	after_event(function()
+		hl.dispatch(hl.dsp.focus({ workspace = 2 })) -- start on the terminal workspace
+	end)
 	os.remove(state_path) -- belt and braces: clear anything a crash left behind
 end)
 
@@ -371,75 +342,61 @@ hl.gesture({ fingers = 4, direction = "horizontal", scale = 0.5, action = "works
 local mod = "SUPER"
 local hy3 = hl.plugin.hy3
 
--- -1 = single-instance: after the first window, new ones reuse the running
--- process and open in ~5ms instead of ~400ms (fonts/GPU already initialized).
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"), { description = "Open terminal" })
 
--- Lock screen when closing laptop lid: noctalia's lockscreen, the same one
--- noctalia's idle timers and suspend raise.
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("noctalia msg session lock"), { locked = true, description = "Lock screen on lid close" })
-
--- Utilities
 hl.bind(mod .. " + D", hl.dsp.exec_cmd("vicinae toggle"), { description = "Open app launcher" })
-hl.bind(
-	mod .. " + SHIFT + B",
-	hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/choose_bluetooth_device_from_paired.sh"),
-	{ description = "Choose Bluetooth device" }
-)
-hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("bash /home/dani/nix_config/menu_launchers/scripts/open_paper.sh"), { description = "Open paper search" })
--- Moved off SHIFT+o, which is the opacity toggle again (see below).
+hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("choose-bluetooth-device"), { description = "Choose Bluetooth device" })
+hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("open-paper"), { description = "Open paper search" })
 hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"), { description = "OCR screen text" })
--- Force the focused window fully opaque and back. Implemented as a tag rather
--- than `setprop alpha`: a tag is per-window state the compositor already tracks
--- and toggles for us, so each window remembers whether it is opaque without
--- this config having to, and the actual opacity lives in one window rule down
--- with the rest of them (opacity-opaque-tag). Global opacity is untouched.
-hl.bind(mod .. " + SHIFT + o", hl.dsp.window.tag({ tag = "opaque", action = "toggle" }), { description = "Toggle window opaque tag" })
-hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd("noctalia msg plugin noctalia/screen_recorder:service all toggle"), { description = "Toggle screen recording" })
--- Region screenshot through noctalia's annotation editor (shell.screenshot.annotate
--- in noctalia/default.nix); Enter/Done copies to the clipboard, Ctrl+S saves.
-hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia msg screenshot-region"), { description = "Screenshot region (annotate)" })
--- Freeze the screen and draw on it in noctalia's annotation editor, then copy or save.
-hl.bind(mod .. " + A", hl.dsp.exec_cmd("noctalia msg screenshot-annotate"), { description = "Screenshot + annotate (full screen)" })
+hl.bind(
+	mod .. " + SHIFT + o",
+	hl.dsp.window.tag({ tag = "opaque", action = "toggle" }),
+	{ description = "Toggle window opaque tag" }
+)
+hl.bind(
+	mod .. " + SHIFT + R",
+	hl.dsp.exec_cmd("noctalia msg plugin noctalia/screen_recorder:service all toggle"),
+	{ description = "Toggle screen recording" }
+)
+hl.bind(
+	mod .. " + SHIFT + S",
+	hl.dsp.exec_cmd("noctalia msg screenshot-region"),
+	{ description = "Screenshot region (annotate)" }
+)
+hl.bind(
+	mod .. " + A",
+	hl.dsp.exec_cmd("noctalia msg screenshot-annotate"),
+	{ description = "Screenshot + annotate (full screen)" }
+)
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("pavucontrol"), { description = "Open volume mixer" })
--- noctalia owns clipboard history (vicinae's monitoring is off, menu_launchers/).
-hl.bind(mod .. " + CONTROL + V", hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"), { description = "Open clipboard history" })
--- Searchable keybind cheatsheet (kenn/keybind-cheatsheet, enabled in
--- noctalia/default.nix). It reads the binds back out of the running compositor
--- over hyprctl, so it stays correct under configType = "lua" -- unlike the
--- plugins that parse hyprland.conf, which this config does not have. No bar
--- pill on purpose; this bind is the only entry point.
-hl.bind(mod .. " + SHIFT + slash", hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"), { description = "Open keybind cheatsheet" })
--- Alt+Tab window switcher: Tab/Shift+Tab cycle, releasing Alt commits, Escape
--- cancels. The overlay grabs the keyboard itself, so only the open is bound.
+hl.bind(
+	mod .. " + CONTROL + V",
+	hl.dsp.exec_cmd("noctalia msg panel-toggle clipboard"),
+	{ description = "Open clipboard history" }
+)
+hl.bind(
+	mod .. " + SHIFT + slash",
+	hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"),
+	{ description = "Open keybind cheatsheet" }
+)
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"), { description = "Window switcher" })
 hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock screen" })
--- Re-read hyprland.lua in place (Hyprland >= 0.56 native dispatcher). Note
--- this drops the Lua VM, so runtime-only state goes through the state file —
--- see the runtime-state section near the top.
 hl.bind(mod .. " + SHIFT + C", hl.dsp.reload_config(), { description = "Reload Hyprland config" })
-
--- Toggle bar
 hl.bind(mod .. " + b", hl.dsp.exec_cmd("noctalia msg bar-toggle"), { description = "Toggle bar" })
-
--- Normal workspaces
 hl.bind(mod .. " + Space", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 
 for i = 1, 9 do
 	hl.bind(mod .. " + " .. i, hl.dsp.focus({ workspace = i }), { description = "Focus workspace " .. i })
-	hl.bind(mod .. " + SHIFT + " .. i, hy3.move_to_workspace(tostring(i), { follow = true }), { description = "Move window to workspace " .. i })
+	hl.bind(
+		mod .. " + SHIFT + " .. i,
+		hy3.move_to_workspace(tostring(i), { follow = true }),
+		{ description = "Move window to workspace " .. i }
+	)
 end
 hl.bind(mod .. " + TAB", hl.dsp.focus({ workspace = "previous" }), { description = "Focus previous workspace" })
 hl.bind(mod .. " + comma", hl.dsp.focus({ workspace = "e-1" }), { description = "Focus previous empty workspace" })
 hl.bind(mod .. " + period", hl.dsp.focus({ workspace = "e+1" }), { description = "Focus next empty workspace" })
 
--- Layout toggle: hy3 <-> Hyprland's native scrolling (niri-style) layout,
--- scoped to the active workspace via a per-workspace layout rule (Hyprland
--- >= 0.54's layout rewrite). Survives a reload now (see the runtime-state
--- section above), but still resets on relogin. The hjkl movement binds below
--- check `scrolling_workspaces` (declared up there, because config.unload has
--- to read it) to pick hy3's tree-aware dispatcher or Hyprland's native
--- direction dispatcher (which scrolling implements and hy3 doesn't).
 local layout_bind = mod .. " + N"
 
 local function active_ws_id()
@@ -462,10 +419,6 @@ hl.bind(layout_bind, function()
 	end
 	hl.workspace_rule({ workspace = tostring(id), layout = layout })
 
-	-- The toggle is otherwise silent and the two layouts look alike until you
-	-- try to move a window, so say which one is live and how to get back. The
-	-- synchronous hint makes a second press replace the first toast rather than
-	-- stack another one (ignored by daemons that don't implement it).
 	hl.exec_cmd(
 		string.format(
 			"notify-send -a hyprland -h string:x-canonical-private-synchronous:hypr-layout "
@@ -514,11 +467,14 @@ hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.close(), { description = "Close win
 
 hl.bind(mod .. " + E", hl.dsp.layout("togglesplit"), { description = "Toggle split direction" }) -- toggle horizontal/vertical split
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen(), { description = "Toggle fullscreen" })
-hl.bind(mod .. " + O", hl.dsp.exec_cmd("hyprctl dispatch setprop activewindow opaque toggle"), { description = "Toggle active window opacity" })
 
 -- Special workspaces
 hl.bind(mod .. " + Minus", hl.dsp.workspace.toggle_special(), { description = "Toggle special workspace" })
-hl.bind(mod .. " + SHIFT + Minus", hl.dsp.window.move({ workspace = "special" }), { description = "Move window to special workspace" })
+hl.bind(
+	mod .. " + SHIFT + Minus",
+	hl.dsp.window.move({ workspace = "special" }),
+	{ description = "Move window to special workspace" }
+)
 
 -- Mouse
 -- NOTE: the legacy `hy3:focustab, mouse` (bindn on mouse:272) is a no-op in current
@@ -575,33 +531,46 @@ hl.define_submap("move", function()
 	-- (wlrctl scroll is broken on Hyprland 0.55: axis events arrive with value120 = 0,
 	-- so toolkits ignore them; ydotool injects real uinput events instead.
 	-- Must be unmodified keys: holding SHIFT makes apps treat the wheel as horizontal scroll.)
-	hl.bind("u", hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y 1.5"), { repeating = true, description = "Scroll wheel up (cursor submap)" })
-	hl.bind("d", hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y -1.5"), { repeating = true, description = "Scroll wheel down (cursor submap)" })
+	hl.bind(
+		"u",
+		hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y 1.5"),
+		{ repeating = true, description = "Scroll wheel up (cursor submap)" }
+	)
+	hl.bind(
+		"d",
+		hl.dsp.exec_cmd("ydotool mousemove --wheel -x 0 -y -1.5"),
+		{ repeating = true, description = "Scroll wheel down (cursor submap)" }
+	)
 	hl.bind("space", hl.dsp.exec_cmd("wlrctl pointer click left"), { description = "Left click (cursor submap)" })
 	hl.bind("return", hl.dsp.exec_cmd("wlrctl pointer click left"), { description = "Left click (cursor submap)" })
-	hl.bind("SHIFT + space", hl.dsp.exec_cmd("wlrctl pointer click right"), { description = "Right click (cursor submap)" })
-	hl.bind("SHIFT + return", hl.dsp.exec_cmd("wlrctl pointer click right"), { description = "Right click (cursor submap)" })
+	hl.bind(
+		"SHIFT + space",
+		hl.dsp.exec_cmd("wlrctl pointer click right"),
+		{ description = "Right click (cursor submap)" }
+	)
+	hl.bind(
+		"SHIFT + return",
+		hl.dsp.exec_cmd("wlrctl pointer click right"),
+		{ description = "Right click (cursor submap)" }
+	)
 	hl.bind("escape", function()
 		hl.config({ cursor = { inactive_timeout = cursor_inactive_timeout } })
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Exit cursor submap" })
 end)
 
--- wl-kbptr (vimium-style mouse control)
+-- wl-kbptr (vimium-style mouse control), configured by wl-kbptr/config
+-- (hyprland/default.nix).
 hl.bind(
 	mod .. " + SHIFT + f",
-	hl.dsp.exec_cmd(
-		"wl-kbptr -o modes=floating,click -o mode_floating.source=detect --config=/home/dani/.config/wl-kbptr.yaml"
-	),
+	hl.dsp.exec_cmd("wl-kbptr"),
 	{ description = "Keyboard-driven mouse control (wl-kbptr)" }
 )
 -- Same, but the picked target gets a right click instead of a left one
--- (mode_click.button defaults to "left" in wl-kbptr.yaml; overridden here).
+-- (wl-kbptr/config sets mode_click.button=left; overridden here).
 hl.bind(
 	mod .. " + CONTROL + SHIFT + f",
-	hl.dsp.exec_cmd(
-		"wl-kbptr -o modes=floating,click -o mode_floating.source=detect -o mode_click.button=right --config=/home/dani/.config/wl-kbptr.yaml"
-	),
+	hl.dsp.exec_cmd("wl-kbptr -o mode_click.button=right"),
 	{ description = "Keyboard-driven mouse control — right click (wl-kbptr)" }
 )
 -- Volume / Brightness
@@ -611,28 +580,35 @@ hl.bind(
 -- (card1-eDP-1, on the iGPU). Writes to nvidia_0 succeed and do nothing, so
 -- the device has to be named explicitly.
 local backlight = "brightnessctl -d intel_backlight"
-hl.bind(mod .. " + F2", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true, description = "Decrease brightness" })
-hl.bind(mod .. " + SHIFT + F2", hl.dsp.exec_cmd(backlight .. " set 1%"), { repeating = true, description = "Set minimum brightness" })
-hl.bind(mod .. " + F3", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, description = "Increase brightness" })
-hl.bind(mod .. " + SHIFT + F3", hl.dsp.exec_cmd(backlight .. " set 100%"), { repeating = true, description = "Set maximum brightness" })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(backlight .. " set 5%-"), { repeating = true, locked = true, description = "Decrease brightness" })
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd(backlight .. " set +5%"), { repeating = true, locked = true, description = "Increase brightness" })
+-- The keyboard's media keys arrive as bare XF86MonBrightness*/XF86Audio*
+-- keysyms (FN is resolved in keyboard firmware), so these binds and the volume
+-- ones below take no modifier. `locked` keeps them live on the lock screen;
+-- `repeating` lets them key-repeat.
+hl.bind(
+	"XF86MonBrightnessDown",
+	hl.dsp.exec_cmd(backlight .. " set 5%-"),
+	{ repeating = true, locked = true, description = "Decrease brightness" }
+)
+hl.bind(
+	"XF86MonBrightnessUp",
+	hl.dsp.exec_cmd(backlight .. " set +5%"),
+	{ repeating = true, locked = true, description = "Increase brightness" }
+)
 -- `volume-all-sinks` (noctalia/default.nix) steps every output at once
 -- -- the speakers' and each paired headset's EQ sink, plus any hardware sink
 -- without one -- so the keys do the same thing as scrolling the
 -- bar's volume pill, instead of only touching whichever sink is default.
 local volume = "volume-all-sinks"
-hl.bind(mod .. " + F6", hl.dsp.exec_cmd(volume .. " 5%-"), { repeating = true, description = "Decrease volume" })
-hl.bind(mod .. " + F7", hl.dsp.exec_cmd(volume .. " 5%+"), { repeating = true, description = "Increase volume" })
-hl.bind(mod .. " + F5", hl.dsp.exec_cmd(volume .. " mute"), { description = "Mute/unmute volume" })
--- The SUPER binds above are chords *on top of* the F-keys. FN is resolved in
--- keyboard firmware, so FN+F2/F3/F5/F6/F7 never reach the compositor as F-keys --
--- they arrive as bare XF86MonBrightness*/XF86Audio* keysyms. Binding those with a
--- modifier means a bare FN press matches nothing, which is why the volume and
--- brightness keys did nothing. Every hardware key therefore needs a bare bind too.
--- `locked` keeps them live on the lock screen; `repeating` lets them key-repeat.
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(volume .. " 5%-"), { repeating = true, locked = true, description = "Decrease volume" })
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(volume .. " 5%+"), { repeating = true, locked = true, description = "Increase volume" })
+hl.bind(
+	"XF86AudioLowerVolume",
+	hl.dsp.exec_cmd(volume .. " 5%-"),
+	{ repeating = true, locked = true, description = "Decrease volume" }
+)
+hl.bind(
+	"XF86AudioRaiseVolume",
+	hl.dsp.exec_cmd(volume .. " 5%+"),
+	{ repeating = true, locked = true, description = "Increase volume" }
+)
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd(volume .. " mute"), { locked = true, description = "Mute/unmute volume" })
 hl.bind(mod .. " + XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { description = "Next track" })
 hl.bind(mod .. " + XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { description = "Play/pause" })
@@ -646,19 +622,31 @@ hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tru
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Previous track" })
 hl.bind("XF86AudioStop", hl.dsp.exec_cmd("playerctl stop"), { locked = true, description = "Stop playback" })
 -- FN+F8 on the HP chassis, routed through the "HP WMI hotkeys" device.
-hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, description = "Toggle mic mute" })
-
--- Speech-to-text
-hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record start"), { description = "Start speech-to-text recording" })
-hl.bind(mod .. " + V", hl.dsp.exec_cmd("voxtype record stop"), { release = true, description = "Stop speech-to-text recording" })
+hl.bind(
+	"XF86AudioMicMute",
+	hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
+	{ locked = true, description = "Toggle mic mute" }
+)
 
 -- Magnifier (cursor:zoom_factor; `magnify` script, was pypr's magnify plugin)
-hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("magnify -0.5"), { repeating = true, description = "Zoom out (magnifier)" })
-hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("magnify +0.5"), { repeating = true, description = "Zoom in (magnifier)" })
+hl.bind(
+	mod .. " + CTRL + Z",
+	hl.dsp.exec_cmd("magnify -0.5"),
+	{ repeating = true, description = "Zoom out (magnifier)" }
+)
+hl.bind(
+	mod .. " + SHIFT + Z",
+	hl.dsp.exec_cmd("magnify +0.5"),
+	{ repeating = true, description = "Zoom in (magnifier)" }
+)
 hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify"), { description = "Toggle magnifier zoom" }) -- toggle zoom
 
 -- Projector: mirror this panel onto whatever external display is attached
-hl.bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("present toggle"), { description = "Present: mirror screen to projector / external display" })
+hl.bind(
+	mod .. " + SHIFT + D",
+	hl.dsp.exec_cmd("present toggle"),
+	{ description = "Present: mirror screen to projector / external display" }
+)
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Layout: hy3 (plugin) config
@@ -679,28 +667,25 @@ hl.config({
 				radius = 5, -- was `rounding` in old hy3; renamed to `radius`
 				render_text = true,
 				text_center = true,
-				text_font = "JetBrainsMono Nerd Font Mono Bold", -- fonts.nix mono (Pango: trailing Bold = weight)
+				text_font = fonts.mono .. " Bold", -- Pango: trailing Bold = weight
 				text_height = 12,
 				text_padding = 0,
 				border_width = 1,
 				-- Mirrors the tmux window pills: the selected tab is a hot coral slab
-				-- with dark text, unselected tabs cool to a graphite slab with a
-				-- burnt-umber rim.
+				-- with dark text, unselected tabs cool to a graphite slab.
 				colors = {
-					active = ember,
-					active_border = ember,
-					active_text = background,
-          -- TODO
-					active_alt_monitor = ember_dim,
-          active_alt_monitor_border = ember_dim,
-          active_alt_monitor_text = background,
-          -- TODO
-					urgent = color3,
-					urgent_border = color3,
-					urgent_text = color0,
-					inactive = surface,
-					inactive_border = surface,
-					inactive_text = fg_dim,
+					active = palette.accent,
+					active_border = palette.accent,
+					active_text = palette.bg,
+					active_alt_monitor = palette.accentDim,
+					active_alt_monitor_border = palette.accentDim,
+					active_alt_monitor_text = palette.bg,
+					urgent = palette.gold,
+					urgent_border = palette.gold,
+					urgent_text = palette.bg,
+					inactive = palette.surface,
+					inactive_border = palette.surface,
+					inactive_text = palette.fgSoft,
 				},
 			},
 
@@ -718,13 +703,6 @@ hl.config({
 })
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Hyprtasking (plugin) — NOT loaded (not in hyprland.plugins), so its config is
--- omitted: hl.config errors on unknown keys when the plugin isn't present.
--- Re-add hyprtasking to plugins and uncomment to use it.
--- ─────────────────────────────────────────────────────────────────────────────
--- hl.config({ plugin = { hyprtasking = { layout = "grid", gap_size = 20, ... } } })
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- Layer rules
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.layer_rule({ name = "vicinae-blur", match = { namespace = "vicinae" }, blur = true, ignore_alpha = 0 })
@@ -736,9 +714,9 @@ hl.layer_rule({ name = "vicinae-no-animation", match = { namespace = "vicinae" }
 -- ignore_alpha is the one rule still honored, and it confines the blur to pixels
 -- the bar actually draws. 0.1 rather than 0: a 0 threshold left the gaps blurred.
 hl.layer_rule({ name = "noctalia-bar-gap-noblur", match = { namespace = "noctalia-bar-default" }, ignore_alpha = 0.1 })
--- rofi dropped out of this alternation with the package itself. vicinae is a
--- layer-shell surface too and could be added here, but it animates on purpose.
-hl.layer_rule({ name = "layer-no-anim", match = { namespace = "^(grim)$" }, no_anim = true })
+-- slurp's region overlay ("selection"): without the layers fade-out, the dimmed
+-- overlay is already gone when grim captures right after slurp exits (wl-ocr).
+hl.layer_rule({ name = "slurp-no-anim", match = { namespace = "^selection$" }, no_anim = true })
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Window rules
@@ -761,16 +739,16 @@ hl.window_rule({
 })
 hl.window_rule({
 	name = "messaging-apps",
-	match = { class = "^(Slack|org\\.telegram\\.desktop|Element|discord)$" },
+	match = { class = "^(slack|org\\.telegram\\.desktop|element|discord)$" },
 	workspace = 9,
 })
 
 -- Floating windows
-hl.window_rule({ name = "float-general-title", match = { title = "^(Weather|MainPicker)$" }, float = true })
+hl.window_rule({ name = "float-general-title", match = { title = "Weather" }, float = true })
 hl.window_rule({
 	name = "float-general",
 	match = {
-		class = "^(Rofi|org\\.pulseaudio\\.pavucontrol|blueberry|mpv|imv)$",
+		class = "^(org\\.pulseaudio\\.pavucontrol|mpv|imv)$",
 	},
 	float = true,
 })
@@ -784,7 +762,7 @@ hl.window_rule({
 	float = true,
 	center = true,
 })
-hl.window_rule({ name = "tile-grayjay", match = { title = "GrayJay" }, tile = true })
+hl.window_rule({ name = "tile-grayjay", match = { title = "Grayjay" }, tile = true })
 
 -- Opacity
 hl.window_rule({
@@ -821,9 +799,8 @@ hl.workspace_rule({ workspace = "1", default_name = "󰈹" }) -- firefox
 hl.workspace_rule({ workspace = "2", default_name = "󰆍" }) -- terminal
 hl.workspace_rule({ workspace = "9", default_name = "󰇮" }) -- envelope (messaging)
 
--- "Smart gaps" / "no gaps when only" (one window or fullscreen on a workspace)
-hl.workspace_rule({ workspace = "w[tv1]", gaps_out = 0, gaps_in = 0 })
-hl.workspace_rule({ workspace = "f[1]", gaps_out = 0, gaps_in = 0 })
+-- No border or rounding on a lone tiled window or a fullscreen one (gaps are
+-- already 0 everywhere, see general above).
 hl.window_rule({ name = "no-gaps-wtv1", match = { float = false, workspace = "w[tv1]" }, border_size = 0, rounding = 0 })
 hl.window_rule({ name = "no-gaps-f1", match = { float = false, workspace = "f[1]" }, border_size = 0, rounding = 0 })
 
@@ -846,10 +823,14 @@ hl.window_rule({ name = "no-gaps-f1", match = { float = false, workspace = "f[1]
 local MESSAGING_WS = 9
 
 local function tab_messaging_workspace()
-	local ws = hl.get_active_workspace()
-	if ws and ws.id == MESSAGING_WS and ws.windows > 0 then
-		hl.exec_cmd("hyprctl dispatch hy3:changegroup tab")
-	end
+	-- Deferred (after_event, above) so a window that just opened has taken
+	-- focus, and is counted, before the check runs.
+	after_event(function()
+		local ws = hl.get_active_workspace()
+		if ws and ws.id == MESSAGING_WS and ws.windows > 0 then
+			hl.dispatch(hy3.change_group("tab"))
+		end
+	end)
 end
 
 hl.on("workspace.active", tab_messaging_workspace) -- switching to ws9

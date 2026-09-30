@@ -22,21 +22,27 @@ let
     '';
   };
 
-  # use OCR and copy to clipboard
-  ocrScript =
-    let
-      inherit (pkgs)
-        grim
-        libnotify
-        tesseract5
-        wl-clipboard
-        ;
-      _ = lib.getExe;
-    in
-    pkgs.writeShellScriptBin "wl-ocr" ''
-      ${_ grim} -g "$(${_ slurp})" -t ppm - | ${_ tesseract5} - - | ${wl-clipboard}/bin/wl-copy
-      ${_ libnotify} "$(${wl-clipboard}/bin/wl-paste)"
+  # OCR a screen region and copy the text; the notification shows what was copied.
+  ocrScript = pkgs.writeShellApplication {
+    name = "wl-ocr";
+    runtimeInputs = [
+      slurp # the Ember wrapper above
+      pkgs.grim
+      pkgs.tesseract5
+      pkgs.wl-clipboard
+      pkgs.libnotify
+    ];
+    text = ''
+      # slurp exits non-zero on Esc: leave the clipboard alone.
+      region=$(slurp) || exit 0
+      # $(...) drops tesseract's trailing newline.
+      text=$(grim -g "$region" -t ppm - | tesseract - -)
+      # Nothing recognised: keep the clipboard as it was.
+      [[ $text == *[![:space:]]* ]] || exit 0
+      printf '%s' "$text" | wl-copy
+      notify-send -- "$text"
     '';
+  };
 
   # Screen magnifier — replaces pyprland's `magnify` plugin, which was only ever
   # a wrapper around Hyprland's native cursor:zoom_factor. Animates the zoom in
@@ -92,20 +98,19 @@ let
   # laptop on a 16:9 projector comes out pillarboxed rather than stretched or
   # cropped (1920x1200 -> 1728x1080 with 96px bars either side).
   #
-  # Two Hyprland quirks make this a two-step: `hyprctl keyword` is a no-op under
-  # configType = "lua" (use `hyprctl eval` instead, as magnify does above), AND
-  # eval alone only *registers* the monitor rule -- unlike hl.config values,
-  # which are read live each frame, monitor rules need an explicit re-apply.
-  # `dispatch forcerendererreload` re-fetches every monitor's rule and applies it.
+  # `hyprctl keyword` is a no-op under configType = "lua", so the monitor rule
+  # goes in through `hyprctl eval` (as magnify does above). hl.monitor()
+  # schedules the rule's re-apply itself, mirroring included.
   #
-  # The rule this registers lives only in the running Hyprland: any config reload
-  # (`hyprctl reload`, or a home-manager switch) re-reads hyprland.lua and drops
-  # it, so mirroring silently reverts to extended. Fine as a default -- just don't
-  # rebuild mid-presentation, and re-run `present on` if you do.
+  # The rule lives only in the running Hyprland. A config reload (`hyprctl
+  # reload`, or a home-manager switch) re-reads hyprland.lua, whose
+  # config.unload/config.reloaded hooks carry the mirror across (its
+  # runtime-state section); logging out ends it.
   #
-  # Escape hatch if that ever breaks: `wl-mirror --fullscreen-output DP-2 -s fit
-  # eDP-1` does the same letterboxed mirror out-of-process (wl-mirror is already
-  # in home.packages, and `wl-present` wraps it in a rofi menu).
+  # Escape hatch if that ever breaks: `wl-mirror --fullscreen-output <output> -s
+  # fit eDP-1` does the same letterboxed mirror out-of-process (wl-mirror is
+  # already in home.packages, and `wl-present` wraps it in a menu, see
+  # WL_PRESENT_DMENU below).
   presentScript =
     let
       jq = lib.getExe pkgs.jq;
@@ -183,7 +188,6 @@ let
       # output name, which outranks the "" wildcard in hyprland.lua -- leaving them
       # off would silently fall back to the binding's own defaults (scale "auto").
       hyprctl eval "hl.monitor({ output = \"$target\", mode = \"preferred\", position = \"auto\", scale = \"1\", mirror = \"$source\" })" >/dev/null
-      hyprctl dispatch forcerendererreload >/dev/null
 
       if [ "$want" = mirror ]; then
         say "Mirroring $builtin_panel to $target"
@@ -203,9 +207,20 @@ in
     # hy3 (hl0.55+) exposes its dispatchers under hl.plugin.hy3 in lua.
     configType = "lua";
     extraConfig = builtins.readFile ./hyprland.lua;
+    # palette.nix's colours as Hyprland "rgb(...)" strings, and the fonts.nix
+    # families hyprland.lua uses. Each `_var` renders as a Lua local ahead of
+    # extraConfig: `local palette = { accent = "rgb(e08060)", ... }`.
+    settings = {
+      palette._var = lib.mapAttrs (_: hex: "rgb(${hex})") (lib.filterAttrs (_: lib.isString) c);
+      fonts._var = { inherit (f) mono; };
+    };
     plugins = with pkgs; [
       hy3
     ];
+    xdph.settings.screencopy = {
+      custom_picker_binary = "hyprland-preview-share-picker";
+      allow_token_by_default = true;
+    };
     # greetd launches the compositor via `start-hyprland` (Hyprland's own
     # crash-watchdog binary, see non_home_manager_config/noctalia-greeter.nix)
     # instead of uwsm now. Session lifecycle is back on this module's own
@@ -235,36 +250,11 @@ in
 
   home.packages = with pkgs; [
     # Cooler screen picker (window/monitor previews instead of a bare list).
-    #
-    # The Outputs tab drops every monitor unpatched: the picker enumerates
-    # wl_outputs, then looks each name up in `hyprctl monitors`, having first
-    # filtered that list by `!disabled`. Hyprland serialises that field as
-    # `!m_enabled`, and since the 0.56 rev pinned below it reports `disabled:
-    # true` for monitors that are plainly enabled and rendering (the Lua API
-    # disagrees with itself here — `hl.get_monitors()[i].enabled` is true for
-    # the same monitors). So the filter empties the list, every wl_output then
-    # misses its lookup, and the tab renders with nothing in it — "output
-    # <name> does not exist on hyprland" in /tmp/hyprland-preview-share-picker.log.
-    #
-    # Dropping the filter is safe: `hyprctl monitors` without `all` only lists
-    # live monitors to begin with, so it was never load-bearing here.
-    # Upstream bug: WhySoBad/hyprland-preview-share-picker#28. Drop this when
-    # either side fixes it — the substituteInPlace is --replace-fail, so a
-    # picker bump that touches the line fails the build rather than silently
-    # going back to an empty tab.
-    (inputs.hyprland-preview-share-picker.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
-      postPatch = (old.postPatch or "") + ''
-        substituteInPlace src/views/outputs.rs \
-          --replace-fail '.map(|monitors| monitors.into_iter().filter(|monitor| !monitor.disabled).collect::<Vec<_>>())' \
-                         '.map(|monitors| monitors.into_iter().collect::<Vec<_>>())'
-      '';
-    }))
+    inputs.hyprland-preview-share-picker.packages.${pkgs.stdenv.hostPlatform.system}.default
 
     # Screenshots and annotation are noctalia's (noctalia/default.nix).
 
     # Volume keys use `volume-all-sinks` from noctalia/default.nix.
-
-    hyprpicker
 
     libnotify
 
@@ -276,9 +266,7 @@ in
     magnifyScript
     presentScript
 
-    # This should really live on its own package
     slurp # Ember wrapper from the let block
-    # wf-recorder
 
     wl-kbptr # Mouse control with keyboard in wayland
     wlrctl # Command line utility for miscellaneous wlroots Wayland extensions
@@ -299,9 +287,8 @@ in
   # it; ~/.local/share/icc is where colord and other ICC-aware apps look too.
   xdg.dataFile."icc/TPLCD_41BE_HDR.icm".source = ./icc/TPLCD_41BE_HDR.icm;
 
-  # INI despite the name; hyprland.lua passes it with --config. Unset keys
-  # take wl-kbptr's defaults.
-  xdg.configFile."wl-kbptr.yaml".text = ''
+  # wl-kbptr's default config path (INI). Unset keys take wl-kbptr's defaults.
+  xdg.configFile."wl-kbptr/config".text = ''
     [general]
     modes=floating,click
 
@@ -342,12 +329,6 @@ in
 
     [mode_click]
     button=left
-  '';
-  xdg.configFile."hypr/xdph.conf".text = ''
-    screencopy {
-      custom_picker_binary = hyprland-preview-share-picker
-      allow_token_by_default = true
-    }
   '';
   # Colours only, over WhiteSur's GTK4 widgets. `.window > box` is needed
   # because the picker's css_classes() drops GTK's `background` class.

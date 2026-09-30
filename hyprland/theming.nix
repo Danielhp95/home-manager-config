@@ -9,12 +9,12 @@ in
     # Pin legacy default: 26.05 changed gtk4.theme default from config.gtk.theme to null,
     # which would stop theming GTK4 apps with WhiteSur.
     gtk4.theme = config.gtk.theme;
-    # GTK4/libadwaita dark mode is driven by the `color-scheme = prefer-dark` dconf
-    # key below — that is the supported mechanism. The old `gtk-application-prefer-dark-theme`
-    # GTK4 setting is rejected by libadwaita ("...is unsupported. Please use
-    # AdwStyleManager:color-scheme instead"), and an `AdwStyleManager` settings.ini key
-    # is not real ("Unknown key AdwStyleManager"). Keep the hint only for legacy GTK3 apps.
-    gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
+    # Dark mode. For GTK3 this writes gtk-application-prefer-dark-theme to
+    # settings.ini, plus the `color-scheme = prefer-dark` dconf key, which is
+    # what GTK4/libadwaita follow. Set on gtk3 only: libadwaita rejects the
+    # GTK4 settings.ini key ("...is unsupported. Please use
+    # AdwStyleManager:color-scheme instead").
+    gtk3.colorScheme = "dark";
     theme = {
       package = pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
       name = "WhiteSur-Dark-orange";
@@ -44,15 +44,9 @@ in
     # exists (libqgtk3.so) — "gtk4" is not a valid value and Qt silently fell
     # back to its default look.
     QT_QPA_PLATFORMTHEME = "gtk3";
-    # For GTK3 apps only. nautilus is a libadwaita app, and libadwaita ships
-    # its own stylesheet and ignores GTK themes by design. Same for gnome-weather, gnome-calendar, decibels and
-    # gthumb. What those *do* honour is the accent-color key below.
-    GTK_THEME = "WhiteSur-Dark-orange";
   };
 
   dconf.settings = {
-    "org/gnome/desktop/interface".cursor-theme = cursor-theme-name;
-    "org/gnome/desktop/interface".color-scheme = "prefer-dark";
     # libadwaita >= 1.6 reads its accent from here (1.9.3 is what is
     # installed). The schema default is 'blue', which is what every GNOME app
     # was drawing with — visibly foreign next to the Ember/WhiteSur orange.
@@ -60,5 +54,10 @@ in
     # is as close to palette.nix `accent` as this mechanism gets; it cannot be
     # pointed at the exact coral.
     "org/gnome/desktop/interface".accent-color = "orange";
+    # GNOME's monospace and document fonts, from fonts.nix. Unset, they kept
+    # whatever the dconf database held: 'Hack 10', which is not installed, so
+    # fontconfig handed "monospace" text a proportional face.
+    "org/gnome/desktop/interface".monospace-font-name = "${f.mono} ${toString f.uiSize}";
+    "org/gnome/desktop/interface".document-font-name = "${f.ui} ${toString f.uiSize}";
   };
 }
