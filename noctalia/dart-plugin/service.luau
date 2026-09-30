@@ -85,7 +85,10 @@ end
 -- nonzero exit even though slim.nu is last in the pipeline (POSIX-sh safe).
 -- --stdin feeds the pipe to the script's $in; --no-config-file keeps the
 -- interactive config.nu (starship/atuin/... inits) out of a hot path.
-local SLIM_SCRIPT = 'd=$1 n=$2 s=$3; shift 3; o=$("$d" run filter "$@") || exit $?; '
+-- BROWSER=true: with a stale token dart opens the login page, and a browser
+-- started by a background poll would live in noctalia's cgroup. The poll
+-- times out instead and shows the `dart login` hint.
+local SLIM_SCRIPT = 'd=$1 n=$2 s=$3; shift 3; o=$(BROWSER=true "$d" run filter "$@") || exit $?; '
 	.. 'printf "%s" "$o" | "$n" --no-config-file --stdin "$s"'
 local SLIM_NU = noctalia.pluginDir() .. "/slim.nu"
 

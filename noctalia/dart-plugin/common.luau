@@ -97,12 +97,21 @@ function M.quoteWord(s)
 	return "'" .. (s:gsub("'", "'\\''")) .. "'"
 end
 
+-- Prefix for spawns that must outlive noctalia: a runAsync child lands in
+-- noctalia.service's cgroup, so restarting noctalia would kill a browser or
+-- terminal started from here. A transient scope gives each one its own.
+M.DETACH = { "systemd-run", "--user", "--scope", "--quiet", "--collect", "--" }
+
 -- argv that opens `url` in $BROWSER, which may carry its own arguments
 -- ("firefox --new-window"), falling back to xdg-open.
 function M.browserArgv(url)
-	local argv = M.splitWords(noctalia.getenv("BROWSER") or "")
-	if not argv or #argv == 0 then
-		argv = { "xdg-open" }
+	local words = M.splitWords(noctalia.getenv("BROWSER") or "")
+	if not words or #words == 0 then
+		words = { "xdg-open" }
+	end
+	local argv = table.clone(M.DETACH)
+	for _, word in ipairs(words) do
+		argv[#argv + 1] = word
 	end
 	argv[#argv + 1] = url
 	return argv

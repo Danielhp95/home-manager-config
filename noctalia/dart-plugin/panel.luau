@@ -41,11 +41,6 @@ local validRunId = common.validRunId
 
 local DART = noctalia.getConfig("dart_path")
 
--- `dart logs` shells out to logcli; until `nh os switch` puts grafana-loki on
--- the PATH (home.packages in noctalia/default.nix), fall back to the store
--- path the sai FHS env already built.
-local LOGCLI_DIR = "/nix/store/hy901jc1mgirc5g8lasy91zbkk013dzk-grafana-loki-3.7.2/bin"
-
 -- Layout constants, all derived from the manifest's panel width (1200):
 local FILTER_INPUT_WIDTH = 1040 -- inputs ignore flexGrow; width is the knob
 local TAG_INPUT_WIDTH = 420
@@ -276,10 +271,12 @@ local function openLogs(id)
 	-- to be quoted. The inner `sh -c` still needs a shell (&&, cd), but it takes
 	-- the dart path and run id as $1/$2 instead of interpolating them - which is
 	-- what forced the doubly-escaped \\$PATH in the old single-string form.
-	local script = "mkdir -p /tmp/dart-logs && cd /tmp/dart-logs && PATH=$PATH:"
-		.. LOGCLI_DIR
-		.. ' && "$1" logs -r "$2" -l 2000 && yazi "$2"'
-	noctalia.runAsync({ "kitty", "--hold", "-e", "sh", "-c", script, "sh", DART, id })
+	local script = 'mkdir -p /tmp/dart-logs && cd /tmp/dart-logs && "$1" logs -r "$2" -l 2000 && yazi "$2"'
+	local argv = table.clone(common.DETACH)
+	for _, arg in ipairs({ "kitty", "--hold", "-e", "sh", "-c", script, "sh", DART, id }) do
+		argv[#argv + 1] = arg
+	end
+	noctalia.runAsync(argv)
 end
 
 -- Tag mutations:
