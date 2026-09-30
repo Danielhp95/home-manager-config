@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  inputs,
   ...
 }:
 let
@@ -104,6 +105,8 @@ let
   '';
 in
 {
+  imports = [ inputs.nix-index-database.homeModules.nix-index ];
+
   home.packages = with pkgs; [
     fd # find alternative
     dust # du alternative. Pretty crazy

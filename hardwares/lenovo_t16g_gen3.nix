@@ -49,6 +49,7 @@ in
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
     ../bluetooth.nix
+    ../specialisations/roadwarrior.nix # boot entry with the dGPU off
 
     # ---- nixos-hardware ---------------------------------------------------
     # Nothing there matches this machine: no T16g, no P16 (only P16s), and no

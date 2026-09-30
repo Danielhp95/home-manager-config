@@ -1,9 +1,4 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running `nixos-help`).
-
 {
-  config,
   pkgs,
   lib,
   inputs,
@@ -12,12 +7,52 @@
 
 {
   imports = [
+    inputs.home-manager.nixosModules.default
+    ../pipewire.nix
+    ./network.nix
+    ./tailscale.nix
+    ./ollama.nix
     ./noctalia-greeter.nix
     ./esp-check.nix
     ./grub-generation-label.nix
     ./fonts.nix
     ./voxtype.nix
   ];
+
+  nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [
+    inputs.claude-code.overlays.default
+    inputs.firefox-addons.overlays.default # pkgs.firefox-addons.*
+    (
+      final: prev:
+      let
+        system = prev.stdenv.hostPlatform.system;
+        hyprland = inputs.hyprland.packages.${system}.hyprland;
+      in
+      {
+        inherit (inputs.iris.packages.${system}) iris;
+        # hy3 links against Hyprland's headers, so it must get the exact
+        # Hyprland build that is installed.
+        inherit hyprland;
+        hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
+        inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
+        # Without mbrola: its voices are ~645 MB and nothing here uses them.
+        espeak-ng = prev.espeak-ng.override { mbrolaSupport = false; };
+      }
+    )
+  ];
+
+  home-manager = {
+    useGlobalPkgs = true;
+    useUserPackages = true;
+    extraSpecialArgs = { inherit inputs; };
+    users.dani = ../home.nix;
+    # Apps replace some managed files with real ones (mimeapps.list, GTK
+    # settings); HM moves those aside, and a .backup left by an earlier
+    # activation would otherwise abort the next one.
+    backupFileExtension = "backup";
+    overwriteBackup = true;
+  };
 
   programs.ydotool.enable = true;
 
@@ -58,6 +93,12 @@
       ];
       download-buffer-size = 268435456; # 256 MiB
       http-connections = 50;
+    };
+    # `nixpkgs#` already resolves to the pinned nixpkgs; these add the short
+    # `nixos#` alias for it and `stable#` for the release branch.
+    registry = {
+      nixos.flake = inputs.nixpkgs;
+      stable.flake = inputs.stable;
     };
     optimise.automatic = true; # periodically run `nix store optimise`
     # Garbage collection is handled by `programs.nh.clean` below (the NixOS nh
