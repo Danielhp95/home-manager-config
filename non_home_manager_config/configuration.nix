@@ -37,13 +37,28 @@
   security.polkit.enable = true;
 
   nix = {
-    settings.extra-experimental-features = [
-      "flakes"
-      "nix-command"
-    ];
-    # This flake's working tree is dirty nearly always, so the "Git tree is
-    # dirty" line on every `nh os switch` / `nix fmt` carried no information.
-    settings.warn-dirty = false;
+    settings = {
+      extra-experimental-features = [
+        "flakes"
+        "nix-command"
+      ];
+      # This flake's working tree is dirty nearly always, so the "Git tree is
+      # dirty" line on every `nh os switch` / `nix fmt` carried no information.
+      warn-dirty = false;
+      substituters = [
+        # cache.nixos.org builds no CUDA; this serves ollama-cuda and its libs.
+        # (Replaces cuda-maintainers.cachix.org, gone since 2025-11.)
+        "https://cache.nixos-cuda.org"
+        # neovim-nightly-overlay builds (danvim) and other nix-community projects.
+        "https://nix-community.cachix.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      ];
+      download-buffer-size = 268435456; # 256 MiB
+      http-connections = 50;
+    };
     optimise.automatic = true; # periodically run `nix store optimise`
     # Garbage collection is handled by `programs.nh.clean` below (the NixOS nh
     # module asserts that nix.gc.automatic and nh.clean must not both be on).

@@ -302,22 +302,6 @@ in
     };
   };
 
-  nix.settings = {
-    substituters = [
-      # Cache for CUDA things
-      "https://cuda-maintainers.cachix.org"
-      # nix-community hosts neovim-nightly-overlay builds (danvim wraps nvim
-      # nightly) plus much of the rest of the nix-community ecosystem.
-      "https://nix-community.cachix.org"
-    ];
-    trusted-public-keys = [
-      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-    ];
-    download-buffer-size = 268435456;
-    http-connections = 50;
-  };
-
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   # The release this machine was installed with (NixOS 26.05, 2026-09), not
