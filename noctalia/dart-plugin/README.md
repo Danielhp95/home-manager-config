@@ -1,57 +1,38 @@
 # dani/dart — DART run manager for noctalia
 
-A [noctalia v5](https://github.com/noctalia-dev/noctalia) Luau plugin that puts
-DART training runs in the bar: the dart logo with a running-run count, and a
-dropdown panel to inspect, search, and manage runs — a shell-native sibling of
-[dart.nvim](../../..//Projects/sai/dart-nvim).
+A [noctalia v5](https://github.com/noctalia-dev/noctalia) Luau plugin: DART
+training runs in the bar, and a dropdown panel to inspect, search and manage
+them. The shell-native sibling of dart.nvim (`~/Projects/sai/dart-nvim`).
 
 ## Features
 
-**Bar widget** — dart logo + per-group counts: `▶` running, `🔧` building,
-`⏳` queued (the other pre-run states), `🛌` suspended (suspend-family states);
-zero groups are hidden. Per-state counts in the tooltip; `!` on CLI errors. Click toggles the
-panel.
+**Bar widget**: the dart logo plus per-group counts (`▶` running, `🔧` building,
+`⏳` queued, `🛌` suspended; empty groups hidden), per-state counts in the
+tooltip, `!` on CLI errors. Click toggles the panel.
 
-**Panel** (1200×640, floating, centered under the bar)
+**Panel** (1200×640, floating under the bar):
 
-- One card per run: state dot + colored state pill, run id, project chip,
-  creation time, scheduling priority (just left of the state pill; a run
-  submitted without one shows DART's default, 0), tag chips. Cards expand (chevron) to show the description,
-  an info line (copyable git commit, clusters, last state change), and actions.
-- Run id click → run page in `$BROWSER`; copy buttons for id, run URL and
-  commit. The link button copies the same URL the open button navigates to.
-- **Filter bar**: free-form `dart run filter` args (e.g.
-  `--tag-ss expt=foo --states success`). Applied args stay scoped to
-  `--username-ss <you>` and `--limit <n>` unless you override them (the CLI
-  keeps the last occurrence of a repeated option). Quote values as you would in
-  a shell (`'…'`, `"…"`, `\`), but no shell ever runs the text: the plugin
-  splits it into arguments itself, so `$`, `;` and `|` are plain characters.
-  Clicking a **tag chip** searches `--tag-ss '<tag>'`, quotes in the tag
-  included. Empty filter → default query (your active runs).
-- **Actions**, gated by `dart_client`'s state machine: Cancel (two-step
-  confirm), Suspend (only from `running`), Resume (only from
-  `suspended_manual`), Delete (two-step confirm). The CLI has no confirmation
-  flag, so the panel owns the confirm step.
-- **Logs**: downloads pod logs (`dart logs`) to `/tmp/dart-logs/<run-id>/` and
-  opens yazi on them in a kitty window.
-- **Tag editor** (pencil button): chips become `[tag][×]` pairs — click the
-  tag to load it into the input (Enter runs `dart tag replace`), `×` deletes,
-  typing into the empty input adds.
+- One card per run: state, id, project, creation time, priority (0 when unset,
+  as DART schedules it) and tag chips. Expanding a card shows the description,
+  an info line (commit, clusters, last state change) and the actions.
+- Open the run page in `$BROWSER`, or copy its id, URL or commit.
+- **Filter bar**: free-form `dart run filter` args (`--tag-ss expt=foo --states
+  success`), kept scoped to `--username-ss`/`--limit` unless overridden. Quote
+  as in a shell, but no shell runs the text: `$`, `;` and `|` are plain
+  characters. A tag chip searches for its tag; an empty filter shows your
+  active runs.
+- **Actions**, gated by `dart_client`'s state machine: Cancel and Delete (with
+  an inline confirm, since the CLI has none), Suspend (from `running`), Resume
+  (from `suspended_manual`).
+- **Logs**: `dart logs` into `/tmp/dart-logs/<run-id>/`, browsed with yazi in a
+  kitty window.
+- **Tag editor** (pencil): click a tag to load it for `dart tag replace`, `×`
+  deletes, typing into the empty input adds.
 
-**Transition toasts** (`notify_transitions`) — every state change between two
-polls raises a notification, the run id on its own line above the transition:
-
-```
-sk-260811-dh-afoot-pint
-queued → running
-```
-
-A run that leaves the active set is re-queried by id so the terminal state is
-reported rather than "gone". **Clicking the toast opens that run's page in
-`$BROWSER`.** The bell button in the panel header mutes/unmutes these toasts
-instantly (a runtime override on top of the `notify_transitions` setting,
-kept in `noctalia.state` like the filter bar's text — it resets on a plugin
-disable/enable, not on a hot reload).
+**Transition toasts** (`notify_transitions`): one per state change between two
+polls, the run id above `from → to`. A run that leaves the active set is
+re-queried, so its final state is reported. Clicking a toast opens the run's
+page; the panel's bell button mutes them at once.
 
 ## Architecture
 
@@ -63,20 +44,16 @@ service.luau  ──  dart run filter … --detailed | slim.nu  ──▶  nocta
 panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 ```
 
-- `plugin.toml` — manifest: entries, panel geometry, user settings.
-- `common.luau` — helpers every entry `require`s: the run-page URL, the run-id
-  guard, the refresh request, and the shell-style word splitter that turns the
-  filter text and `$BROWSER` into argv.
-- `service.luau` — the only place `dart run filter` runs. Handles the
-  custom-filter query, queues refreshes requested mid-poll, publishes state,
-  and raises the transition toasts.
-- `panel.luau` — all interactive UI. Mutations (`dart run cancel/…`,
-  `dart tag …`) run here, toast their result, then request a re-poll.
-- `widget.luau` — bar badge; purely event-driven, no CLI calls, no tick.
-- `slim.nu` — projects the ~142 KB `--detailed` JSON down to the fields the
-  UI shows (~10 KB), keeping Lua `json.decode` well inside noctalia's 25 ms
-  script-callback budget.
-- `assets/dart-logo.png` — 128 px logo (bar renders it at 18 px, 3× loaded).
+- `plugin.toml`: entries, panel geometry, settings.
+- `common.luau`: the run-page URL, the run-id guard, the refresh request, and
+  the shell-style word splitter behind the filter bar and `$BROWSER`.
+- `service.luau`: the only place `dart run filter` runs; publishes state and
+  raises the toasts.
+- `panel.luau`: all interactive UI; runs the mutations, then requests a re-poll.
+- `widget.luau`: the bar badge; no CLI calls, no tick.
+- `slim.nu`: cuts the ~142 KB `--detailed` JSON to the ~10 KB the UI shows,
+  keeping `json.decode` inside noctalia's 25 ms callback budget.
+- `assets/dart-logo.png`: 128 px logo, drawn at 18 px.
 
 ## Settings (noctalia settings UI, or `[plugin_settings."dani/dart"]`)
 
@@ -88,17 +65,14 @@ panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 | `limit`        | 100                                      | `--limit` for every query        |
 | `poll_seconds` | 120                                      | background poll cadence          |
 
-## Install / dev loop
+## Dev loop
 
-Declarative install is in `../default.nix`: the plugin dir is linked to
-`~/.local/share/noctalia/plugins/dart` (out-of-store symlink, so edits here
-hot-reload the running shell), `plugins.enabled = ["dani/dart"]`, and the
-`dart` widget alias sits in `bar.default.end`.
+`../default.nix` links this directory to `~/.local/share/noctalia/plugins/dart`
+out of the store, enables `dani/dart` and puts the `dart` widget in the bar.
 
-- Edit any `.luau` → noctalia hot-reloads that entry; editing `common.luau`
-  reloads every entry that requires it (watch `journalctl --user -u noctalia -f`
-  for errors). Manifest changes need
-  `noctalia msg plugins disable dani/dart && noctalia msg plugins enable dani/dart`.
+- Saving a `.luau` hot-reloads that entry (`common.luau`: every entry); watch
+  `journalctl --user -u noctalia -f`. `plugin.toml` changes need `noctalia msg
+  plugins disable dani/dart && noctalia msg plugins enable dani/dart`.
 - Lint: `noctalia plugins lint ~/.local/share/noctalia/plugins/dart`
 - Drive it: `noctalia msg panel-toggle dani/dart:panel`,
   `noctalia msg plugin dani/dart:panel all filter "--states success"`,
@@ -107,27 +81,15 @@ hot-reload the running shell), `plugins.enabled = ["dani/dart"]`, and the
 
 ## Gotchas
 
-- `noctalia.state` is in-memory: a plugin disable/enable (not a hot reload)
-  clears the run cache and any active filter.
-- The Logs button needs `logcli` (`dart logs` shells out to it).
-  `pkgs.grafana-loki` is in home.packages; until a rebuild lands, the button
-  falls back to a pinned store path (`LOGCLI_DIR` in panel.luau) — if that
-  path gets GC'd the kitty window shows the missing-binary error.
-- `slim.nu` needs `nu` on disk at `nu_path`, which comes from
-  `programs.nushell` in `../../terminal/nushell.nix` — the default points at
-  the per-user profile symlink rather than a store path so rebuilds and GC
-  don't break it. Disabling that module breaks polling; repoint `nu_path`.
-- Runtime overrides (`~/.local/state/noctalia/settings.toml`, written by the
-  GUI and `noctalia msg plugins enable`) merge OVER the nix-managed
-  config.toml and replace arrays wholesale — if nix edits to `plugins.enabled`
-  or `bar.default.end` stop applying, delete the shadowing block there.
-- `plugin.toml` declares `plugin_api = 30`. A noctalia without API 30 (the
-  2026-08 pins stop at 28) refuses to load the plugin at all.
-- A clickable transition toast is a detached `notify-send -A default=…` process
-  parked on the D-Bus reply, since only the sender is told the action fired and
-  `noctalia.notify` cannot carry actions. noctalia defers `NotificationClosed`
-  for actionable notifications that merely expired, so that process (and the
-  **Open run** button on the control-center history entry) outlives the toast
-  and is only reaped when the entry is dismissed, cleared, or pushed out of the
-  100-entry history. Without `notify-send` on PATH the toasts fall back to
-  plain `noctalia.notify` ones, which are not clickable.
+- `noctalia.state` is in memory: a plugin disable/enable (not a hot reload)
+  clears the run cache, the filter and the mute.
+- The Logs button needs `logcli` on PATH (`pkgs.grafana-loki`, ../default.nix).
+- `slim.nu` needs `nu` at `nu_path`: the per-user profile symlink from
+  `programs.nushell` (`../../terminal/nushell.nix`), which survives rebuilds.
+- Settings-GUI changes and `noctalia msg plugins enable` land in
+  `~/.local/state/noctalia/settings.toml`, which overrides config.toml (arrays
+  wholesale): delete the shadowing block if a nix change doesn't apply.
+- `plugin_api = 30`: a noctalia without that API refuses to load the plugin.
+- A clickable toast is a detached `notify-send -A default=…` waiting on the
+  D-Bus reply, alive as long as its control-center history entry. Without
+  `notify-send` on PATH the toasts are plain and unclickable.

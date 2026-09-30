@@ -1,17 +1,13 @@
 --!nonstrict
 --[[
-Helpers shared by the dani/dart entries, loaded with
-`require("./common.luau")` (plugin API 22).
-
-require caches per entry, so the widget, panel and service each get their own
-copy of this table: nothing here is shared state. The entries still talk to
-each other only over noctalia.state.
+Helpers shared by the dani/dart entries (`require("./common.luau")`, plugin API
+22). require caches per entry, so each entry gets its own copy: nothing here is
+shared state, and the entries still talk only over noctalia.state.
 ]]
 
 local M = {}
 
--- Run details page. The panel's open button, its context menu and the service's
--- transition toasts all land here.
+-- Run details page: the panel's open button, its context menu and the toasts.
 M.DETAILS_URL = "https://dart.platform.research.sony/en/details/"
 
 -- A run id becomes a URL path segment, so anything that is not
@@ -26,15 +22,10 @@ function M.requestRefresh()
 	noctalia.state.set("command", { op = "refresh", nonce = os.clock() })
 end
 
--- Split text into words the way /bin/sh would, minus every expansion: blanks
--- separate words, '...' is literal, "..." is literal except for \" \\ \$ \`,
--- and a backslash outside quotes escapes the next character. Adjacent quoted
--- and bare segments join into one word (a'b'"c" -> abc). Returns nil plus a
--- message on an unterminated quote.
---
--- This is what lets the free-form filter bar and $BROWSER go out as argv
--- spawns (plugin API 24): the text is tokenized here instead of by a shell, so
--- $(...), ; and | are just characters inside an argument.
+-- Split text into words like /bin/sh minus every expansion: blanks separate
+-- words, '...' is literal, "..." honours only \" \\ \$ \`, a bare backslash
+-- escapes the next character, adjacent segments join (a'b'"c" -> abc). Returns
+-- nil plus a message on an unterminated quote. No shell ever sees the text.
 function M.splitWords(text)
 	local words, cur, inWord = {}, {}, false
 	local i, n = 1, #text
@@ -88,18 +79,16 @@ end
 -- The inverse of splitWords for a single word: POSIX single quotes, with an
 -- embedded ' written as '\''. splitWords(quoteWord(s)) == { s } for any s.
 function M.quoteWord(s)
-	-- The panel quotes one tag per rendered chip, and gsub measured ~25 us per
-	-- call against ~0.3 us for a plain concat - enough across 100 cards to blow
-	-- the 25 ms render budget. Most tags hold no quote, so skip it for those.
+	-- Called per rendered tag chip: gsub (~25 us vs ~0.3 us for a concat) would
+	-- blow the 25 ms render budget across 100 cards, and most tags hold no quote.
 	if not s:find("'", 1, true) then
 		return "'" .. s .. "'"
 	end
 	return "'" .. (s:gsub("'", "'\\''")) .. "'"
 end
 
--- Prefix for spawns that must outlive noctalia: a runAsync child lands in
--- noctalia.service's cgroup, so restarting noctalia would kill a browser or
--- terminal started from here. A transient scope gives each one its own.
+-- Prefix for spawns that must outlive noctalia: a runAsync child lives in
+-- noctalia.service's cgroup and dies with it; a transient scope avoids that.
 M.DETACH = { "systemd-run", "--user", "--scope", "--quiet", "--collect", "--" }
 
 -- argv that opens `url` in $BROWSER, which may carry its own arguments

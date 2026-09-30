@@ -1,14 +1,11 @@
-# Connect to an already-paired bluetooth device. Packaged as
-# `choose-bluetooth-device` by ../default.nix (writeShellApplication supplies
-# the shebang, strict mode and PATH).
+# Connect to a paired bluetooth device. Packaged as `choose-bluetooth-device`
+# by ../default.nix, which supplies the shebang, strict mode and PATH.
 bluetoothctl power on || true
 
-# U+F293, nf-fa-bluetooth, written as UTF-8 bytes so the file holds no
-# private-use glyph.
+# U+F293 (nf-fa-bluetooth) as UTF-8 bytes, so the file holds no PUA glyph.
 icon=$(printf '\xef\x8a\x93')
 
-# `bluetoothctl devices Paired` prints "Device <MAC> <name>", so the icon
-# prefix pushes the MAC out to field 3.
+# Lines read "<icon> Device <MAC> <name>", so the MAC is field 3.
 selection=$(
 	bluetoothctl devices Paired |
 		sed "s/^/$icon     /" |
@@ -16,14 +13,11 @@ selection=$(
 )
 device=$(awk '{print $3}' <<<"$selection")
 
-# vicinae can't guarantee the result is a real list entry, and it exits 0 when
-# dismissed, so the MAC itself is the check.
+# vicinae exits 0 even when dismissed; a well-formed MAC is the check.
 if [[ ! $device =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
 	exit 0
 fi
 
-# Toasts: noctalia is the notification daemon, so these are Ember-themed, land
-# in notification history, and do not need dismissing.
 if bluetoothctl connect "$device"; then
 	notify-send -a bluetooth "Bluetooth" "Connected to $device"
 else

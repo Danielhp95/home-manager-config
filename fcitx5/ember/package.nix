@@ -8,8 +8,7 @@
 let
   p = (import ../../palette.nix).hash;
 
-  # Ember.conf and the SVGs name their colors by palette attribute; these are
-  # the attributes each file uses.
+  # The palette attributes each file uses as placeholders.
   themeConf = replaceVars ./Ember.conf {
     inherit (p)
       fg
@@ -33,9 +32,7 @@ stdenvNoCC.mkDerivation {
 
   dontUnpack = true;
 
-  # rsvg-convert, for rasterising the menu glyphs. Keeping the sources as SVG
-  # means the shapes stay reviewable in the repo instead of arriving as opaque
-  # binaries, and their colors come from palette.nix like the theme's.
+  # rsvg-convert rasterises the menu glyphs, kept as reviewable SVG sources.
   nativeBuildInputs = [ librsvg ];
 
   installPhase = ''
@@ -46,9 +43,8 @@ stdenvNoCC.mkDerivation {
     mkdir -pv $out/share/fcitx5/themes/Ember
     cp -v ${themeConf} $out/share/fcitx5/themes/Ember/theme.conf
 
-    # Menu glyphs. The sizes match upstream's default theme so menu metrics
-    # line up; classicui blits these as-is, applying no tint of its own, so
-    # the colors baked in here are final.
+    # Sizes match upstream's default theme; classicui applies no tint, so the
+    # colors baked in are final.
     rsvg-convert -w 6 -h 12 ${arrow} -o $out/share/fcitx5/themes/Ember/arrow.png
     rsvg-convert -w 24 -h 24 ${radio} -o $out/share/fcitx5/themes/Ember/radio.png
 

@@ -1,6 +1,5 @@
 { ... }:
 
-# A lot of these values were taken from a ~/.config/mimeapps.list tht was on my system
 {
   xdg = {
     enable = true;
@@ -9,10 +8,11 @@
       enable = true;
       defaultApplications = {
         "application/pdf" = ["org.pwmt.zathura.desktop"];
-        "image/png" = ["org.gnome.gThumb.desktop"];  # Can I get imv?
-        "image/jpeg" = ["org.gnome.gThumb.desktop"];  # Can I get imv?
-        "image/webp" = ["org.gnome.gThumb.desktop"];  # Can I get imv?
-        "image/bmp" = ["org.gnome.gThumb.desktop"];  # Can I get imv?
+        # imv (imv.desktop) is installed too, if gThumb should go.
+        "image/png" = ["org.gnome.gThumb.desktop"];
+        "image/jpeg" = ["org.gnome.gThumb.desktop"];
+        "image/webp" = ["org.gnome.gThumb.desktop"];
+        "image/bmp" = ["org.gnome.gThumb.desktop"];
         "x-scheme-handler/tg" = ["org.telegram.desktop.desktop"];
         "x-scheme-handler/http" = ["firefox.desktop"];
         "x-scheme-handler/https" = ["firefox.desktop"];

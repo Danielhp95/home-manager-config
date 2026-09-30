@@ -1,43 +1,23 @@
-# fcitx5 via home-manager's i18n.inputMethod module: it wraps the package with
-# the addons, writes ~/.config/fcitx5 declaratively, and generates the
-# fcitx5-daemon user service (WantedBy=graphical-session.target, so it starts
-# with any compositor session and survives hyprland's target restart).
-#
-# The whole ~/.config/fcitx5 directory becomes a read-only store symlink, so
-# nothing can be changed via fcitx5-configtool without porting it back here.
-# The `settings` below are the former user-level files transcribed verbatim
-# (config -> globalOptions, profile -> inputMethod, conf/*.conf -> addons).
-# Mutable runtime data (the pinyin user dict) lives in ~/.local/share and is
-# unaffected.
+# fcitx5 via home-manager's i18n.inputMethod: ~/.config/fcitx5 is a read-only
+# store symlink, so changes made in fcitx5-configtool must be ported here.
+# fcitx5-daemon.service is WantedBy=graphical-session.target, so it survives
+# hyprland's target restart. The pinyin user dict lives in ~/.local/share.
 { pkgs, ... }:
 
 let
-  # The Ember skin (./ember), linked into ~/.local/share/fcitx5/themes/Ember
-  # below. That one copy reaches both renderers of the candidate window:
-  #
-  #  * the daemon's own classicui, for every text-input-v3 client (kitty,
-  #    ghostty, anything without an IM-module env var);
-  #  * the fcitx5-gtk and fcitx5-qt IM plugins (Firefox, Telegram: anything
-  #    that honours GTK_IM_MODULE/QT_IM_MODULE=fcitx from the greeter's
-  #    session script, non_home_manager_config/noctalia-greeter.nix). On
-  #    Wayland they advertise a "client side input panel", draw the popup
-  #    inside the app, read Theme= from ~/.config/fcitx5/conf/classicui.conf
-  #    and look that theme up in the app's own data dirs, silently falling
-  #    back to fcitx5's stock white "default" skin when it is not there.
-  #
-  # XDG_DATA_HOME is searched by both. The wrapper's share/ is private to the
-  # daemon, and home.packages doesn't help either: the per-user profile only
-  # links NixOS's environment.pathsToLink, which has no /share/fcitx5.
+  # The Ember skin goes in ~/.local/share (XDG_DATA_HOME) because two renderers
+  # need it: the daemon's classicui, and the fcitx5-gtk/qt plugins that draw
+  # the popup inside Firefox/Telegram and silently fall back to the white
+  # default skin. The wrapper's share/ is daemon-only, and the per-user
+  # profile doesn't link share/fcitx5.
   ember = import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg replaceVars; };
   ui = (import ../fonts.nix).ui;
 in
 {
   xdg.dataFile."fcitx5/themes/Ember".source = "${ember}/share/fcitx5/themes/Ember";
 
-  # fcitx5-daemon.service (from i18n.inputMethod below) starts fcitx5. The
-  # wrapper also ships an XDG autostart entry that systemd's generator turns
-  # into a second unit; the two race, and the loser exits on the taken D-Bus
-  # name. Hidden=true in the user's autostart dir masks the packaged entry.
+  # Masks the wrapper's XDG autostart entry: it raced fcitx5-daemon.service
+  # for the D-Bus name.
   xdg.configFile."autostart/org.fcitx.Fcitx5.desktop".text = ''
     [Desktop Entry]
     Type=Application
@@ -50,8 +30,7 @@ in
     type = "fcitx5";
     fcitx5 = {
       waylandFrontend = true;
-      # fcitx5-gtk, both fcitx5-qt builds and fcitx5-configtool already come
-      # with qt6Packages.fcitx5-with-addons.
+      # fcitx5-gtk, fcitx5-qt and fcitx5-configtool come with the wrapper.
       addons = [ pkgs.qt6Packages.fcitx5-chinese-addons ];
 
       settings = {
@@ -116,9 +95,6 @@ in
 
         # ~/.config/fcitx5/conf/*.conf
         addons = {
-          # fcitx5 only reads these from here now; don't recreate them via
-          # fcitx5-configtool without porting changes back.
-          # This is the former user-level config verbatim, plus Theme=Ember.
           classicui.globalSection = {
             "Vertical Candidate List" = "False";
             WheelForPaging = "True";
@@ -139,11 +115,8 @@ in
             EnableFractionalScale = "True";
           };
 
-          # The plain keyboard engine (keyboard-us) has a "hint" mode: spell
-          # completion that pops a candidate list while typing English. It is
-          # off by default but two global hotkeys switch it on, and they fire
-          # whenever fcitx5 holds the input focus. Cleared here; an empty value
-          # is how fcitx5 serialises an empty key list.
+          # keyboard-us's spell-completion "hint" mode: its two hotkeys fire
+          # whenever fcitx5 has focus, so they are cleared (empty = no keys).
           keyboard.globalSection = {
             EnableHintByDefault = "False";
             "Hint Trigger" = ""; # was Control+Alt+H (toggle completion)

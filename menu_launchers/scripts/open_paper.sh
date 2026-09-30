@@ -1,15 +1,9 @@
-# Pick a paper out of ~/papers and open it in zathura. Packaged as
-# `open-paper` by ../default.nix (writeShellApplication supplies the shebang,
-# strict mode and PATH).
+# Pick a paper from ~/papers and open it in zathura. Packaged as `open-paper`
+# by ../default.nix, which supplies the shebang, strict mode and PATH.
 PAPERS_LOCATION=~/papers
 
-# vicinae's dmenu quick-look only renders real content for image/* and text
-# mime types (verified in its resolveFilePreview(), src/server/src/qml/
-# view-utils.cpp) — everything else, including application/pdf, falls back to
-# a generic file-type icon. So instead of feeding PDF paths directly, render
-# each one's first page to a cached PNG and feed *that*: the preview panel
-# then shows real page content, and the selection is mapped back to the
-# source PDF below. pdftoppm comes from poppler-utils (runtimeInputs).
+# vicinae's quick-look previews only images and text, so each PDF's first page
+# is cached as a PNG and listed instead; the choice maps back to the PDF.
 THUMB_DIR=~/.cache/paper-thumbnails
 mkdir -p "$THUMB_DIR"
 
@@ -30,23 +24,16 @@ while IFS= read -r -d '' pdf; do
 		thumb_to_pdf["$thumb"]="$pdf"
 		entries+=("$thumb")
 	else
-		# Thumbnailing failed (e.g. corrupt PDF) — fall back to the PDF path
-		# itself, which still gets quick-look's generic-icon treatment.
+		# Thumbnailing failed (e.g. a corrupt PDF): list the PDF itself.
 		entries+=("$pdf")
 	fi
 done < <(find "$PAPERS_LOCATION" -maxdepth 1 -type f -name '*.pdf' -print0)
 
-# -W widens the window past the default 1536px (menu_launchers/default.nix):
-# the quick-look panel takes a fixed 65% of it (detailRatio in vicinae's
-# GenericListView.qml, not configurable), leaving only 35% for the list, and
-# paper titles are long enough to truncate hard at the default size. 1850 is
-# the most we can add while still fitting the laptop panel (eDP-1, 1920px);
-# vicinae does not clamp a wider request to the monitor, it just overflows.
+# -W: the preview takes a fixed 65% of the window, so widen it for long titles.
+# 1850 still fits eDP-1 (1920 logical px); vicinae doesn't clamp, it overflows.
 choice=$(printf '%s\n' "${entries[@]}" | vicinae dmenu -p "Choose paper" -W 1850)
 
-# Guard on the selection, not on the exit status: vicinae exits 0 when
-# dismissed without a choice as well (verified), and an empty choice would run
-# zathura on ~/papers itself.
+# vicinae exits 0 when dismissed too; an empty choice would open ~/papers.
 if [ -n "$choice" ]; then
 	exec zathura "${thumb_to_pdf[$choice]:-$choice}"
 fi

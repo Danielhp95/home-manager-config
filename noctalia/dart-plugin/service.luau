@@ -1,13 +1,10 @@
 --!nonstrict
 --[[
-Poller service (entry "poller" of dani/dart).
+Poller service (entry "poller" of dani/dart): the only entry that runs `dart run
+filter`. Widgets get one VM per output, so the one poll loop lives here.
 
-The ONLY entry that runs `dart run filter`. Widget entries are per-output
-VMs, so a singleton service entry guarantees exactly one poll loop no matter
-how many monitors are connected.
-
-Publishes over noctalia.state (shared by all entries of this plugin):
-  "runs"       slimmed run list (see slim.nu for the exact fields)
+Publishes over noctalia.state:
+  "runs"       slimmed run list (fields: slim.nu)
   "error"      user-facing error string, nil when healthy
   "busy"       true while a poll is in flight
   "fetched_at" unix seconds of the last successful poll
@@ -17,10 +14,8 @@ Listens on:
   "custom_filter" verbatim `dart run filter` args from the panel's filter bar
   "muted"         bool; true suspends transition toasts (panel's bell button)
 
-Also raises a notification on every run state transition between two polls —
-see the "State transitions" block below. Those toasts are clickable (click →
-the run's page in $BROWSER); see the "Clickable toasts" block for why they go
-through notify-send rather than noctalia.notify.
+Also toasts every run state transition between two polls (clickable: opens the
+run's page).
 ]]
 
 local common = require("./common.luau")
@@ -35,19 +30,16 @@ if NOTIFY == nil then
 	NOTIFY = true
 end
 
--- Runtime override of NOTIFY, flipped by the panel's bell button. Separate
--- from the notify_transitions setting (a config-file default) so muting is
--- instant and needs no plugin reload; like custom_filter, it lives only in
--- noctalia.state and resets on a plugin disable/enable.
+-- The panel's bell button: an instant runtime override of notify_transitions,
+-- kept in noctalia.state (resets on a plugin disable/enable).
 local muted = noctalia.state.get("muted") and true or false
 noctalia.state.watch("muted", function(v)
 	muted = v and true or false
 end)
 
--- Default query states: dart.nvim's active set, extended with the manual
--- suspend/resume/cancel in-flight states - without suspended_manual the
--- panel's Resume button could never appear, and the in-flight states keep a
--- run visible while an action settles.
+-- dart.nvim's active set plus the manual suspend/resume/cancel states: without
+-- suspended_manual Resume never shows, and the in-flight states keep a run
+-- visible while an action settles.
 local STATES = table.concat({
 	"submitting",
 	"submitted",
@@ -76,18 +68,12 @@ local function customFilter()
 	return nil
 end
 
--- `dart run filter <args>` piped through slim.nu, as an argv spawn. The ~142KB
--- --detailed payload is slimmed before Lua ever parses it (json.decode runs
--- inside a 25ms callback budget). The pipe still needs a shell, but only as
--- this fixed script: the dart and nu paths, slim.nu and every filter argument
--- arrive as positional parameters, so no value is ever spliced into shell
--- text. Capture-then-pipe instead of pipefail so a dart failure surfaces as a
--- nonzero exit even though slim.nu is last in the pipeline (POSIX-sh safe).
--- --stdin feeds the pipe to the script's $in; --no-config-file keeps the
--- interactive config.nu (starship/atuin/... inits) out of a hot path.
--- BROWSER=true: with a stale token dart opens the login page, and a browser
--- started by a background poll would live in noctalia's cgroup. The poll
--- times out instead and shows the `dart login` hint.
+-- `dart run filter <args> | slim.nu`: the ~142KB --detailed payload is slimmed
+-- before json.decode, which runs inside a 25ms callback budget. A fixed script
+-- with every value passed positionally, never spliced into shell text.
+-- Capture-then-pipe so a dart failure still exits nonzero (no pipefail in sh).
+-- BROWSER=true: with a stale token dart would open the login page from inside
+-- noctalia's cgroup; the poll times out into the `dart login` hint instead.
 local SLIM_SCRIPT = 'd=$1 n=$2 s=$3; shift 3; o=$(BROWSER=true "$d" run filter "$@") || exit $?; '
 	.. 'printf "%s" "$o" | "$n" --no-config-file --stdin "$s"'
 local SLIM_NU = noctalia.pluginDir() .. "/slim.nu"
@@ -100,12 +86,9 @@ local function slimmed(args)
 	return argv
 end
 
--- Build the poll argv. A custom filter replaces the default states query but
--- stays scoped to the configured user: --username-ss/--limit come FIRST so a
--- user-supplied value wins (click keeps the last occurrence of an option).
--- The filter text is split into words here, not by a shell. The panel refuses
--- text that does not split, so the error return only guards a filter that
--- reached noctalia.state some other way.
+-- A custom filter replaces the default states query but stays scoped to the
+-- user: --username-ss/--limit come first so a user-supplied value wins (click
+-- keeps an option's last occurrence).
 local function listArgv()
 	local args = { "--username-ss", USER, "--limit", tostring(LIMIT) }
 	local custom = customFilter()
@@ -126,29 +109,17 @@ local function listArgv()
 end
 
 -- ── State transitions ───────────────────────────────────────────────────────
--- Every poll already knows each run's state; what is worth a notification is
--- the *edge* between two polls. Two kinds exist and only one is visible in the
--- run list:
---
---   queued -> running        both polls list the run, the state differs
---   running -> <terminal>    the run drops out of the list entirely, because
---                            the default query is scoped to the active STATES
---
--- The second is the one that actually matters ("did the batch finish while I
--- was away"), so a disappearance triggers one targeted --id-ss re-query with no
--- --states filter to find out where the run landed.
---
--- The map is persisted, so a transition that happened while the shell was down
--- still gets reported on the first poll after it comes back. MAX_TOASTS caps
--- the burst that follows an overnight gap.
+-- A toast per state change between two polls. A run that reached a terminal
+-- state drops out of the (active-only) list, so a disappearance triggers one
+-- --id-ss re-query to find where it landed. The map persists across restarts;
+-- MAX_TOASTS caps the burst after an overnight gap.
 local DATA_DIR = noctalia.pluginDataDir() or "/tmp/noctalia-dart"
 noctalia.mkdirAll(DATA_DIR)
 local SEEN_PATH = DATA_DIR .. "/last_states.json"
 local MAX_TOASTS = 5
 
--- dart's terminal states are not enumerated anywhere this plugin can read, so
--- classify by substring: anything that reads like a failure gets the error
--- styling, everything else a plain notification.
+-- dart's terminal states aren't enumerated anywhere readable: classify by
+-- substring.
 local function isFailureState(state)
 	local s = tostring(state):lower()
 	for _, needle in ipairs({ "fail", "error", "cancel", "kill", "abort" }) do
@@ -160,34 +131,21 @@ local function isFailureState(state)
 end
 
 -- ── Clickable toasts ────────────────────────────────────────────────────────
--- noctalia.notify() raises a notification with no actions, and noctalia's toast
--- only reacts to a left-click when actions[0] == "default"
--- (shell/notification/notification_toast.cpp), so a plugin cannot make its own
--- notifications clickable through the Luau API at all. Transition toasts
--- therefore go out over D-Bus via `notify-send -A default=…` instead.
---
--- Only the sending process receives ActionInvoked, so notify-send has to
--- outlive the toast and open the run page itself. It is spawned DETACHED
--- (runAsync with no callback): a detached spawn neither consumes one of the
--- VM's 8 async-command slots nor takes a timeout, so a burst of these can sit
--- waiting without starving the poller. They are not short-lived either —
--- noctalia defers NotificationClosed for an actionable notification that only
--- expired, which is what keeps the control center's history entry clickable
--- too; the process is reaped when that entry is dismissed or ages out.
+-- noctalia.notify() can't carry actions, so transition toasts go through
+-- `notify-send -A default=…`. Only the sender sees ActionInvoked, so notify-send
+-- waits and opens the page itself. It is spawned detached (no callback): that
+-- takes none of the VM's 8 async slots and no timeout, and it can live as long
+-- as the entry stays in the control center's history.
 local LOGO = noctalia.pluginDir() .. "/assets/dart-logo.png"
 local HAS_NOTIFY_SEND = noctalia.commandExists("notify-send")
 
--- Waiting on notify-send and then deciding needs a shell, so the spawn is a
--- fixed script with everything passed positionally: $1 urgency, $2 icon,
--- $3 title, $4 body, and the rest is the browser argv with the run URL last.
--- stdout carries the action key when the toast is clicked and is empty when it
--- just expires, so the browser only ever starts on a click.
+-- $1 urgency, $2 icon, $3 title, $4 body, then the browser argv (URL last).
+-- notify-send prints the action key only on a click, so only a click opens it.
 local NOTIFY_SCRIPT = 'u=$1 i=$2 t=$3 b=$4; shift 4; '
 	.. 'a=$(notify-send -a Noctalia -u "$u" -i "$i" -A "default=Open run" "$t" "$b"); '
 	.. '[ "$a" = default ] && exec "$@"'
 
--- `-a Noctalia` keeps the toast visually identical to noctalia.notify's, which
--- is what addInternal() stamps as the app name.
+-- `-a Noctalia` makes it look like noctalia.notify's own toasts.
 local function clickableNotify(id, title, body, failure)
 	local argv = { "/bin/sh", "-c", NOTIFY_SCRIPT, "sh", failure and "critical" or "normal", LOGO, title, body }
 	for _, arg in ipairs(common.browserArgv(common.DETAILS_URL .. id)) do
@@ -196,10 +154,7 @@ local function clickableNotify(id, title, body, failure)
 	return noctalia.runAsync(argv)
 end
 
--- Batch-overflow summaries ("and N more...") have no single run to link to, so
--- they skip notify-send's click action - but they should still carry the dart
--- logo like every per-run toast does, instead of falling back to
--- noctalia.notify's generic icon. Detached the same way clickableNotify is.
+-- "and N more..." summaries: no run to link, but still the dart logo.
 local function plainNotify(title, body)
 	if HAS_NOTIFY_SEND and noctalia.runAsync({ "notify-send", "-a", "Noctalia", "-u", "normal", "-i", LOGO, title, body }) then
 		return
@@ -216,21 +171,12 @@ local function loadSeen()
 	return type(parsed) == "table" and parsed or nil
 end
 
--- nil until a baseline exists. Distinguishes "nothing to compare against yet"
--- (say nothing) from "compared, and nothing changed".
+-- nil until a baseline exists: "nothing to compare yet", not "no changes".
 local seen = loadSeen()
 
--- Clicking the toast opens the run's page, the same URL the panel's open button
--- uses. Falls back to a plain (unclickable) toast when notify-send is missing,
--- the id would not make a run URL, or the spawn is refused.
---
--- The newline is a hard break, not a suggestion: the toast body is laid out
--- with single_paragraph_mode off (render/text/cairo_text_renderer.cpp), so
--- Pango starts a new paragraph at '\n'. It stays one break through the whole
--- pipeline — sanitizeMarkup() at the D-Bus ingress only touches tags and
--- entities. Keeping the id on its own line is what stops the ~280 px body
--- column from word-wrapping "<id> from → to" mid-transition; both halves now
--- fit their line, and the toast's 3-line body budget leaves one to spare.
+-- Falls back to a plain toast when notify-send is missing, the id makes no
+-- URL, or the spawn is refused. The id gets its own line (a hard break in the
+-- toast body) so the ~280 px column doesn't wrap "<id> from → to" mid-way.
 local function announce(id, from, to)
 	local line = ("%s\n%s → %s"):format(id, tostring(from), tostring(to))
 	local failure = isFailureState(to)
@@ -244,10 +190,9 @@ local function announce(id, from, to)
 	end
 end
 
--- Resolve runs that dropped out of the active query. One command for the whole
--- batch: --id-ss takes a comma-separated list, and with no --states filter a run
--- comes back carrying the state it landed in. A run that comes back missing was
--- deleted (dart's default data-state filter hides those) and is reported as such.
+-- One --id-ss query (comma-separated) for every run that left the active list;
+-- with no --states filter each comes back in the state it landed in. A missing
+-- one was deleted and is reported as "gone".
 local function resolveVanished(vanished)
 	local ids = {}
 	for id in pairs(vanished) do
@@ -274,9 +219,7 @@ local function resolveVanished(vanished)
 				plainNotify("DART", ("and %d more run(s) left the active set"):format(#ids - MAX_TOASTS))
 				break
 			end
-			-- No row and no error means the run is genuinely gone; a failed
-			-- re-query is reported the same way rather than silently dropped,
-			-- since either way the run is no longer being tracked.
+			-- A failed re-query also reports "gone": the run isn't tracked either way.
 			announce(id, vanished[id], landed[id] or "gone")
 		end
 	end, 20000)
@@ -358,9 +301,7 @@ local refresh -- fwd decl: the completion callback re-invokes it
 
 refresh = function()
 	if isPolling then
-		-- Queue instead of drop: the in-flight result would be stale for a
-		-- just-changed query (e.g. a filter applied right after panel-open
-		-- kicked off the default poll).
+		-- Queue, don't drop: the in-flight result may be for a stale query.
 		pendingRefresh = true
 		return
 	end
@@ -371,15 +312,11 @@ refresh = function()
 	end
 	isPolling = true
 	noctalia.state.set("busy", true)
-	-- Captured at poll start, not in the callback: only the default query is
-	-- diffable — under a panel filter, "missing from the list" means "excluded
-	-- by the filter", which would fire a finished-toast for every run the filter
-	-- drops. Reading it here rather than on completion also covers the user
-	-- typing a filter while this poll is in flight.
+	-- Only the default query is diffable (under a filter, "missing" means
+	-- "filtered out"); read at poll start so a filter typed mid-poll counts.
 	local diffable = customFilter() == nil
-	-- 20s timeout: far above the ~1.5s p50, far below the 120s browser hang
-	-- a stale refresh token would cause. On timeout the whole process group
-	-- is killed and handleResult shows the `dart login` hint.
+	-- 20s: far above the ~1.5s p50, far below a stale token's 120s hang. On
+	-- timeout the process group is killed and the `dart login` hint shows.
 	local ok = noctalia.runAsync(argv, function(res)
 		isPolling = false
 		noctalia.state.set("busy", false)
@@ -395,8 +332,7 @@ refresh = function()
 	end
 end
 
--- update() is the only timer noctalia offers; the isPolling guard keeps
--- ticks from overlapping a slow poll (callbacks are serialized per-VM).
+-- update() is the only timer; isPolling keeps ticks from overlapping a slow poll.
 noctalia.setUpdateInterval(POLL * 1000)
 function update()
 	refresh()

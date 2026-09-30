@@ -1,18 +1,8 @@
 { lib, ... }:
 
-# Ghostty configuration — a faithful equivalent of kitty/kitty.conf.
-# Validated against ghostty 1.3.1 with `ghostty +validate-config`.
-#
-# NOTE ON HINTS (kitty's `hints` kitten): ghostty has NO native hints / keyboard
-# URL-open feature (tracked upstream in ghostty-org/ghostty#2012 and #2394, still
-# open). Our kitty `ctrl+shift+p>u/f/l/w` hints are ALREADY replicated, terminal-
-# agnostically, by tmux-thumbs in tmux/default.nix: `prefix+p` enters the `hints`
-# key-table, then u/U (url), f/F (path), l/L (line), w/W (word) copy/paste. That
-# works identically under ghostty, so switching terminals does not lose hints —
-# as long as you are inside tmux.
-#
-# NOTE ON ICONS: unlike kitty, ghostty bundles a Nerd Font fallback, so kitty's
-# `symbol_map` blocks are unnecessary here and intentionally omitted.
+# Ghostty, set up to match kitty/kitty.conf. It has no hints kitten
+# (ghostty-org/ghostty#2012, #2394); tmux-thumbs (prefix+p) covers that inside
+# tmux. Its bundled Nerd Font fallback makes kitty's symbol_map unnecessary.
 
 let
   p = (import ../palette.nix).hash;
@@ -24,17 +14,17 @@ in
     settings = {
       # ── Fonts ──────────────────────────────────────────────────────────────
       font-family = (import ../fonts.nix).mono;
-      # kitty `adjust_line_height 117%`; ghostty adds on top of base → 17% = 117%.
+      # kitty's adjust_line_height 117%: ghostty takes the increase.
       adjust-cell-height = "17%";
 
-      # ── Colors: EMBER theme, from ../palette.nix (same slots as kitty) ──────
+      # ── Colors: Ember, from ../palette.nix ─────────────────────────────────
       background = p.bg;
       foreground = p.fg;
       selection-background = p.border;
       selection-foreground = p.fg;
       cursor-color = p.accent;
       cursor-text = p.bg;
-      # 16 ANSI colors (kitty color0–color15). ghostty `palette = N=#hex`.
+      # ANSI 0-15, as `N=#hex`.
       palette = lib.imap0 (i: c: "${toString i}=${c}") p.ansi;
 
       # ── Cursor ──────────────────────────────────────────────────────────────
@@ -53,8 +43,7 @@ in
       # ── Window ────────────────────────────────────────────────────────────────
       background-opacity = 0.87;
       window-save-state = "always"; # kitty `remember_window_size yes`
-      # Nonzero x: the prompt's round pill caps need air or they look amputated
-      # against the window edge
+      # Nonzero x: the prompt's round pill caps need air from the window edge.
       window-padding-x = 10;
       window-padding-y = 0;
 
@@ -69,9 +58,8 @@ in
         "ctrl+shift+s=paste_from_selection"
         "shift+insert=paste_from_selection"
 
-        # Scrolling. NOTE: ctrl+shift+j / ctrl+shift+k are intentionally NOT bound
-        # so ghostty forwards them to the running program — Neovim's floaterm uses
-        # them to cycle terminal buffers. This mirrors the unmap in kitty.conf.
+        # Scrolling. ctrl+shift+j/k stay unbound: Neovim's floaterm uses them
+        # (kitty.conf unmaps them too).
         "ctrl+shift+up=scroll_page_lines:-1"
         "ctrl+shift+down=scroll_page_lines:1"
         "ctrl+shift+page_up=scroll_page_up"
@@ -110,8 +98,7 @@ in
         "ctrl+shift+minus=decrease_font_size:2"
         "ctrl+shift+backspace=reset_font_size"
 
-        # Misc. ghostty only supports TOGGLING opacity (no incremental step like
-        # kitty's set_background_opacity +0.1), so the a>m/a>l binds don't port.
+        # Misc. Opacity can only be toggled, so kitty's a>m/a>l steps don't port.
         "ctrl+shift+a>t=toggle_background_opacity"
         "ctrl+shift+f11=toggle_fullscreen"
         "ctrl+shift+delete=clear_screen"

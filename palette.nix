@@ -1,23 +1,12 @@
-# Single source of truth for the "Ember" dark palette — warm graphite with a
-# coral spark. It is deliberately kept in the same family as the
-# WhiteSur-Dark-orange GTK/Qt theme (hyprland/theming.nix) so that native
-# toolkit apps and apps that theme themselves (terminals, firefox, spotify,
-# element, the greeter, the lock screen) read as one system.
+# The Ember palette: warm graphite with a coral spark, in the family of the
+# WhiteSur-Dark-orange GTK/Qt theme (hyprland/theming.nix).
 #
-# Consumers that can't import this file and carry their own copies of these
-# values: hyprland/hyprland.lua (read verbatim) and
-# kitty/shaders/ember-blaze.pipeline (linear RGB).
+# Hand-kept copies, for files that can't import this one: hyprland.lua (read
+# verbatim), kitty/shaders/ember-blaze.pipeline (linear RGB) and danvim's
+# palette.lua (a standalone flake; same attribute names).
 #
-# danvim/lua/danvim/palette.lua is a hand-kept mirror by necessity rather than
-# by history: danvim is a standalone flake whose luaPath is its own directory,
-# so its lua cannot import a path above it. Attribute names there match the
-# ones below exactly.
-#
-# Attributes are bare hex (no leading '#'); `hash` holds the same set prefixed
-# with '#' for config formats that require it. `ansi` is the 16-colour
-# terminal palette built from them (see below). `light` holds the light-mode
-# counterpart under the same attribute names (and its own `hash`) — see the
-# note above lightColors below.
+# Attributes are bare hex; `hash` is the same set with '#', `ansi` the
+# terminal palette, `light` the light-mode set under the same names.
 let
   colors = {
     # Surfaces, darkest to lightest.
@@ -26,7 +15,7 @@ let
     bgAlt = "242320"; # cards, status bars, secondary surfaces
     surface = "2a2825"; # hovered/selected rows
     border = "3a342d";
-    divider = "4c4b49"; # thin separators drawn on top of surface (tmux  dividers)
+    divider = "4c4b49"; # thin separators drawn on top of surface (tmux dividers)
 
     # Text.
     fg = "d8d0c0";
@@ -34,31 +23,21 @@ let
     fgDim = "9a9288";
     muted = "6e6a66"; # disabled text, bright-black
 
-    # Accent — the coral that stands in for WhiteSur's orange.
-    # accentBright is a real lightness step above accent (7.5:1 vs 6.1:1 on
-    # bg), not just a saturation push: the old ff6b4a was equiluminant with
-    # accent, so the "hotter" variant vanished for red-green colour-blindness.
+    # Accent: the coral that stands in for WhiteSur's orange. accentBright is a
+    # lightness step (7.5:1 vs 6.1:1 on bg), so it stays distinct to red-green
+    # colour-blind eyes.
     accent = "e08060";
     accentBright = "ff8f66";
     accentDim = "b8654c";
     ash = "8a5a3c"; # burnt-umber ramp tail (tmux/starship flame trails); decorative only — 3:1 on bg
 
-    # Secondary hues, shared with the terminal palette. One semantic slot
-    # each, kept perceptually distinct: olive = strings/success, gold =
-    # emphasis-and-attention (paths, cd arguments, folders, workspaces,
-    # warnings; ration it: at 8.4:1 it outshines accent), steel = quiet
-    # metadata (version pills, flags, interpolation, inlay hints, ANSI blue
-    # slot), mauve = language structure, sage = injected/dynamic values (env,
-    # interpolation), error = failures only — near-equiluminant with accent
-    # (1.35:1 mutual), so always pair it with a glyph or bold, never colour
-    # alone.
-    #
-    # "steel" is a historical name: the slot held a steel blue until 2026-08,
-    # when it became magma orange (picked from 20 candidates previewed across
-    # yazi/starship/noctalia/nvim). The attribute name stays because it is
-    # load-bearing across every consumer and the hand-kept danvim mirror.
-    # Magma is also near-equiluminant with accent (1.05:1 mutual) — fine for
-    # metadata, but never use it to *contrast against* coral.
+    # One semantic slot each: olive = strings/success; gold = emphasis (paths,
+    # folders, workspaces, warnings; ration it, it outshines accent); steel =
+    # quiet metadata (flags, version pills, inlay hints, ANSI blue); mauve =
+    # language structure; sage = injected/dynamic values; error = failures only.
+    # "steel" now holds magma orange; the name stays because every consumer
+    # uses it. error and steel are near-equiluminant with accent: never
+    # contrast them against coral by hue alone.
     olive = "8a9868";
     gold = "c8b468";
     steel = "ef7f38";
@@ -66,9 +45,7 @@ let
     sage = "7aa88a";
     error = "e05252";
 
-    # Bright ANSI companions (color9-14 in terminal palettes) — same hue as
-    # their normal counterpart above, lightened + saturated the way
-    # accentBright steps up from accent. Terminal-only; not used elsewhere.
+    # Bright ANSI companions (color9-14): same hues, lighter. Terminal-only.
     oliveBright = "acc66d";
     goldBright = "e3cc75";
     steelBright = "fb9c5f";
@@ -77,19 +54,12 @@ let
   };
 
   # ── Ember Light ──────────────────────────────────────────────────────────
-  # Warm paper with the same coral spark, slot for slot: every attribute above
-  # exists here with its *semantics* preserved rather than its lightness. So
-  # `bgDeep` is still the sunken surface (a step darker than `bg`, not lighter),
-  # `accentBright` is still the higher-contrast accent (6.7:1 vs accent's 4.7:1,
-  # reached by going darker), and `accentDim`/`ash` stay decorative-only.
-  #
-  # Written for noctalia's light mode (noctalia/default.nix builds the Ember
-  # palette JSON from both halves) and also used by vicinae's light theme
-  # (menu_launchers/). No terminal uses it, so treat the ANSI tail as
-  # provisional — no terminal has been retuned against it.
+  # Warm paper, slot for slot with the same *semantics* rather than lightness:
+  # bgDeep is still the sunken surface (darker than bg), accentBright still
+  # the higher-contrast accent (reached by going darker). Used by noctalia and
+  # vicinae; no terminal uses it, so its ANSI tail is untested.
   lightColors = {
-    # Surfaces. Ordered the same way as the dark set: bgDeep is the sunken
-    # end, divider the most prominent.
+    # Surfaces: bgDeep is the sunken end, divider the most prominent.
     bgDeep = "eae2d4";
     bg = "f5efe4";
     bgAlt = "ece5d8";
@@ -117,8 +87,7 @@ let
     sage = "3f6b52";
     error = "b3261e"; # 1.2:1 against accent — pair with a glyph, never colour alone
 
-    # Bright ANSI companions. On light these step *down* in lightness, since
-    # "bright" means "more prominent", not "closer to white".
+    # Bright ANSI companions: on light, "bright" means darker (more prominent).
     oliveBright = "44541f";
     goldBright = "6a5306";
     steelBright = "8a3f10";
@@ -126,8 +95,8 @@ let
     sageBright = "27553c";
   };
 
-  # ANSI 0-15 for the terminals (kitty, ghostty): black, red, green, yellow,
-  # blue, magenta, cyan, white, then the bright row. Dark palette only.
+  # ANSI 0-15 (kitty, ghostty, the Linux console): black red green yellow blue
+  # magenta cyan white, then the bright row. Dark palette only.
   ansi = [
     colors.bg
     colors.accent

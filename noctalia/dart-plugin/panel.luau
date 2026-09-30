@@ -1,36 +1,22 @@
 --!nonstrict
 --[[
-Run-list panel (entry "panel" of dani/dart).
+Run-list panel (entry "panel" of dani/dart): header -> filter bar -> run cards.
+A collapsed card is a header row plus one row of tag chips; expanding adds
+the full tags, an info line, the description, a tag editor and the actions.
+Right-clicking any header button opens the same actions as a context menu.
 
-Layout: header (title, counts, refresh, close) -> filter bar -> scrollable
-run cards. Each card collapses to [state dot | id | open | copy | link |
-commit | project | uptime | created (local tz) | priority | state pill |
-chevron] plus one row of tag chips; expanding it adds the full wrapped tag
-rows, an info line (clusters / updated), the
-description, a tag editor, and state-gated action buttons. Right-clicking any
-header button opens the same actions as a native context menu, so the common
-ones are reachable without expanding the card.
-
-Data flow: this panel never talks to `dart run filter` itself — service.luau
-polls and publishes "runs"/"error"/"busy" via noctalia.state, and the panel
-asks for refreshes over the "command" state channel. Mutations (cancel /
-suspend / resume / delete, tag add / delete / replace) DO run here via
-noctalia.runAsync, then request a list refresh.
+Data: service.luau polls and publishes "runs"/"error"/"busy" over
+noctalia.state; the panel only requests refreshes. Mutations (run and tag
+actions) run here via noctalia.runAsync, then request a refresh.
 
 Conventions:
-- All colors are palette-role tokens so the wallpaper-derived theme applies.
-- Handler props (onClick/onSubmit/onChange) take closures directly: the
-  reconciler moves any function-valued prop into its own handler table and
-  names it after the node's path, so per-row handlers need no global names.
-  Cards carry key = "run-<id>", which is what makes those paths stable.
-  panel.openContextMenu is the exception - its onActivate is still dispatched
-  by global name, hence onRunMenu() at the bottom of this file.
-- Every spawn is an argv table (noctalia.runAsync{...}), so no value is ever
-  shell-quoted by hand. The two inputs that really are word lists - $BROWSER,
-  which may carry its own arguments, and the filter bar's free-form
-  `dart run filter` args - are split by common.splitWords, not by a shell.
-- Helpers the entries share (run URL, run-id guard, refresh request, word
-  splitting) live in common.luau, loaded with require().
+- Colors are palette-role tokens, so the shell's theme applies.
+- Handler props take closures: the reconciler names them after the node's
+  path, and cards carry key = "run-<id>" to keep paths stable. The exception
+  is panel.openContextMenu, whose onActivate dispatches by global name
+  (onRunMenu at the bottom).
+- Every spawn is an argv table; $BROWSER and the filter text are split by
+  common.splitWords, never by a shell.
 ]]
 
 -- ═══════════════════════════════════════════════════ config & constants ═══
@@ -65,9 +51,8 @@ local STATE_COLOR = {
 	canceled = "on_surface_variant",
 }
 
--- States `dart run cancel` accepts, per dart_client/api.py. Suspend is only
--- legal from "running" and resume only from "suspended_manual" (checked
--- inline where the buttons are built).
+-- States `dart run cancel` accepts (dart_client/api.py). Suspend is only legal
+-- from "running", resume only from "suspended_manual".
 local CANCELABLE = {
 	building = true,
 	queued = true,
@@ -85,8 +70,7 @@ local CANCELABLE = {
 
 -- ═══════════════════════════════════════════════════════════ view state ═══
 
--- Mirrors of the service's published state (kept fresh by the watchers at
--- the bottom of this file).
+-- Mirrors of the service's published state (watchers at the bottom).
 local runs = noctalia.state.get("runs") or {}
 local err = noctalia.state.get("error")
 local busy = noctalia.state.get("busy") or false
@@ -151,9 +135,7 @@ local function chipTags(run)
 	return out
 end
 
--- Days-since-epoch for a UTC civil date (Howard Hinnant's algorithm). Only
--- ever called with a real calendar date pulled out of an ISO timestamp, so
--- no need to handle y < 0.
+-- Days since the epoch for a UTC civil date, y >= 0 (Howard Hinnant's algorithm).
 local function daysFromCivil(y, m, d)
 	y = m <= 2 and y - 1 or y
 	local era = y // 400
@@ -163,9 +145,8 @@ local function daysFromCivil(y, m, d)
 	return era * 146097 + doe - 719468
 end
 
--- ISO UTC timestamp -> Unix epoch seconds. Doesn't use os.time({...}), which
--- treats the table as *local* time and would skew by the machine's UTC
--- offset.
+-- ISO UTC timestamp -> epoch seconds. Not os.time({...}): that reads the table
+-- as local time.
 local function epochFromIso(iso)
 	if type(iso) ~= "string" then
 		return nil
@@ -178,10 +159,8 @@ local function epochFromIso(iso)
 	return days * 86400 + tonumber(h) * 3600 + tonumber(mi) * 60 + tonumber(s)
 end
 
--- ISO UTC timestamp -> "07-15 16:32", through noctalia's own formatter (the
--- one the clock settings use). localShortTime renders in the machine's
--- timezone; shortTime passes "UTC" (plugin API 19) to match what the DART web
--- UI shows.
+-- ISO UTC timestamp -> "07-15 16:32" via noctalia's formatter: localShortTime
+-- in the machine's timezone, shortTime in UTC (as the DART web UI shows).
 local SHORT_TIME = "{:%m-%d %H:%M}"
 
 local function localShortTime(iso)
@@ -212,12 +191,9 @@ end
 
 -- ═══════════════════ actions: everything that leaves the panel process ═══
 
--- Publish verbatim `dart run filter` args (service.luau adds them after the
--- default --username-ss/--limit). Empty text returns to the default query.
--- The text never reaches a shell - service.luau splits it into an argv spawn
--- with common.splitWords - so the one thing to refuse here is text that does
--- not split, i.e. an unterminated quote. Quotes, spaces, =, commas and even
--- $() are all just characters in a filter value.
+-- Publish verbatim `dart run filter` args; the service splits them into argv
+-- after the default --username-ss/--limit. Empty text returns to the default
+-- query. Only text that doesn't split (an unterminated quote) is refused.
 local function applyFilter(text)
 	text = noctalia.string.trim(text or "")
 	local words, splitErr = common.splitWords(text)
@@ -232,17 +208,15 @@ local function applyFilter(text)
 	render()
 end
 
--- Tag chip click: search for that tag. common.quoteWord keeps the filter text
--- readable and editable, and splitWords undoes it exactly, so any tag is
--- searchable, one containing a quote included.
+-- Tag chip click: search for that tag. quoteWord and splitWords round-trip any
+-- tag, quotes included.
 local function filterByTag(tag)
 	filterGen += 1 -- re-key the input so it shows the new filter text
 	applyFilter("--tag-ss " .. common.quoteWord(tag))
 end
 
--- Same URL dart.nvim opens, or nil when the id would not survive being a path
--- segment. One guard for both consumers: the open button spawns it, the link
--- button copies it, and neither can produce a URL the other would refuse.
+-- The run page URL, or nil when the id can't be a path segment: one guard for
+-- both the open and the link button.
 local function runUrl(id)
 	if not validRunId(id) then
 		return nil
@@ -250,8 +224,8 @@ local function runUrl(id)
 	return common.DETAILS_URL .. id
 end
 
--- Detached spawn (runAsync without a callback) so the browser outlives the
--- shell.
+-- Detached (no callback); browserArgv's scope keeps the browser out of
+-- noctalia's cgroup.
 local function openInBrowser(id)
 	local url = runUrl(id)
 	if not url then
@@ -260,17 +234,13 @@ local function openInBrowser(id)
 	noctalia.runAsync(common.browserArgv(url))
 end
 
--- dart.nvim's <leader>l equivalent. `dart logs` downloads per-pod files into
--- <cwd>/<run-id>/, so run it under /tmp/dart-logs and browse the result with
--- yazi, all inside one held kitty window (errors stay visible).
+-- dart.nvim's <leader>l: `dart logs` writes <cwd>/<run-id>/, so run it in
+-- /tmp/dart-logs and browse the result with yazi in one held kitty window.
 local function openLogs(id)
 	if not validRunId(id) then
 		return
 	end
-	-- The outer spawn is an argv table, so nothing here passes through a shell
-	-- to be quoted. The inner `sh -c` still needs a shell (&&, cd), but it takes
-	-- the dart path and run id as $1/$2 instead of interpolating them - which is
-	-- what forced the doubly-escaped \\$PATH in the old single-string form.
+	-- The inner sh -c takes the dart path and run id as $1/$2, never interpolated.
 	local script = 'mkdir -p /tmp/dart-logs && cd /tmp/dart-logs && "$1" logs -r "$2" -l 2000 && yazi "$2"'
 	local argv = table.clone(common.DETACH)
 	for _, arg in ipairs({ "kitty", "--hold", "-e", "sh", "-c", script, "sh", DART, id }) do
@@ -288,9 +258,7 @@ local function tagAction(action, id, tag, oldTag)
 	if tag == "" then
 		return
 	end
-	-- No quote/newline guard: argv hands each value to execve as its own
-	-- element, so a tag containing ' or " or a newline is passed through
-	-- verbatim.
+	-- No quote/newline guard: argv passes each value verbatim.
 	local argv
 	if action == "replace" then
 		argv = { DART, "tag", "replace", "--run-ids", id, "--old-tag", oldTag, "--new-tag", tag }
@@ -310,9 +278,8 @@ local function tagAction(action, id, tag, oldTag)
 	end, 30000)
 end
 
--- Run mutations (cancel / suspend / resume / delete). The CLI has no confirm
--- flag and prints a multi-line ModifiedRuns JSON object on success - parse
--- ALL of stdout (not the last line) and toast what actually happened.
+-- Run mutations. The CLI has no confirm flag and prints a multi-line
+-- ModifiedRuns JSON object on success: parse all of stdout.
 local function runAction(action, id)
 	if not validRunId(id) then
 		return
@@ -352,11 +319,8 @@ local function copyToClipboard(label, text)
 	end
 end
 
--- The URL behind the open button, on the clipboard instead of in a browser -
--- what you want when the run is going into a message or a ticket. Has to sit
--- below copyToClipboard: `local function` is only in scope after its own
--- declaration, so calling it from further up would silently resolve to a nil
--- global instead.
+-- The open button's URL, to the clipboard. Must sit below copyToClipboard: a
+-- `local function` is only in scope after its own declaration.
 local function copyRunUrl(id)
 	local url = runUrl(id)
 	if not url then
@@ -367,10 +331,8 @@ end
 
 -- ═══════════════════════════════════════════════════════ UI builders ═══
 
--- Scheduling priority pill, sat just left of the state pill. DART schedules the
--- highest priority first, and a run submitted without one counts as 0
--- (dart_client/hydra.py), so a missing value shows as 0 rather than nothing.
--- tostring drops the ".0" the API sends for whole numbers (-1.0 -> "-1").
+-- Scheduling priority pill. A run submitted without one counts as 0
+-- (dart_client/hydra.py), so nil shows as 0; tostring drops the API's ".0".
 local function priorityChip(run)
 	local priority = tonumber(run.priority) or 0
 	return ui.row(
@@ -394,10 +356,9 @@ local function chip(text, fillRole, textRole)
 	})
 end
 
--- One tag chip -> (node, estimatedWidth). Chips are compact buttons rather than
--- clickable rows: a row takes onClick, but only a button carries the tooltip
--- that says what the click does. Normal mode: click searches for the tag.
--- Edit mode: [tag -> load into the input for replace] [x -> delete].
+-- One tag chip -> (node, estimatedWidth). A button, not a row: only buttons
+-- carry a tooltip. Normal mode: click searches for the tag. Edit mode:
+-- [tag -> load into the input for replace] [x -> delete].
 local function tagChip(tag, editing, runId)
 	local disp = #tag > CHIP_MAX_CHARS and (tag:sub(1, CHIP_MAX_CHARS - 3) .. "...") or tag
 	local textWidth = math.min(#disp * CHIP_PX_PER_CHAR, 250)
@@ -441,10 +402,8 @@ local function tagChip(tag, editing, runId)
 		textWidth + 26
 end
 
--- Flex rows can't wrap (the C++ Flex has setWrap but the reconciler doesn't
--- expose it), so chips are packed into rows by estimated pixel width.
--- Collapsed cards keep only the first row plus a "+n" overflow label;
--- expanded cards show every row.
+-- The reconciler can't wrap Flex rows, so chips are packed by estimated width.
+-- Collapsed cards keep the first row plus a "+n" label.
 local function chipRowNodes(run, expanded)
 	local tags = chipTags(run)
 	if #tags == 0 then
@@ -494,17 +453,10 @@ local function commitButton(run)
 	})
 end
 
--- Per-run context menu, opened by right-clicking any of the card's header
--- buttons. Three constraints from the host shape this:
---   * openContextMenu needs a live pointer serial, and only onRightClick
---     carries one - an onClick handler would silently get `false` back. So
---     there is no left-click "..." button; right-click is the whole gesture.
---   * onActivate is dispatched by GLOBAL name (unlike the render tree's
---     handler props, which take closures), so the run id travels in `context`
---     rather than being captured - see onRunMenu() at the bottom.
---   * Items are label + enabled only; the menu has no icons or shortcuts.
--- `enabled` must be a real boolean, hence the `== true` on the CANCELABLE
--- lookup, which is otherwise nil for a state that cannot be cancelled.
+-- Per-run context menu, opened by right-clicking a card's header buttons:
+-- openContextMenu needs a pointer serial, which only onRightClick carries.
+-- onActivate dispatches by global name, so the run id travels in `context`
+-- (onRunMenu at the bottom). `enabled` must be a real boolean: `== true`.
 local function openRunMenu(run)
 	local free = (actionBusy == nil)
 	local items = {
@@ -529,17 +481,11 @@ local function openRunMenu(run)
 	panel.openContextMenu({ onActivate = "onRunMenu", context = run.id, items = items })
 end
 
--- Card header: state dot | run id | open | copy | link | ... | commit |
--- project | uptime | created (local tz) | priority | state pill | chevron.
---
--- The id is a bold label with separate open/copy/link buttons beside it, not a
--- clickable row wrapped around the label. Rows do take onClick, but only
--- ui.button carries a tooltip and the onRightClick that openRunMenu needs, and
--- every header control answers right-click with the run menu.
+-- Card header: state dot | run id | open | copy | link | commit | project |
+-- uptime | created (local tz) | priority | state pill | chevron. The id is a
+-- label beside buttons, because only buttons carry tooltips and onRightClick.
 local function cardHeader(run, expanded, color)
-	-- Shared by every header button: right-click anywhere in the control
-	-- cluster opens the run menu, so the gesture does not depend on hitting
-	-- one specific glyph.
+	-- Every header control answers right-click with the run menu.
 	local menu = function()
 		openRunMenu(run)
 	end
@@ -566,9 +512,8 @@ local function cardHeader(run, expanded, color)
 			end,
 			onRightClick = menu,
 		}),
-		-- Same target as the open button beside it, to the clipboard rather
-		-- than to $BROWSER. "link" not "copy": the pair reads as id-vs-URL at a
-		-- glance, which two copy glyphs would not.
+		-- The open button's URL, to the clipboard; a link glyph, so the pair reads
+		-- as id-vs-URL.
 		ui.button({
 			glyph = "link",
 			variant = "ghost",
@@ -625,9 +570,8 @@ local function cardHeader(run, expanded, color)
 	return ui.row({ gap = 8, align = "center" }, bits)
 end
 
--- Info line of an expanded card: clusters | last update. (The commit lives in
--- the header now, on every card.) All fields come from the slimmed filter
--- payload - no extra CLI calls.
+-- Info line of an expanded card: clusters | last update, from the slimmed
+-- payload (no extra CLI calls).
 local function infoLine(run)
 	local info = {}
 	local clusters = {}
@@ -710,10 +654,8 @@ local function tagEditorRow(run)
 	return ui.row({ gap = 6, align = "center" }, nodes)
 end
 
--- Action buttons of an expanded card. A pending cancel/delete swaps the whole
--- row for an inline confirm (the CLI is non-interactive, so the widget owns
--- the confirmation step). Suspend/resume act immediately - they're cheap to
--- undo. Gating mirrors dart_client's state machine.
+-- Action buttons. Cancel/delete swap the row for an inline confirm (the CLI
+-- has none); suspend/resume act at once. Gating mirrors dart_client's states.
 local function actionButtons(run)
 	if pending and pending.id == run.id then
 		return {
@@ -884,9 +826,8 @@ local function centered(nodes)
 	return ui.column({ flexGrow = 1, align = "center", justify = "center", gap = 10 }, nodes)
 end
 
--- Filter bar: free-form `dart run filter` args (service.luau keeps them
--- scoped to --limit/--username-ss unless overridden). Enter or the search
--- button applies; filter-off returns to the default query.
+-- Filter bar: free-form `dart run filter` args. Enter or the search button
+-- applies; filter-off returns to the default query.
 local function filterBar()
 	return ui.row({ gap = 8, align = "center" }, {
 		ui.input({
@@ -1057,10 +998,8 @@ function onFilterClear()
 	applyFilter("")
 end
 
--- Context-menu dispatch: (activated item id, the value passed as `context` -
--- here the run id). Destructive items expand the card and arm the same inline
--- Yes/No confirm the action buttons use, rather than firing outright: the CLI
--- has no confirm flag, so the panel owns that step either way.
+-- Context-menu dispatch (item id, run id as `context`). Destructive items
+-- expand the card and arm the same inline confirm the action buttons use.
 function onRunMenu(itemId, runId)
 	if itemId == "open" then
 		openInBrowser(runId)

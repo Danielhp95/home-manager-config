@@ -1,12 +1,8 @@
 --!nonstrict
 --[[
-Bar widget (entry "widget" of dani/dart).
-
-Shows the dart logo plus per-group counts (running / building / queued / suspended),
-with a per-state count tooltip; clicking toggles the run-list panel. Purely event-driven off the
-poller service's published state - this entry never calls the dart CLI and
-has no update() tick. Note bar widgets get one VM per output, which is why
-the polling lives in the singleton service instead of here.
+Bar widget (entry "widget" of dani/dart): the dart logo plus per-group run
+counts; click toggles the panel. Event-driven off the service's state, with no
+CLI calls: bar widgets get one VM per output, so polling lives in the service.
 ]]
 
 local common = require("./common.luau")
@@ -15,7 +11,7 @@ local runs = noctalia.state.get("runs") or {}
 local err = noctalia.state.get("error")
 
 local function render()
-	-- 18px logo sits comfortably in the 36px capsule bar.
+	-- 18px fits the 36px capsule bar.
 	barWidget.setImage("assets/dart-logo.png", false, 18, 18)
 
 	if err then
@@ -26,10 +22,8 @@ local function render()
 	end
 
 	barWidget.setColor("on_surface")
-	-- Group the poller's states into the four badge buckets. Building gets its
-	-- own bucket (it is the slow pre-run step worth watching); the remaining
-	-- pre-run states count as queued; every suspend-family state (including the
-	-- manual request/in-flight ones) counts as suspended.
+	-- Badge buckets: building gets its own (the slow pre-run step), the other
+	-- pre-run states count as queued, the whole suspend family as suspended.
 	local GROUP = {
 		running = "running",
 		building = "building",

@@ -1,10 +1,7 @@
-# Single source of truth for fonts, the typographic counterpart of
-# palette.nix. Values are fontconfig family names; `packages` provides them.
-#
-# Hand-kept mirrors (their config can't import this file): the hy3 tab font in
-# hyprland/hyprland.lua, which is read verbatim, and --mono in the start page's
-# style.css. Deliberate one-offs stay local: GRUB's Determination Mono
-# (grub_theme/) and the start page's Cormorant Garamond display serif.
+# Font families by role (fontconfig names), the counterpart of palette.nix;
+# `packages` provides them. Hand-kept copies: the hy3 tab font in hyprland.lua
+# and --mono in the start page's style.css. GRUB's and the start page's display
+# fonts are deliberate one-offs.
 {
   # UI text: GTK/Qt, noctalia, fcitx5 and fontconfig's sans-serif.
   ui = "Adwaita Sans";
