@@ -1,27 +1,15 @@
-# Undertale mirror-scene GRUB theme.
-#
-# The boot menu is drawn inside the dialogue box of the "Despite everything,
-# it's still you." screen. The dialogue text was erased from background.png;
-# GRUB re-renders it below with the real game font, so the label, the menu
-# entries and the countdown all share the same typeface.
-#
-# background.png is 1920x1200 (the 1920x1080 screenshot with 60px black bars
-# top/bottom to match the laptop panel's 16:10 aspect); GRUB stretches it to
-# the screen. All coordinates are percentages, so the layout follows it. The
-# fonts, row heights and the heart are fixed pixel sizes, authored for the
-# panel's native 3840x2400, the mode the firmware gives GRUB.
-# Dialogue box interior on the 1920x1200 canvas: x 116-1787, y 700-1114
-# (x 232-3574, y 1400-2228 at 3840x2400).
+# Undertale mirror-scene theme: the menu sits in the dialogue box, its text
+# re-rendered in the game font. background.png (1920x1200) is stretched and
+# positions are percentages; fonts, rows and the heart are pixel sizes for
+# 3840x2400, where the dialogue box interior is x 232-3574, y 1400-2228.
 
 desktop-image: "background.png"
 desktop-color: "#000000"
 title-text: ""
 terminal-font: "Determination Mono Web Regular 72"
 
-# After choosing an entry (or pressing Esc/c) GRUB swaps the menu for its
-# gfxterm terminal. Without these, the terminal defaults to a smaller
-# centered window, so the splashImage gets drawn shrunken in the middle of
-# the screen. Make the terminal cover the whole screen instead.
+# Full-screen terminal once an entry is chosen; the default small centered
+# window would draw the splash image shrunken.
 terminal-left: "0"
 terminal-top: "0"
 terminal-width: "100%"
@@ -39,12 +27,9 @@ terminal-border: "0"
     text = "* Despite everything, it's still you."
 }
 
-# Boot entries as dialogue choices: white text, Undertale-yellow selection,
-# and the SOUL heart as the selection cursor. The heart lives in the west
-# slice of the selected-item pixmap (select_w.png, 96x112: the 48x56 source
-# upscaled 2x at build time; width must equal icon_width and height must
-# equal item_height so it renders 1:1); the icon column reserves that space
-# on every row so text never overlaps it.
+# The SOUL heart is the cursor: the west slice of the selected-item pixmap
+# (select_w.png, 96x112; must equal icon_width x item_height to render 1:1).
+# The icon column reserves its space on every row.
 + boot_menu {
     left = 8%
     top = 67%

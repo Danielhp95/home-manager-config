@@ -1,13 +1,9 @@
-# Undertale mirror-scene GRUB theme (see theme.txt for the layout).
-#
-# DeterminationMonoWeb.woff is "Determination Mono Web", the fan recreation of
-# Undertale's dialogue font (vendored from
-# github.com/SatoruGojo231/determination-mono-font). GRUB can't use TTF/WOFF,
-# so grub-mkfont bakes a pf2 bitmap for every pixel size theme.txt names; the
-# NixOS GRUB installer loads every *.pf2 in the theme directory.
-#
-# select_w.png (the SOUL heart, 48x56 pixel art) is upscaled 2x with a point
-# filter for the 3840x2400 mode GRUB runs in; GRUB draws pixmaps unscaled.
+# Undertale mirror-scene GRUB theme (layout in theme.txt). The font is the fan
+# "Determination Mono Web" (github.com/SatoruGojo231/determination-mono-font),
+# baked by grub-mkfont into a pf2 per pixel size theme.txt names. The pixel
+# art (backgrounds, 48x56 SOUL heart) is upscaled 2x with a point filter for
+# the native 3840x2400 mode: GRUB draws pixmaps unscaled and smooths the
+# backgrounds when it stretches them.
 {
   stdenvNoCC,
   grub2,
@@ -28,10 +24,12 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
     mkdir -p $out
-    cp theme.txt background.png background-selected.png $out/
-    # PNG32: keep the source's 8-bit RGBA; left alone, ImageMagick writes a
+    cp theme.txt $out/
+    # PNG32: keep the sources' 8-bit RGBA; left alone, ImageMagick writes a
     # palette PNG for a two-colour image.
-    magick select_w.png -filter point -resize 200% -strip PNG32:$out/select_w.png
+    for img in background.png background-selected.png select_w.png; do
+      magick $img -filter point -resize 200% -strip PNG32:$out/$img
+    done
     for size in $(sed -n 's/.*Determination Mono Web Regular \([0-9]*\).*/\1/p' theme.txt | sort -u); do
       grub-mkfont -s $size -o $out/determination-mono-$size.pf2 DeterminationMonoWeb.woff
     done
