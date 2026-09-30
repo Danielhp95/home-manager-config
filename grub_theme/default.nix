@@ -2,10 +2,9 @@
 #
 # DeterminationMonoWeb.woff is "Determination Mono Web", the fan recreation of
 # Undertale's dialogue font (vendored from
-# github.com/SatoruGojo231/determination-mono-font). GRUB can't use TTF/WOFF
-# directly, so grub-mkfont bakes it into pf2 bitmaps at the exact pixel sizes
-# theme.txt references; the NixOS GRUB installer loadfont's every *.pf2 it
-# finds in the theme directory.
+# github.com/SatoruGojo231/determination-mono-font). GRUB can't use TTF/WOFF,
+# so grub-mkfont bakes a pf2 bitmap for every pixel size theme.txt names; the
+# NixOS GRUB installer loads every *.pf2 in the theme directory.
 {
   stdenvNoCC,
   grub2,
@@ -23,7 +22,7 @@ stdenvNoCC.mkDerivation {
     runHook preInstall
     mkdir -p $out
     cp theme.txt background.png background-selected.png select_w.png $out/
-    for size in 32 48 72; do
+    for size in $(sed -n 's/.*Determination Mono Web Regular \([0-9]*\).*/\1/p' theme.txt | sort -u); do
       grub-mkfont -s $size -o $out/determination-mono-$size.pf2 DeterminationMonoWeb.woff
     done
     runHook postInstall

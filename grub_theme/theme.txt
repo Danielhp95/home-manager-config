@@ -13,7 +13,7 @@
 desktop-image: "background.png"
 desktop-color: "#000000"
 title-text: ""
-terminal-font: "Determination Mono Web Regular 32"
+terminal-font: "Determination Mono Web Regular 36"
 
 # After choosing an entry (or pressing Esc/c) GRUB swaps the menu for its
 # gfxterm terminal. Without these, the terminal defaults to a smaller
@@ -32,7 +32,7 @@ terminal-border: "0"
     width = 84%
     align = "left"
     color = "#ffffff"
-    font = "Determination Mono Web Regular 72"
+    font = "Determination Mono Web Regular 76"
     text = "* Despite everything, it's still you."
 }
 
@@ -46,7 +46,7 @@ terminal-border: "0"
     top = 67%
     width = 84%
     height = 20%
-    item_font = "Determination Mono Web Regular 48"
+    item_font = "Determination Mono Web Regular 52"
     item_color = "#ffffff"
     selected_item_color = "#ffff00"
     selected_item_pixmap_style = "select_*.png"
@@ -65,6 +65,6 @@ terminal-border: "0"
     left = 8%
     top = 89%
     color = "#ffffff"
-    font = "Determination Mono Web Regular 32"
+    font = "Determination Mono Web Regular 36"
     text = "* (It boots by itself in %d seconds.)"
 }
