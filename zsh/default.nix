@@ -25,7 +25,7 @@ let
     if [[ -n $__profile_modules[1] ]]; then
       __profile_kernel=''${__profile_modules[1]:t}
       if [[ $__profile_kernel != $(uname -r) ]]; then
-        print -P "%F{#${p.error}}reboot: kernel/profile mismatch%f (running $(uname -r), profile has $__profile_kernel)"
+        print -P "%F{${p.error}}reboot: kernel/profile mismatch%f (running $(uname -r), profile has $__profile_kernel)"
       fi
     fi
     unset __profile_modules __profile_kernel
