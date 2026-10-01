@@ -30,7 +30,7 @@ let
   # danvim's nvim (which ships the firenvim plugin).
   firenvimHost =
     let
-      nvim = "${inputs.danvim.packages.${pkgs.stdenv.hostPlatform.system}.nvim}/bin/nvim";
+      nvim = "${pkgs.danvim}/bin/nvim";
 
       # Verbatim from firenvim's s:get_executable_content(): take stdin before
       # the config loads, and keep print() off the protocol's stdout.

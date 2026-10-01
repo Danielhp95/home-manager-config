@@ -165,7 +165,7 @@ in
     translate-shell
 
     # THE nvim
-    inputs.danvim.packages.${pkgs.stdenv.hostPlatform.system}.nvim
+    pkgs.danvim
 
     # Weather app
     gnome-weather

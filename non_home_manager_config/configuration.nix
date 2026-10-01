@@ -32,6 +32,8 @@
       in
       {
         inherit (inputs.iris.packages.${system}) iris;
+        # danvim with the selected palette injected (../danvim.nix).
+        danvim = import ../danvim.nix { inherit inputs system; };
         # hy3 links against Hyprland's headers: build it against this Hyprland.
         inherit hyprland;
         hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
