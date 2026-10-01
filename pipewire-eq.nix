@@ -609,24 +609,12 @@ let
 in
 {
   services.pipewire.wireplumber = {
-    # Stable's 0.5.14: 0.5.16+ destroys a chain's module twice on unload (every
-    # headset disconnect), spinning WirePlumber at 100% CPU and hanging pactl
-    # and wpctl. Unpin once a release fixes wp_impl_module_unload().
-    package = pkgs.stable.wireplumber;
     extraLv2Packages = [
       pkgs.lsp-plugins
       pkgs.calf
     ];
     extraConfig."60-eq-sinks" = {
-      # A filter-chain needs the adapter factory in WirePlumber's own context
-      # ("no adapter factory found"). Request it as a profile component, not a
-      # raw context.modules entry: loading client-node there too makes the
-      # pw.client-node component fail with EEXIST, and monitor.bluez (which
-      # requires it) is then skipped — no A2DP endpoints, no headsets.
-      "wireplumber.profiles".main = {
-        "node.software-dsp" = "required";
-        "pw.node-factory.adapter" = "required";
-      };
+      "wireplumber.profiles".main."node.software-dsp" = "required";
       "node.software-dsp.rules" = [
         speakers
         shokz
