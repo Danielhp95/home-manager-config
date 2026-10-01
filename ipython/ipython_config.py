@@ -1,8 +1,8 @@
-# Ember by inheritance: every colour is an ANSI slot name (emitted as SGR
+# The palette by inheritance: every colour is an ANSI slot name (emitted as SGR
 # 30-37/90-97), so the terminal's colour0-15 decide and nothing can drift.
-# Slots: red accent (coral), green olive, yellow gold, blue steel, magenta
-# mauve, cyan sage, brightblack muted. Roles: olive strings, gold types,
-# steel metadata, mauve structure, sage injected values, coral definitions.
+# Which slot plays which role differs per palette, so ./default.nix fills the
+# at-sign placeholders from palette.nix's roles.ansi. A plain name (ansigreen,
+# ansired, ansibrightblack) means that slot in every palette.
 
 from pygments.style import Style
 from pygments.token import (
@@ -42,46 +42,47 @@ class EmberAnsi(Style):
         Whitespace: "ansibrightblack",
         # ── Comments ────────────────────────────────────────────────────────
         Comment: "italic ansibrightblack",
-        Comment.Preproc: "ansiyellow",
-        Comment.Special: "bold italic ansiyellow",
-        # ── Language structure — mauve ──────────────────────────────────────
-        Keyword: "bold ansimagenta",
-        Keyword.Constant: "ansicyan",  # True / False / None read as values
-        Keyword.Type: "ansiyellow",
+        Comment.Preproc: "@emphasis@",
+        Comment.Special: "bold italic @emphasis@",
+        # ── Language structure ──────────────────────────────────────────────
+        Keyword: "bold @structure@",
+        Keyword.Constant: "@value@",  # True / False / None read as values
+        Keyword.Type: "@emphasis@",
         Operator: "",
-        Operator.Word: "bold ansimagenta",  # and / or / not / in / is
+        Operator.Word: "bold @structure@",  # and / or / not / in / is
         Punctuation: "",
         # ── Names ───────────────────────────────────────────────────────────
         Name: "",
-        Name.Builtin: "ansiblue",  # steel: neutral, always-there metadata
-        Name.Builtin.Pseudo: "italic ansiblue",  # self, cls
-        Name.Class: "bold ansired",  # accent: the thing you scan for
-        Name.Function: "ansired",
-        Name.Function.Magic: "ansired",
-        Name.Decorator: "ansiyellow",
-        Name.Exception: "bold ansibrightred",
-        Name.Namespace: "ansiblue",  # module paths in imports
-        Name.Constant: "ansicyan",
+        Name.Builtin: "@metadata@",  # neutral, always-there metadata
+        Name.Builtin.Pseudo: "italic @metadata@",  # self, cls
+        Name.Class: "bold @definition@",  # the thing you scan for
+        Name.Function: "@definition@",
+        Name.Function.Magic: "@definition@",
+        Name.Decorator: "@emphasis@",
+        Name.Exception: "bold @failure@",
+        Name.Namespace: "@metadata@",  # module paths in imports
+        Name.Constant: "@value@",
         Name.Attribute: "",
         Name.Variable: "",
-        Name.Variable.Magic: "ansiblue",  # __name__, __file__
-        Name.Tag: "ansimagenta",
+        Name.Variable.Magic: "@metadata@",  # __name__, __file__
+        Name.Tag: "@structure@",
         # ── Literals ────────────────────────────────────────────────────────
-        Number: "ansicyan",  # sage: values injected into the code
-        String: "ansigreen",  # olive: strings, per palette.nix
-        String.Doc: "italic ansigreen",
-        String.Affix: "ansimagenta",  # the f / r / b prefix is syntax, not text
-        String.Escape: "ansicyan",
-        String.Interpol: "ansicyan",  # sage is literally the interpolation hue
-        String.Regex: "ansicyan",
+        Number: "@value@",  # values injected into the code
+        String: "@string@",
+        String.Doc: "italic @string@",
+        String.Affix: "@structure@",  # the f / r / b prefix is syntax, not text
+        String.Escape: "@value@",
+        String.Interpol: "@value@",
+        String.Regex: "@value@",
         # ── Failure — error only, never decoration ──────────────────────────
-        Error: "bold ansibrightred",
-        Generic.Error: "ansibrightred",
-        Generic.Traceback: "ansibrightred",
+        Error: "bold @failure@",
+        Generic.Error: "@failure@",
+        Generic.Traceback: "@failure@",
+        # Diff hues, the same in every palette.
         Generic.Deleted: "ansired",
         Generic.Inserted: "ansigreen",
-        Generic.Heading: "bold ansired",
-        Generic.Subheading: "bold ansimagenta",
+        Generic.Heading: "bold @accent@",
+        Generic.Subheading: "bold @structure@",
         Generic.Prompt: "ansibrightblack",
         Generic.Emph: "italic",
         Generic.Strong: "bold",
@@ -97,8 +98,8 @@ c.TerminalInteractiveShell.highlighting_style = EmberAnsi
 c.TerminalInteractiveShell.highlighting_style_overrides = {
     Token.Prompt: "ansigreen",
     Token.PromptNum: "bold ansibrightgreen",
-    Token.OutPrompt: "ansired",
-    Token.OutPromptNum: "bold ansibrightred",
+    Token.OutPrompt: "@accent@",
+    Token.OutPromptNum: "bold @accentBright@",
 }
 
 # Traceback framing, `??` and %pycat use IPython's ColorANSI schemes (bare SGR

@@ -1,8 +1,9 @@
-# Ember for the prompt_toolkit chrome around the input line (completion popup,
-# ghost text, toolbars): not pygments tokens, so ipython_config.py can't reach
-# them, and their defaults are hardcoded greys. PromptSession reads its style
-# through a DynamicStyle, so reassigning pt_app.style here (startup files run
-# after init_prompt_toolkit_cli) applies on the next repaint. ANSI slots only.
+# The palette for the prompt_toolkit chrome around the input line (completion
+# popup, ghost text, toolbars): not pygments tokens, so ipython_config.py can't
+# reach them, and their defaults are hardcoded greys. PromptSession reads its
+# style through a DynamicStyle, so reassigning pt_app.style here (startup files
+# run after init_prompt_toolkit_cli) applies on the next repaint. ANSI slots
+# only; ./default.nix fills in the accent's, as in ipython_config.py.
 
 
 def _apply_ember_ptk_ui() -> None:
@@ -17,13 +18,13 @@ def _apply_ember_ptk_ui() -> None:
 
     ember_ui = Style(
         [
-            # Completion popup on the two darkest slots, the coral accent on
-            # the selected row instead of the default reverse-video slab
+            # Completion popup on the two darkest slots, the accent on the
+            # selected row instead of the default reverse-video slab
             ("completion-menu", "bg:ansiblack ansigray"),
             ("completion-menu.completion", "bg:ansiblack ansigray"),
-            ("completion-menu.completion.current", "bg:ansired ansiblack"),
+            ("completion-menu.completion.current", "bg:@accent@ ansiblack"),
             ("completion-menu.meta.completion", "bg:ansiblack ansibrightblack"),
-            ("completion-menu.meta.completion.current", "bg:ansired ansiblack"),
+            ("completion-menu.meta.completion.current", "bg:@accent@ ansiblack"),
             ("completion-menu.multi-column-meta", "bg:ansiblack ansibrightblack"),
             # Fuzzy-match emphasis inside a completion.
             ("completion-menu.completion fuzzymatch.outside", "ansibrightblack"),
@@ -36,12 +37,12 @@ def _apply_ember_ptk_ui() -> None:
             ("completion-menu.completion.current fuzzymatch.inside", "bold"),
             # Single-line completion bar (`display_completions = 'column'`).
             ("completion-toolbar", "bg:ansiblack ansigray"),
-            ("completion-toolbar.arrow", "bold bg:ansiblack ansired"),
+            ("completion-toolbar.arrow", "bold bg:ansiblack @accent@"),
             ("completion-toolbar.completion", "bg:ansiblack ansigray"),
-            ("completion-toolbar.completion.current", "bg:ansired ansiblack"),
+            ("completion-toolbar.completion.current", "bg:@accent@ ansiblack"),
             # History ghost text — must read as not-yet-real, so: muted.
             ("auto-suggestion", "ansibrightblack"),
-            # Search and errors.
+            # Search and errors (red as red: the one use that is not the accent).
             ("search", "bg:ansiyellow ansiblack"),
             ("search.current", "bg:ansibrightyellow ansiblack"),
             ("search-toolbar", "bold ansigray"),

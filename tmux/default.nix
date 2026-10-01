@@ -1,7 +1,9 @@
 { pkgs, lib, config, ... }:
 
 let
-  p = (import ../palette.nix).hash;
+  palette = import ../palette.nix;
+  p = palette.hash;
+  inherit (palette.roles) search;
   # The @color_* variables tmux.conf renders with, from palette.nix
   emberColors = ''
     # ── Ember palette — GENERATED from palette.nix by default.nix ──
@@ -22,6 +24,16 @@ let
     # Command-prompt cursor (tmux >= 3.5). A colour option, not a style, so
     # it can't reference the @vars above; the hex comes straight from here.
     set -g prompt-cursor-colour "${p.accent}"
+    # tmux's defaults for these are ANSI names (red, blue, magenta, cyan), and
+    # which slot is the accent differs per palette, so they are set from here:
+    # prefix-q pane numbers and the clock, then copy mode's search matches
+    # (colour is their only cue: the palette's roles.search pair) and mark.
+    set -g display-panes-active-colour "${p.accent}"
+    set -g display-panes-colour "${p.steel}"
+    set -g clock-mode-colour "${p.steel}"
+    set -g copy-mode-match-style "bg=${p.${search.match}},fg=${p.bg}"
+    set -g copy-mode-current-match-style "bg=${p.${search.current}},fg=${p.bg}"
+    set -g copy-mode-mark-style "bg=${p.accent},fg=${p.bg}"
   '';
 
   # Plugin options only; the plugins themselves load last (see loadPlugins)
