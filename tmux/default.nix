@@ -29,8 +29,13 @@ let
     # ── tmux-resurrect ──
     set -g @resurrect-strategy-vim 'session'
     set -g @resurrect-strategy-nvim 'session'
-    set -g @resurrect-processes 'vim nvim ssh npm ~ipython'
+    # claude comes back as --continue: the last conversation in that directory
+    set -g @resurrect-processes 'vim nvim ssh npm ~ipython yazi "claude->claude --continue"'
     set -g @resurrect-capture-pane-contents 'on' # Restore pane contents
+    # Nix wrappers exec with a full path as argv[0] (/nix/store/…/bin/yazi), and
+    # nixCats adds --cmd source/nix/store/… to nvim. Neither matches a name in
+    # the restore list, and both pin a store path. Saved back as `name <args>`.
+    set -g @resurrect-hook-post-save-layout 'sed -i -E "s#\t:(/etc/profiles/per-user/[^/]+|/run/current-system/sw|/nix/store/[^/]+)/bin/#\t:#; s# --cmd source/nix/store/[^ ]*/nvim-setup[.]lua##"'
 
     # ── tmux-continuum ──
     set -g @continuum-restore 'on' # Continuum auto restore
