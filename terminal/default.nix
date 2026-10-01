@@ -24,7 +24,36 @@ in
     _ZO_EXCLUDE_DIRS = "${config.home.homeDirectory}:/nix/store/*:*/.git/*";
     # Dedupe symlinked paths before scoring — most things are symlinks on NixOS
     _ZO_RESOLVE_SYMLINKS = "1";
+    # fzf reads this file on every start (the colours below). A constant path:
+    # in FZF_DEFAULT_OPTS itself, a palette switch would not reach fzf until
+    # the next login, when session variables are next read.
+    FZF_DEFAULT_OPTS_FILE = "${config.xdg.configHome}/fzf/colors";
   };
+
+  # Accent for matches and the pointer, steel for neutral chrome; gold is kept
+  # for needs-attention states.
+  xdg.configFile."fzf/colors".text =
+    "--color="
+    + lib.concatStringsSep "," (
+      lib.mapAttrsToList (name: value: "${name}:${value}") {
+        bg = p.bg;
+        "bg+" = p.surface;
+        fg = p.fg;
+        "fg+" = p.fg;
+        hl = p.accent;
+        "hl+" = p.accentBright;
+        info = p.steel;
+        marker = p.accent;
+        prompt = p.accent;
+        spinner = p.sage;
+        pointer = p.accent;
+        header = p.olive;
+        border = p.border;
+        label = p.steel;
+        query = p.fg;
+      }
+    )
+    + "\n";
 
   home.packages = with pkgs; [
     rsync
@@ -231,25 +260,7 @@ in
       # a copy of the binding per nesting level. Literal `nvim`, not $EDITOR:
       # nushell loads session variables unexpanded.
       defaultOptions = [ "--bind='ctrl-e:execute(nvim {} > /dev/tty)+abort'" ];
-      # Coral for matches and the pointer, steel for neutral chrome; gold is
-      # kept for needs-attention states.
-      colors = {
-        bg = p.bg;
-        "bg+" = p.surface;
-        fg = p.fg;
-        "fg+" = p.fg;
-        hl = p.accent;
-        "hl+" = p.accentBright;
-        info = p.steel;
-        marker = p.accent;
-        prompt = p.accent;
-        spinner = p.sage;
-        pointer = p.accent;
-        header = p.olive;
-        border = p.border;
-        label = p.steel;
-        query = p.fg;
-      };
+      # Colours: FZF_DEFAULT_OPTS_FILE, above.
     };
   };
 

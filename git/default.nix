@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   palette = import ../palette.nix;
 
@@ -145,7 +150,10 @@ let
   });
 in
 {
-  home.sessionVariables.GLAMOUR_STYLE = "${glamourStyle}";
+  # A constant path, not the store path: a session variable keeps its value
+  # until the next login, so a palette switch would leave gh on the old style.
+  xdg.configFile."glamour/style.json".source = glamourStyle;
+  home.sessionVariables.GLAMOUR_STYLE = "${config.xdg.configHome}/glamour/style.json";
 
   # Structural diffs for `git diff`; git.enable must be explicit, the module
   # no longer sets diff.external on its own.

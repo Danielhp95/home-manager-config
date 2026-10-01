@@ -117,11 +117,29 @@ in
     };
   };
 
+  # The syntax-highlighting styles again, as a file a running shell can
+  # re-read (see the precmd hook in initContent).
+  xdg.configFile."zsh/palette.zsh".text = lib.concatStrings (
+    lib.mapAttrsToList (
+      name: style: "ZSH_HIGHLIGHT_STYLES[${name}]=${lib.escapeShellArg style}\n"
+    ) config.programs.zsh.syntaxHighlighting.styles
+  );
+
   programs.zsh = {
     enable = true;
     sessionVariables = {
       EDITOR = "nvim";
     };
+    # Session variables are read once per login, and a tmux server keeps the
+    # environment it started with. Restated per shell, these three reach a
+    # new pane without either being restarted.
+    envExtra = lib.concatMapStrings (
+      name: "export ${name}=${lib.escapeShellArg config.home.sessionVariables.${name}}\n"
+    ) [
+      "FZF_DEFAULT_OPTS"
+      "FZF_DEFAULT_OPTS_FILE"
+      "GLAMOUR_STYLE"
+    ];
     initContent = lib.mkMerge [
       # Order 850, before HM sources the plugins (900): autopair wraps these
       # space/backspace bindings instead of losing its own to them, and
@@ -162,6 +180,17 @@ in
       # could let it set RPROMPT again after this.
       (lib.mkAfter ''
         RPROMPT=""
+
+        # A palette switch reaches shells that are already running: when the
+        # styles file changes (its store path does), the next prompt re-reads it.
+        __palette_styles=$ZDOTDIR/palette.zsh
+        __palette_seen=''${__palette_styles:A}
+        __palette_refresh () {
+          [[ ''${__palette_styles:A} == $__palette_seen ]] && return
+          __palette_seen=''${__palette_styles:A}
+          source $__palette_styles
+        }
+        precmd_functions+=(__palette_refresh)
       '')
     ];
     autocd = true;
