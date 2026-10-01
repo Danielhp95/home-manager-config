@@ -15,6 +15,9 @@ let
 in
 {
   xdg.dataFile."fcitx5/themes/Ember".source = "${ember}/share/fcitx5/themes/Ember";
+  # The daemon reads the skin at start: restart it when the skin changes (a
+  # palette switch), as noctalia and vicinae are for their themes.
+  systemd.user.services.fcitx5-daemon.Unit.X-Restart-Triggers = [ "${ember}" ];
 
   # Masks the wrapper's XDG autostart entry: it raced fcitx5-daemon.service
   # for the D-Bus name.

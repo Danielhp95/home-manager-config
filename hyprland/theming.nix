@@ -9,6 +9,7 @@ let
   m = p.meta;
   f = import ../fonts.nix;
   css = import ../gtk-css.nix p;
+  hyprctl = lib.getExe' pkgs.hyprland "hyprctl";
 in
 {
   gtk = {
@@ -47,6 +48,20 @@ in
     package = m.cursor.package pkgs;
     inherit (m.cursor) name size;
   };
+
+  # XCURSOR_THEME and XCURSOR_SIZE are session variables, read once per login.
+  # So that a switch changes the cursor at once, tell the running compositor
+  # directly, and the user manager for what it starts from now on.
+  home.activation.applyCursor = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    (
+      export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+      for instance in $(${hyprctl} instances -j 2>/dev/null | ${lib.getExe pkgs.jq} -r '.[].instance'); do
+        run ${hyprctl} -i "$instance" setcursor ${m.cursor.name} ${toString m.cursor.size} >/dev/null || true
+      done
+      run ${lib.getExe' pkgs.systemd "systemctl"} --user set-environment \
+        XCURSOR_THEME=${m.cursor.name} XCURSOR_SIZE=${toString m.cursor.size} || true
+    )
+  '';
 
   home.sessionVariables = {
     # Qt follows the GTK theme. Not "gtk4": no such plugin, Qt silently ignores it.

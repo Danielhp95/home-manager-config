@@ -102,6 +102,14 @@ let
 in
 {
   home.packages = with pkgs; [ serpl ];
+  # A switch that changes the config (a palette switch does) reloads it in the
+  # running server, as `prefix r` would. The socket is under XDG_RUNTIME_DIR,
+  # which the activation service does not have set.
+  xdg.configFile."tmux/tmux.conf".onChange = ''
+    TMUX_TMPDIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
+      ${lib.getExe config.programs.tmux.package} source-file ${config.xdg.configHome}/tmux/tmux.conf 2>/dev/null || true
+  '';
+
   programs.tmux = {
     enable = true;
     # vi keys in copy mode and in the command prompt (mode-keys/status-keys)
