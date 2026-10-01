@@ -4,10 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Wanderer</title>
-    <!-- Inline so a new tab never waits on a second request for its icon. -->
+    <!-- Inline so a new tab never waits on a second request for its icon.
+         The three at-sign placeholders are palette colours (package.nix). -->
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231c1b19'/%3E%3Cpath d='M1 12l4-6 3 4 2-3 5 5z' fill='%234a3b33'/%3E%3Ccircle cx='8' cy='5' r='2' fill='%23e08060'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23@faviconBg@'/%3E%3Cpath d='M1 12l4-6 3 4 2-3 5 5z' fill='%23@faviconPeak@'/%3E%3Ccircle cx='8' cy='5' r='2' fill='%23@faviconSun@'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="/assets/palette.css" />
     <link rel="stylesheet" href="/assets/style.css" />
@@ -16,7 +17,7 @@
   <body>
     <!-- The painting and its weather. Decorative: nothing here is hintable. -->
     <div class="art" aria-hidden="true">
-      <img class="art-canvas" src="/assets/wanderer-ember.jpg" alt="" />
+      <img class="art-canvas" src="/assets/wanderer.jpg" alt="" />
       <div class="fog fog-low"></div>
       <div class="fog fog-high"></div>
       <div class="glow"></div>

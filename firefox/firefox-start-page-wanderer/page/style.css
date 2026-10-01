@@ -1,7 +1,7 @@
 /* The "gallery wall": the canvas on the right edge, fading into a graphite
  * column that holds the dashboard. Colours come from assets/palette.css (nix
- * generates it from palette.nix); only the fog is a raw veil. app.js sets the
- * fog and tint variables from the weather; the defaults are a calm, overcast
+ * generates it from palette.nix). app.js sets the fog and tint variables from
+ * the weather; the defaults are a calm, overcast
  * afternoon, for when the service never answers.
  */
 
@@ -93,12 +93,12 @@ body {
   background:
     radial-gradient(
       ellipse 26% 52% at 22% 50%,
-      rgb(216 198 178 / 45%),
+      rgb(var(--ember-fog-rgb) / 45%),
       transparent 72%
     ),
     radial-gradient(
       ellipse 22% 46% at 68% 58%,
-      rgb(216 198 178 / 38%),
+      rgb(var(--ember-fog-rgb) / 38%),
       transparent 72%
     );
   animation: drift 42s ease-in-out infinite alternate;

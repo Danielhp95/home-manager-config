@@ -9,6 +9,7 @@
   imagemagick,
   nodejs,
   python3,
+  replaceVars,
   runCommand,
   stdenvNoCC,
   writeText,
@@ -19,8 +20,22 @@ let
   # package instead ("attribute 'hash' missing").
   palette = import ../../palette.nix;
   shared = import ./shared.nix;
+  colour = import ../../lib/colour.nix { inherit lib; };
 
-  art = import ./art.nix { inherit fetchurl imagemagick runCommand; };
+  ramp = palette.extra.artRamp;
+  brightestSky = lib.last ramp;
+  art =
+    # Text must stay the lightest thing on the page.
+    assert lib.assertMsg (colour.luminance brightestSky < colour.luminance palette.fg)
+      "start page: extra.artRamp's last stop #${brightestSky} is not darker than fg #${palette.fg}";
+    import ./art.nix {
+      inherit
+        fetchurl
+        imagemagick
+        runCommand
+        ramp
+        ;
+    };
 
   # bgDeep -> bg-deep; digits and punctuation pass through.
   toKebab =
@@ -38,8 +53,17 @@ let
       lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (
         lib.filterAttrs (_: value: builtins.isString value) palette.hash
       )
-    )}}
+    )}  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
+    }
   '';
+
+  # The inline favicon: the page's bg, a peak in the painting's mid-tone, the
+  # sun in accent. Bare hex: each follows a %23 in the data URI.
+  indexHtml = replaceVars ./page/index.html {
+    faviconBg = palette.bg;
+    faviconPeak = builtins.elemAt ramp 2;
+    faviconSun = palette.accent;
+  };
 
   aliasesJson = writeText "aliases.json" (builtins.toJSON shared.searchAliases);
 in
@@ -67,11 +91,11 @@ rec {
       runHook preInstall
 
       mkdir -p $out/assets/fonts
-      cp index.html $out/
+      cp ${indexHtml} $out/index.html
       cp style.css app.js search.js $out/assets/
       cp ${paletteCss} $out/assets/palette.css
       cp ${aliasesJson} $out/assets/aliases.json
-      cp ${art} $out/assets/wanderer-ember.jpg
+      cp ${art} $out/assets/wanderer.jpg
 
       # Only the two faces the page actually uses, served from the page's own
       # origin: the clock must not depend on fontconfig finding anything.
@@ -82,7 +106,7 @@ rec {
     '';
 
     meta = {
-      description = "Static start page: Friedrich's Wanderer, Ember-graded, over a live dashboard";
+      description = "Static start page: Friedrich's Wanderer, graded into the palette, over a live dashboard";
       platforms = lib.platforms.all;
     };
   };

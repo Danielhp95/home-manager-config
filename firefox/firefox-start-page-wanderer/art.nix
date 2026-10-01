@@ -1,12 +1,15 @@
 # Friedrich's *Wanderer above the Sea of Fog* (1818, public domain), fetched
-# from Wikimedia Commons by hash and graded into the Ember palette with a
-# gradient map: luminance looked up in a five-stop ramp, from black rock to the
-# brightest sky (#c8ab94, kept below the page's fg #d8d0c0 so text stays the
-# lightest thing). Uncropped: the layout hangs the whole portrait on the right.
+# from Wikimedia Commons by hash and graded into the palette with a gradient
+# map: luminance looked up in a five-stop ramp, from black rock to the
+# brightest sky (the palette's extra.artRamp; package.nix checks that its last
+# stop stays below the page's fg, so text stays the lightest thing).
+# Uncropped: the layout hangs the whole portrait on the right.
 {
   fetchurl,
   imagemagick,
   runCommand,
+  # Five bare-hex stops, darkest first.
+  ramp,
 }:
 
 let
@@ -20,19 +23,21 @@ let
       "firefox-start-page-wanderer/1.0 (nixpkgs fetchurl)"
     ];
   };
+  stop = builtins.elemAt ramp;
 in
-runCommand "wanderer-ember.jpg"
+assert builtins.length ramp == 5;
+runCommand "wanderer-graded.jpg"
   {
     nativeBuildInputs = [ imagemagick ];
   }
   ''
     # The five stops, linearly interpolated (-filter triangle) into 256 entries.
-    magick -size 1x5 xc:'#0c0b0a' \
-      -fill '#221c19' -draw 'point 0,1' \
-      -fill '#4a3b33' -draw 'point 0,2' \
-      -fill '#8a7061' -draw 'point 0,3' \
-      -fill '#c8ab94' -draw 'point 0,4' \
-      -filter triangle -resize 1x256! -set colorspace sRGB ember-lut.png
+    magick -size 1x5 xc:'#${stop 0}' \
+      -fill '#${stop 1}' -draw 'point 0,1' \
+      -fill '#${stop 2}' -draw 'point 0,2' \
+      -fill '#${stop 3}' -draw 'point 0,3' \
+      -fill '#${stop 4}' -draw 'point 0,4' \
+      -filter triangle -resize 1x256! -set colorspace sRGB lut.png
 
     # sRGB TrueColor before -clut, or the greyscale image makes the lookup grey.
     magick ${painting} \
@@ -40,7 +45,7 @@ runCommand "wanderer-ember.jpg"
       -colorspace gray \
       -contrast-stretch 1%x0.5% \
       -colorspace sRGB -type TrueColor \
-      ember-lut.png -clut \
+      lut.png -clut \
       -strip -quality 88 \
       $out
   ''
