@@ -96,9 +96,15 @@
   };
 
   outputs =
-    { nixpkgs, ... }@inputs:
+    { self, nixpkgs, ... }@inputs:
     {
       formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
+
+      # What a palette names but evaluation only forces once it is selected:
+      # its GTK theme, cursor and icon theme (palettes/check.nix).
+      checks.x86_64-linux.palettes = import ./palettes/check.nix {
+        inherit (self.nixosConfigurations.lenovo) pkgs;
+      };
 
       nixosConfigurations.lenovo = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
