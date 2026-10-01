@@ -53,6 +53,7 @@ let
   # drops untracked files, and a listed file that is missing fails loudly.
   slugs = [
     "ember"
+    "tokyo-night-violet"
   ];
 
   # ── Schema ───────────────────────────────────────────────────────────────
