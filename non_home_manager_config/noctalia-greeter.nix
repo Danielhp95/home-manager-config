@@ -3,6 +3,7 @@
 { lib, pkgs, ... }:
 let
   p = import ../palette.nix;
+  material = import ../noctalia/material.nix { inherit lib; };
 
   # The greeter sets only XDG_SESSION_TYPE and the XDG_*_DESKTOP pair (from
   # DesktopNames=); the IM and wayland toolkit variables come from here.
@@ -86,25 +87,8 @@ in
         scheme = "Synced";
         theme_mode = "dark";
         font_family = (import ../fonts.nix).ui;
-        # Ember, slot for slot as noctalia/default.nix maps it for the shell.
-        palette = {
-          primary = p.hash.accent;
-          on_primary = p.hash.bg;
-          secondary = p.hash.gold;
-          on_secondary = p.hash.bg;
-          tertiary = p.hash.sage;
-          on_tertiary = p.hash.bg;
-          error = p.hash.error;
-          on_error = p.hash.bg;
-          surface = p.hash.bg;
-          on_surface = p.hash.fg;
-          surface_variant = p.hash.surface;
-          on_surface_variant = p.hash.fgSoft;
-          outline = p.hash.border;
-          shadow = p.hash.bgDeep;
-          hover = p.hash.accentBright;
-          on_hover = p.hash.bg;
-        };
+        # The same roles as the shell's (noctalia/material.nix).
+        palette = material.greeter p;
       };
 
       cursor.size = p.meta.cursor.size;

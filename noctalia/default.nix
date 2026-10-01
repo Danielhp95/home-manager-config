@@ -1,11 +1,16 @@
 {
   inputs,
   pkgs,
+  lib,
   config,
   ...
 }:
 let
   p = import ../palette.nix;
+  material = import ./material.nix { inherit lib; };
+  # A palette's file stem under ~/.config/noctalia/palettes, which is also the
+  # name the settings GUI shows and `theme.custom_palette` selects.
+  stem = palette: builtins.replaceStrings [ " " ] [ "" ] palette.meta.name;
 
   noctaliaPkg = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
@@ -71,62 +76,6 @@ let
       esac
     '';
   };
-
-  # One half (dark or light) of a noctalia custom palette: m* slots drive the
-  # shell, `terminal` feeds the terminal templates. ansiBlack/ansiWhite are the
-  # two slots that swap between halves (bg/fg on dark, fg/bg on light).
-  emberHalf =
-    {
-      c,
-      ansiBlack,
-      ansiWhite,
-    }:
-    {
-      mPrimary = c.hash.accent;
-      mOnPrimary = c.hash.bg;
-      mSecondary = c.hash.gold;
-      mOnSecondary = c.hash.bg;
-      mTertiary = c.hash.sage;
-      mOnTertiary = c.hash.bg;
-      mError = c.hash.error;
-      mOnError = c.hash.bg;
-      mSurface = c.hash.bg;
-      mOnSurface = c.hash.fg;
-      mHover = c.hash.accentBright;
-      mOnHover = c.hash.bg;
-      mSurfaceVariant = c.hash.surface;
-      mOnSurfaceVariant = c.hash.fgSoft;
-      mOutline = c.hash.border;
-      mShadow = c.hash.bgDeep;
-      terminal = {
-        background = c.hash.bg;
-        foreground = c.hash.fg;
-        cursor = c.hash.accent;
-        cursorText = c.hash.bg;
-        selectionBg = c.hash.border;
-        selectionFg = c.hash.fg;
-        normal = {
-          black = ansiBlack;
-          red = c.hash.accent;
-          green = c.hash.olive;
-          yellow = c.hash.gold;
-          blue = c.hash.steel;
-          magenta = c.hash.mauve;
-          cyan = c.hash.sage;
-          white = ansiWhite;
-        };
-        bright = {
-          black = c.hash.muted;
-          red = c.hash.accentBright;
-          green = c.hash.oliveBright;
-          yellow = c.hash.goldBright;
-          blue = c.hash.steelBright;
-          magenta = c.hash.mauveBright;
-          cyan = c.hash.sageBright;
-          white = "#ffffff";
-        };
-      };
-    };
 in
 {
   home.packages = [
@@ -157,20 +106,11 @@ in
     # A switch restarts the service when the config or palette changes.
     systemd.enable = true;
 
-    # ~/.config/noctalia/palettes/Ember.json, selected by `theme.custom_palette`
-    # (file stem).
-    customPalettes.Ember = {
-      dark = emberHalf {
-        c = p;
-        ansiBlack = p.hash.bg;
-        ansiWhite = p.hash.fg;
-      };
-      light = emberHalf {
-        c = p.light;
-        ansiBlack = p.light.hash.fg;
-        ansiWhite = p.light.hash.bg;
-      };
-    };
+    # ~/.config/noctalia/palettes/<stem>.json, one per palette: a name saved
+    # by the settings GUI then always has a file, whichever is selected below.
+    customPalettes = lib.mapAttrs' (
+      _: palette: lib.nameValuePair (stem palette) (material.shell palette)
+    ) p.all;
 
     # config.toml (schema: example.toml in the noctalia repo). Settings-GUI
     # changes land in ~/.local/state/noctalia/settings.toml and override these,
@@ -199,11 +139,11 @@ in
 
       theme = {
         mode = "dark";
-        # Ember (customPalettes above) rather than wallpaper-derived colours,
-        # so the shell matches every other app; both halves are real, so the
-        # dark_mode toggle switches to Ember Light.
+        # The palette (customPalettes above) rather than wallpaper-derived
+        # colours, so the shell matches every other app; both halves are real,
+        # so the dark_mode toggle switches to its light half.
         source = "custom";
-        custom_palette = "Ember";
+        custom_palette = stem p;
         # Propagate the palette to other apps' configs.
         templates = {
           # Not "cava" (not installed; its apply.sh exits 1) or "hyprland" (its

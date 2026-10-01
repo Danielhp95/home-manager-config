@@ -1,4 +1,9 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   palette = import ../palette.nix;
@@ -28,14 +33,14 @@ let
     text = builtins.readFile ./scripts/open_paper.sh;
   };
 
-  # Theme-picker icon: a coral dot on the theme's background.
+  # Theme-picker icon: an accent dot on the theme's background.
   themeIcon =
     c:
     ''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${c.bg}"/><circle cx="32" cy="32" r="13" fill="${c.accent}"/></svg>'';
 
-  # Accents follow palette.nix's ANSI mapping; steel (magma) is both blue and
-  # orange.
-  emberColors = c: {
+  # vicinae names its accents by hue: the palette's roles.hues says which slot
+  # carries each one, and its orange is extra.orange.
+  themeColors = roles: c: {
     core = {
       background = c.bg;
       foreground = c.fg;
@@ -44,17 +49,48 @@ let
       accent = c.accent;
     };
 
-    accents = {
-      blue = c.steel;
-      green = c.olive;
-      magenta = c.mauve;
-      orange = c.steel;
-      purple = c.mauve;
-      red = c.accent;
-      yellow = c.gold;
-      cyan = c.sage;
+    accents = builtins.mapAttrs (_: slot: c.${slot}) roles.hues // {
+      orange = c.extra.orange;
     };
   };
+
+  # A dark and a light theme per palette. Every palette is installed, so the
+  # picker lists them all; settings.theme below follows the selected one.
+  themesOf =
+    { meta, roles, ... }@q:
+    {
+      ${meta.slug} = {
+        meta = {
+          version = 1;
+          inherit (meta) name description;
+          variant = "dark";
+          icon = "icons/${meta.slug}.svg";
+          inherits = "vicinae-dark";
+        };
+
+        colors = themeColors roles q.hash;
+      };
+
+      ${meta.light.slug} = {
+        meta = {
+          version = 1;
+          inherit (meta.light) name description;
+          variant = "light";
+          icon = "icons/${meta.light.slug}.svg";
+          inherits = "vicinae-light";
+        };
+
+        colors = themeColors roles q.light.hash;
+      };
+    };
+
+  # Next to the theme files programs.vicinae.themes writes (meta.icon above).
+  iconsOf =
+    { meta, ... }@q:
+    {
+      "vicinae/themes/icons/${meta.slug}.svg".text = themeIcon q.hash;
+      "vicinae/themes/icons/${meta.light.slug}.svg".text = themeIcon q.light.hash;
+    };
 in
 {
   # Both use `vicinae dmenu`, which exits 0 even when dismissed with nothing
@@ -64,9 +100,7 @@ in
     openPaper
   ];
 
-  # Next to the theme files programs.vicinae.themes writes (meta.icon below).
-  xdg.dataFile."vicinae/themes/icons/ember.svg".text = themeIcon palette.hash;
-  xdg.dataFile."vicinae/themes/icons/ember-light.svg".text = themeIcon palette.light.hash;
+  xdg.dataFile = lib.concatMapAttrs (_: iconsOf) palette.all;
 
   programs.vicinae = {
     enable = true;
@@ -74,11 +108,11 @@ in
     settings = {
       theme = {
         dark = {
-          name = "ember";
+          name = palette.meta.slug;
           icon_theme = "auto";
         };
         light = {
-          name = "ember-light";
+          name = palette.meta.light.slug;
           icon_theme = "auto";
         };
       };
@@ -106,33 +140,7 @@ in
         };
       };
     };
-    themes = {
-      ember = {
-        meta = {
-          version = 1;
-          name = "Ember";
-          description = "Warm graphite monochrome with a single coral spark";
-          variant = "dark";
-          icon = "icons/ember.svg";
-          inherits = "vicinae-dark";
-        };
-
-        colors = emberColors palette.hash;
-      };
-
-      ember-light = {
-        meta = {
-          version = 1;
-          name = "Ember Light";
-          description = "Soft parchment tones with restrained earthy accents";
-          variant = "light";
-          icon = "icons/ember-light.svg";
-          inherits = "vicinae-light";
-        };
-
-        colors = emberColors palette.light.hash;
-      };
-    };
+    themes = lib.concatMapAttrs (_: themesOf) palette.all;
   };
 
 }

@@ -1,24 +1,51 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
-  # gh's markdown style (GLAMOUR_STYLE): glamour's dark.json in Ember, token
-  # roles as in ../ipython/ipython_config.py. Text uses ANSI slots; chroma's
-  # fixed 256-colour table maps only the xterm values of slots 1-7 back exactly
-  # (bright ones and slot 8 tie), so code comments use grey 242, nearest muted.
-  slot = {
-    accent = "#800000";
-    olive = "#008000";
-    gold = "#808000";
-    steel = "#000080";
-    mauve = "#800080";
-    sage = "#008080";
-    fg = "#c0c0c0";
-    comment = "#6c6c6c";
+  palette = import ../palette.nix;
+
+  # gh's markdown style (GLAMOUR_STYLE): glamour's dark.json through the
+  # terminal's ANSI slots, token roles from palette.roles.ansi (shared with
+  # ../ipython). Prose takes a slot number. Code goes through chroma's fixed
+  # 256-colour table, which maps only the xterm values of slots 1-7 back
+  # exactly (bright ones and slot 8 tie), so a role on a bright slot uses its
+  # normal one, and comments take the table entry nearest `muted` that is no
+  # darker than it.
+  # ANSI slots 1-7: the number prose uses, and the xterm value chroma maps
+  # back to it (a stand-in, not a colour: the terminal draws its own).
+  number = {
+    red = "1";
+    green = "2";
+    yellow = "3";
+    blue = "4";
+    magenta = "5";
+    cyan = "6";
+    white = "7";
   };
+  xterm = {
+    red = "#800000";
+    green = "#008000";
+    yellow = "#808000";
+    blue = "#000080";
+    magenta = "#800080";
+    cyan = "#008080";
+    white = "#c0c0c0";
+  };
+  # brightRed -> red: chroma cannot reach the bright slots.
+  normal =
+    name:
+    let
+      m = builtins.match "bright(.)(.*)" name;
+    in
+    if m == null then name else lib.toLower (builtins.elemAt m 0) + builtins.elemAt m 1;
+  # role -> slot number (prose) / xterm stand-in (chroma).
+  n = role: number.${normal palette.roles.ansi.${role}};
+  x = builtins.mapAttrs (_: name: xterm.${normal name}) palette.roles.ansi;
+  comment = "#${((import ../lib/xterm256.nix).nearestNoDarker palette.muted).hex}";
+
   bold = color: {
     inherit color;
     bold = true;
   };
-  glamourEmber = pkgs.writeText "glamour-ember.json" (builtins.toJSON {
+  glamourStyle = pkgs.writeText "glamour-${palette.meta.slug}.json" (builtins.toJSON {
     document = {
       block_prefix = "\n";
       block_suffix = "\n";
@@ -30,14 +57,14 @@ let
       color = "8";
     };
     list.level_indent = 2;
-    heading = bold "1" // {
+    heading = bold (n "accent") // {
       block_suffix = "\n";
     };
     h1 = {
       prefix = " ";
       suffix = " ";
       color = "0";
-      background_color = "1";
+      background_color = n "accent";
       bold = true;
     };
     h2.prefix = "## ";
@@ -80,45 +107,45 @@ let
       prefix = " ";
       suffix = " ";
       color = "2";
-      background_color = "#${(import ../palette.nix).surface}";
+      background_color = palette.hash.surface;
     };
     code_block = {
       color = "7";
       margin = 2;
       chroma = {
-        text.color = slot.fg;
-        error = bold slot.accent;
+        text.color = xterm.white;
+        error = bold x.failure;
         comment = {
-          color = slot.comment;
+          color = comment;
           italic = true;
         };
-        comment_preproc.color = slot.gold;
-        keyword = bold slot.mauve;
-        keyword_reserved = bold slot.mauve;
-        keyword_namespace = bold slot.mauve;
-        keyword_type.color = slot.gold;
-        name_builtin.color = slot.steel;
-        name_tag.color = slot.mauve;
-        name_class = bold slot.accent;
-        name_constant.color = slot.sage;
-        name_decorator.color = slot.gold;
-        name_exception = bold slot.accent;
-        name_function.color = slot.accent;
-        literal_number.color = slot.sage;
-        literal_string.color = slot.olive;
-        literal_string_escape.color = slot.sage;
-        generic_deleted.color = slot.accent;
+        comment_preproc.color = x.emphasis;
+        keyword = bold x.structure;
+        keyword_reserved = bold x.structure;
+        keyword_namespace = bold x.structure;
+        keyword_type.color = x.emphasis;
+        name_builtin.color = x.metadata;
+        name_tag.color = x.structure;
+        name_class = bold x.definition;
+        name_constant.color = x.value;
+        name_decorator.color = x.emphasis;
+        name_exception = bold x.failure;
+        name_function.color = x.definition;
+        literal_number.color = x.value;
+        literal_string.color = x.string;
+        literal_string_escape.color = x.value;
+        generic_deleted.color = xterm.red;
         generic_emph.italic = true;
-        generic_inserted.color = slot.olive;
+        generic_inserted.color = xterm.green;
         generic_strong.bold = true;
-        generic_subheading.color = slot.comment;
+        generic_subheading.color = comment;
       };
     };
     definition_description.block_prefix = "\n🠶 ";
   });
 in
 {
-  home.sessionVariables.GLAMOUR_STYLE = "${glamourEmber}";
+  home.sessionVariables.GLAMOUR_STYLE = "${glamourStyle}";
 
   # Structural diffs for `git diff`; git.enable must be explicit, the module
   # no longer sets diff.external on its own.
