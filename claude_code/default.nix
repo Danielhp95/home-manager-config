@@ -7,14 +7,9 @@
 }:
 let
   pal = import ../palette.nix;
+  colour = import ../lib/colour.nix { inherit lib; };
   # "e08060" -> "224;128;96", the form the script's truecolor escapes take.
-  rgb =
-    hex:
-    lib.concatMapStringsSep ";" (i: toString (lib.fromHexString (builtins.substring i 2 hex))) [
-      0
-      2
-      4
-    ];
+  rgb = colour.rgbSemicolons;
 
   # `--stdin`, or piped input never reaches $in in a nu script. The script's
   # at-sign placeholders are palette colours; replaceVars fails the build on a
@@ -34,6 +29,14 @@ let
       "steel"
       "surface"
     ] (name: rgb pal.${name})
+    # extra.heat: the effort pill's three steps past accent.
+    // lib.listToAttrs (
+      lib.zipListsWith (level: hex: lib.nameValuePair "heat${level}" (rgb hex)) [
+        "High"
+        "Xhigh"
+        "Max"
+      ] pal.extra.heat
+    )
   );
   claude-statusline = pkgs.writeShellScriptBin "claude-statusline" ''
     exec ${lib.getExe pkgs.nushell} --stdin ${statuslineScript}

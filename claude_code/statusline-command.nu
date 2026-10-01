@@ -59,16 +59,16 @@ def main [] {
     cd $cwd
   }
 
-  # At-sign placeholders are palette.nix colours (replaceVars in default.nix);
-  # the three hotter effort embers have no palette slot.
+  # At-sign placeholders are palette.nix colours (replaceVars in default.nix):
+  # the slots by name, and extra.heat for the three hotter effort steps.
   let color_ash = "@ash@"
   let color_bg0 = "@bg@"
   let color_bg1 = "@surface@"
   let color_ember = "@accent@"
   let color_ember_dim = "@accentDim@"
-  let color_ember_high = "232;110;58"
-  let color_ember_xhigh = "245;90;46"
-  let color_ember_max = "255;66;46"
+  let color_ember_high = "@heatHigh@"
+  let color_ember_xhigh = "@heatXhigh@"
+  let color_ember_max = "@heatMax@"
   let color_error = "@error@"
   let color_fg1 = "@fgDim@"
   let color_fg_soft = "@fgSoft@"
