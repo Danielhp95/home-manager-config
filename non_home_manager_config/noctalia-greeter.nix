@@ -73,8 +73,8 @@ in
 
     # Same cursor as the session (hyprland/theming.nix).
     cursorTheme = {
-      package = pkgs.bibata-cursors;
-      name = "Bibata-Modern-Amber";
+      package = p.meta.cursor.package pkgs;
+      inherit (p.meta.cursor) name;
     };
 
     settings = {
@@ -107,7 +107,7 @@ in
         };
       };
 
-      cursor.size = 20;
+      cursor.size = p.meta.cursor.size;
 
       # Mirrors input.kb_layout / kb_options in hyprland/hyprland.lua.
       keyboard = {
