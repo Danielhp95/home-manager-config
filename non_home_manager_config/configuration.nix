@@ -45,6 +45,11 @@
           inherit (final.stdenv.hostPlatform) system;
           config.allowUnfree = true;
         };
+        # nixos-unstable at a date or commit: (pkgs.multiverse.at "2026-10-02").<name>.
+        multiverse = inputs.multiverse.lib.mkMultiverse {
+          inherit (final.stdenv.hostPlatform) system;
+          config.allowUnfree = true;
+        };
       }
     )
   ];

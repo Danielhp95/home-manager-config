@@ -18,7 +18,8 @@
     omnibin.url = "github:fzakaria/omnibin";
     omnibin.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Any nixpkgs release on demand: (inputs.multiverse.lib.mkMultiverse { … }).at "25.05".
+    # Any nixpkgs release, date or commit on demand: (pkgs.multiverse.at "25.05").<name>
+    # (the overlay in non_home_manager_config/configuration.nix).
     multiverse.url = "github:fzakaria/nixpkgs-multiverse";
 
     # hy3 builds against Hyprland's headers: pin both revs and move them

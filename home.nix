@@ -125,8 +125,11 @@ in
     # For the launcher entry; services.nextcloud-client below runs the client.
     nextcloud-client
 
+    # Unstable as of this date, not pkgs.stable: an app on an older glibc than
+    # the system's cannot load its Mesa, renders on the dGPU instead, and its
+    # NVIDIA buffers abort Hyprland. Move the date along with nixpkgs.
+    (pkgs.multiverse.at "2026-10-02").grayjay # video platform aggregator
     # From the release branch (pkgs.stable, the overlay in configuration.nix).
-    pkgs.stable.grayjay # video platform aggregator
     pkgs.stable.discord
 
     ### Basic utilities
