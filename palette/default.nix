@@ -6,5 +6,5 @@
 # terminal palette (`term` by name), `light` the light-mode set under the same
 # names, `meta` the palette's names and non-colour choices, `all` every
 # palette by slug.
-# (import ./lib.nix).select "ember"
-(import ./lib.nix).select "tokyo-night-violet"
+(import ./lib.nix).select "ember"
+# (import ./lib.nix).select "tokyo-night-violet"

@@ -240,8 +240,8 @@ in
       size = 20;
     };
     icons = {
-      package = pkgs: pkgs.morewaita-icon-theme;
-      name = "MoreWaita";
+      package = pkgs: pkgs.papirus-icon-theme;
+      name = "Papirus";
     };
     # Which base colourscheme danvim loads under its own overrides.
     nvim.family = "ember";

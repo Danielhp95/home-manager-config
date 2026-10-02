@@ -225,14 +225,22 @@ in
     };
     # Only seen where ~/.config/gtk-4.0/gtk.css is not read.
     adwaitaAccent = "purple";
-    cursor = {
-      package = pkgs: pkgs.catppuccin-cursors.mochaMauve;
-      name = "catppuccin-mocha-mauve-cursors";
-      size = 24; # the theme ships 12, 18, 24, 30, …; not 20
+    # Ember's pointer with the amber swapped for the accent (./bibata.nix).
+    cursor = rec {
+      package =
+        pkgs:
+        pkgs.callPackage ./bibata.nix { } {
+          inherit name;
+          body = dark.accent;
+          outline = "ffffff";
+          watch = dark.bg;
+        };
+      name = "Bibata-Modern-Violet";
+      size = 20;
     };
     icons = {
-      package = pkgs: pkgs.morewaita-icon-theme;
-      name = "MoreWaita";
+      package = pkgs: pkgs.papirus-icon-theme;
+      name = "Papirus";
     };
     nvim.family = "tokyonight";
     # kitty's cursor trail: violet body, deeper violet edge.
