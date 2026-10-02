@@ -4,10 +4,12 @@ Run-list panel (entry "panel" of dani/dart): header -> filter bar -> run cards.
 A collapsed card is a header row plus one row of tag chips; expanding adds
 the full tags, an info line, the description, a tag editor and the actions.
 Right-clicking any header button opens the same actions as a context menu.
+Pinned runs lead the list on a lighter card and stay there under any filter.
 
-Data: service.luau polls and publishes "runs"/"error"/"busy" over
-noctalia.state; the panel only requests refreshes. Mutations (run and tag
-actions) run here via noctalia.runAsync, then request a refresh.
+Data: service.luau polls and publishes "runs"/"pinned_runs"/"error"/"busy"
+over noctalia.state; the panel only requests refreshes and publishes the
+"pinned" ids. Mutations (run and tag actions) run here via noctalia.runAsync,
+then request a refresh.
 
 Conventions:
 - Colors are palette-role tokens, so the shell's theme applies.
@@ -49,6 +51,7 @@ local STATE_COLOR = {
 	cancel_requested = "on_surface_variant",
 	canceling = "on_surface_variant",
 	canceled = "on_surface_variant",
+	gone = "on_surface_variant", -- a pinned run dart no longer returns (service.luau)
 }
 
 -- States `dart run cancel` accepts (dart_client/api.py). Suspend is only legal
@@ -89,6 +92,30 @@ local customFilter = noctalia.state.get("custom_filter") -- verbatim filter args
 local filterDraft = customFilter or "" -- filter input text, tracked via onChange
 local filterGen = 0 -- bumped to re-key (reseed) the filter input
 
+-- Pins. The ids (newest first) are the panel's to change and the service's to
+-- persist; the service answers with their rows, which keep a pinned run on
+-- screen when the list no longer holds it.
+local pinned, pinnedSet = {}, {} -- id array, and the same ids as a set
+local pinnedRow = {} -- id -> row, from "pinned_runs"
+
+local function setPins(ids)
+	pinned, pinnedSet = {}, {}
+	for _, id in ipairs(type(ids) == "table" and ids or {}) do
+		pinned[#pinned + 1] = id
+		pinnedSet[id] = true
+	end
+end
+
+local function setPinnedRows(rows)
+	pinnedRow = {}
+	for _, r in ipairs(type(rows) == "table" and rows or {}) do
+		pinnedRow[r.id] = r
+	end
+end
+
+setPins(noctalia.state.get("pinned"))
+setPinnedRows(noctalia.state.get("pinned_runs"))
+
 local render -- fwd decl; defined in the render section
 
 -- ═══════════════════════════════════════════════ run metadata helpers ═══
@@ -114,14 +141,15 @@ local function describe(run)
 end
 
 -- The context menu carries only a run id (see openRunMenu), so items that need
--- more of the run than its id look it up in the current list.
+-- more of the run than its id look it up in the current list, then among the
+-- pinned runs the list doesn't hold.
 local function runById(id)
 	for _, r in ipairs(runs) do
 		if r.id == id then
 			return r
 		end
 	end
-	return nil
+	return pinnedRow[id]
 end
 
 -- Tags worth showing as chips (the description= tag is prose, not a tag).
@@ -215,6 +243,22 @@ local function filterByTag(tag)
 	applyFilter("--tag-ss " .. common.quoteWord(tag))
 end
 
+-- Pin or unpin a run; a new pin goes first. The service persists the ids.
+local function togglePin(id)
+	local ids = {}
+	if not pinnedSet[id] then
+		ids[1] = id
+	end
+	for _, p in ipairs(pinned) do
+		if p ~= id then
+			ids[#ids + 1] = p
+		end
+	end
+	setPins(ids)
+	noctalia.state.set("pinned", ids)
+	render()
+end
+
 -- The run page URL, or nil when the id can't be a path segment: one guard for
 -- both the open and the link button.
 local function runUrl(id)
@@ -297,6 +341,9 @@ local function runAction(action, id)
 			local mod = noctalia.json.decode(res.stdout)
 			if type(mod) == "table" and mod.successful_ids and #mod.successful_ids > 0 then
 				noctalia.notify("dart " .. action, table.concat(mod.successful_ids, ", "))
+				if action == "delete" and pinnedSet[id] then
+					togglePin(id) -- else the pin lingers as a "gone" card
+				end
 			elseif type(mod) == "table" and mod.noop_ids and #mod.noop_ids > 0 then
 				noctalia.notify("dart " .. action, id .. ": no-op")
 			else
@@ -470,6 +517,7 @@ local function openRunMenu(run)
 	end
 	items[#items + 1] = { kind = "item", id = "logs", label = "Logs (download, browse in yazi)" }
 	items[#items + 1] = { kind = "item", id = "tags", label = "Edit tags" }
+	items[#items + 1] = { kind = "item", id = "pin", label = pinnedSet[run.id] and "Unpin" or "Pin to top" }
 	items[#items + 1] = { kind = "separator" }
 	items[#items + 1] = { kind = "item", id = "suspend", label = "Suspend", enabled = free and run.state == "running" }
 	items[#items + 1] =
@@ -481,10 +529,11 @@ local function openRunMenu(run)
 	panel.openContextMenu({ onActivate = "onRunMenu", context = run.id, items = items })
 end
 
--- Card header: state dot | run id | open | copy | link | commit | project |
--- uptime | created (local tz) | priority | state pill | chevron. The id is a
--- label beside buttons, because only buttons carry tooltips and onRightClick.
-local function cardHeader(run, expanded, color)
+-- Card header: state dot | run id | open | copy | link | pin | commit |
+-- project | uptime | created (local tz) | priority | state pill | chevron. The
+-- id is a label beside buttons, because only buttons carry tooltips and
+-- onRightClick.
+local function cardHeader(run, expanded, color, isPinned)
 	-- Every header control answers right-click with the run menu.
 	local menu = function()
 		openRunMenu(run)
@@ -521,6 +570,16 @@ local function cardHeader(run, expanded, color)
 			tooltip = "Copy run URL (right-click: menu)",
 			onClick = function()
 				copyRunUrl(run.id)
+			end,
+			onRightClick = menu,
+		}),
+		ui.button({
+			glyph = isPinned and "pinned-filled" or "pin",
+			variant = "ghost",
+			controlSize = "sm",
+			tooltip = (isPinned and "Unpin" or "Pin to top") .. " (right-click: menu)",
+			onClick = function()
+				togglePin(run.id)
 			end,
 			onRightClick = menu,
 		}),
@@ -656,6 +715,7 @@ end
 
 -- Action buttons. Cancel/delete swap the row for an inline confirm (the CLI
 -- has none); suspend/resume act at once. Gating mirrors dart_client's states.
+-- Cancel, the most used, sits rightmost.
 local function actionButtons(run)
 	if pending and pending.id == run.id then
 		return {
@@ -711,19 +771,17 @@ local function actionButtons(run)
 			render()
 		end,
 	})
-	if CANCELABLE[run.state] then
-		btns[#btns + 1] = ui.button({
-			text = "Cancel",
-			glyph = "player-stop",
-			variant = "outline",
-			controlSize = "sm",
-			enabled = enabled,
-			onClick = function()
-				pending = { id = run.id, action = "cancel" }
-				render()
-			end,
-		})
-	end
+	btns[#btns + 1] = ui.button({
+		text = "Delete",
+		glyph = "trash",
+		variant = "destructive",
+		controlSize = "sm",
+		enabled = enabled,
+		onClick = function()
+			pending = { id = run.id, action = "delete" }
+			render()
+		end,
+	})
 	if run.state == "running" then
 		btns[#btns + 1] = ui.button({
 			text = "Suspend",
@@ -748,17 +806,19 @@ local function actionButtons(run)
 			end,
 		})
 	end
-	btns[#btns + 1] = ui.button({
-		text = "Delete",
-		glyph = "trash",
-		variant = "destructive",
-		controlSize = "sm",
-		enabled = enabled,
-		onClick = function()
-			pending = { id = run.id, action = "delete" }
-			render()
-		end,
-	})
+	if CANCELABLE[run.state] then
+		btns[#btns + 1] = ui.button({
+			text = "Cancel",
+			glyph = "player-stop",
+			variant = "outline",
+			controlSize = "sm",
+			enabled = enabled,
+			onClick = function()
+				pending = { id = run.id, action = "cancel" }
+				render()
+			end,
+		})
+	end
 	if actionBusy == run.id then
 		btns[#btns + 1] = ui.label({ text = "working...", color = "on_surface_variant", fontSize = 12 })
 	end
@@ -766,12 +826,14 @@ local function actionButtons(run)
 end
 
 -- One run card. Cards carry their own fill so runs read as clearly delimited
--- blocks; the expanded card gets a stronger fill plus an outline border.
+-- blocks; the expanded card gets a stronger fill plus an outline border, and
+-- a pinned card sits a step lighter than its unpinned twin.
 local function runCard(run)
 	local expanded = (expandedId == run.id)
+	local isPinned = pinnedSet[run.id] == true
 	local color = stateColor(run.state)
 
-	local children = { cardHeader(run, expanded, color) }
+	local children = { cardHeader(run, expanded, color, isPinned) }
 	for _, rowNode in ipairs(chipRowNodes(run, expanded)) do
 		children[#children + 1] = rowNode
 	end
@@ -813,8 +875,12 @@ local function runCard(run)
 		gap = 6,
 		padding = 10,
 		radius = 14,
-		fill = expanded and "surface_variant/0.75" or "surface_variant/0.35",
 	}
+	if isPinned then
+		props.fill = expanded and "surface_variant/1.0" or "surface_variant/0.85"
+	else
+		props.fill = expanded and "surface_variant/0.75" or "surface_variant/0.35"
+	end
 	if expanded then
 		props.border = "outline/0.5"
 		props.borderWidth = 1
@@ -909,21 +975,39 @@ render = function()
 				maxWidth = 700,
 			}),
 		})
-	elseif #runs == 0 then
-		body = centered({
-			ui.glyph({ name = "target-arrow", size = 40, color = "on_surface_variant/0.6" }),
-			ui.label({
-				text = busy and "Loading runs..." or (customFilter and "No runs match the filter" or "No active runs"),
-				color = "on_surface_variant",
-				fontSize = 14,
-			}),
-		})
 	else
-		local cards = {}
+		-- Pinned cards lead, in pin order, on the list's row when it has one;
+		-- the list follows without them.
+		local cards, rest, listed = {}, {}, {}
 		for _, run in ipairs(runs) do
-			cards[#cards + 1] = runCard(run)
+			if pinnedSet[run.id] then
+				listed[run.id] = run
+			else
+				rest[#rest + 1] = runCard(run)
+			end
 		end
-		body = ui.scroll({ flexGrow = 1, gap = 8 }, cards)
+		for _, id in ipairs(pinned) do
+			local run = listed[id] or pinnedRow[id]
+			if run then
+				cards[#cards + 1] = runCard(run)
+			end
+		end
+		local empty = busy and "Loading runs..." or (customFilter and "No runs match the filter" or "No active runs")
+		if #cards == 0 and #rest == 0 then
+			body = centered({
+				ui.glyph({ name = "target-arrow", size = 40, color = "on_surface_variant/0.6" }),
+				ui.label({ text = empty, color = "on_surface_variant", fontSize = 14 }),
+			})
+		else
+			if #rest == 0 then -- only pins on screen: say the list itself is empty
+				cards[#cards + 1] = ui.row({ justify = "center", padding = 8 }, {
+					ui.label({ text = empty, color = "on_surface_variant", fontSize = 12 }),
+				})
+			else
+				table.move(rest, 1, #rest, #cards + 1, cards)
+			end
+			body = ui.scroll({ flexGrow = 1, gap = 8 }, cards)
+		end
 	end
 
 	panel.render(ui.column({ flexGrow = 1, gap = 12 }, {
@@ -949,6 +1033,14 @@ noctalia.state.watch("busy", function(v)
 end)
 noctalia.state.watch("muted", function(v)
 	muted = v and true or false
+	render()
+end)
+noctalia.state.watch("pinned", function(v)
+	setPins(v)
+	render()
+end)
+noctalia.state.watch("pinned_runs", function(v)
+	setPinnedRows(v)
 	render()
 end)
 
@@ -1017,6 +1109,8 @@ function onRunMenu(itemId, runId)
 	elseif itemId == "tags" then
 		expandedId, editTagsId, editingOldTag = runId, runId, nil
 		render()
+	elseif itemId == "pin" then
+		togglePin(runId)
 	elseif itemId == "suspend" or itemId == "resume" then
 		runAction(itemId, runId)
 	elseif itemId == "cancel" or itemId == "delete" then
@@ -1029,10 +1123,13 @@ end
 -- Scripting hooks:
 --   noctalia msg plugin dani/dart:panel all open <run-id>
 --   noctalia msg plugin dani/dart:panel all filter "--states success --limit 5"
--- (an empty filter payload resets to the default query)
+--   noctalia msg plugin dani/dart:panel all pin <run-id>
+-- (an empty filter payload resets to the default query; pin toggles)
 function onIpc(event, payload)
 	if event == "open" and type(payload) == "string" then
 		openInBrowser(payload)
+	elseif event == "pin" and validRunId(payload) then
+		togglePin(payload)
 	elseif event == "filter" then
 		filterGen += 1
 		applyFilter(type(payload) == "string" and payload or "")

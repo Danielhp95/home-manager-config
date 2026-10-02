@@ -4,15 +4,17 @@ Poller service (entry "poller" of dani/dart): the only entry that runs `dart run
 filter`. Widgets get one VM per output, so the one poll loop lives here.
 
 Publishes over noctalia.state:
-  "runs"       slimmed run list (fields: slim.nu)
-  "error"      user-facing error string, nil when healthy
-  "busy"       true while a poll is in flight
-  "fetched_at" unix seconds of the last successful poll
+  "runs"        slimmed run list (fields: slim.nu)
+  "pinned_runs" rows of the pinned runs, in pin order (same fields)
+  "error"       user-facing error string, nil when healthy
+  "busy"        true while a poll is in flight
+  "fetched_at"  unix seconds of the last successful poll
 
 Listens on:
   "command"       { op = "refresh", nonce } -> re-poll now (widget/panel ask)
   "custom_filter" verbatim `dart run filter` args from the panel's filter bar
   "muted"         bool; true suspends transition toasts (panel's bell button)
+  "pinned"        run ids pinned in the panel, newest first; persisted here
 
 Also toasts every run state transition between two polls (clickable: opens the
 run's page).
@@ -264,6 +266,99 @@ local function diffAndNotify(runs)
 	resolveVanished(vanished)
 end
 
+-- ── Pinned runs ─────────────────────────────────────────────────────────────
+-- A pinned run stays in the panel whatever the filter, and after it leaves the
+-- active set. The ids persist across restarts; after each poll the pinned runs
+-- the list did not return are re-queried by id, with no --states/--username-ss.
+local PINS_PATH = DATA_DIR .. "/pinned.json"
+
+-- Whatever came off the state bus or the file -> a clean id array.
+local function pinList(value)
+	local ids, dup = {}, {}
+	if type(value) == "table" then
+		for _, id in ipairs(value) do
+			if common.validRunId(id) and not dup[id] then
+				dup[id] = true
+				ids[#ids + 1] = id
+			end
+		end
+	end
+	return ids
+end
+
+local function byId(rows)
+	local map = {}
+	for _, r in ipairs(rows) do
+		if type(r) == "table" and r.id then
+			map[r.id] = r
+		end
+	end
+	return map
+end
+
+local pinnedIds = pinList((noctalia.json.decode(noctalia.readFile(PINS_PATH) or "")))
+-- Last row seen per pinned id, seeded from the bus so a hot reload keeps them.
+local pinnedRows = byId(noctalia.state.get("pinned_runs") or {})
+local lastRuns = noctalia.state.get("runs") or {}
+local pinGen = 0 -- drops an id query overtaken by a newer poll's
+
+local function publishPinned()
+	local rows = {}
+	for _, id in ipairs(pinnedIds) do
+		rows[#rows + 1] = pinnedRows[id]
+	end
+	noctalia.state.set("pinned_runs", rows)
+end
+
+-- Called after each poll: a pinned run takes the list's row when it has one,
+-- the rest share one --id-ss query (substring match, hence the exact lookup).
+-- dart hides deleted runs, so one the query stops returning is kept as "gone"
+-- rather than dropped: its card stays until it is unpinned.
+local function refreshPinned(runs)
+	if #pinnedIds == 0 then
+		return
+	end
+	local listed, missing = byId(runs), {}
+	for _, id in ipairs(pinnedIds) do
+		if listed[id] then
+			pinnedRows[id] = listed[id]
+		else
+			missing[#missing + 1] = id
+		end
+	end
+	publishPinned()
+	if #missing == 0 then
+		return
+	end
+	pinGen += 1
+	local gen = pinGen
+	local argv = slimmed({ "--id-ss", table.concat(missing, ","), "--limit", tostring(LIMIT), "--detailed" })
+	noctalia.runAsync(argv, function(res)
+		if gen ~= pinGen or res.timedOut or res.exitCode ~= 0 then
+			return -- keep the last rows
+		end
+		local rows = noctalia.json.decode(res.stdout)
+		if type(rows) ~= "table" then
+			return
+		end
+		local landed, stillPinned = byId(rows), {}
+		for _, id in ipairs(pinnedIds) do
+			stillPinned[id] = true
+		end
+		for _, id in ipairs(missing) do
+			if stillPinned[id] then
+				local row = landed[id]
+				if not row then
+					row = pinnedRows[id] and table.clone(pinnedRows[id]) or { id = id, tags = {}, state_info = "" }
+					row.state = "gone"
+				end
+				pinnedRows[id] = row
+			end
+		end
+		publishPinned()
+	end, 20000)
+end
+
 -- Interpret one poll result and publish it.
 local function handleResult(res, diffable)
 	if res.timedOut then
@@ -290,6 +385,8 @@ local function handleResult(res, diffable)
 	noctalia.state.set("error", nil)
 	noctalia.state.set("runs", runs)
 	noctalia.state.set("fetched_at", os.time())
+	lastRuns = runs
+	refreshPinned(runs)
 	if diffable then
 		diffAndNotify(runs)
 	end
@@ -340,6 +437,31 @@ end
 
 noctalia.state.watch("command", function(cmd)
 	if type(cmd) == "table" and cmd.op == "refresh" then
+		refresh()
+	end
+end)
+
+-- Published before the watch below is registered, so the service's own set
+-- doesn't come back through it.
+noctalia.state.set("pinned", pinnedIds)
+publishPinned()
+
+-- The panel pinned or unpinned a run. A pin clicked in the panel is on a run
+-- the service already holds a row for; only an id pinned over IPC needs a poll.
+noctalia.state.watch("pinned", function(value)
+	pinnedIds = pinList(value)
+	local encoded = noctalia.json.encode(pinnedIds, false)
+	if encoded then
+		noctalia.writeFile(PINS_PATH, encoded)
+	end
+	local listed, rows, unknown = byId(lastRuns), {}, false
+	for _, id in ipairs(pinnedIds) do
+		rows[id] = pinnedRows[id] or listed[id]
+		unknown = unknown or rows[id] == nil
+	end
+	pinnedRows = rows
+	publishPinned()
+	if unknown then
 		refresh()
 	end
 end)

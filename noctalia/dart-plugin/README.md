@@ -21,6 +21,11 @@ tooltip, `!` on CLI errors. Click toggles the panel.
   as in a shell, but no shell runs the text: `$`, `;` and `|` are plain
   characters. A tag chip searches for its tag; an empty filter shows your
   active runs.
+- **Pin** (pin button, or the right-click menu): the run moves to the top on a
+  lighter card and stays there under any filter, and after it leaves the active
+  set, until it is unpinned. Pins survive restarts. A pinned run that dart no
+  longer returns (deleted elsewhere) shows as `gone`; deleting one from the
+  panel unpins it.
 - **Actions**, gated by `dart_client`'s state machine: Cancel and Delete (with
   an inline confirm, since the CLI has none), Suspend (from `running`), Resume
   (from `suspended_manual`).
@@ -47,8 +52,9 @@ panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 - `plugin.toml`: entries, panel geometry, settings.
 - `common.luau`: the run-page URL, the run-id guard, the refresh request, and
   the shell-style word splitter behind the filter bar and `$BROWSER`.
-- `service.luau`: the only place `dart run filter` runs; publishes state and
-  raises the toasts.
+- `service.luau`: the only place `dart run filter` runs; publishes state,
+  raises the toasts, and keeps the pinned runs' rows fresh (one extra `--id-ss`
+  query per poll, only for pins the list did not return).
 - `panel.luau`: all interactive UI; runs the mutations, then requests a re-poll.
 - `widget.luau`: the bar badge; no CLI calls, no tick.
 - `slim.nu`: cuts the ~142 KB `--detailed` JSON to the ~10 KB the UI shows,
@@ -77,12 +83,14 @@ out of the store, enables `dani/dart` and puts the `dart` widget in the bar.
 - Drive it: `noctalia msg panel-toggle dani/dart:panel`,
   `noctalia msg plugin dani/dart:panel all filter "--states success"`,
   `noctalia msg plugin dani/dart:panel all open <run-id>`,
+  `noctalia msg plugin dani/dart:panel all pin <run-id>` (toggles),
   `noctalia msg plugin dani/dart:widget focused refresh ""`
 
 ## Gotchas
 
 - `noctalia.state` is in memory: a plugin disable/enable (not a hot reload)
-  clears the run cache, the filter and the mute.
+  clears the run cache, the filter and the mute. Pins are the exception: the
+  service keeps them in `pinned.json` under the plugin data dir.
 - The Logs button needs `logcli` on PATH (`pkgs.grafana-loki`, ../default.nix).
 - `slim.nu` needs `nu` at `nu_path`: the per-user profile symlink from
   `programs.nushell` (`../../terminal/nushell.nix`), which survives rebuilds.
