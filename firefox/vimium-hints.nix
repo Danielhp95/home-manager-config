@@ -1,7 +1,13 @@
 # Vimium's link-hint and vomnibar CSS (userDefinedLinkHintCss), in the selected
 # palette: hints are accent on a deep ground, the vomnibar is a bgAlt card, and
-# the selected row is the accent at a quarter strength so its text keeps
-# contrast. White stays white for the characters already typed.
+# the selected row is a wash of the bar's focused workspace pill (noctalia's
+# primary role, ../noctalia/material.nix): the solid pill is too stark across a
+# full-width row, so it is laid over the card at 25% and the text goes one step
+# brighter instead of dark. White stays white for the characters already typed.
+#
+# The vomnibar's class names are Vimium 2.x's (pages/vomnibar_page.css in the
+# xpi); a selector that matches nothing fails silently, and Vimium's own dark
+# sheet shows through.
 { lib, p }:
 let
   h = c: "#${c}";
@@ -12,6 +18,7 @@ let
       ch = i: toString (lib.fromHexString (builtins.substring (2 * i) 2 c));
     in
     "rgba(${ch 0}, ${ch 1}, ${ch 2}, ${a})";
+  primary = p.${p.roles.material.primary};
 in
 ''
   /* Generated from palette/ (firefox/vimium-hints.nix). */
@@ -32,23 +39,18 @@ in
     text-shadow: none;
   }
 
-  input#vomnibarInput.vimiumReset {
-    color: ${h p.fg} !important;
-    background-color: ${h p.bgDeep} !important;
-  }
-
   #vomnibar {
     border-color: ${rgba p.accent "0.35"};
     background-color: ${h p.bgAlt};
     box-shadow: 0em 0.1em 0.6em 0.1em ${rgba p.accent "0.35"};
   }
 
-  #vomnibar .vomnibarSearchArea {
+  #vomnibar-search-area {
     background-color: ${h p.bgAlt};
     border-bottom: ${rgba p.accent "0.35"};
   }
 
-  #vomnibar li .vomnibarTopHalf .vomnibarSource {
+  #vomnibar li .source {
     color: ${h p.accent};
   }
 
@@ -66,24 +68,33 @@ in
     border-bottom: ${h p.border};
   }
 
-  #vomnibar li .vomnibarUrl {
+  #vomnibar li .url {
     color: ${h p.accent};
   }
 
-  #vomnibar li .vomnibarMatch {
+  #vomnibar li .match {
     color: #ffffff;
   }
 
-  #vomnibar li.vomnibarSelected {
-    background-color: ${rgba p.accent "0.25"};
-  }
-
-  #vomnibar li em .vomnibarMatch, #vomnibar li .vomnibarTitle .vomnibarMatch {
+  #vomnibar li em .match, #vomnibar li .title .match {
     color: #ffffff;
   }
 
-  #vomnibar li em, #vomnibar li .vomnibarTitle {
+  #vomnibar li em, #vomnibar li .title {
     color: ${h p.fgSoft};
+  }
+
+  /* Last: it ties the rules above on specificity and wins on order. */
+  #vomnibar li.selected {
+    background-color: ${rgba primary "0.25"};
+  }
+
+  #vomnibar li.selected :is(.title, em) {
+    color: ${h p.fg};
+  }
+
+  #vomnibar li.selected :is(.source, .url) {
+    color: ${h p.accentBright};
   }
 
   /* Link hint matching characters */
