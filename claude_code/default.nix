@@ -169,8 +169,9 @@ in
     # Personal, cross-project skills.
     skills = {
       # A file (not a directory) links only SKILL.md, so the skill directory
-      # stays writable for the state.json and reports/ the skill writes there.
-      neovim-news-update = ./skills/neovim-news-update/SKILL.md;
+      # stays writable for the per-repo state, notes and reports the skill
+      # writes there (the shipped profiles are linked below).
+      repo-news = ./skills/repo-news/SKILL.md;
 
       # obra/superpowers: brainstorm -> plan -> execute, plus its disciplines.
       brainstorming = superpower "brainstorming";
@@ -285,4 +286,14 @@ in
   };
 
   home.packages = [ claude-statusline ];
+
+  # repo-news's shipped profiles, one per directory under skills/repo-news/repos.
+  # Linked a file at a time so each repos/<slug>/ stays writable; profiles the
+  # skill creates at runtime are plain files beside them.
+  home.file = lib.mapAttrs' (
+    slug: _:
+    lib.nameValuePair ".claude/skills/repo-news/repos/${slug}/profile.md" {
+      source = ./skills/repo-news/repos/${slug}/profile.md;
+    }
+  ) (builtins.readDir ./skills/repo-news/repos);
 }
