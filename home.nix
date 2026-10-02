@@ -61,6 +61,7 @@ in
     ./kitty
     ./ghostty
     ./ipython
+    ./matplotlib.nix
 
     ./hyprland
     ./noctalia
