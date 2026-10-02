@@ -30,8 +30,9 @@ let
     fi
     unset __profile_modules __profile_kernel
   '';
-  # Ember for zsh-syntax-highlighting, in starship's voice: commands coral,
-  # strings olive, paths gold, options/interpolation steel, structure mauve.
+  # The palette for zsh-syntax-highlighting, in starship's voice: commands the
+  # accent, options its dim step, paths lavender, strings olive, interpolation
+  # steel, structure mauve.
   syntaxHighlightStyles = {
     command = "fg=${p.accent}";
     builtin = "fg=${p.accent}";
@@ -58,12 +59,13 @@ let
     named-fd = "fg=${p.sage}";
     numeric-fd = "fg=${p.sage}";
 
-    path = "fg=${p.gold}";
-    path_prefix = "fg=${p.gold}";
+    # lavender ink; the underline keeps an existing path distinct from plain words
+    path = "fg=${p.fgSoft},underline";
+    path_prefix = "fg=${p.fgDim},underline";
     path_pathseparator = "fg=${p.muted}";
     path_prefix_pathseparator = "fg=${p.muted}";
-    single-hyphen-option = "fg=${p.steel}";
-    double-hyphen-option = "fg=${p.steel}";
+    single-hyphen-option = "fg=${p.accentDim}";
+    double-hyphen-option = "fg=${p.accentDim}";
 
     reserved-word = "fg=${p.mauve}";
     globbing = "fg=${p.mauve}";
@@ -78,10 +80,10 @@ let
     arg0 = "fg=${p.fg}";
     default = "fg=${p.fg}";
 
-    bracket-level-1 = "fg=${p.steel}";
-    bracket-level-2 = "fg=${p.gold}";
-    bracket-level-3 = "fg=${p.sage}";
-    bracket-level-4 = "fg=${p.mauve}";
+    bracket-level-1 = "fg=${p.accentBright}";
+    bracket-level-2 = "fg=${p.mauve}";
+    bracket-level-3 = "fg=${p.accentDim}";
+    bracket-level-4 = "fg=${p.sage}";
     bracket-error = "fg=${p.error}";
     cursor-matchingbracket = "fg=${p.accentBright},bold";
   };
