@@ -1,8 +1,8 @@
 { ... }:
 let
-  # Ember palette from palette.nix. The pill/slab powerline language (E0B6
+  # Ember palette from palette/. The pill/slab powerline language (E0B6
   # open, E0B4 close, E0B0 flame trail) is shared with tmux's status bar.
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 
   # One graphite pill per language module. The icons are real PUA glyphs:
   # grep-verify codepoints after any edit (tooling has silently dropped them).

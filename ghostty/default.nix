@@ -5,7 +5,7 @@
 # tmux. Its bundled Nerd Font fallback makes kitty's symbol_map unnecessary.
 
 let
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 in
 {
   programs.ghostty = {
@@ -17,7 +17,7 @@ in
       # kitty's adjust_line_height 117%: ghostty takes the increase.
       adjust-cell-height = "17%";
 
-      # ── Colors: Ember, from ../palette.nix ─────────────────────────────────
+      # ── Colors: Ember, from ../palette/ ─────────────────────────────────
       background = p.bg;
       foreground = p.fg;
       selection-background = p.border;

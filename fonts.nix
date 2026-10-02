@@ -1,4 +1,4 @@
-# Font families by role (fontconfig names), the counterpart of palette.nix;
+# Font families by role (fontconfig names), the counterpart of palette/;
 # `packages` provides them. Hand-kept copies: the hy3 tab font in hyprland.lua
 # and --mono in the start page's style.css. GRUB's and the start page's display
 # fonts are deliberate one-offs.

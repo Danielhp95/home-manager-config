@@ -1,5 +1,5 @@
 -- Hyprland config in Lua. Home Manager prepends the hy3 plugin load, its
--- session hooks and the `palette` / `fonts` locals (palette.nix and fonts.nix
+-- session hooks and the `palette` / `fonts` locals (palette/ and fonts.nix
 -- as "rgb(...)" colours and family names, see hyprland/default.nix).
 --
 -- hl.plugin.load only registers hy3: it loads after the first parse, which then

@@ -4,7 +4,7 @@
   ...
 }:
 let
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 
   # https://github.com/yazi-rs/plugins — this pin MUST track nixpkgs' yazi
   # (26.9.1; this rev targets 26.8.15 and runs clean on 26.9.1): the plugin API
@@ -306,7 +306,7 @@ in
         run = "plugin yamb -- delete_all";
       }
     ];
-    # Ember from ../palette.nix. yazi silently ignores unknown theme keys, so a
+    # Ember from ../palette/. yazi silently ignores unknown theme keys, so a
     # typo or renamed key just reverts to the preset (v26 moved the hover styles
     # from [mgr] to [indicator]). No [app].overall bg: the terminal paints it.
     theme = {

@@ -6,7 +6,7 @@
 # `nix flake update spicetify-nix`.
 
 let
-  p = (import ./palette.nix);
+  p = (import ./palette);
   spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {

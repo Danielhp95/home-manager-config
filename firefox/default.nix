@@ -18,7 +18,7 @@
 # programs.firefox.policies.ExtensionSettings with an AMO install_url.
 
 let
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 
   # Shared with the start page's service and ./vimium.nix.
   startPage = import ./firefox-start-page-wanderer/shared.nix;

@@ -2,7 +2,7 @@
 # to violet (OKLCH h ~296) and the neighbours of the violet accent moved clear
 # of it: blue is a soft steel blue, keywords a light rose, error a true red.
 #
-# The shape is fixed by ./default.nix, which rejects a missing, misspelt or
+# The shape is fixed by ./lib.nix, which rejects a missing, misspelt or
 # malformed entry. Colours are bare lowercase hex.
 let
   dark = {

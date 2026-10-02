@@ -6,7 +6,7 @@
 }:
 
 let
-  palette = import ../palette.nix;
+  palette = import ../palette;
   vicinae = config.programs.vicinae.package;
 
   # The two dmenu-style pickers, on PATH by name (hyprland.lua binds them).

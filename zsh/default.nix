@@ -16,7 +16,7 @@ let
     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
   '';
   fileManager = "yazi";
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
   # Warns when the booted kernel no longer matches the system profile's (its
   # modules can be GC'd); the running-system half of
   # non_home_manager_config/esp-check.nix.

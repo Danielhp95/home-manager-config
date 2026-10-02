@@ -5,8 +5,8 @@
 }:
 
 let
-  # Bare hex (no leading '#'), palette.nix's native form.
-  pal = import ./palette.nix;
+  # Bare hex (no leading '#'), the palette's native form.
+  pal = import ./palette;
 in
 {
 
@@ -95,7 +95,7 @@ in
   };
 
   # A flat background instead of imv's default checkerboard, and an Ember
-  # status line. imv takes bare hex, palette.nix's native form.
+  # status line. imv takes bare hex, the palette's native form.
   programs.imv = {
     enable = true;
     settings.options = {

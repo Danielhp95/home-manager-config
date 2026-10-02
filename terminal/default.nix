@@ -5,7 +5,7 @@
   ...
 }:
 let
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 
   # atuin's PTY proxy keeps a shadow vt100, so the Ctrl-R popup draws over the
   # scrollback and restores it. Not atuin's `[pty_proxy] enabled`: that execs

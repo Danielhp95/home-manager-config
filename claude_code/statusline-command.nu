@@ -59,7 +59,7 @@ def main [] {
     cd $cwd
   }
 
-  # At-sign placeholders are palette.nix colours (replaceVars in default.nix):
+  # At-sign placeholders are palette/ colours (replaceVars in default.nix):
   # the slots by name, and extra.heat for the three hotter effort steps.
   let color_ash = "@ash@"
   let color_bg0 = "@bg@"

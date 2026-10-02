@@ -5,7 +5,7 @@
   ...
 }:
 let
-  palette = import ../palette.nix;
+  palette = import ../palette;
 
   # gh's markdown style (GLAMOUR_STYLE): glamour's dark.json through the
   # terminal's ANSI slots, token roles from palette.roles.ansi (shared with

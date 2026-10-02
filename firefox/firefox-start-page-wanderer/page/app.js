@@ -208,7 +208,7 @@ function renderMachine(section) {
     "machine-body",
     el("p", {}, joined(system)),
     // The disk number carries a glyph when it is in the red, because palette
-    // error and accent are near-equiluminant (see ../../palette.nix).
+    // error and accent are near-equiluminant (see ../../palette/).
     el(
       "p",
       { class: diskClass },

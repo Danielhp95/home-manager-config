@@ -5,7 +5,7 @@
 # profile that never chose a theme (the choice lives in account data).
 
 let
-  p = (import ./palette.nix).hash;
+  p = (import ./palette).hash;
 in
 {
   # Installs Element and writes `settings` to ~/.config/Element/config.json.

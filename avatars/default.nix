@@ -4,5 +4,5 @@
 pkgs.callPackage ./recolour.nix { } {
   src = ./ratchet.png;
   from = "2a2825";
-  to = (import ../palette.nix).surface;
+  to = (import ../palette).surface;
 }

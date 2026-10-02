@@ -193,7 +193,7 @@
 
   # The terminals' ANSI 0-15, so the LUKS prompt and ttys are Ember.
   # Set via kernel params: takes effect on the next boot.
-  console.colors = (import ../palette.nix).ansi;
+  console.colors = (import ../palette).ansi;
 
   time.timeZone = "America/New_York";
 

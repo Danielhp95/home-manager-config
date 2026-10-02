@@ -1,5 +1,5 @@
 /* Firefox chrome in the Ember palette; ./default.nix prepends the `--ember-*`
- * colours from ../palette.nix. Firefox renames parts and variables between
+ * colours from ../palette/. Firefox renames parts and variables between
  * versions: if a rule stops applying, look it up in the Browser Toolbox.
  */
 

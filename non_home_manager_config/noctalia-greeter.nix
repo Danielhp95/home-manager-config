@@ -2,7 +2,7 @@
 # https://docs.noctalia.dev/greeter/configuration/
 { lib, pkgs, ... }:
 let
-  p = import ../palette.nix;
+  p = import ../palette;
   material = import ../noctalia/material.nix { inherit lib; };
 
   # The greeter sets only XDG_SESSION_TYPE and the XDG_*_DESKTOP pair (from

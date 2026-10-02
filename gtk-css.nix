@@ -1,4 +1,4 @@
-# Palette slots (bare hex, palette.nix shape) -> libadwaita / adw-gtk3 named colours.
+# Palette slots (bare hex, palette/ shape) -> libadwaita / adw-gtk3 named colours.
 # Returns { css3; css4; } for gtk.gtk3.extraCss / gtk.gtk4.extraCss.
 # Works on any theme whose stylesheet REFERENCES the names (adw-gtk3, libadwaita itself);
 # it does nothing useful on WhiteSur / Tokyonight, whose CSS is compiled to literal hex.

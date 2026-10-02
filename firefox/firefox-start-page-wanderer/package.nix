@@ -18,7 +18,7 @@
 let
   # Imported, not an argument: callPackage would inject nixpkgs' own `palette`
   # package instead ("attribute 'hash' missing").
-  palette = import ../../palette.nix;
+  palette = import ../../palette;
   shared = import ./shared.nix;
   colour = import ../../lib/colour.nix { inherit lib; };
 
@@ -47,7 +47,7 @@ let
 
   # As with ../userChrome.css: nix owns the palette, the stylesheet stays plain.
   paletteCss = writeText "palette.css" ''
-    /* Generated from ../../palette.nix — do not edit. */
+    /* Generated from ../../palette/ — do not edit. */
     :root {
     ${lib.concatStrings (
       lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (

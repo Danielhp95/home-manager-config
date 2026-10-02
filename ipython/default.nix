@@ -3,11 +3,11 @@
 # IPython comes from each project's virtualenv, not this flake, so it is themed
 # through ~/.ipython, which every venv's ipython reads. The two style files
 # name ANSI slots only, so the terminal's colour0-15 apply and no colour is
-# copied from ../palette.nix; what is filled in is which slot plays which role
+# copied from ../palette/; what is filled in is which slot plays which role
 # (palette.roles.ansi).
 
 let
-  roles = (import ../palette.nix).roles.ansi;
+  roles = (import ../palette).roles.ansi;
 
   # palette.term's names as pygments and prompt_toolkit spell them: slot 7 is
   # "gray" there, slot 15 "white".

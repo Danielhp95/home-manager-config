@@ -5,11 +5,11 @@
 # falls back to the default. Keep the keys equal to the union of the bundled
 # themes (written to ~/.config/lnav/configs/default/*.json.sample on first
 # run; 43/26/15/4 per section as of 0.14.1) and re-diff after lnav upgrades.
-# `vars` reuse palette.nix's names. semantic() stays unused: it hashes tokens
+# `vars` reuse the palette's names. semantic() stays unused: it hashes tokens
 # into the full 256-colour cube, off-palette.
 
 let
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 
   vars = {
     inherit (p)

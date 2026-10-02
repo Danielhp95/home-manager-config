@@ -5,7 +5,7 @@
   ...
 }:
 let
-  p = import ../palette.nix;
+  p = import ../palette;
   m = p.meta;
   f = import ../fonts.nix;
   css = import ../gtk-css.nix p;

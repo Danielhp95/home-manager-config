@@ -1,13 +1,13 @@
 { ... }:
 
 let
-  p = (import ./palette.nix).hash;
+  p = (import ./palette).hash;
 in
 {
   programs.zathura = {
     enable = true;
     extraConfig = ''
-      # Colors come from ./palette.nix (Ember / WhiteSur-Dark-orange family).
+      # Colors come from ./palette/ (Ember / WhiteSur-Dark-orange family).
       set default-bg "${p.bg}"
       set default-fg "${p.fg}"
 

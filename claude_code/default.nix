@@ -6,7 +6,7 @@
   ...
 }:
 let
-  pal = import ../palette.nix;
+  pal = import ../palette;
   colour = import ../lib/colour.nix { inherit lib; };
   # "e08060" -> "224;128;96", the form the script's truecolor escapes take.
   rgb = colour.rgbSemicolons;

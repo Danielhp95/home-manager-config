@@ -1,6 +1,6 @@
 { pkgs, lib, ... }:
 let
-  p = (import ../palette.nix).hash;
+  p = (import ../palette).hash;
 
   # Created under this exact name by ollama-iris-model.service
   # (../non_home_manager_config/ollama.nix).

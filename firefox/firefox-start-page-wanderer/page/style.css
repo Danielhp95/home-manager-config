@@ -1,6 +1,6 @@
 /* The "gallery wall": the canvas on the right edge, fading into a graphite
  * column that holds the dashboard. Colours come from assets/palette.css (nix
- * generates it from palette.nix). app.js sets the fog and tint variables from
+ * generates it from palette/). app.js sets the fog and tint variables from
  * the weather; the defaults are a calm, overcast
  * afternoon, for when the service never answers.
  */

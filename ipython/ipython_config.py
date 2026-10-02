@@ -1,7 +1,7 @@
 # The palette by inheritance: every colour is an ANSI slot name (emitted as SGR
 # 30-37/90-97), so the terminal's colour0-15 decide and nothing can drift.
 # Which slot plays which role differs per palette, so ./default.nix fills the
-# at-sign placeholders from palette.nix's roles.ansi. A plain name (ansigreen,
+# at-sign placeholders from the palette's roles.ansi. A plain name (ansigreen,
 # ansired, ansibrightblack) means that slot in every palette.
 
 from pygments.style import Style

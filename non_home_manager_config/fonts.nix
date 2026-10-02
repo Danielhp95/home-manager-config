@@ -9,10 +9,10 @@ in
     fontconfig.defaultFonts = {
       sansSerif = [ f.ui ] ++ f.cjkSans ++ [ f.emoji ];
       serif = f.serif ++ [ f.emoji ];
-      monospace = [
-        f.mono
-        f.emoji
-      ];
+      # No emoji here: kitty asks `monospace` for text-presentation symbols
+      # the main font lacks (✔ ❤ ⏱) and crops the colour bitmap to a corner
+      # of the cell. Real emoji come through the `emoji` family regardless.
+      monospace = [ f.mono ];
       emoji = [ f.emoji ];
     };
   };

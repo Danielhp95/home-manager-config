@@ -6,7 +6,7 @@
   ...
 }:
 let
-  p = import ../palette.nix;
+  p = import ../palette;
   material = import ./material.nix { inherit lib; };
   # A palette's file stem under ~/.config/noctalia/palettes, which is also the
   # name the settings GUI shows and `theme.custom_palette` selects.

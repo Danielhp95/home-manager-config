@@ -101,8 +101,8 @@
       formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
 
       # What a palette names but evaluation only forces once it is selected:
-      # its GTK theme, cursor and icon theme (palettes/check.nix).
-      checks.x86_64-linux.palettes = import ./palettes/check.nix {
+      # its GTK theme, cursor and icon theme (palette/check.nix).
+      checks.x86_64-linux.palettes = import ./palette/check.nix {
         inherit (self.nixosConfigurations.lenovo) pkgs;
       };
 

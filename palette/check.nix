@@ -1,12 +1,12 @@
 # Builds only if every palette's GTK theme, cursor and icon theme exist under
-# the names its `meta` gives. The schema (./default.nix) checks that these are
+# the names its `meta` gives. The schema (./lib.nix) checks that these are
 # functions and strings; whether the package still exists in nixpkgs, and still
 # ships a theme of that name, only shows when the palette is selected. This
 # asks for all of them at once: `nix build .#checks.x86_64-linux.palettes`.
 { pkgs }:
 let
   inherit (pkgs) lib;
-  inherit (import ./.) all;
+  inherit (import ./lib.nix) all;
 
   dirs =
     palette:

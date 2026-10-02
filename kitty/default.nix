@@ -1,7 +1,7 @@
 { lib, pkgs, ... }:
 
 let
-  palette = import ../palette.nix;
+  palette = import ../palette;
   p = palette.hash;
 
   # The cursor trail in two palette slots, chosen per palette (meta.trail).
@@ -18,7 +18,7 @@ in
   programs.kitty = {
     enable = true;
     font.name = (import ../fonts.nix).mono;
-    # Colours from ../palette.nix. kitty.conf is written after these and would
+    # Colours from ../palette/. kitty.conf is written after these and would
     # override them, so it must not set any of these.
     settings = {
       background = p.bg;

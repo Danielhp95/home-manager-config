@@ -1,12 +1,12 @@
 { pkgs, lib, config, ... }:
 
 let
-  palette = import ../palette.nix;
+  palette = import ../palette;
   p = palette.hash;
   inherit (palette.roles) search;
-  # The @color_* variables tmux.conf renders with, from palette.nix
+  # The @color_* variables tmux.conf renders with, from palette/
   emberColors = ''
-    # ── Ember palette — GENERATED from palette.nix by default.nix ──
+    # ── Ember palette — GENERATED from palette/ by default.nix ──
     # Surfaces
     set -g @color_bg0 "${p.bg}"
     set -g @color_bg1 "${p.surface}"

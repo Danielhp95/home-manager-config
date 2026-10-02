@@ -1,5 +1,5 @@
 # The palette schema: what a palette file must supply, and the shape every
-# consumer gets back through ../palette.nix.
+# consumer gets back through ../palette (default.nix).
 #
 # A palette file (./<slug>.nix) is a plain attrset of exactly:
 #   dark, light               the 25 semantic slots (`slotNames`)
@@ -376,7 +376,7 @@ let
   );
 
   problems = concatMap (
-    slug: map (msg: "  palettes/${slug}.nix: ${msg}") (validate slug raw.${slug})
+    slug: map (msg: "  palette/${slug}.nix: ${msg}") (validate slug raw.${slug})
   ) slugs;
 
   # ── Derived views ────────────────────────────────────────────────────────
@@ -462,9 +462,9 @@ in
 # every half of every palette: a light half nobody reads is still held to the
 # schema. It runs once per evaluation (nix caches an imported file).
 if problems != [ ] then
-  throw "palette schema violated (schema: palettes/default.nix)\n${concatStringsSep "\n" problems}"
+  throw "palette schema violated (schema: palette/lib.nix)\n${concatStringsSep "\n" problems}"
 else if leaks != [ ] then
-  throw "palettes/default.nix: only the 25 slots may be strings at a palette's top level and in `hash`\n${concatStringsSep "\n" leaks}"
+  throw "palette/lib.nix: only the 25 slots may be strings at a palette's top level and in `hash`\n${concatStringsSep "\n" leaks}"
 else
   {
     inherit
@@ -474,12 +474,12 @@ else
       termNames
       ;
 
-    # The body of ../palette.nix: one palette, with `all` beside it for
+    # The body of ./default.nix: one palette, with `all` beside it for
     # consumers that install every palette side by side.
     select =
       slug:
       if all ? ${slug} then
         all.${slug} // { inherit all; }
       else
-        throw "palette.nix: \"${slug}\" is not a palette; choose one of: ${commas slugs}";
+        throw "palette: \"${slug}\" is not a palette; choose one of: ${commas slugs}";
   }

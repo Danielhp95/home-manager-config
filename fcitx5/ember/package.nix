@@ -6,7 +6,7 @@
 }:
 
 let
-  p = (import ../../palette.nix).hash;
+  p = (import ../../palette).hash;
 
   # The palette attributes each file uses as placeholders.
   themeConf = replaceVars ./Ember.conf {

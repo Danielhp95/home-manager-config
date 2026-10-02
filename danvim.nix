@@ -10,7 +10,7 @@
 # name with it.
 { inputs, system }:
 let
-  pal = import ./palette.nix;
+  pal = import ./palette;
   nvim = inputs.danvim.packages.${system}.nvim;
 in
 nvim.override (prev: {
@@ -24,7 +24,7 @@ nvim.override (prev: {
           map (name: {
             inherit name;
             value = pal.hash.${name};
-          }) ((import ./palettes).slotNames ++ [ "ansi" ])
+          }) ((import ./palette/lib.nix).slotNames ++ [ "ansi" ])
         )
         // {
           # The two extras the tokyonight family's syntax needs.
