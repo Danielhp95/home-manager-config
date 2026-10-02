@@ -108,6 +108,7 @@ let
   # 0 is one colour, n a list of exactly n, "halves" a { dark, light } pair.
   extraShape = {
     orange = "halves"; # vicinae's orange accent; nvim constants (tokyonight family)
+    urgent = "halves"; # noctalia's error role: urgent workspaces, notification badges
     cyan = 0; # nvim types and specials (tokyonight family)
     fog = 0; # the start page's fog veil
     heat = 3; # the Claude statusline's high / xhigh / max effort pills

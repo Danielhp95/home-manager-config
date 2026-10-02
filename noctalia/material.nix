@@ -16,8 +16,13 @@ let
     let
       c = half.hash;
     in
-    lib.concatMapAttrs (fill c) (palette.roles.material // { error = "error"; })
+    lib.concatMapAttrs (fill c) palette.roles.material
     // {
+      # Its own colour, not the error slot: the shell draws urgent workspaces
+      # and notification badges with it, and wants them brighter than the
+      # failure red the editors and shells use.
+      error = c.extra.urgent;
+      on_error = c.bg;
       surface = c.bg;
       on_surface = c.fg;
       surface_variant = c.surface;

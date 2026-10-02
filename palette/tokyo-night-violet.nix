@@ -122,6 +122,13 @@ in
 
   # Colours outside the 25 slots, each with one or two consumers.
   extra = {
+    # noctalia's error role (urgent workspaces, notification badges): Tokyo
+    # Night's own red, 6.5:1 on bg against the error slot's 5.0:1. The slot
+    # stays the true red for everything that must not read as rose.
+    urgent = {
+      dark = "f7768e";
+      light = "b00c1e";
+    };
     # vicinae's orange accent and danvim's constants and numbers. Tokyo
     # Night's own ff9e64 sits too close to gold.
     orange = {

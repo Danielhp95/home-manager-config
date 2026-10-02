@@ -131,6 +131,11 @@ in
 
   # Colours outside the 25 slots, each with one or two consumers.
   extra = {
+    # noctalia's error role; the error slot itself in each half.
+    urgent = {
+      dark = "e05252";
+      light = "b3261e";
+    };
     # Where a consumer wants an orange apart from blue (vicinae); in Ember both
     # are magma, so this is steel in each half.
     orange = {
