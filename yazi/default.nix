@@ -190,14 +190,6 @@ in
         run = "shell --block $SHELL";
       }
       {
-        desc = "open lazygit here";
-        on = [
-          "g"
-          "l"
-        ];
-        run = "shell --block lazygit";
-      }
-      {
         desc = "hide or show preview";
         on = [
           "m"
@@ -681,7 +673,6 @@ in
   home.packages = with pkgs; [
     exiftool # Tool to read, write and edit EXIF meta information
     imagemagick # For resizing preview images
-    lazygit # g l binding
     trash-cli # required by restore.yazi
     mediainfo # required by mediainfo.yazi (ffmpeg comes from home.nix)
     # `gio`, which every gvfs.yazi action shells out to: services.gvfs ships
