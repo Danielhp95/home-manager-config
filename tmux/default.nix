@@ -36,18 +36,46 @@ let
     set -g copy-mode-mark-style "bg=${p.accent},fg=${p.bg}"
   '';
 
+  # A command line that opens a nix shell, env assignments allowed in front
+  # (POSIX ERE). zsh notes the lines that match on their pane, and resurrect
+  # restores the saved commands that match.
+  nixShellLine = "^([A-Za-z_][A-Za-z0-9_]*=[^ ]* )*nix(-shell| develop| shell)( |$)";
+
+  # @resurrect-hook-post-save-layout: rewrites the save file ($1) before
+  # resurrect compares it with the previous one.
+  resurrectPostSave = pkgs.writeShellScript "resurrect-post-save-layout" ''
+    # Nix wrappers exec with a full path as argv[0] (/nix/store/…/bin/yazi), and
+    # nixCats adds --cmd source/nix/store/… to nvim. Neither matches a name in
+    # the restore list, and both pin a store path. Saved back as `name <args>`.
+    sed -i -E 's#\t:(/etc/profiles/per-user/[^/]+|/run/current-system/sw|/nix/store/[^/]+)/bin/#\t:#; s# --cmd source/nix/store/[^ ]*/nvim-setup[.]lua##' "$1"
+
+    # nix-shell and nix develop exec the shell they build, so the pane's process
+    # is `bash --rcfile /tmp/nix-shell…` and the command line is gone. A pane
+    # whose zsh noted one (programs.zsh.initContent below) is saved as that
+    # command, in the directory it ran from: `nix-shell shell.nix` fails in any
+    # other. A note on a pane with nothing running (:) is stale.
+    noted=$(tmux list-panes -a -f '#{@nix_shell_cmd}' \
+      -F $'#{session_name}\t#{window_index}\t#{pane_index}\t#{@nix_shell_dir}\t#{@nix_shell_cmd}')
+    [ -n "$noted" ] || exit 0
+    awk -F '\t' -v OFS='\t' '
+      NR == FNR { dir[$1, $2, $3] = $4; cmd[$1, $2, $3] = $5; next }
+      $1 == "pane" && $11 != ":" && ($2, $3, $6) in cmd {
+        $8 = ":" dir[$2, $3, $6]; $11 = ":" cmd[$2, $3, $6]
+      }
+      { print }
+    ' <(printf '%s\n' "$noted") "$1" > "$1.tmp" && mv "$1.tmp" "$1"
+  '';
+
   # Plugin options only; the plugins themselves load last (see loadPlugins)
   pluginOptions = ''
     # ── tmux-resurrect ──
     set -g @resurrect-strategy-vim 'session'
     set -g @resurrect-strategy-nvim 'session'
-    # claude comes back as --continue: the last conversation in that directory
-    set -g @resurrect-processes 'vim nvim ssh npm ~ipython yazi "claude->claude --continue"'
+    # claude comes back as --continue: the last conversation in that directory.
+    # The last entry (~ makes it a regex) is the nix shells resurrectPostSave saves.
+    set -g @resurrect-processes 'vim nvim ssh npm ~ipython yazi "claude->claude --continue" "~${nixShellLine}"'
     set -g @resurrect-capture-pane-contents 'on' # Restore pane contents
-    # Nix wrappers exec with a full path as argv[0] (/nix/store/…/bin/yazi), and
-    # nixCats adds --cmd source/nix/store/… to nvim. Neither matches a name in
-    # the restore list, and both pin a store path. Saved back as `name <args>`.
-    set -g @resurrect-hook-post-save-layout 'sed -i -E "s#\t:(/etc/profiles/per-user/[^/]+|/run/current-system/sw|/nix/store/[^/]+)/bin/#\t:#; s# --cmd source/nix/store/[^ ]*/nvim-setup[.]lua##"'
+    set -g @resurrect-hook-post-save-layout '${resurrectPostSave}'
 
     # ── tmux-continuum ──
     set -g @continuum-restore 'on' # Continuum auto restore
@@ -108,6 +136,30 @@ in
   xdg.configFile."tmux/tmux.conf".onChange = ''
     TMUX_TMPDIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
       ${lib.getExe config.programs.tmux.package} source-file ${config.xdg.configHome}/tmux/tmux.conf 2>/dev/null || true
+  '';
+
+  # The noting half of resurrectPostSave's nix shells. Only a pane's own shell
+  # does it (a child of the tmux server, whose pid is in $TMUX): a nix shell
+  # opened in nvim's :terminal must not replace the pane's nvim.
+  programs.zsh.initContent = ''
+    if [[ -n $TMUX_PANE && $PPID == ''${''${TMUX#*,}%%,*} ]]; then
+      # $3 is the line about to run, aliases expanded. The save file is one
+      # tab-separated line per pane, hence no newlines or tabs.
+      __nix_shell_note () {
+        [[ $3 =~ '${nixShellLine}' && $3 != *[$'\n\t']* ]] || return
+        tmux set-option -p -t $TMUX_PANE @nix_shell_dir $PWD \; \
+          set-option -p -t $TMUX_PANE @nix_shell_cmd $3 2>/dev/null && __nix_shell_noted=1
+      }
+      # Back at the prompt, so the nix shell has exited
+      __nix_shell_forget () {
+        [[ -n $__nix_shell_noted ]] || return
+        unset __nix_shell_noted
+        tmux set-option -pu -t $TMUX_PANE @nix_shell_dir \; \
+          set-option -pu -t $TMUX_PANE @nix_shell_cmd 2>/dev/null
+      }
+      preexec_functions+=(__nix_shell_note)
+      precmd_functions+=(__nix_shell_forget)
+    fi
   '';
 
   programs.tmux = {
