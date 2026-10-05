@@ -30,8 +30,17 @@ in
       url_color = p.steel;
       # steel, the quiet-metadata slot.
       active_border_color = p.steel;
+      # Unfocused splits recede, as tmux's pane borders do.
+      inactive_border_color = p.border;
       # Gold, the system-wide attention colour.
       bell_border_color = p.gold;
+
+      # Tabs as the tmux window pills and the hy3 tabs: the selected one an
+      # accent slab with dark text, the rest graphite.
+      active_tab_foreground = p.bg;
+      active_tab_background = p.accent;
+      inactive_tab_foreground = p.fgSoft;
+      inactive_tab_background = p.surface;
 
       # An absolute store path, not a name: kitty caches pipelines by name and
       # recompiles on reload only when this option's value changes.
