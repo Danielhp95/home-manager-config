@@ -670,6 +670,30 @@ in
       };
     };
   };
+  # yazi as the file dialog of every app that asks the desktop portal for one
+  # (the system side is xdg.portal in configuration.nix). The portal backend
+  # runs the wrapper, which opens `$TERMCMD yazi --chooser-file=...`: Enter on
+  # a file picks it, q cancels. For a save, the suggested file is created as a
+  # placeholder and hovered; move or rename it first to save elsewhere.
+  # Plain `kitty`, not `kitty -1`: the wrapper waits for the window to close.
+  # hyprland.lua floats and centres the window by this class; its size is
+  # kitty's own, because a floating kitty resizes itself to the size it
+  # remembers and so overrides a size rule.
+  xdg.configFile."xdg-desktop-portal-termfilechooser/config".text = ''
+    [filechooser]
+    cmd=${pkgs.xdg-desktop-portal-termfilechooser}/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
+    default_dir=$HOME
+    env=TERMCMD=kitty --class file-chooser -o remember_window_size=no -o initial_window_width=1200 -o initial_window_height=800
+  '';
+
+  # GTK apps draw their own file dialog unless told to ask the portal
+  # (GTK_USE_PORTAL is GTK3's switch, GDK_DEBUG=portals GTK4's). It also sends
+  # their "open this link" through the portal. Read at login.
+  home.sessionVariables = {
+    GTK_USE_PORTAL = "1";
+    GDK_DEBUG = "portals";
+  };
+
   home.packages = with pkgs; [
     exiftool # Tool to read, write and edit EXIF meta information
     imagemagick # For resizing preview images

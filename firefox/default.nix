@@ -166,6 +166,10 @@ in
         # Rounded bottom window corners, to match WhiteSur's window shape.
         "widget.gtk.rounded-bottom-corners.enabled" = true;
 
+        # Open/save dialogs through the desktop portal, which hands them to
+        # yazi (yazi/default.nix); the default (2) uses GTK's own dialog.
+        "widget.use-xdg-desktop-portal.file-picker" = 1;
+
         # --- add-on management -------------------------------------------
         # Nix owns the add-on set; Sync would reinstall removed add-ons.
         "services.sync.engine.addons" = false;

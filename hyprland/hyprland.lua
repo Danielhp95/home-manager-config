@@ -700,6 +700,14 @@ hl.window_rule({
 	center = true,
 })
 hl.window_rule({ name = "tile-grayjay", match = { title = "Grayjay" }, tile = true })
+-- The file dialog: yazi in its own kitty, floating like the GTK dialog it
+-- replaces. Its size is set on the kitty command line (yazi/default.nix).
+hl.window_rule({
+	name = "file-chooser",
+	match = { class = "^file-chooser$" },
+	float = true,
+	center = true,
+})
 
 -- Opacity
 hl.window_rule({

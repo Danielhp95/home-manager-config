@@ -189,11 +189,17 @@
 
   xdg.portal = {
     enable = true; # home-manager's portal module asserts on the pathsToLink this sets
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # FileChooser/Settings fallback ("hyprland;gtk")
-    config.common.default = [
-      "hyprland"
-      "gtk"
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk # Settings and the rest ("hyprland;gtk")
+      pkgs.xdg-desktop-portal-termfilechooser # file dialogs: yazi (yazi/default.nix)
     ];
+    config.common = {
+      default = [
+        "hyprland"
+        "gtk"
+      ];
+      "org.freedesktop.impl.portal.FileChooser" = [ "termfilechooser" ];
+    };
   };
 
   # The terminals' ANSI 0-15, so the LUKS prompt and ttys are Ember.
