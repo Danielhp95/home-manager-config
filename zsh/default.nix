@@ -120,12 +120,19 @@ in
   };
 
   # The syntax-highlighting styles again, as a file a running shell can
-  # re-read (see the precmd hook in initContent).
-  xdg.configFile."zsh/palette.zsh".text = lib.concatStrings (
-    lib.mapAttrsToList (
-      name: style: "ZSH_HIGHLIGHT_STYLES[${name}]=${lib.escapeShellArg style}\n"
-    ) config.programs.zsh.syntaxHighlighting.styles
-  );
+  # re-read (see the precmd hook in initContent), and with them the
+  # file-listing colours (../terminal/ls-colors.nix) and the completion
+  # menu's copy of those.
+  xdg.configFile."zsh/palette.zsh".text =
+    lib.concatStrings (
+      lib.mapAttrsToList (
+        name: style: "ZSH_HIGHLIGHT_STYLES[${name}]=${lib.escapeShellArg style}\n"
+      ) config.programs.zsh.syntaxHighlighting.styles
+    )
+    + ''
+      export LS_COLORS=${lib.escapeShellArg config.home.sessionVariables.LS_COLORS}
+      zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}
+    '';
 
   programs.zsh = {
     enable = true;
@@ -133,14 +140,15 @@ in
       EDITOR = "nvim";
     };
     # Session variables are read once per login, and a tmux server keeps the
-    # environment it started with. Restated per shell, these three reach a
-    # new pane without either being restarted.
+    # environment it started with. Restated per shell, these reach a new pane
+    # without either being restarted.
     envExtra = lib.concatMapStrings (
       name: "export ${name}=${lib.escapeShellArg config.home.sessionVariables.${name}}\n"
     ) [
       "FZF_DEFAULT_OPTS"
       "FZF_DEFAULT_OPTS_FILE"
       "GLAMOUR_STYLE"
+      "LS_COLORS"
     ];
     initContent = lib.mkMerge [
       # Order 850, before HM sources the plugins (900): autopair wraps these

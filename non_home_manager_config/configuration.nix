@@ -258,6 +258,9 @@
   # Home Manager's zsh already runs compinit (with the plugin fpath); a second
   # run here rebuilds ~/.config/zsh/.zcompdump on every shell launch (~1s).
   programs.zsh.enableCompletion = false;
+  # LS_COLORS is the palette's (terminal/ls-colors.nix); this would replace it
+  # with the dircolors default in every interactive shell.
+  programs.zsh.enableLsColors = false;
   users.users.dani = {
     shell = pkgs.zsh;
     isNormalUser = true;
