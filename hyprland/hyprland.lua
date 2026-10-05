@@ -529,6 +529,11 @@ hl.bind(
 	hl.dsp.exec_cmd("wl-kbptr -o mode_click.button=right"),
 	{ description = "Keyboard-driven mouse control — right click (wl-kbptr)" }
 )
+hl.bind(
+	mod .. " + ALT + f",
+	hl.dsp.exec_cmd("wl-kbptr --drag"),
+	{ description = "Keyboard-driven mouse control — drag (wl-kbptr)" }
+)
 -- Volume / Brightness. The media keys arrive as bare XF86 keysyms (FN is
 -- resolved in keyboard firmware), so they take no modifier; `locked` keeps them
 -- working on the lock screen.

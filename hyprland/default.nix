@@ -239,7 +239,14 @@ in
 
     slurp # Ember wrapper from the let block
 
-    wl-kbptr # keyboard-driven pointer (SUPER+SHIFT+F)
+    (wl-kbptr.overrideAttrs (old: {
+      src = fetchFromGitHub {
+        owner = "moverest";
+        repo = "wl-kbptr";
+        rev = "6ef84f398816b7a007ba969047e43d095f332175";
+        hash = "sha256-nprdHawJqZK0zL0XcHuxmJquDLPKjl1z0rx5cRbkDe0=";
+      };
+    })) # keyboard-driven pointer
     wlrctl # clicks in hyprland.lua's mouse-cursor submap
   ];
 
@@ -293,6 +300,11 @@ in
 
     [mode_click]
     button=left
+
+    [mode_drag]
+    start_marker_color=#${c.gold}
+    start_marker_size=16
+    start_marker_shape=caret
   '';
   # Colours only, over WhiteSur's GTK4 widgets. `.window > box` is needed
   # because the picker's css_classes() drops GTK's `background` class.
