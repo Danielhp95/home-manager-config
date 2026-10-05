@@ -74,5 +74,9 @@ in
     # GNOME's monospace and document fonts; gtk.font only sets font-name.
     "org/gnome/desktop/interface".monospace-font-name = "${f.mono} ${toString f.uiSize}";
     "org/gnome/desktop/interface".document-font-name = "${f.ui} ${toString f.uiSize}";
+    # No icon, minimize, maximize or close in GTK headerbars: Hyprland binds
+    # close and fullscreen, and minimize does nothing here. On Wayland GTK
+    # takes the layout from this key, not from settings.ini.
+    "org/gnome/desktop/wm/preferences".button-layout = ":";
   };
 }
