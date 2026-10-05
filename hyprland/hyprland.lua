@@ -543,6 +543,16 @@ hl.bind(
 	hl.dsp.exec_cmd(backlight .. " set +5%"),
 	{ repeating = true, locked = true, description = "Increase brightness" }
 )
+hl.bind(
+	"SHIFT + XF86MonBrightnessDown",
+	hl.dsp.exec_cmd(backlight .. " set 1%"),
+	{ repeating = false, locked = true, description = "Minimizes brightness" }
+)
+hl.bind(
+	"SHIFT + XF86MonBrightnessUp",
+	hl.dsp.exec_cmd(backlight .. " set 100%"),
+	{ repeating = false, locked = true, description = "Maxes brightness" }
+)
 -- volume-all-sinks (noctalia/default.nix) steps every output sink at once, like
 -- scrolling the bar's volume pill, not just the default sink.
 local volume = "volume-all-sinks"
