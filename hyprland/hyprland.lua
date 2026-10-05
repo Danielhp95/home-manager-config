@@ -40,9 +40,16 @@ hl.monitor({
 -- The mouse-cursor submap below disables the timeout and restores this value.
 local cursor_inactive_timeout = 5
 
+-- A palette colour with an alpha byte: "rgb(15111f)", "cc" -> "rgba(15111fcc)".
+local function alpha(colour, aa)
+	return (colour:gsub("^rgb%((%x+)%)$", "rgba(%1" .. aa .. ")"))
+end
+
 hl.config({
 	misc = {
 		disable_hyprland_logo = true,
+		-- Drawn behind everything, so it shows until the wallpaper is up.
+		background_color = palette.bgDeep,
 		exit_window_retains_fullscreen = true, -- closing a fullscreen window makes the next one fullscreen
 		enable_swallow = true, -- terminal disappears while the GUI it spawned is open
 		swallow_regex = "^kitty",
@@ -102,6 +109,22 @@ hl.config({
 			passes = 3,
 			ignore_opacity = true,
 		},
+		-- Floating windows only (the no-shadow-tiled rule below): a soft drop
+		-- in the palette's darkest surface instead of the default neutral grey.
+		shadow = {
+			enabled = true,
+			range = 24,
+			render_power = 3,
+			color = alpha(palette.bgDeep, "cc"),
+			offset = { 0, 6 },
+		},
+	},
+
+	xwayland = {
+		-- X11 clients draw 1:1 on eDP-1 instead of being stretched 2x: sharp,
+		-- and games see the panel's real 3840x2400. Such a client has to scale
+		-- its own UI (Steam: Settings > Interface), and its cursor is half size.
+		force_zero_scaling = true,
 	},
 
 	animations = {
@@ -711,6 +734,10 @@ hl.window_rule({
 hl.workspace_rule({ workspace = "1", default_name = "󰈹" }) -- firefox
 hl.workspace_rule({ workspace = "2", default_name = "󰆍" }) -- terminal
 hl.workspace_rule({ workspace = "9", default_name = "󰇮" }) -- envelope (messaging)
+
+-- Tiled windows cast no shadow: with no gaps it would fall across the
+-- neighbouring window and show through its transparency.
+hl.window_rule({ name = "no-shadow-tiled", match = { float = false }, no_shadow = true })
 
 -- No border or rounding on a lone tiled window or a fullscreen one (gaps are
 -- already 0 everywhere, see general above).
