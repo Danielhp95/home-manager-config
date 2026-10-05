@@ -23,6 +23,11 @@ let
     QT_IM_MODULE = "fcitx";
     SDL_IM_MODULE = "fcitx";
     GSK_RENDERER = "gl";
+    # Hyprland otherwise takes SCHED_RR from rtkit, under a 200 ms
+    # RLIMIT_RTTIME. Bringing up an output on the NVIDIA card (HDMI hotplug)
+    # can hold the main thread on-CPU inside one ioctl for longer than that,
+    # and the kernel then SIGKILLs it: no core dump, no crash report.
+    HYPRLAND_NO_RT = "1";
   };
 
   # start-hyprland is Hyprland's crash watchdog, called by name because
