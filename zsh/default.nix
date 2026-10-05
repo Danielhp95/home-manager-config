@@ -119,6 +119,14 @@ in
     };
   };
 
+  # Man pages through bat's Manpage syntax, in the same ANSI theme. bat cannot
+  # read groff's colour escapes: -c makes groff overstrike instead, and col
+  # strips that.
+  home.sessionVariables = {
+    MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+    MANROFFOPT = "-c";
+  };
+
   # The syntax-highlighting styles again, as a file a running shell can
   # re-read (see the precmd hook in initContent), and with them the
   # file-listing colours (../terminal/ls-colors.nix) and the completion
@@ -149,6 +157,8 @@ in
       "FZF_DEFAULT_OPTS_FILE"
       "GLAMOUR_STYLE"
       "LS_COLORS"
+      "MANPAGER"
+      "MANROFFOPT"
     ];
     initContent = lib.mkMerge [
       # Order 850, before HM sources the plugins (900): autopair wraps these
