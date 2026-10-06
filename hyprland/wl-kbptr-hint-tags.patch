@@ -1,0 +1,126 @@
+--- a/src/mode_floating.c
++++ b/src/mode_floating.c
+@@ -10,7 +10,10 @@
+ #include "utils_cairo.h"
+ 
+ #include <cairo.h>
++#include <ctype.h>
++#include <math.h>
+ #include <stdbool.h>
++#include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -109,7 +112,7 @@
+ 
+     ms->label_font_face = cairo_toy_font_face_create(
+         state->config.mode_floating.label_font_family, CAIRO_FONT_SLANT_NORMAL,
+-        CAIRO_FONT_WEIGHT_NORMAL
++        CAIRO_FONT_WEIGHT_BOLD
+     );
+ 
+     return ms;
+@@ -193,40 +196,78 @@
+             label_selection_is_included(curr_label, ms->label_selection);
+ 
+         if (selectable) {
++            // A small rounded tag at the target's top-left corner (as Vimium's
++            // link hints), instead of a block over the whole target.
++            const double em =
++                compute_relative_font_size(&config->label_font_size, a.h);
++            cairo_set_font_size(cairo, em);
++            label_selection_str(curr_label, label_selected_str);
++            for (char *c = label_selected_str; *c; c++) {
++                *c = toupper((unsigned char)*c);
++            }
++            cairo_text_extents_t te_all;
++            cairo_font_extents_t fe;
++            cairo_text_extents(cairo, label_selected_str, &te_all);
++            cairo_font_extents(cairo, &fe);
++
++            const double pad_x = fe.height * .32, pad_y = fe.height * .06;
++            const double w     = te_all.x_advance + 2 * pad_x;
++            const double h     = fe.ascent + fe.descent + 2 * pad_y;
++            const double r     = h / 2;
++            const double x     = (a.x > 2 ? a.x - 2 : 0) + .5;
++            const double y     = (a.y > 2 ? a.y - 2 : 0) + .5;
++
++            // Vimium's glow, `box-shadow: 0 .1em .6em .1em` in the border's
++            // hue at 20%. cairo has no blur: the pill is filled at growing
++            // sizes, each layer's alpha chosen so the stack follows the
++            // Gaussian falloff (sigma = blur / 2) the CSS shadow has.
++            const double  sh_blur = .6 * em, sh_grow = .1 * em, sh_dy = .1 * em;
++            const double  sh_step = sh_blur / 8;
++            const uint32_t bc     = config->selectable_border_color;
++            double         below  = 0;
++            cairo_set_operator(cairo, CAIRO_OPERATOR_OVER);
++            for (double d = sh_blur; d > -sh_dy - sh_step; d -= sh_step) {
++                const double want =
++                    .2 * .5 * erfc(d / (sh_blur / 2 * M_SQRT2));
++                const double e = sh_grow + d, re = r + e;
++                cairo_new_sub_path(cairo);
++                cairo_arc(
++                    cairo, x + w - r, y + r + sh_dy, re, -M_PI / 2, M_PI / 2
++                );
++                cairo_arc(
++                    cairo, x + r, y + r + sh_dy, re, M_PI / 2, 3 * M_PI / 2
++                );
++                cairo_close_path(cairo);
++                cairo_set_source_rgba(
++                    cairo, (bc >> 24 & 0xff) / 255.0, (bc >> 16 & 0xff) / 255.0,
++                    (bc >> 8 & 0xff) / 255.0, 1 - (1 - want) / (1 - below)
++                );
++                cairo_fill(cairo);
++                below = want;
++            }
++
++            cairo_new_sub_path(cairo);
++            cairo_arc(cairo, x + w - r, y + r, r, -M_PI / 2, M_PI / 2);
++            cairo_arc(cairo, x + r, y + r, r, M_PI / 2, 3 * M_PI / 2);
++            cairo_close_path(cairo);
+             cairo_set_operator(cairo, CAIRO_OPERATOR_OVER);
+             cairo_set_source_u32(cairo, config->selectable_bg_color);
+-            cairo_rectangle(cairo, a.x, a.y, a.w, a.h);
+-            cairo_fill(cairo);
+-
+-            cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
++            cairo_fill_preserve(cairo);
+             cairo_set_source_u32(cairo, config->selectable_border_color);
+-            cairo_rectangle(cairo, a.x + .5, a.y + .5, a.w - 1, a.h - 1);
+-            cairo_set_line_width(cairo, 1);
++            cairo_set_line_width(cairo, 1.5);
+             cairo_stroke(cairo);
+ 
+-            cairo_set_font_size(
+-                cairo, compute_relative_font_size(&config->label_font_size, a.h)
+-            );
+-            cairo_text_extents_t te_all;
+-            label_selection_str(curr_label, label_selected_str);
+-            cairo_text_extents(cairo, label_selected_str, &te_all);
+-
+             label_selection_str_split(
+                 curr_label, label_selected_str, label_unselected_str,
+                 ms->label_selection->next
+             );
+-
+-            cairo_text_extents_t te_selected, te_unselected;
+-            cairo_text_extents(cairo, label_selected_str, &te_selected);
+-            cairo_text_extents(cairo, label_unselected_str, &te_unselected);
+-
+-            cairo_move_to(
+-                cairo,
+-                a.x +
+-                    (a.w - te_selected.x_advance - te_unselected.x_advance) / 2,
+-                a.y + (int)((a.h + te_all.height) / 2)
+-            );
+-            cairo_set_operator(cairo, CAIRO_OPERATOR_OVER);
++            for (char *c = label_selected_str; *c; c++) {
++                *c = toupper((unsigned char)*c);
++            }
++            for (char *c = label_unselected_str; *c; c++) {
++                *c = toupper((unsigned char)*c);
++            }
++            cairo_move_to(cairo, x + pad_x, y + pad_y + fe.ascent);
+             cairo_set_source_u32(cairo, config->label_select_color);
+             cairo_show_text(cairo, label_selected_str);
+             cairo_set_source_u32(cairo, config->label_color);

@@ -1,0 +1,49 @@
+--- a/src/target_detection.cpp
++++ b/src/target_detection.cpp
+@@ -123,7 +123,7 @@
+ 
+ static cv::Mat get_gray_scale_from_buffer(
+     void *data, uint32_t height, uint32_t width, uint32_t stride,
+-    enum wl_shm_format format
++    enum wl_shm_format format, double shrink
+ ) {
+     pixman_image_t *image = NULL;
+     cv::Mat         buf;
+@@ -159,6 +159,14 @@
+         break;
+     }
+ 
++    // On a HiDPI output, detect at the logical resolution: targets are sized
++    // in logical pixels and every later step costs time per pixel.
++    if (shrink < 1) {
++        cv::Mat small;
++        cv::resize(buf, small, cv::Size(), shrink, shrink, cv::INTER_AREA);
++        buf = small;
++    }
++
+     cv::Mat in_channels[4];
+     cv::split(buf, in_channels);
+ 
+@@ -349,11 +357,19 @@
+     enum wl_shm_format format, enum wl_output_transform transform,
+     struct rect initial_area, struct rect **areas
+ ) {
+-    cv::Mat m1 =
+-        get_gray_scale_from_buffer(data, height, width, stride, format);
++    // Transforms with the low bit set swap width and height.
++    double scale = ((double)((transform & 1) ? width : height)) /
++                   ((double)initial_area.h);
++    const double shrink = scale >= 1.5 ? 1 / scale : 1;
++
++    cv::Mat m1 = get_gray_scale_from_buffer(
++        data, height, width, stride, format, shrink
++    );
++    width  = m1.cols;
++    height = m1.rows;
+     apply_transform(m1, transform, width, height);
+ 
+-    double scale = ((double)height) / ((double)initial_area.h);
++    scale = ((double)height) / ((double)initial_area.h);
+ 
+     cv::Mat m2;
+     cv::Mat kernel =

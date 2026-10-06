@@ -246,6 +246,16 @@ in
         rev = "6ef84f398816b7a007ba969047e43d095f332175";
         hash = "sha256-nprdHawJqZK0zL0XcHuxmJquDLPKjl1z0rx5cRbkDe0=";
       };
+      patches = (old.patches or [ ]) ++ [
+        # Floating mode draws a Vimium-shaped tag at each target's corner
+        # (rounded, bold, upper case) instead of a block over the target,
+        # with Vimium's glow (../firefox/vimium-hints.nix, box-shadow) in the
+        # hue of selectable_border_color, so it follows the palette.
+        ./wl-kbptr-hint-tags.patch
+        # Detect targets at the logical resolution on a HiDPI output: about a
+        # quarter faster to appear at 3840x2400 @2.
+        ./wl-kbptr-logical-detect.patch
+      ];
     })) # keyboard-driven pointer
     wlrctl # clicks in hyprland.lua's mouse-cursor submap
   ];
@@ -270,15 +280,18 @@ in
     selectable_bg_color=#${c.ash}
     selectable_border_color=#${c.fgDim}
 
+    # Vimium's link hints (../firefox/vimium-hints.nix): accent letters on a
+    # deep tag, white for the characters already typed. The size is fixed:
+    # min and max agree, so the percentage of the target's height is moot.
     [mode_floating]
     source=detect
-    label_color=#${c.fg}
-    label_select_color=#${c.gold}
+    label_color=#${c.accent}
+    label_select_color=#ffffff
     unselectable_bg_color=#${c.bgDeep}66
-    selectable_bg_color=#${c.ash}
-    selectable_border_color=#${c.fgDim}
-    label_font_family=${f.monoSemiBold}
-    label_font_size=16 80% 100
+    selectable_bg_color=#${c.bgDeep}
+    selectable_border_color=#${c.accent}59
+    label_font_family=${f.ui}
+    label_font_size=13.8 1% 13.8
 
     [mode_bisect]
     label_color=#${c.fg}
@@ -303,7 +316,7 @@ in
 
     [mode_drag]
     start_marker_color=#${c.gold}
-    start_marker_size=16
+    start_marker_size=10
     start_marker_shape=caret
   '';
   # Colours only, over WhiteSur's GTK4 widgets. `.window > box` is needed
