@@ -38,13 +38,13 @@ let
   # matplotlibrc sits on whatever ground the project picks, usually white, so
   # it takes the light half's hues, which are tuned for paper.
   rc = ''
-    # Generated from palette/ (matplotlib.nix); edits are overwritten.
+    # Generated from nix_config's palette/ (home/matplotlib.nix); edits are overwritten.
     # Colour cycle only; `plt.style.use("palette")` is the full dark look.
     ${cycleOf p.light}
   '';
 
   style = ''
-    # Generated from palette/ (matplotlib.nix); edits are overwritten.
+    # Generated from nix_config's palette/ (home/matplotlib.nix); edits are overwritten.
     figure.facecolor: ${p.bg}
     figure.edgecolor: ${p.bg}
     savefig.facecolor: ${p.bg}

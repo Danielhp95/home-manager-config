@@ -38,7 +38,7 @@ Each tracked repo has one directory, `<skill-dir>/repos/<slug>/`:
 - `reports/` — the **logs**: one report per run.
 
 A `profile.md` that is a symlink into the Nix store ships with the user's config; its
-source is `~/nix_config/claude_code/skills/repo-news/repos/<slug>/profile.md`. Treat it
+source is `~/nix_config/home/claude-code/skills/repo-news/repos/<slug>/profile.md`. Treat it
 as read-only and put anything learned in `notes.md`.
 
 ## Steps

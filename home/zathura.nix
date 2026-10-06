@@ -7,7 +7,7 @@ in
   programs.zathura = {
     enable = true;
     extraConfig = ''
-      # Colors come from ./palette/ (Ember / WhiteSur-Dark-orange family).
+      # Colors come from nix_config's palette/ (Ember / WhiteSur-Dark-orange family).
       set default-bg "${p.bg}"
       set default-fg "${p.fg}"
 

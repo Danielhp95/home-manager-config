@@ -46,7 +46,7 @@ let
 
   # As with ../userChrome.css: nix owns the palette, the stylesheet stays plain.
   paletteCss = writeText "palette.css" ''
-    /* Generated from ../../palette/ — do not edit. */
+    /* Generated from nix_config's palette/ — do not edit. */
     :root {
     ${lib.concatStrings (
       lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (
