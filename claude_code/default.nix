@@ -59,7 +59,7 @@ let
   '';
 in
 {
-  # statusLine and attribution are managed settings (./managed-settings.nix).
+  # statusLine and attribution are managed settings (../nixos/claude-code.nix).
   # Claude Code rewrites the rest of ~/.claude/settings.json at runtime, so it
   # is seeded once, never a store symlink. The seed omits autoMode (work
   # details; this repo is public).

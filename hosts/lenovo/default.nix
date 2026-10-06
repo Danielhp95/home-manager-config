@@ -7,7 +7,7 @@
     ./hardware.nix
     ./roadwarrior.nix # boot entry with the dGPU off
     ./audio-eq.nix # per-device output EQ, as WirePlumber filter-chain sinks
-    ../../non_home_manager_config/configuration.nix
+    ../../nixos
   ];
 
   networking.hostName = hostName;

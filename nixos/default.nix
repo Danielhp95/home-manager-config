@@ -9,15 +9,16 @@
 {
   imports = [
     inputs.home-manager.nixosModules.default
-    ../claude_code/managed-settings.nix
-    ../pipewire.nix
+    ./claude-code.nix
+    ./audio.nix
+    ./bluetooth.nix
     ./network.nix
     ./tailscale.nix
     ./ollama.nix
-    ./noctalia-greeter.nix
+    ./greeter.nix
     ./esp-check.nix
     ./grub-generation-label.nix
-    ./fonts.nix
+    ./fontconfig.nix
   ];
 
   nixpkgs.config.allowUnfree = true;

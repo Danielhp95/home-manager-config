@@ -3,7 +3,7 @@ let
   p = (import ../palette).hash;
 
   # Created under this exact name by ollama-iris-model.service
-  # (../non_home_manager_config/ollama.nix).
+  # (../nixos/ollama.nix).
   aiModel = "iris-qwen3-4b";
 
   # Behaviour with no config knob. --replace-fail breaks the build if upstream

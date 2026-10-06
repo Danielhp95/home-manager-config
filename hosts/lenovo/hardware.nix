@@ -26,7 +26,6 @@ in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    ../../bluetooth.nix
 
     # nixos-hardware has no T16g or Arrow Lake profile; these are the parts
     # that fit. Meteor Lake (same Xe-LPG iGPU): microcode, i915 in the initrd
