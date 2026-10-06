@@ -78,7 +78,9 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "stable": "stable"
+        "stable": [
+          "stable"
+        ]
       },
       "locked": {
         "lastModified": 1791297105,
@@ -850,7 +852,7 @@
         "omnibin": "omnibin",
         "socratic-skills": "socratic-skills",
         "spicetify-nix": "spicetify-nix",
-        "stable": "stable_2",
+        "stable": "stable",
         "superpowers": "superpowers",
         "walkthrough-skill": "walkthrough-skill"
       }
@@ -893,22 +895,6 @@
       }
     },
     "stable": {
-      "locked": {
-        "lastModified": 1791254437,
-        "narHash": "sha256-qMSsgG+9tIdx282dMqGuJAUK3t6F36clM6efd0rXfes=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "b25309931cfda5f0b8805f462a29897eeae50168",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "ref": "nixos-26.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "stable_2": {
       "locked": {
         "lastModified": 1791254437,
         "narHash": "sha256-qMSsgG+9tIdx282dMqGuJAUK3t6F36clM6efd0rXfes=",

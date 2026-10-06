@@ -71,6 +71,7 @@
     # after `nix flake update danvim`.
     danvim.url = "path:/home/dani/nix_config/danvim";
     danvim.inputs.nixpkgs.follows = "nixpkgs";
+    danvim.inputs.stable.follows = "stable";
 
     # Claude Code skill collections, as plain sources; claude_code/default.nix
     # picks which skills to expose.
