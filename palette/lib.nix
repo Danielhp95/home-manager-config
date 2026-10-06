@@ -11,17 +11,14 @@
 #
 # A built palette is:
 #   <slot>              the 25 dark slots, bare hex
+#   slots               the same 25 as one attrset, for consumers that
+#                       enumerate them (Hyprland's Lua table, CSS variables)
 #   ansi                term in ANSI order, a list of 16
 #   term, extra         attrsets (the dark half's)
 #   hash                slots, ansi, term and extra again, with '#'
 #   light               the light half: slots, ansi, term, hash, and the
 #                       extras that are written per half
 #   roles, meta         attrsets, as written in the palette file
-#
-# Two consumers enumerate instead of naming keys, so only slots may be strings
-# at those two levels; everything else there must be a list or an attrset:
-#   top level  home/hyprland/default.nix turns every string into a Lua rgb(..)
-#   hash       the start page turns every string into a CSS variable
 #
 # `meta` holds functions of pkgs (the GTK, cursor and icon packages), so a
 # built palette cannot be serialised whole (`builtins.toJSON`, `nix eval
@@ -396,6 +393,7 @@ let
       term = palette.term.${side};
       perHalf = filter (n: extraShape.${n} == "halves") (attrNames extraShape);
       views = {
+        slots = palette.${side};
         ansi = map (n: term.${n}) termNames;
         inherit term;
         # Nothing reads the single-valued extras in light mode.
@@ -423,49 +421,12 @@ let
     };
 
   all = mapAttrs (_: build) raw;
-
-  # The header's rule about strings, held against this file's own output, so
-  # a view added to `half` or `build` cannot reach Hyprland or the start page.
-  leaks = concatMap (
-    slug:
-    concatMap
-      (
-        level:
-        let
-          strings = filter (n: isString level.set.${n}) (attrNames level.set);
-          stray = filter (n: !(elem n slotNames)) strings;
-          gone = filter (n: !(elem n strings)) slotNames;
-        in
-        one (stray != [ ]) "  ${slug}: ${level.at}: ${commas stray} would be emitted as a colour"
-        ++ one (gone != [ ]) "  ${slug}: ${level.at}: ${commas gone} is no longer a string"
-      )
-      [
-        {
-          at = "the top level";
-          set = all.${slug};
-        }
-        {
-          at = "hash";
-          set = all.${slug}.hash;
-        }
-        {
-          at = "light";
-          set = all.${slug}.light;
-        }
-        {
-          at = "light.hash";
-          set = all.${slug}.light.hash;
-        }
-      ]
-  ) slugs;
 in
 # The gate sits at the root, so reading anything from any palette first checks
 # every half of every palette: a light half nobody reads is still held to the
 # schema. It runs once per evaluation (nix caches an imported file).
 if problems != [ ] then
   throw "palette schema violated (schema: palette/lib.nix)\n${concatStringsSep "\n" problems}"
-else if leaks != [ ] then
-  throw "palette/lib.nix: only the 25 slots may be strings at a palette's top level and in `hash`\n${concatStringsSep "\n" leaks}"
 else
   {
     inherit

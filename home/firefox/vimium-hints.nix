@@ -10,14 +10,9 @@
 # sheet shows through.
 { lib, p }:
 let
-  h = c: "#${c}";
-  # rgba() takes decimal channels; the palette is bare hex.
-  rgba =
-    c: a:
-    let
-      ch = i: toString (lib.fromHexString (builtins.substring (2 * i) 2 c));
-    in
-    "rgba(${ch 0}, ${ch 1}, ${ch 2}, ${a})";
+  colour = import ../../lib/colour.nix { inherit lib; };
+  h = colour.hash;
+  inherit (colour) rgba;
   primary = p.${p.roles.material.primary};
 in
 ''

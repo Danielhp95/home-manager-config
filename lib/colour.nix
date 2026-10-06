@@ -1,5 +1,6 @@
-# Palette-independent colour arithmetic, pure Nix (no pkgs, no build step).
-# Every function takes bare 6-digit hex, the palette's native form.
+# Palette-independent colour arithmetic and formatting, pure Nix (no pkgs, no
+# build step). Every function takes bare 6-digit hex, the palette's native
+# form; a consumer never spells a colour format by hand.
 { lib }:
 let
   channels =
@@ -37,9 +38,6 @@ let
       n = builtins.floor (x * 1000 + 0.5);
     in
     "${toString (n / 1000)}.${lib.fixedWidthString 3 "0" (toString (lib.mod n 1000))}";
-in
-{
-  inherit channels linearChannel fixed3;
 
   # WCAG relative luminance, 0 (black) to 1 (white).
   luminance =
@@ -50,9 +48,48 @@ in
     in
     0.2126 * at 0 + 0.7152 * at 1 + 0.0722 * at 2;
 
+  rgbCommas = join ", "; # "e9873a" -> "233, 135, 58" (CSS rgba(r, g, b, a))
+
+  # bgDeep -> bg-deep; digits and punctuation pass through.
+  toKebab =
+    name:
+    lib.concatMapStrings (
+      char: if char == lib.toUpper char && char != lib.toLower char then "-${lib.toLower char}" else char
+    ) (lib.stringToCharacters name);
+in
+{
+  inherit
+    channels
+    linearChannel
+    fixed3
+    luminance
+    rgbCommas
+    toKebab
+    ;
+
+  hash = hex: "#${hex}"; # "bb9af7" -> "#bb9af7"
+  argb = aa: hex: "#${aa}${hex}"; # "#AARRGGBB" (mpv)
+  rgba = hex: a: "rgba(${rgbCommas hex}, ${a})"; # CSS, alpha as a decimal string
+
   rgbSemicolons = join ";"; # "e08060" -> "224;128;96"   (SGR 38;2;…)
   rgbSpaces = join " "; # "d8c6b2" -> "216 198 178"  (CSS rgb(r g b / a))
-  rgbCommas = join ", "; # "e9873a" -> "233, 135, 58" (CSS rgba(r, g, b, a))
+
+  # WCAG contrast ratio of two colours, 1 (none) to 21 (black on white).
+  contrast =
+    a: b:
+    let
+      la = luminance a;
+      lb = luminance b;
+    in
+    (lib.max la lb + 0.05) / (lib.min la lb + 0.05);
+
+  # An attrset of colours as CSS custom properties, one per line:
+  # cssVars "ember" { bgDeep = "#16161e"; } -> "  --ember-bg-deep: #16161e;\n".
+  cssVars =
+    prefix: colours:
+    lib.concatStrings (
+      lib.mapAttrsToList (name: value: "  --${prefix}-${toKebab name}: ${value};\n") colours
+    );
 
   # "e08060" -> "0.745, 0.216, 0.117": the three linear-light floats a shader takes.
   linear3 = hex: lib.concatMapStringsSep ", " (n: fixed3 (linearChannel n)) (channels hex);

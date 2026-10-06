@@ -37,24 +37,11 @@ let
         ;
     };
 
-  # bgDeep -> bg-deep; digits and punctuation pass through.
-  toKebab =
-    name:
-    lib.concatMapStrings (
-      char: if char == lib.toUpper char && char != lib.toLower char then "-${lib.toLower char}" else char
-    ) (lib.stringToCharacters name);
-
   # As with ../userChrome.css: nix owns the palette, the stylesheet stays plain.
   paletteCss = writeText "palette.css" ''
     /* Generated from nix_config's palette/ — do not edit. */
     :root {
-    ${
-      lib.concatStrings (
-        lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (
-          lib.filterAttrs (_: value: builtins.isString value) palette.hash
-        )
-      )
-    }  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
+    ${colour.cssVars "ember" palette.hash.slots}  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
     }
   '';
 

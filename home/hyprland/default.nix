@@ -7,6 +7,8 @@
 let
   # Bare hex: in the slurp wrapper's flags a leading '#' would start a comment.
   c = import ../../palette;
+  # The same slots with '#', for the generated INI and CSS below.
+  h = c.hash;
   f = import ../../fonts.nix;
 
   # slurp in Ember for every caller (wl-ocr, the share picker's region button);
@@ -194,7 +196,7 @@ in
     # Each `_var` becomes a Lua local ahead of extraConfig:
     # `local palette = { accent = "rgb(e08060)", ... }` and `fonts`.
     settings = {
-      palette._var = lib.mapAttrs (_: hex: "rgb(${hex})") (lib.filterAttrs (_: lib.isString) c);
+      palette._var = lib.mapAttrs (_: hex: "rgb(${hex})") c.slots;
       fonts._var = { inherit (f) mono; };
     };
     plugins = [ pkgs.hy3 ];
@@ -268,48 +270,48 @@ in
     modes=floating,click
 
     [mode_tile]
-    label_color=#${c.fg}
-    label_select_color=#${c.gold}
-    unselectable_bg_color=#${c.bgDeep}66
-    selectable_bg_color=#${c.ash}
-    selectable_border_color=#${c.fgDim}
+    label_color=${h.fg}
+    label_select_color=${h.gold}
+    unselectable_bg_color=${h.bgDeep}66
+    selectable_bg_color=${h.ash}
+    selectable_border_color=${h.fgDim}
 
     # Vimium's link hints (../firefox/vimium-hints.nix): accent letters on a
     # deep tag, white for the characters already typed. The size is fixed:
     # min and max agree, so the percentage of the target's height is moot.
     [mode_floating]
     source=detect
-    label_color=#${c.accent}
+    label_color=${h.accent}
     label_select_color=#ffffff
-    unselectable_bg_color=#${c.bgDeep}66
-    selectable_bg_color=#${c.bgDeep}
-    selectable_border_color=#${c.accent}59
+    unselectable_bg_color=${h.bgDeep}66
+    selectable_bg_color=${h.bgDeep}
+    selectable_border_color=${h.accent}59
     label_font_family=${f.ui}
     label_font_size=13.8 1% 13.8
 
     [mode_bisect]
-    label_color=#${c.fg}
-    pointer_color=#${c.accent}
-    unselectable_bg_color=#${c.bgDeep}
-    even_area_bg_color=#${c.ash}
-    even_area_border_color=#${c.fgDim}
-    odd_area_bg_color=#${c.muted}
-    odd_area_border_color=#${c.fgSoft}
-    history_border_color=#${c.gold}
+    label_color=${h.fg}
+    pointer_color=${h.accent}
+    unselectable_bg_color=${h.bgDeep}
+    even_area_bg_color=${h.ash}
+    even_area_border_color=${h.fgDim}
+    odd_area_bg_color=${h.muted}
+    odd_area_border_color=${h.fgSoft}
+    history_border_color=${h.gold}
 
     [mode_split]
-    pointer_color=#${c.accent}
-    bg_color=#${c.bgDeep}
-    area_bg_color=#${c.ash}
-    vertical_color=#${c.muted}
-    horizontal_color=#${c.fgDim}
-    history_border_color=#${c.gold}
+    pointer_color=${h.accent}
+    bg_color=${h.bgDeep}
+    area_bg_color=${h.ash}
+    vertical_color=${h.muted}
+    horizontal_color=${h.fgDim}
+    history_border_color=${h.gold}
 
     [mode_click]
     button=left
 
     [mode_drag]
-    start_marker_color=#${c.gold}
+    start_marker_color=${h.gold}
     start_marker_size=10
     start_marker_shape=caret
   '';
@@ -320,17 +322,17 @@ in
   '';
   xdg.configFile."hyprland-preview-share-picker/ember.css".text = ''
     .window, .window > box, .notebook > stack, .page {
-      background-color: #${c.bg};
-      color: #${c.fg};
+      background-color: ${h.bg};
+      color: ${h.fg};
     }
     .notebook > header {
-      background-color: #${c.bgDeep};
-      border-color: #${c.border};
+      background-color: ${h.bgDeep};
+      border-color: ${h.border};
     }
-    .tab-label { color: #${c.fgDim}; }
-    .notebook > header > tabs > tab:hover .tab-label { color: #${c.fg}; }
-    .notebook > header > tabs > tab:checked .tab-label { color: #${c.accent}; }
-    .notebook > header > tabs > tab:checked { box-shadow: inset 0 -2px #${c.accent}; }
+    .tab-label { color: ${h.fgDim}; }
+    .notebook > header > tabs > tab:hover .tab-label { color: ${h.fg}; }
+    .notebook > header > tabs > tab:checked .tab-label { color: ${h.accent}; }
+    .notebook > header > tabs > tab:checked { box-shadow: inset 0 -2px ${h.accent}; }
 
     .page flowboxchild, .page button {
       background: none;
@@ -339,30 +341,30 @@ in
       outline: none;
     }
     .card {
-      background-color: #${c.bgAlt};
+      background-color: ${h.bgAlt};
       border: 2px solid transparent;
       border-radius: 8px;
       padding: 5px;
     }
-    flowboxchild:hover > .card, button:hover > .card { background-color: #${c.surface}; }
+    flowboxchild:hover > .card, button:hover > .card { background-color: ${h.surface}; }
     flowboxchild:selected > .card, flowboxchild:focus > .card,
-    button:focus > .card, button:active > .card { border-color: #${c.accent}; }
-    .image-label { color: #${c.fgSoft}; }
+    button:focus > .card, button:active > .card { border-color: ${h.accent}; }
+    .image-label { color: ${h.fgSoft}; }
 
     .region-button {
-      background: #${c.accent};
-      color: #${c.bg};
+      background: ${h.accent};
+      color: ${h.bg};
       border: none;
       box-shadow: none;
     }
-    .region-button:hover, .region-button:focus { background: #${c.accentBright}; }
-    .region-button:disabled { background: #${c.border}; color: #${c.muted}; }
+    .region-button:hover, .region-button:focus { background: ${h.accentBright}; }
+    .region-button:disabled { background: ${h.border}; color: ${h.muted}; }
 
-    .restore-button { color: #${c.fgSoft}; }
+    .restore-button { color: ${h.fgSoft}; }
     .restore-button check:checked {
-      background: #${c.accent};
-      border-color: #${c.accent};
-      color: #${c.bg};
+      background: ${h.accent};
+      border-color: ${h.accent};
+      color: ${h.bg};
     }
   '';
 }

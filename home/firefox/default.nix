@@ -17,6 +17,7 @@
 
 let
   p = (import ../../palette).hash;
+  colour = import ../../lib/colour.nix { inherit lib; };
 
   # Shared with the start page's service and ./vimium.nix.
   startPage = import ./firefox-start-page-wanderer/shared.nix;
@@ -217,21 +218,7 @@ in
       };
 
       # The palette as custom properties, so userChrome.css stays plain CSS.
-      userChrome = ''
-        :root {
-          --ember-bg: ${p.bg};
-          --ember-bg-alt: ${p.bgAlt};
-          --ember-bg-deep: ${p.bgDeep};
-          --ember-surface: ${p.surface};
-          --ember-border: ${p.border};
-          --ember-fg: ${p.fg};
-          --ember-fg-dim: ${p.fgDim};
-          --ember-accent: ${p.accent};
-          --ember-accent-bright: ${p.accentBright};
-        }
-
-      ''
-      + builtins.readFile ./userChrome.css;
+      userChrome = ":root {\n${colour.cssVars "ember" p.slots}}\n\n" + builtins.readFile ./userChrome.css;
     };
   };
 

@@ -20,13 +20,8 @@ nvim.override (prev: {
         # The 25 slots and `ansi`, all with '#'. Named, not `pal.hash` whole:
         # `term` and the rest of `extra` are not danvim's, and would rebuild
         # the wrapper when a start-page colour changes.
-        builtins.listToAttrs (
-          map (name: {
-            inherit name;
-            value = pal.hash.${name};
-          }) ((import ../palette/lib.nix).slotNames ++ [ "ansi" ])
-        )
-        // {
+        pal.hash.slots // {
+          inherit (pal.hash) ansi;
           # The two extras the tokyonight family's syntax needs.
           inherit (pal.hash.extra) orange cyan;
           meta = {

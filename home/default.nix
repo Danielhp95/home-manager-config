@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   ...
 }:
@@ -6,6 +7,7 @@
 let
   # Bare hex (no leading '#'), the palette's native form.
   pal = import ../palette;
+  inherit (import ../lib/colour.nix { inherit lib; }) argb;
 in
 {
 
@@ -73,12 +75,12 @@ in
     config = {
       # OSD only: subtitles are content and keep their own colours.
       # `background` is the letterbox (default: a light checkerboard).
-      # Colours are AARRGGBB.
-      osd-color = "#FF${pal.fg}";
-      osd-outline-color = "#FF${pal.bgDeep}";
-      osd-back-color = "#AF${pal.bg}";
+      # Colours are AARRGGBB (colour.argb).
+      osd-color = argb "FF" pal.fg;
+      osd-outline-color = argb "FF" pal.bgDeep;
+      osd-back-color = argb "AF" pal.bg;
       background = "color";
-      background-color = "#FF${pal.bgDeep}";
+      background-color = argb "FF" pal.bgDeep;
 
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true; # Don't close mpv when video is done
