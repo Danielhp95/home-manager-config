@@ -26,8 +26,7 @@ in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    ../bluetooth.nix
-    ../specialisations/roadwarrior.nix # boot entry with the dGPU off
+    ../../bluetooth.nix
 
     # nixos-hardware has no T16g or Arrow Lake profile; these are the parts
     # that fit. Meteor Lake (same Xe-LPG iGPU): microcode, i915 in the initrd
@@ -91,7 +90,7 @@ in
 
         # The splash is the scene with the SOUL heart in the corner, shown once
         # an entry is picked, so the heart seems to jump from the menu.
-        theme = pkgs.callPackage ../grub_theme { };
+        theme = pkgs.callPackage ../../grub_theme { };
         splashImage = "${config.boot.loader.grub.theme}/background-selected.png";
         splashMode = "stretch";
         # gfxmodeEfi stays "auto": the GOP offers no 1920x1200, so GRUB runs at
@@ -187,7 +186,4 @@ in
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-
-  # The release this disk was installed with; never bump it.
-  system.stateVersion = "26.05";
 }

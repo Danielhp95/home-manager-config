@@ -5,7 +5,6 @@
     impala # iwd TUI
     iwgtk # iwd GUI
   ];
-  networking.hostName = "lenovo"; # Must match the flake's nixosConfigurations attr.
 
   # connman rfkill-blocks every technology saved as disabled, at each boot;
   # `rfkill unblock` doesn't persist, `connmanctl disable/enable <tech>` does.

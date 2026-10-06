@@ -110,12 +110,12 @@
 
       overlays.default = import ./pkgs/overlay.nix inputs;
 
-      nixosConfigurations.lenovo = nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./hardwares/lenovo_t16g_gen3.nix
-          ./non_home_manager_config/configuration.nix
-        ];
-      };
+      nixosConfigurations = nixpkgs.lib.genAttrs [ "lenovo" ] (
+        hostName:
+        nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs hostName; };
+          modules = [ ./hosts/${hostName} ];
+        }
+      );
     };
 }

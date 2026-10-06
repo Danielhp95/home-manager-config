@@ -1,8 +1,5 @@
 { pkgs, ... }:
 {
-  # Per-device output EQ, as WirePlumber-managed filter-chain sinks.
-  imports = [ ./pipewire-eq.nix ];
-
   # pulseaudio only for its CLI tools (pactl & co); pipewire-pulse is the
   # server. Not defaultPackages: assigning that drops perl/rsync/strace.
   environment.systemPackages = with pkgs; [

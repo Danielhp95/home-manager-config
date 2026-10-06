@@ -265,7 +265,7 @@ let
     priority = speakerPriority;
     target = "alsa_output.pci-0000_80_1f.3-platform-sof_sdw.HiFi__Speaker__sink";
     nodes = [
-      (convolver "conv" ./pipewire-eq/thinkpad_t16g_gen3_dolby_balanced.irs)
+      (convolver "conv" ./audio-eq/thinkpad_t16g_gen3_dolby_balanced.irs)
       {
         type = "lv2";
         name = "bass";
