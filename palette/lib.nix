@@ -20,7 +20,7 @@
 #
 # Two consumers enumerate instead of naming keys, so only slots may be strings
 # at those two levels; everything else there must be a list or an attrset:
-#   top level  hyprland/default.nix turns every string into a Lua rgb(..)
+#   top level  home/hyprland/default.nix turns every string into a Lua rgb(..)
 #   hash       the start page turns every string into a CSS variable
 #
 # `meta` holds functions of pkgs (the GTK, cursor and icon packages), so a
@@ -120,7 +120,7 @@ let
   roleShape = {
     # role -> ANSI name, for programs that can only name terminal slots
     # (IPython, prompt_toolkit, glamour). Not black/brightBlack: glamour's
-    # chroma table (git/default.nix) has no stand-in for slots 0 and 8.
+    # chroma table (home/git/default.nix) has no stand-in for slots 0 and 8.
     ansi = {
       names = [
         "accent"
@@ -187,8 +187,8 @@ let
       # Import the theme's gtk-4.0/gtk.css as user CSS (home-manager's
       # gtk.gtk4.theme). False for themes that must not be (adw-gtk3).
       gtk4Import = "bool";
-      # Write ../gtk-css.nix's named colours as user CSS. Only themes that
-      # reference the names follow them (adw-gtk3, libadwaita itself).
+      # Write ../home/hyprland/gtk-css.nix's named colours as user CSS. Only
+      # themes that reference the names follow them (adw-gtk3, libadwaita itself).
       paletteCss = {
         gtk3 = "bool";
         gtk4 = "bool";

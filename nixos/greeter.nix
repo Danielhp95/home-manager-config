@@ -3,7 +3,7 @@
 { lib, pkgs, ... }:
 let
   p = import ../palette;
-  material = import ../noctalia/material.nix { inherit lib; };
+  material = import ../home/noctalia/material.nix { inherit lib; };
 
   # The greeter sets only XDG_SESSION_TYPE and the XDG_*_DESKTOP pair (from
   # DesktopNames=); the IM and wayland toolkit variables come from here.
@@ -64,7 +64,7 @@ in
   # is behind a 0700 home, so Icon= points at the store copy. `f+` rewrites
   # the whole keyfile each boot, dropping anything else stored there.
   systemd.tmpfiles.rules = [
-    "f+ /var/lib/AccountsService/users/dani 0600 root root - [User]\\nIcon=${import ../avatars { inherit pkgs; }}\\nSystemAccount=false\\n"
+    "f+ /var/lib/AccountsService/users/dani 0600 root root - [User]\\nIcon=${import ../pkgs/avatar { inherit pkgs; }}\\nSystemAccount=false\\n"
   ];
 
   environment.systemPackages = [ hyprlandSession ];
@@ -77,7 +77,7 @@ in
     # password prompt; the complete palette below still wins over its colours.
     passwordlessSyncUsers = [ "dani" ];
 
-    # Same cursor as the session (hyprland/theming.nix).
+    # Same cursor as the session (home/hyprland/theming.nix).
     cursorTheme = {
       package = p.meta.cursor.package pkgs;
       inherit (p.meta.cursor) name;
@@ -92,13 +92,13 @@ in
         scheme = "Synced";
         theme_mode = "dark";
         font_family = (import ../fonts.nix).ui;
-        # The same roles as the shell's (noctalia/material.nix).
+        # The same roles as the shell's (home/noctalia/material.nix).
         palette = material.greeter p;
       };
 
       cursor.size = p.meta.cursor.size;
 
-      # Mirrors input.kb_layout / kb_options in hyprland/hyprland.lua.
+      # Mirrors input.kb_layout / kb_options in home/hyprland/hyprland.lua.
       keyboard = {
         layout = "us";
         options = "caps:escape";

@@ -1,9 +1,9 @@
 # THE nvim: danvim's package with the selected palette handed to its Lua as
 # `nixCats.extra("palette")` (read by danvim/lua/danvim/palette.lua).
 #
-# Bound once, as `pkgs.danvim`, in ./overlay.nix; home.nix and
-# firefox/default.nix both use that, so the firenvim host can never run a
-# differently themed nvim.
+# Bound once, as `pkgs.danvim`, in ./overlay.nix; home/default.nix and
+# home/firefox/default.nix both use that, so the firenvim host can never run
+# a differently themed nvim.
 #
 # A plain function, called with `import`, never `callPackage`: nixpkgs has a
 # package called `palette`, and callPackage would fill an argument of that

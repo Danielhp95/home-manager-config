@@ -1,5 +1,5 @@
 # The Ember palette: warm graphite with a coral spark, in the family of the
-# WhiteSur-Dark-orange GTK/Qt theme (hyprland/theming.nix).
+# WhiteSur-Dark-orange GTK/Qt theme (home/hyprland/theming.nix).
 #
 # One hand-kept copy: danvim's palette.lua embeds these values as its fallback
 # for builds without the nix_config override (../danvim.nix).

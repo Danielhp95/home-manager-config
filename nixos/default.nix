@@ -32,7 +32,7 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     extraSpecialArgs = { inherit inputs; };
-    users.dani = ../home.nix;
+    users.dani = ../home;
     # Apps overwrite some managed files (mimeapps.list, GTK settings); a stale
     # .backup from an earlier activation would otherwise abort the next one.
     backupFileExtension = "backup";
@@ -165,7 +165,7 @@
     enable = true; # home-manager's portal module asserts on the pathsToLink this sets
     extraPortals = [
       pkgs.xdg-desktop-portal-gtk # Settings and the rest ("hyprland;gtk")
-      pkgs.xdg-desktop-portal-termfilechooser # file dialogs: yazi (yazi/default.nix)
+      pkgs.xdg-desktop-portal-termfilechooser # file dialogs: yazi (home/yazi/default.nix)
     ];
     config.common = {
       default = [
@@ -203,13 +203,13 @@
     };
   };
 
-  # Session start: greeter script (noctalia-greeter.nix) -> start-hyprland;
-  # Hyprland's start hook pushes the env to systemd (hyprland/default.nix).
+  # Session start: greeter script (./greeter.nix) -> start-hyprland;
+  # Hyprland's start hook pushes the env to systemd (home/hyprland/default.nix).
   # Session daemons must be units WantedBy=graphical-session.target, never
   # exec-once; leave hyprland.systemd.extraCommands at the module default.
 
   # Services a GNOME desktop would normally enable
-  services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see yazi/default.nix)
+  services.gvfs.enable = true; # yazi/nautilus: MTP, network shares (see home/yazi/default.nix)
   services.udisks2.enable = true; # yazi mount menu
   services.gnome.gnome-keyring.enable = true; # Secret Service; unlocked at login by greetd's PAM stack
   services.gnome.glib-networking.enable = true; # TLS for libsoup (GNOME apps such as gnome-weather)
@@ -238,7 +238,7 @@
   # Home Manager's zsh already runs compinit (with the plugin fpath); a second
   # run here rebuilds ~/.config/zsh/.zcompdump on every shell launch (~1s).
   programs.zsh.enableCompletion = false;
-  # LS_COLORS is the palette's (terminal/ls-colors.nix); this would replace it
+  # LS_COLORS is the palette's (home/terminal/ls-colors.nix); this would replace it
   # with the dircolors default in every interactive shell.
   programs.zsh.enableLsColors = false;
   users.users.dani = {

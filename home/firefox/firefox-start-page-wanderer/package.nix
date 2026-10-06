@@ -1,0 +1,146 @@
+# The start page and its backend, buildable (tests included, in checkPhase)
+# without evaluating Home Manager:
+#   nix build --impure --expr 'let p = import <nixpkgs> {}; in
+#     (p.callPackage ./firefox/firefox-start-page-wanderer/package.nix {}).page'
+{
+  lib,
+  cormorant,
+  fetchurl,
+  imagemagick,
+  nodejs,
+  python3,
+  replaceVars,
+  runCommand,
+  stdenvNoCC,
+  writeText,
+}:
+
+let
+  # Imported, not an argument: callPackage would inject nixpkgs' own `palette`
+  # package instead ("attribute 'hash' missing").
+  palette = import ../../../palette;
+  shared = import ./shared.nix;
+  colour = import ../../../lib/colour.nix { inherit lib; };
+
+  ramp = palette.extra.artRamp;
+  brightestSky = lib.last ramp;
+  art =
+    # Text must stay the lightest thing on the page.
+    assert lib.assertMsg (colour.luminance brightestSky < colour.luminance palette.fg)
+      "start page: extra.artRamp's last stop #${brightestSky} is not darker than fg #${palette.fg}";
+    import ./art.nix {
+      inherit
+        fetchurl
+        imagemagick
+        runCommand
+        ramp
+        ;
+    };
+
+  # bgDeep -> bg-deep; digits and punctuation pass through.
+  toKebab =
+    name:
+    lib.concatMapStrings (
+      char:
+      if char == lib.toUpper char && char != lib.toLower char then "-${lib.toLower char}" else char
+    ) (lib.stringToCharacters name);
+
+  # As with ../userChrome.css: nix owns the palette, the stylesheet stays plain.
+  paletteCss = writeText "palette.css" ''
+    /* Generated from ../../palette/ — do not edit. */
+    :root {
+    ${lib.concatStrings (
+      lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (
+        lib.filterAttrs (_: value: builtins.isString value) palette.hash
+      )
+    )}  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
+    }
+  '';
+
+  # The inline favicon: the page's bg, a peak in the painting's mid-tone, the
+  # sun in accent. Bare hex: each follows a %23 in the data URI.
+  indexHtml = replaceVars ./page/index.html {
+    faviconBg = palette.bg;
+    faviconPeak = builtins.elemAt ramp 2;
+    faviconSun = palette.accent;
+  };
+
+  aliasesJson = writeText "aliases.json" (builtins.toJSON shared.searchAliases);
+in
+rec {
+  inherit art;
+
+  page = stdenvNoCC.mkDerivation {
+    pname = "firefox-start-page-wanderer-page";
+    version = "1.0";
+    src = ./page;
+
+    dontConfigure = true;
+    dontBuild = true;
+
+    # nodejs is a *check* input: nothing in the served page needs it.
+    nativeCheckInputs = [ nodejs ];
+    doCheck = true;
+    checkPhase = ''
+      runHook preCheck
+      ALIASES_JSON=${aliasesJson} node --test search.test.js
+      runHook postCheck
+    '';
+
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p $out/assets/fonts
+      cp ${indexHtml} $out/index.html
+      cp style.css app.js search.js $out/assets/
+      cp ${paletteCss} $out/assets/palette.css
+      cp ${aliasesJson} $out/assets/aliases.json
+      cp ${art} $out/assets/wanderer.jpg
+
+      # Only the two faces the page actually uses, served from the page's own
+      # origin: the clock must not depend on fontconfig finding anything.
+      cp ${cormorant}/share/fonts/truetype/CormorantGaramond-Regular.ttf $out/assets/fonts/
+      cp ${cormorant}/share/fonts/truetype/CormorantGaramond-Italic.ttf $out/assets/fonts/
+
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "Static start page: Friedrich's Wanderer, graded into the palette, over a live dashboard";
+      platforms = lib.platforms.all;
+    };
+  };
+
+  service = stdenvNoCC.mkDerivation {
+    pname = "firefox-start-page-wanderer";
+    version = "1.0";
+    src = ./service;
+
+    # In buildInputs rather than nativeBuildInputs so patchShebangs rewrites
+    # `#!/usr/bin/env python3` to this exact interpreter.
+    buildInputs = [ python3 ];
+
+    dontConfigure = true;
+    dontBuild = true;
+
+    nativeCheckInputs = [ python3 ];
+    doCheck = true;
+    checkPhase = ''
+      runHook preCheck
+      python3 -m unittest discover -s . -p 'test_*.py'
+      runHook postCheck
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 firefox-start-page-wanderer.py $out/bin/firefox-start-page-wanderer
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "Local backend for the Wanderer start page (weather, machine, code, todo)";
+      mainProgram = "firefox-start-page-wanderer";
+      platforms = lib.platforms.linux;
+    };
+  };
+}

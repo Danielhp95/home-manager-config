@@ -11,7 +11,7 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nixos-hardware.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Prebuilt database for programs.nix-index and comma (zsh/default.nix).
+    # Prebuilt database for programs.nix-index and comma (home/zsh/default.nix).
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -73,8 +73,8 @@
     danvim.inputs.nixpkgs.follows = "nixpkgs";
     danvim.inputs.stable.follows = "stable";
 
-    # Claude Code skill collections, as plain sources; claude_code/default.nix
-    # picks which skills to expose.
+    # Claude Code skill collections, as plain sources;
+    # home/claude-code/default.nix picks which skills to expose.
     superpowers = {
       url = "github:obra/superpowers";
       flake = false;
