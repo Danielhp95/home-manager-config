@@ -8,6 +8,8 @@ in
 {
   inherit (inputs.iris.packages.${system}) iris;
   inherit (inputs.omnibin.packages.${system}) omnibin omnibin-shell;
+  # ~/.face and the greeter's icon, on the palette's surface (./avatar).
+  avatar = import ./avatar { pkgs = final; };
   # danvim with the selected palette injected (./danvim.nix).
   danvim = import ./danvim.nix { inherit inputs system; };
   # hy3 links against Hyprland's headers: build it against this Hyprland.

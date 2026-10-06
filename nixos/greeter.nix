@@ -71,7 +71,7 @@ in
   # is behind a 0700 home, so Icon= points at the store copy. `f+` rewrites
   # the whole keyfile each boot, dropping anything else stored there.
   systemd.tmpfiles.rules = [
-    "f+ /var/lib/AccountsService/users/${user} 0600 root root - [User]\\nIcon=${import ../pkgs/avatar { inherit pkgs; }}\\nSystemAccount=false\\n"
+    "f+ /var/lib/AccountsService/users/${user} 0600 root root - [User]\\nIcon=${pkgs.avatar}\\nSystemAccount=false\\n"
   ];
 
   environment.systemPackages = [ hyprlandSession ];

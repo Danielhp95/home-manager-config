@@ -89,7 +89,7 @@ in
 
         # The splash is the scene with the SOUL heart in the corner, shown once
         # an entry is picked, so the heart seems to jump from the menu.
-        theme = pkgs.callPackage ../../grub_theme { };
+        theme = pkgs.callPackage ../../pkgs/grub-theme/package.nix { };
         splashImage = "${config.boot.loader.grub.theme}/background-selected.png";
         splashMode = "stretch";
         # gfxmodeEfi stays "auto": the GOP offers no 1920x1200, so GRUB runs at

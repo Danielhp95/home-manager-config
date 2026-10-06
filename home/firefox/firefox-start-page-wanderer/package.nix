@@ -1,7 +1,6 @@
 # The start page and its backend, buildable (tests included, in checkPhase)
 # without evaluating Home Manager:
-#   nix build --impure --expr 'let p = import <nixpkgs> {}; in
-#     (p.callPackage ./firefox/firefox-start-page-wanderer/package.nix {}).page'
+#   nix build .#start-page
 {
   lib,
   cormorant,

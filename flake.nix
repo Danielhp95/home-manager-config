@@ -99,14 +99,24 @@
 
   outputs =
     { self, nixpkgs, ... }@inputs:
+    let
+      # The host's package set, overlay included: no second nixpkgs evaluation.
+      inherit (self.nixosConfigurations.lenovo) pkgs;
+    in
     {
       formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
 
+      # The derivations written in this repo that are worth building alone:
+      # `nix build .#grub-theme`.
+      packages.x86_64-linux = {
+        inherit (pkgs) avatar danvim;
+        grub-theme = pkgs.callPackage ./pkgs/grub-theme/package.nix { };
+        start-page = (pkgs.callPackage ./home/firefox/firefox-start-page-wanderer/package.nix { }).page;
+      };
+
       # What a palette names but evaluation only forces once it is selected:
       # its GTK theme, cursor and icon theme (palette/check.nix).
-      checks.x86_64-linux.palettes = import ./palette/check.nix {
-        inherit (self.nixosConfigurations.lenovo) pkgs;
-      };
+      checks.x86_64-linux.palettes = import ./palette/check.nix { inherit pkgs; };
 
       overlays.default = import ./pkgs/overlay.nix inputs;
 

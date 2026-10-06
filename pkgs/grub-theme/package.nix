@@ -4,7 +4,10 @@
 # art (backgrounds, 48x56 SOUL heart) is upscaled 2x with a point filter for
 # the native 3840x2400 mode: GRUB draws pixmaps unscaled and smooths the
 # backgrounds when it stretches them.
+#
+# Build it alone with `nix build .#grub-theme`.
 {
+  lib,
   stdenvNoCC,
   grub2,
   imagemagick,
@@ -14,7 +17,12 @@ stdenvNoCC.mkDerivation {
   pname = "undertale-grub-theme";
   version = "1.0";
 
-  src = ./.;
+  # Everything here but this file: a comment edit above then rebuilds nothing,
+  # and so does not re-run the bootloader's install hooks on the next switch.
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.difference ./. ./package.nix;
+  };
 
   nativeBuildInputs = [
     grub2

@@ -98,7 +98,7 @@ in
 
   # For shell.avatar_path. The greeter can't read ~ (0700) and gets the same
   # image through AccountsService (nixos/greeter.nix).
-  home.file.".face".source = import ../../pkgs/avatar { inherit pkgs; };
+  home.file.".face".source = pkgs.avatar;
 
   systemd.user.services.noctalia.Service.Environment = [
     "NOCTALIA_ASSETS_DIR=${stormlightAssets}"
