@@ -6,6 +6,12 @@
   ...
 }:
 
+let
+  # The one account. greeter.nix reads it back from home-manager.users.
+  user = "dani";
+  # This checkout, which `nh` rebuilds from.
+  flakeDir = "${config.users.users.${user}.home}/nix_config";
+in
 {
   imports = [
     inputs.home-manager.nixosModules.default
@@ -32,7 +38,7 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     extraSpecialArgs = { inherit inputs; };
-    users.dani = ../home;
+    users.${user} = ../home;
     # Apps overwrite some managed files (mimeapps.list, GTK settings); a stale
     # .backup from an earlier activation would otherwise abort the next one.
     backupFileExtension = "backup";
@@ -96,7 +102,7 @@
 
   programs.nh = {
     enable = true;
-    flake = "/home/dani/nix_config";
+    flake = flakeDir;
     clean = {
       enable = true;
       # Not `--delete-old`: after a rebuild that silently missed the ESP it
@@ -241,7 +247,7 @@
   # LS_COLORS is the palette's (home/terminal/ls-colors.nix); this would replace it
   # with the dircolors default in every interactive shell.
   programs.zsh.enableLsColors = false;
-  users.users.dani = {
+  users.users.${user} = {
     shell = pkgs.zsh;
     isNormalUser = true;
     extraGroups = [

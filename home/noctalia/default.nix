@@ -6,6 +6,9 @@
   ...
 }:
 let
+  # The live checkout: the dart plugin is linked out of it and the wallpapers
+  # are read from it, so both follow a move of the repo or of this directory.
+  flakeDir = "${config.home.homeDirectory}/nix_config";
   p = import ../../palette;
   material = import ./material.nix { inherit lib; };
   # A palette's file stem under ~/.config/noctalia/palettes, which is also the
@@ -91,7 +94,7 @@ in
   # The local DART plugin, linked out of the store so edits to ./dart-plugin
   # hot-reload in the running shell without a rebuild.
   xdg.dataFile."noctalia/plugins/dart".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix_config/home/noctalia/dart-plugin";
+    config.lib.file.mkOutOfStoreSymlink "${flakeDir}/home/noctalia/dart-plugin";
 
   # For shell.avatar_path. The greeter can't read ~ (0700) and gets the same
   # image through AccountsService (nixos/greeter.nix).
@@ -238,7 +241,7 @@ in
 
       wallpaper = {
         enabled = true;
-        directory = "~/nix_config/wallpapers";
+        directory = "~/nix_config/wallpapers"; # flakeDir, in the ~ form noctalia keeps
         fill_mode = "crop";
       };
 

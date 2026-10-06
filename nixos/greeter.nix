@@ -1,7 +1,14 @@
 # Noctalia Greeter as the display manager (greetd). Settings reference:
 # https://docs.noctalia.dev/greeter/configuration/
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
+  # The one Home Manager user (set in ./default.nix).
+  user = builtins.head (builtins.attrNames config.home-manager.users);
   p = import ../palette;
   material = import ../home/noctalia/material.nix { inherit lib; };
 
@@ -64,7 +71,7 @@ in
   # is behind a 0700 home, so Icon= points at the store copy. `f+` rewrites
   # the whole keyfile each boot, dropping anything else stored there.
   systemd.tmpfiles.rules = [
-    "f+ /var/lib/AccountsService/users/dani 0600 root root - [User]\\nIcon=${import ../pkgs/avatar { inherit pkgs; }}\\nSystemAccount=false\\n"
+    "f+ /var/lib/AccountsService/users/${user} 0600 root root - [User]\\nIcon=${import ../pkgs/avatar { inherit pkgs; }}\\nSystemAccount=false\\n"
   ];
 
   environment.systemPackages = [ hyprlandSession ];
@@ -75,7 +82,7 @@ in
 
     # noctalia's greeter sync (shell.greeter_sync) pushes the wallpaper with no
     # password prompt; the complete palette below still wins over its colours.
-    passwordlessSyncUsers = [ "dani" ];
+    passwordlessSyncUsers = [ user ];
 
     # Same cursor as the session (home/hyprland/theming.nix).
     cursorTheme = {
@@ -85,8 +92,8 @@ in
 
     settings = {
       session.default = "Hyprland";
-      # Opens straight on dani's password step; Esc goes back to the user list.
-      user.default = "dani";
+      # Opens straight on the user's password step; Esc goes back to the user list.
+      user.default = user;
 
       appearance = {
         scheme = "Synced";
