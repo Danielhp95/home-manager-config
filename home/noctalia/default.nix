@@ -3,13 +3,14 @@
   pkgs,
   lib,
   config,
+  theme,
   ...
 }:
 let
   # The live checkout: the dart plugin is linked out of it and the wallpapers
   # are read from it, so both follow a move of the repo or of this directory.
   flakeDir = "${config.home.homeDirectory}/nix_config";
-  p = import ../../palette;
+  p = theme;
   material = import ./material.nix { inherit lib; };
   # A palette's file stem under ~/.config/noctalia/palettes, which is also the
   # name the settings GUI shows and `theme.custom_palette` selects.
@@ -124,7 +125,7 @@ in
     # arrays wholesale.
     settings = {
       shell = {
-        font_family = (import ../../fonts.nix).ui;
+        font_family = theme.fonts.ui;
         telemetry_enabled = false;
         avatar_path = "~/.face";
         # The clipboard history (mod+CONTROL+V); vicinae's is off in

@@ -1,7 +1,7 @@
 # System fonts and fontconfig defaults, from ../fonts.nix.
-{ pkgs, ... }:
+{ pkgs, theme, ... }:
 let
-  f = import ../fonts.nix;
+  f = theme.fonts;
 in
 {
   fonts = {

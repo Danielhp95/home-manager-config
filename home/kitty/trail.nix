@@ -1,12 +1,16 @@
 # kitty's stock cursor-trail-blaze with its two colours taken from the palette.
 # The stock pipeline has no `var` overrides, so this file is that pipeline plus
-# two. The shader works in linear light; ../../lib/colour.nix does the conversion.
+# two. The shader works in linear light; theme.colour does the conversion.
 #
 # Returns a store DIRECTORY holding cursor-trail.pipeline. `custom_shaders`
 # takes the absolute path, so the option value changes exactly when a colour
 # does, and kitty recompiles on the reload that follows (it compares that
 # option, and caches pipelines by name).
-{ lib, writeTextDir }:
+{
+  lib,
+  writeTextDir,
+  theme,
+}:
 {
   # Each: { slot = "<palette attribute>"; hex = "<bare hex>"; }
   fill, # TRAIL_COLOR: the body of the trail
@@ -16,7 +20,7 @@
   label ? c: "${c.slot} #${c.hex}",
 }:
 let
-  colour = import ../../lib/colour.nix { inherit lib; };
+  inherit (theme) colour;
   float4 = c: "float4(${colour.linear3 c.hex}, 1.0)";
 in
 writeTextDir "cursor-trail.pipeline" ''

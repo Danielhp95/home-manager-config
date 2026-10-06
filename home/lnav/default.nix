@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, theme, ... }:
 
 # lnav ignores the terminal palette, so this is a full Ember theme. lnav does
 # NOT validate a theme's body: an unknown style key or undefined $var silently
@@ -9,7 +9,7 @@
 # into the full 256-colour cube, off-palette.
 
 let
-  p = (import ../../palette).hash;
+  p = theme.hash;
 
   vars = {
     inherit (p)

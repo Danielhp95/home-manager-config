@@ -1,7 +1,6 @@
-_:
-
+{ theme, ... }:
 let
-  p = (import ../palette).hash;
+  p = theme.hash;
 in
 {
   programs.zathura = {

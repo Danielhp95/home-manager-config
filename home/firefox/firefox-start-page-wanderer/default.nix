@@ -8,12 +8,13 @@
   lib,
   osConfig,
   pkgs,
+  theme,
   ...
 }:
 
 let
   shared = import ./shared.nix;
-  wanderer = pkgs.callPackage ./package.nix { };
+  wanderer = pkgs.callPackage ./package.nix { inherit theme; };
 
   home = config.home.homeDirectory;
 

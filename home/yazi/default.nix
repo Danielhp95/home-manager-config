@@ -1,10 +1,11 @@
 {
   pkgs,
   lib,
+  theme,
   ...
 }:
 let
-  p = (import ../../palette).hash;
+  p = theme.hash;
 
   # https://github.com/yazi-rs/plugins — this pin MUST track nixpkgs' yazi
   # (26.9.1; this rev targets 26.8.15 and runs clean on 26.9.1): the plugin API

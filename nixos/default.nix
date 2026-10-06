@@ -3,6 +3,7 @@
   pkgs,
   lib,
   inputs,
+  theme,
   ...
 }:
 
@@ -31,13 +32,13 @@ in
   nixpkgs.overlays = [
     inputs.claude-code.overlays.default
     inputs.firefox-addons.overlays.default # pkgs.firefox-addons.*
-    (import ../pkgs/overlay.nix inputs)
+    (import ../pkgs/overlay.nix { inherit inputs theme; })
   ];
 
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = { inherit inputs theme; };
     users.${user} = ../home;
     # Apps overwrite some managed files (mimeapps.list, GTK settings); a stale
     # .backup from an earlier activation would otherwise abort the next one.
@@ -184,7 +185,7 @@ in
 
   # The terminals' ANSI 0-15, so the LUKS prompt and ttys are Ember.
   # Set via kernel params: takes effect on the next boot.
-  console.colors = (import ../palette).ansi;
+  console.colors = theme.ansi;
 
   time.timeZone = "America/New_York";
 

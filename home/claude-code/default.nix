@@ -3,11 +3,12 @@
   pkgs,
   lib,
   inputs,
+  theme,
   ...
 }:
 let
-  pal = import ../../palette;
-  colour = import ../../lib/colour.nix { inherit lib; };
+  pal = theme;
+  inherit (theme) colour;
   # "e08060" -> "224;128;96", the form the script's truecolor escapes take.
   rgb = colour.rgbSemicolons;
 

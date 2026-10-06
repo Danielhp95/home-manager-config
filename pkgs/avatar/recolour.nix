@@ -9,6 +9,7 @@
   lib,
   runCommand,
   imagemagick,
+  theme,
 }:
 {
   src,
@@ -18,7 +19,7 @@
   name ? "avatar.png",
 }:
 let
-  colour = import ../../lib/colour.nix { inherit lib; };
+  inherit (theme) colour;
   # Per-channel shift in ImageMagick's 0-1 range.
   shift = lib.zipListsWith (t: f: toString ((t - f) / 255.0)) (colour.channels to) (
     colour.channels from

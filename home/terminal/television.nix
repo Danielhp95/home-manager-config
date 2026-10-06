@@ -1,6 +1,11 @@
-{ pkgs, config, ... }:
+{
+  pkgs,
+  config,
+  theme,
+  ...
+}:
 let
-  p = (import ../../palette).hash;
+  p = theme.hash;
 
   # Not on PATH: the sai venv's dart, as in noctalia/dart-plugin/plugin.toml.
   dart = "${config.home.homeDirectory}/Projects/sai/.venv/bin/dart";

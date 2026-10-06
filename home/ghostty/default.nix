@@ -1,11 +1,11 @@
-{ lib, ... }:
+{ lib, theme, ... }:
 
 # Ghostty, set up to match kitty/kitty.conf. It has no hints kitten
 # (ghostty-org/ghostty#2012, #2394); tmux-thumbs (prefix+p) covers that inside
 # tmux. Its bundled Nerd Font fallback makes kitty's symbol_map unnecessary.
 
 let
-  p = (import ../../palette).hash;
+  p = theme.hash;
 in
 {
   programs.ghostty = {
@@ -13,7 +13,7 @@ in
     enableZshIntegration = true;
     settings = {
       # ── Fonts ──────────────────────────────────────────────────────────────
-      font-family = (import ../../fonts.nix).mono;
+      font-family = theme.fonts.mono;
       # kitty's adjust_line_height 117%: ghostty takes the increase.
       adjust-cell-height = "17%";
 

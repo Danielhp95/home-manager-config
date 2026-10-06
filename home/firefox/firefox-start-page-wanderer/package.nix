@@ -12,14 +12,15 @@
   runCommand,
   stdenvNoCC,
   writeText,
+  theme,
 }:
 
 let
-  # Imported, not an argument: callPackage would inject nixpkgs' own `palette`
-  # package instead ("attribute 'hash' missing").
-  palette = import ../../../palette;
+  # `theme`, never `palette`, as the argument: nixpkgs has a package called
+  # palette, and callPackage would fill an argument of that name with it.
+  palette = theme;
   shared = import ./shared.nix;
-  colour = import ../../../lib/colour.nix { inherit lib; };
+  inherit (theme) colour;
 
   ramp = palette.extra.artRamp;
   brightestSky = lib.last ramp;

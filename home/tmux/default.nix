@@ -2,11 +2,12 @@
   pkgs,
   lib,
   config,
+  theme,
   ...
 }:
 
 let
-  palette = import ../../palette;
+  palette = theme;
   p = palette.hash;
   inherit (palette.roles) search;
   # The @color_* variables tmux.conf renders with, from palette/

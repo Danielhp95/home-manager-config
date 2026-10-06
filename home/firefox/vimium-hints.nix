@@ -8,11 +8,11 @@
 # The vomnibar's class names are Vimium 2.x's (pages/vomnibar_page.css in the
 # xpi); a selector that matches nothing fails silently, and Vimium's own dark
 # sheet shows through.
-{ lib, p }:
+{ theme }:
 let
-  colour = import ../../lib/colour.nix { inherit lib; };
-  h = colour.hash;
-  inherit (colour) rgba;
+  p = theme;
+  h = theme.colour.hash;
+  inherit (theme.colour) rgba;
   primary = p.${p.roles.material.primary};
   # The characters already typed: the terminal's paper white.
   white = h p.term.brightWhite;

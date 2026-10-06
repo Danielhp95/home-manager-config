@@ -1,6 +1,7 @@
 # Every package this flake adds to nixpkgs or changes in it: packages from
 # flake inputs, overrides, and the pinned package sets.
-inputs: final: prev:
+{ inputs, theme }:
+final: prev:
 let
   system = prev.stdenv.hostPlatform.system;
   hyprland = inputs.hyprland.packages.${system}.hyprland;
@@ -9,9 +10,12 @@ in
   inherit (inputs.iris.packages.${system}) iris;
   inherit (inputs.omnibin.packages.${system}) omnibin omnibin-shell;
   # ~/.face and the greeter's icon, on the palette's surface (./avatar).
-  avatar = import ./avatar { pkgs = final; };
+  avatar = import ./avatar {
+    pkgs = final;
+    inherit theme;
+  };
   # danvim with the selected palette injected (./danvim.nix).
-  danvim = import ./danvim.nix { inherit inputs system; };
+  danvim = import ./danvim.nix { inherit inputs system theme; };
   # hy3 links against Hyprland's headers: build it against this Hyprland.
   inherit hyprland;
   hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };

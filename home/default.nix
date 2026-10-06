@@ -1,13 +1,13 @@
 {
-  lib,
   pkgs,
+  theme,
   ...
 }:
 
 let
   # Bare hex (no leading '#'), the palette's native form.
-  pal = import ../palette;
-  inherit (import ../lib/colour.nix { inherit lib; }) argb;
+  pal = theme;
+  inherit (theme.colour) argb;
 in
 {
 

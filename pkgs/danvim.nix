@@ -5,12 +5,15 @@
 # home/firefox/default.nix both use that, so the firenvim host can never run
 # a differently themed nvim.
 #
-# A plain function, called with `import`, never `callPackage`: nixpkgs has a
-# package called `palette`, and callPackage would fill an argument of that
-# name with it.
-{ inputs, system }:
+# A plain function, called with `import`: it needs the flake inputs, which
+# callPackage does not have.
+{
+  inputs,
+  system,
+  theme,
+}:
 let
-  pal = import ../palette;
+  pal = theme;
   nvim = inputs.danvim.packages.${system}.nvim;
 in
 nvim.override (prev: {

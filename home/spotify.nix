@@ -1,4 +1,9 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  pkgs,
+  theme,
+  ...
+}:
 
 # Spotify (CEF) ignores desktop themes, so spicetify patches its web bundle:
 # Sleek with an Ember colour scheme. spicetify installs its own wrapped spotify;
@@ -6,7 +11,7 @@
 # `nix flake update spicetify-nix`.
 
 let
-  p = import ../palette;
+  p = theme;
   spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {

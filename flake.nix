@@ -102,6 +102,8 @@
     let
       system = "x86_64-linux";
       inherit (nixpkgs) lib;
+      # The selected palette, the fonts and the colour helpers (./theme.nix).
+      theme = import ./theme.nix { inherit lib; };
       # The host's package set, overlay included: no second nixpkgs evaluation.
       inherit (self.nixosConfigurations.lenovo) pkgs;
 
@@ -150,7 +152,8 @@
       packages.${system} = {
         inherit (pkgs) avatar danvim;
         grub-theme = pkgs.callPackage ./pkgs/grub-theme/package.nix { };
-        start-page = (pkgs.callPackage ./home/firefox/firefox-start-page-wanderer/package.nix { }).page;
+        start-page =
+          (pkgs.callPackage ./home/firefox/firefox-start-page-wanderer/package.nix { inherit theme; }).page;
       };
 
       # `nix flake check`. Nothing runs these on its own: there is no CI.
@@ -164,12 +167,12 @@
         deadnix = lint "deadnix" [ pkgs.deadnix ] "deadnix --fail .";
       };
 
-      overlays.default = import ./pkgs/overlay.nix inputs;
+      overlays.default = import ./pkgs/overlay.nix { inherit inputs theme; };
 
       nixosConfigurations = nixpkgs.lib.genAttrs [ "lenovo" ] (
         hostName:
         nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs hostName; };
+          specialArgs = { inherit inputs hostName theme; };
           modules = [ ./hosts/${hostName} ];
         }
       );

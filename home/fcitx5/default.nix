@@ -2,7 +2,7 @@
 # store symlink, so changes made in fcitx5-configtool must be ported here.
 # fcitx5-daemon.service is WantedBy=graphical-session.target, so it survives
 # hyprland's target restart. The pinyin user dict lives in ~/.local/share.
-{ pkgs, ... }:
+{ pkgs, theme, ... }:
 
 let
   # The Ember skin goes in ~/.local/share (XDG_DATA_HOME) because two renderers
@@ -11,6 +11,7 @@ let
   # default skin. The wrapper's share/ is daemon-only, and the per-user
   # profile doesn't link share/fcitx5.
   ember = import ./ember/package.nix {
+    inherit theme;
     inherit (pkgs)
       stdenvNoCC
       lib
@@ -18,7 +19,7 @@ let
       replaceVars
       ;
   };
-  inherit (import ../../fonts.nix) ui;
+  inherit (theme.fonts) ui;
 in
 {
   xdg.dataFile."fcitx5/themes/Ember".source = "${ember}/share/fcitx5/themes/Ember";

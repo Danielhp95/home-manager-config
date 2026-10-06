@@ -2,14 +2,15 @@
   pkgs,
   lib,
   inputs,
+  theme,
   ...
 }:
 let
   # Bare hex: in the slurp wrapper's flags a leading '#' would start a comment.
-  c = import ../../palette;
+  c = theme;
   # The same slots with '#', for the generated INI and CSS below.
   h = c.hash;
-  f = import ../../fonts.nix;
+  f = theme.fonts;
 
   # slurp in Ember for every caller (wl-ocr, the share picker's region button);
   # a caller's own flags still win.

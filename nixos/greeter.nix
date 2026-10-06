@@ -4,12 +4,13 @@
   config,
   lib,
   pkgs,
+  theme,
   ...
 }:
 let
   # The one Home Manager user (set in ./default.nix).
   user = builtins.head (builtins.attrNames config.home-manager.users);
-  p = import ../palette;
+  p = theme;
   material = import ../home/noctalia/material.nix { inherit lib; };
 
   # The greeter sets only XDG_SESSION_TYPE and the XDG_*_DESKTOP pair (from
@@ -100,7 +101,7 @@ in
       appearance = {
         scheme = "Synced";
         theme_mode = "dark";
-        font_family = (import ../fonts.nix).ui;
+        font_family = theme.fonts.ui;
         # The same roles as the shell's (home/noctalia/material.nix).
         palette = material.greeter p;
       };

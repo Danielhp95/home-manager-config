@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  theme,
+  ...
+}:
 
 # IPython comes from each project's virtualenv, not this flake, so it is themed
 # through ~/.ipython, which every venv's ipython reads. The two style files
@@ -7,7 +12,7 @@
 # (palette.roles.ansi).
 
 let
-  roles = (import ../../palette).roles.ansi;
+  roles = theme.roles.ansi;
 
   # palette.term's names as pygments and prompt_toolkit spell them: slot 7 is
   # "gray" there, slot 15 "white".

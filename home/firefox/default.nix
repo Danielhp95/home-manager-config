@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  theme,
   ...
 }:
 
@@ -16,8 +17,8 @@
 # reMarkable. Their .xpi files stay in the profile (docs/manual-steps.md).
 
 let
-  p = (import ../../palette).hash;
-  colour = import ../../lib/colour.nix { inherit lib; };
+  p = theme.hash;
+  inherit (theme) colour;
 
   # Shared with the start page's service and ./vimium.nix.
   startPage = import ./firefox-start-page-wanderer/shared.nix;

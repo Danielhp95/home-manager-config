@@ -3,10 +3,11 @@
   lib,
   librsvg,
   replaceVars,
+  theme,
 }:
 
 let
-  p = (import ../../../palette).hash;
+  p = theme.hash;
 
   # The palette attributes each file uses as placeholders.
   themeConf = replaceVars ./Ember.conf {

@@ -1,12 +1,11 @@
-_:
-
+{ theme, ... }:
 # Only Element's own theme system colours its web content, via `custom_themes`.
 # `default_theme` only applies to a profile that never chose a theme (the choice
 # lives in account data), so the theme is picked once by hand:
 # docs/manual-steps.md.
 
 let
-  p = (import ../palette).hash;
+  p = theme.hash;
 in
 {
   programs.element-desktop = {

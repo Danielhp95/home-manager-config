@@ -2,11 +2,12 @@
   pkgs,
   lib,
   config,
+  theme,
   ...
 }:
 let
-  palette = import ../../palette;
-  colour = import ../../lib/colour.nix { inherit lib; };
+  palette = theme;
+  inherit (theme) colour;
 
   # gh's markdown style (GLAMOUR_STYLE): glamour's dark.json through the
   # terminal's ANSI slots, token roles from palette.roles.ansi (shared with

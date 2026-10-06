@@ -1,7 +1,12 @@
-{ lib, pkgs, ... }:
+{
+  lib,
+  pkgs,
+  theme,
+  ...
+}:
 
 let
-  palette = import ../../palette;
+  palette = theme;
   p = palette.hash;
 
   # The cursor trail in two palette slots, chosen per palette (meta.trail).
@@ -9,7 +14,7 @@ let
     slot = name;
     hex = palette.${name};
   };
-  trail = pkgs.callPackage ./trail.nix { } {
+  trail = pkgs.callPackage ./trail.nix { inherit theme; } {
     fill = slot palette.meta.trail.fill;
     rim = slot palette.meta.trail.rim;
   };
@@ -17,7 +22,7 @@ in
 {
   programs.kitty = {
     enable = true;
-    font.name = (import ../../fonts.nix).mono;
+    font.name = theme.fonts.mono;
     # Colours from ../../palette/. kitty.conf is written after these and would
     # override them, so it must not set any of these.
     settings = {

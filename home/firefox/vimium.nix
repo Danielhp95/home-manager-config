@@ -2,6 +2,7 @@
   lib,
   pkgs,
   config,
+  theme,
   ...
 }:
 
@@ -17,7 +18,6 @@
 
 let
   startPage = import ./firefox-start-page-wanderer/shared.nix;
-  p = import ../../palette;
 
   vimiumSettings = {
     # Vimium stays off entirely here (empty passKeys): editors, canvases and
@@ -74,7 +74,7 @@ let
     settingsVersion = "2.3";
 
     # Hints and vomnibar in the selected palette (./vimium-hints.nix).
-    userDefinedLinkHintCss = import ./vimium-hints.nix { inherit lib p; };
+    userDefinedLinkHintCss = import ./vimium-hints.nix { inherit theme; };
   };
 in
 {

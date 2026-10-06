@@ -13,9 +13,9 @@
 #
 # Hex is written without '#': in an rc file or style sheet that starts a
 # comment, and matplotlib accepts bare six-digit hex for colours and cycles.
-{ lib, ... }:
+{ lib, theme, ... }:
 let
-  p = import ../palette;
+  p = theme;
 
   # Categorical order: violet first, then the hues furthest from it, so two
   # series in one axes are never neighbours on the colour wheel. A palette that

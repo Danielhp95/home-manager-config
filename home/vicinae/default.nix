@@ -2,11 +2,12 @@
   config,
   lib,
   pkgs,
+  theme,
   ...
 }:
 
 let
-  palette = import ../../palette;
+  palette = theme;
   vicinae = config.programs.vicinae.package;
 
   # The two dmenu-style pickers, on PATH by name (hyprland.lua binds them).
@@ -135,7 +136,7 @@ in
       font = {
         normal = {
           size = 15;
-          family = (import ../../fonts.nix).monoWide;
+          family = theme.fonts.monoWide;
         };
       };
     };

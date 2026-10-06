@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, theme, ... }:
 
 # One colour per kind of file for everything that lists files outside yazi:
 # LS_COLORS (ls, fd, the zsh completion menu, nushell's ls) and eza's theme.
@@ -9,8 +9,8 @@
 # slot, so it follows whatever palette the terminal has (the Linux console
 # included, which cannot draw hex); any other slot falls back to truecolor.
 let
-  palette = import ../../palette;
-  colour = import ../../lib/colour.nix { inherit lib; };
+  palette = theme;
+  inherit (theme) colour;
 
   # kind -> slot, shared with yazi's filetype rules.
   kinds = import ./file-kinds.nix;

@@ -2,12 +2,13 @@
   pkgs,
   config,
   lib,
+  theme,
   ...
 }:
 let
-  p = import ../../palette;
+  p = theme;
   m = p.meta;
-  f = import ../../fonts.nix;
+  f = theme.fonts;
   css = import ./gtk-css.nix p;
   hyprctl = lib.getExe' pkgs.hyprland "hyprctl";
 in
