@@ -6,6 +6,7 @@
 }:
 let
   palette = import ../../palette;
+  colour = import ../../lib/colour.nix { inherit lib; };
 
   # gh's markdown style (GLAMOUR_STYLE): glamour's dark.json through the
   # terminal's ANSI slots, token roles from palette.roles.ansi (shared with
@@ -36,7 +37,7 @@ let
   # role -> slot number (prose) / xterm stand-in (chroma).
   n = role: toString palette.termIndex.${normal palette.roles.ansi.${role}};
   x = builtins.mapAttrs (_: name: xterm.${normal name}) palette.roles.ansi;
-  comment = "#${((import ../../lib/xterm256.nix).nearestNoDarker palette.muted).hex}";
+  comment = "#${(colour.nearestNoDarker palette.muted).hex}";
 
   bold = color: {
     inherit color;

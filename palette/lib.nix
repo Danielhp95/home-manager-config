@@ -413,9 +413,6 @@ let
     );
 
   # A { dark, light } pair, both sides held to the same check.
-  checkHalves =
-    check: at: v:
-    checkKeys at halves v ++ eachPresent halves v (h: check "${at}.${h}");
 
   topLevel = {
     dark = checkHexSet slotNames;
