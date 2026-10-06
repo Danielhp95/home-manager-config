@@ -1,0 +1,3 @@
+# repeated_keys wants `a.b = 1; a.c = 2;` folded into `a = { b = 1; c = 2; };`.
+# Here the dotted keys each carry their own comment block, so they stay apart.
+disabled = [ "repeated_keys" ]

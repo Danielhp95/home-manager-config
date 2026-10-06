@@ -100,23 +100,69 @@
   outputs =
     { self, nixpkgs, ... }@inputs:
     let
+      system = "x86_64-linux";
+      inherit (nixpkgs) lib;
       # The host's package set, overlay included: no second nixpkgs evaluation.
       inherit (self.nixosConfigurations.lenovo) pkgs;
+
+      # The Nix files and the lint configuration only, so a lint check is
+      # rebuilt when Nix code changes and not when a wallpaper does.
+      nixSrc = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.unions [
+          (lib.fileset.fileFilter (f: f.hasExt "nix") ./.)
+          ./statix.toml
+        ];
+      };
+      lint =
+        name: tools: cmd:
+        pkgs.runCommand "lint-${name}" { nativeBuildInputs = tools; } ''
+          cd ${nixSrc}
+          ${cmd}
+          touch $out
+        '';
     in
     {
-      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
+      # `nix fmt`: deadnix --edit, then nixfmt, over every tracked .nix file.
+      formatter.${system} = pkgs.treefmt.withConfig {
+        runtimeInputs = [
+          pkgs.nixfmt
+          pkgs.deadnix
+        ];
+        settings = {
+          tree-root-file = "flake.nix";
+          formatter.deadnix = {
+            command = "deadnix";
+            options = [ "--edit" ];
+            includes = [ "*.nix" ];
+            priority = 0;
+          };
+          formatter.nixfmt = {
+            command = "nixfmt";
+            includes = [ "*.nix" ];
+            priority = 1;
+          };
+        };
+      };
 
       # The derivations written in this repo that are worth building alone:
       # `nix build .#grub-theme`.
-      packages.x86_64-linux = {
+      packages.${system} = {
         inherit (pkgs) avatar danvim;
         grub-theme = pkgs.callPackage ./pkgs/grub-theme/package.nix { };
         start-page = (pkgs.callPackage ./home/firefox/firefox-start-page-wanderer/package.nix { }).page;
       };
 
-      # What a palette names but evaluation only forces once it is selected:
-      # its GTK theme, cursor and icon theme (palette/check.nix).
-      checks.x86_64-linux.palettes = import ./palette/check.nix { inherit pkgs; };
+      # `nix flake check`. Nothing runs these on its own: there is no CI.
+      checks.${system} = {
+        # What a palette names but evaluation only forces once it is selected:
+        # its GTK theme, cursor and icon theme (palette/check.nix).
+        palettes = import ./palette/check.nix { inherit pkgs; };
+        nixfmt = lint "nixfmt" [ pkgs.nixfmt ] "find . -name '*.nix' -exec nixfmt --check {} +";
+        # statix.toml switches off the one rule this repo does not follow.
+        statix = lint "statix" [ pkgs.statix ] "statix check .";
+        deadnix = lint "deadnix" [ pkgs.deadnix ] "deadnix --fail .";
+      };
 
       overlays.default = import ./pkgs/overlay.nix inputs;
 
