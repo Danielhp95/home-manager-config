@@ -84,6 +84,8 @@ in
     pkgs.grafana-loki
     # jrohland/claudecode only runs with jq on PATH (commandExists("jq")).
     pkgs.jq
+    # rylos/tailnet asks `xdg-user-dir DOWNLOAD` for its Taildrop directory.
+    pkgs.xdg-user-dirs
   ];
 
   # The local DART plugin, linked out of the store so edits to ./dart-plugin
@@ -221,6 +223,10 @@ in
         # parse hyprland.conf can't read the lua config.
         "kenn/keybind-cheatsheet"
 
+        # Tailscale state, peers (copy IP/name), exit nodes; also a `tn`
+        # launcher prefix. Needs tailscale and ssh from the system profile.
+        "rylos/tailnet"
+
         # gpu-screen-recorder front end, no bar widget: Super+Shift+R
         # (hyprland.lua) and the control-center tile drive it.
         "noctalia/screen_recorder"
@@ -258,6 +264,12 @@ in
         position = "top";
         thickness = 36;
         background_opacity = 0.0;
+        # No protocol blur behind the bar: the pills are opaque, and the gaps
+        # between them stay clear. noctalia asks the compositor to blur the
+        # whole bar rect (ext-background-effect-v1), which Hyprland's layer
+        # rules can't switch off; this drops the request itself (5.2.1).
+        # https://docs.noctalia.dev/noctalia/bar/ ("compositor_blur")
+        compositor_blur = false;
         radius = 18;
         margin_ends = 8; # inset from each end of the bar
         # margin_edge: gap above; margin_opposite_edge: gap below, taken from
@@ -304,6 +316,7 @@ in
             id = "tray";
             members = [
               "tray"
+              "tailnet"
               "notifications"
             ];
             fill = "surface_variant";
@@ -419,6 +432,10 @@ in
 
         claudecode = {
           type = "jrohland/claudecode:pill";
+        };
+
+        tailnet = {
+          type = "rylos/tailnet:bar";
         };
       };
 

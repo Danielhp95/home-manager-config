@@ -14,9 +14,9 @@ Hand-written from the C++ bindings, since noctalia ships no definitions:
   src/ui/ui_tree_reconciler.cpp      per-control props and callback props
   src/shell/**/plugin_*.cpp          the hooks noctalia calls back into
   docs/plugin-api.json               which plugin_api level introduced what
-Last checked against noctalia d6607b4 (2026-09-08, plugin API 30). Re-check
-after a version bump; a stale entry here type-checks clean and then fails at
-runtime.
+Last checked against noctalia d6607b4 (2026-09-08, plugin API 30); levels 31
+and 32 added from e639a87 (2026-10-03), the rest not re-read. Re-check after a
+version bump; a stale entry here type-checks clean and then fails at runtime.
 
 All the globals are registered for every entry kind, so they are all declared
 unconditionally here. Availability is by effect, not existence: calling
@@ -226,6 +226,10 @@ declare noctalia: {
 	-- mask on that output (API 25).
 	setWallpaperMask: (connector: string, mask: WallpaperMask?) -> (),
 	isDarkMode: () -> boolean,
+	-- "#RRGGBB" for a role of the active palette ("primary", "on_surface", ...);
+	-- nil for an unknown role (API 31).
+	-- https://docs.noctalia.dev/noctalia/plugins/development/runtime-api/
+	getColor: (role: string) -> string?,
 
 	-- ### Shell
 	-- panelId is fully qualified, e.g. "dani/dart:panel".
@@ -464,13 +468,14 @@ so their handlers survive re-renders. A closure still receives the same string
 arguments a named handler does.
 
 Click targets: ui.button (onClick, onRightClick, onHover, plus `tooltip`), and
-ui.row / ui.column / ui.box / ui.image (onClick and onHover only -- no
-tooltip, no right-click).
+ui.row / ui.column / ui.box / ui.image (onClick, onHover and `tooltip` -- no
+right-click).
 
 Levels: dragSource / dropZone are panel-only (API 5); markdown, input
 submitOnEnter and scroll stickToBottom / onScroll / scrollToBottomRev are API
 21; input frameVisible is API 27; graph onPointerMove / onPointerLeave are
-API 29.
+API 29; `tooltip` on row / column / box / image is API 32. One line per level:
+https://github.com/noctalia-dev/noctalia/blob/main/docs/plugin-api.json
 ]]
 declare ui: {
 	column: (props: { [string]: any }?, children: { UiNode }?) -> UiNode,
