@@ -93,58 +93,24 @@ let
     mauveBright = "553646";
     sageBright = "27553c";
   };
-
-  # Ember has no true red, blue or magenta: the terminal's red IS the accent
-  # (error has no ANSI slot), blue is magma, magenta is mauve.
-  ansiFrom = c: {
-    red = c.accent;
-    green = c.olive;
-    yellow = c.gold;
-    blue = c.steel;
-    magenta = c.mauve;
-    cyan = c.sage;
-    brightBlack = c.muted;
-    brightRed = c.accentBright;
-    brightGreen = c.oliveBright;
-    brightYellow = c.goldBright;
-    brightBlue = c.steelBright;
-    brightMagenta = c.mauveBright;
-    brightCyan = c.sageBright;
-    brightWhite = "ffffff";
-  };
 in
 {
   inherit dark light;
 
-  # The 16 ANSI colours by name (kitty, ghostty, the Linux console, noctalia's
-  # terminal templates). black and white are the two that swap between halves.
-  term = {
-    dark = ansiFrom dark // {
-      black = dark.bg;
-      white = dark.fg;
-    };
-    light = ansiFrom light // {
-      black = light.fg;
-      white = light.bg;
-    };
+  # The 16 ANSI colours (kitty, ghostty, the Linux console, noctalia's terminal
+  # templates), where they are not ./lib.nix's ansiDefaults. Ember has no true
+  # red, blue or magenta: the terminal's red IS the accent (error has no ANSI
+  # slot), blue is magma, magenta is mauve.
+  ansi = {
+    red = "accent";
+    brightRed = "accentBright";
   };
 
   # Colours outside the 25 slots, each with one or two consumers.
   extra = {
-    # noctalia's error role; the error slot itself in each half.
-    urgent = {
-      dark = "e05252";
-      light = "b3261e";
-    };
-    # Where a consumer wants an orange apart from blue (vicinae); in Ember both
-    # are magma, so this is steel in each half.
-    orange = {
-      dark = "ef7f38";
-      light = "a84e16";
-    };
-    # danvim's tokyonight family paints types with it; under Ember nothing
-    # reads it. Sage, the slot nearest that hue.
-    cyan = "7aa88a";
+    # urgent, orange and cyan are the defaults: the error, steel and sage
+    # slots. Ember's only orange is its magma `steel`, and nothing reads cyan
+    # under it (danvim's tokyonight family does).
     # The start page's fog veil.
     fog = "d8c6b2";
     # Three steps hotter than accent: the Claude statusline's high / xhigh /
@@ -181,14 +147,6 @@ in
       string = "green";
     };
 
-    # Material role -> slot name (noctalia shell, greeter, dart panel states).
-    material = {
-      primary = "accent";
-      secondary = "gold";
-      tertiary = "sage";
-      hover = "accentBright";
-    };
-
     # hue name -> slot name, for programs that want a colour by its hue
     # (vicinae accents; its orange is extra.orange). Ember has neither a blue
     # nor a true red.
@@ -214,13 +172,8 @@ in
   # `package` values are functions of pkgs, so this file imports without it.
   meta = {
     name = "Ember";
-    slug = "ember";
     description = "Warm graphite monochrome with a single coral spark";
-    light = {
-      name = "Ember Light";
-      slug = "ember-light";
-      description = "Soft parchment tones with restrained earthy accents";
-    };
+    light.description = "Soft parchment tones with restrained earthy accents";
     gtk = {
       package = pkgs: pkgs.whitesur-gtk-theme.override { themeVariants = [ "orange" ]; };
       name = "WhiteSur-Dark-orange";

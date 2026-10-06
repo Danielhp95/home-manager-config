@@ -2,12 +2,17 @@
 # consumer gets back through ../palette (default.nix).
 #
 # A palette file (./<slug>.nix) is a plain attrset of exactly:
-#   dark, light               the 25 semantic slots (`slotNames`)
-#   term.dark, term.light     the 16 ANSI colours by name (`termNames`)
-#   extra                     colours outside the slots (`extraShape`)
-#   roles                     name -> name tables, one for both halves (`roleShape`)
-#   meta                      everything that is not a colour (`metaShape`)
-# Colours are bare lowercase hex, no '#'.
+#   dark, light   the 25 semantic slots (`slotNames`)
+#   ansi          ANSI colour name -> colour reference, where it differs from
+#                 `ansiDefaults` (red and brightRed always: they have none)
+#   extra         colours outside the slots (`extraShape`); the ones in
+#                 `extraDefaults` only where they are not that slot
+#   roles         name -> name tables, one for both halves (`roleShape`)
+#   meta          everything that is not a colour (`metaShape`)
+# Colours are bare lowercase hex, no '#'. A colour reference is a slot name
+# (that slot, in the half being built), a colour (the same in both halves) or
+# a { dark, light } pair of either. A palette file states decisions; what
+# every palette would write alike is a default here.
 #
 # A built palette is:
 #   <slot>              the 25 dark slots, bare hex
@@ -43,6 +48,7 @@ let
     listToAttrs
     mapAttrs
     match
+    removeAttrs
     typeOf
     ;
 
@@ -102,6 +108,33 @@ let
     "brightWhite"
   ];
 
+  # ANSI name -> colour reference, unless the palette's `ansi` says otherwise.
+  # red and brightRed are missing on purpose: whether the terminal's red is
+  # the accent or a true red is each palette's own call.
+  ansiDefaults = {
+    # The two that swap between halves.
+    black = {
+      dark = "bg";
+      light = "fg";
+    };
+    white = {
+      dark = "fg";
+      light = "bg";
+    };
+    green = "olive";
+    yellow = "gold";
+    blue = "steel";
+    magenta = "mauve";
+    cyan = "sage";
+    brightBlack = "muted";
+    brightGreen = "oliveBright";
+    brightYellow = "goldBright";
+    brightBlue = "steelBright";
+    brightMagenta = "mauveBright";
+    brightCyan = "sageBright";
+    brightWhite = "ffffff";
+  };
+
   # 0 is one colour, n a list of exactly n, "halves" a { dark, light } pair.
   extraShape = {
     orange = "halves"; # vicinae's orange accent; nvim constants (tokyonight family)
@@ -110,6 +143,15 @@ let
     fog = 0; # the start page's fog veil
     heat = 3; # the Claude statusline's high / xhigh / max effort pills
     artRamp = 5; # the start page's grade for the painting, darkest first
+  };
+
+  # The extras a palette may leave out, and the slot each then is. A new
+  # colour that most palettes can take from a slot is added here and in
+  # `extraShape` only.
+  extraDefaults = {
+    urgent = "error";
+    orange = "steel";
+    cyan = "sage";
   };
 
   # roles.<table>: every name in `names` must be there, and each value must be
@@ -166,6 +208,17 @@ let
     };
   };
 
+  # The role tables a palette may leave out.
+  roleDefaults.material = {
+    primary = "accent";
+    secondary = "gold";
+    tertiary = "sage";
+    hover = "accentBright";
+  };
+
+  # meta.slug is the file's name and meta.light.{name,slug} follow from
+  # meta.name and it; a palette may still state them.
+  #
   # A leaf is "string", "slug", "bool", "int", "function" (of pkgs), "slot"
   # (a slot name) or a list (one of these values); an attrset nests.
   metaShape = {
@@ -273,6 +326,21 @@ let
     names: at: v:
     checkKeys at names v ++ eachPresent names v (n: checkHex "${at}.${n}");
 
+  # The resolved ANSI colours. Their names are checked once, as `ansi` (what
+  # the file wrote); a reference that is no slot name arrives here unresolved.
+  checkTerm =
+    _: v:
+    checkKeys "ansi" termNames (v.dark or null)
+    ++ concatMap (
+      h:
+      eachPresent termNames (v.${h} or null) (
+        n: x:
+        one (
+          !(isString x && match "[0-9a-f]{6}" x != null)
+        ) "ansi.${n} (${h}): ${show x} is neither a slot name nor six lowercase hex digits"
+      )
+    ) halves;
+
   checkExtra =
     at: v:
     checkKeys at (attrNames extraShape) v
@@ -349,7 +417,7 @@ let
   topLevel = {
     dark = checkHexSet slotNames;
     light = checkHexSet slotNames;
-    term = checkHalves (checkHexSet termNames);
+    term = checkTerm;
     extra = checkExtra;
     roles = checkRoles;
     meta = checkMeta metaShape;
@@ -373,8 +441,73 @@ let
     }) slugs
   );
 
+  # ── Defaults ─────────────────────────────────────────────────────────────
+  # A palette file as written -> the full palette the contract checks and the
+  # views are built from: `ansi` resolved into `term`, the defaults filled in.
+  # Nothing here may throw on a malformed file: the contract reports it.
+  attrsOr = v: if isAttrs v then v else { };
+
+  resolve =
+    file: side: ref:
+    if isAttrs ref then
+      resolve file side (ref.${side} or null)
+    else if isString ref && elem ref slotNames then
+      (attrsOr (file.${side} or null)).${ref} or ref
+    else
+      ref;
+
+  complete =
+    slug: file:
+    let
+      meta = attrsOr (file.meta or null);
+    in
+    removeAttrs file [ "ansi" ]
+    // {
+      term = listToAttrs (
+        map (side: {
+          name = side;
+          value = mapAttrs (_: resolve file side) (ansiDefaults // attrsOr (file.ansi or null));
+        }) halves
+      );
+      extra = mapAttrs (
+        n: v:
+        let
+          shape = extraShape.${n} or null;
+        in
+        if shape == "halves" then
+          {
+            dark = resolve file "dark" v;
+            light = resolve file "light" v;
+          }
+        else if shape == 0 then
+          resolve file "dark" v
+        else
+          v
+      ) (extraDefaults // attrsOr (file.extra or null));
+      roles = roleDefaults // attrsOr (file.roles or null);
+      meta = {
+        inherit slug;
+      }
+      // meta
+      // {
+        light = {
+          name = "${if isString (meta.name or null) then meta.name else slug} Light";
+          slug = "${slug}-light";
+        }
+        // attrsOr (meta.light or null);
+      };
+    };
+
+  full = mapAttrs (slug: file: if isAttrs file then complete slug file else file) raw;
+
   problems = concatMap (
-    slug: map (msg: "  palette/${slug}.nix: ${msg}") (validate slug raw.${slug})
+    slug:
+    map (msg: "  palette/${slug}.nix: ${msg}") (
+      one (
+        isAttrs raw.${slug} && raw.${slug} ? term
+      ) "term: lib.nix builds it; state ANSI colours in `ansi`"
+      ++ validate slug full.${slug}
+    )
   ) slugs;
 
   # ── Derived views ────────────────────────────────────────────────────────
@@ -420,7 +553,7 @@ let
       inherit (palette) roles meta;
     };
 
-  all = mapAttrs (_: build) raw;
+  all = mapAttrs (_: build) full;
 in
 # The gate sits at the root, so reading anything from any palette first checks
 # every half of every palette: a light half nobody reads is still held to the

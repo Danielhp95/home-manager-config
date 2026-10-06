@@ -81,42 +81,23 @@ let
     mauveBright = "8f275f";
     sageBright = "00564d";
   };
-
-  # Hue-true: red is the error red, blue is steel, and the violet accent takes
-  # the magenta slot, as Tokyo Night's own magenta does. mauve (rose) has no
-  # slot. To give slot 5 to the rose instead, change the two magenta lines to
-  # c.mauve / c.mauveBright and roles.ansi below; no consumer changes.
-  ansiFrom = c: {
-    red = c.error;
-    green = c.olive;
-    yellow = c.gold;
-    blue = c.steel;
-    magenta = c.accent;
-    cyan = c.sage;
-    brightBlack = c.muted;
-    brightGreen = c.oliveBright;
-    brightYellow = c.goldBright;
-    brightBlue = c.steelBright;
-    brightMagenta = c.accentBright;
-    brightCyan = c.sageBright;
-    brightWhite = "ffffff";
-  };
 in
 {
   inherit dark light;
 
-  # black and white are the two that swap between halves; bright red has no
-  # slot of its own (error, one step lighter; on paper, one step darker).
-  term = {
-    dark = ansiFrom dark // {
-      black = dark.bg;
-      white = dark.fg;
-      brightRed = "fd7468";
-    };
-    light = ansiFrom light // {
-      black = light.fg;
-      white = light.bg;
-      brightRed = "920014";
+  # The 16 ANSI colours, where they are not ./lib.nix's ansiDefaults. Hue-true:
+  # red is the error red, blue is steel, and the violet accent takes the
+  # magenta slot, as Tokyo Night's own magenta does. mauve (rose) has no slot.
+  # To give slot 5 to the rose instead, drop the two magenta lines and change
+  # roles.ansi below; no consumer changes.
+  ansi = {
+    red = "error";
+    magenta = "accent";
+    brightMagenta = "accentBright";
+    # No slot of its own: error, one step lighter; on paper, one step darker.
+    brightRed = {
+      dark = "fd7468";
+      light = "920014";
     };
   };
 
@@ -174,14 +155,6 @@ in
       string = "green";
     };
 
-    # Material role -> slot name (noctalia shell, greeter, dart panel states).
-    material = {
-      primary = "accent";
-      secondary = "gold";
-      tertiary = "sage";
-      hover = "accentBright";
-    };
-
     # hue name -> slot name (vicinae accents; its orange is extra.orange).
     hues = {
       red = "error";
@@ -204,13 +177,8 @@ in
   # Everything that is not a colour.
   meta = {
     name = "Tokyo Night Violet";
-    slug = "tokyo-night-violet";
     description = "Tokyo Night on a violet ground, with a lavender accent";
-    light = {
-      name = "Tokyo Night Violet Light";
-      slug = "tokyo-night-violet-light";
-      description = "Lavender paper with dark violet ink";
-    };
+    light.description = "Lavender paper with dark violet ink";
     gtk = {
       package = pkgs: pkgs.adw-gtk3;
       name = "adw-gtk3-dark";
