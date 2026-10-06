@@ -78,7 +78,7 @@ let
   };
 in
 {
-  home.file.".local/share/vimium/vimium-settings.json".text = builtins.toJSON vimiumSettings;
+  xdg.dataFile."vimium/vimium-settings.json".text = builtins.toJSON vimiumSettings;
 
   # Updates only userDefinedLinkHintCss inside Vimium's row, leaving every other
   # option as last saved in its UI. sync_change_counter is bumped only when the
@@ -97,7 +97,7 @@ in
           UPDATE storage_sync_data
           SET data = json_set(data, '\$.userDefinedLinkHintCss', '$sql_css'),
               sync_change_counter = sync_change_counter + 1
-          WHERE ext_id = '{d7742d87-e61d-4b78-b8a1-b469842139fa}'
+          WHERE ext_id = '${pkgs.firefox-addons.vimium.addonId}'
             AND json_extract(data, '\$.userDefinedLinkHintCss') IS NOT '$sql_css';
         " || echo "vimiumPalette: could not update $db (Firefox busy?); import vimium-settings.json by hand" >&2
       fi

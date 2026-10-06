@@ -5,6 +5,7 @@
 # Wayland, and Hyprland's stop/start of that target would take it down.
 {
   config,
+  lib,
   osConfig,
   pkgs,
   ...
@@ -31,8 +32,8 @@ let
       nixConfigDir = "${home}/${shared.nixConfigDir}";
       repos = map (repo: "${home}/${repo}") shared.repos;
       todoFile = "${home}/${shared.todoFile}";
-      gitBin = "${pkgs.git}/bin/git";
-      ghBin = "${pkgs.gh}/bin/gh";
+      gitBin = lib.getExe pkgs.git;
+      ghBin = lib.getExe pkgs.gh;
     }
   );
 in

@@ -1,9 +1,9 @@
 { pkgs, ... }:
 {
   # Not defaultPackages: assigning that drops perl/rsync/strace.
-  environment.systemPackages = with pkgs; [
-    impala # iwd TUI
-    iwgtk # iwd GUI
+  environment.systemPackages = [
+    pkgs.impala # iwd TUI
+    pkgs.iwgtk # iwd GUI
   ];
 
   # connman rfkill-blocks every technology saved as disabled, at each boot;

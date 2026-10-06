@@ -45,7 +45,7 @@ let
     ${lib.concatStringsSep "\n" (
       lib.mapAttrsToList (k: v: "export ${k}=${lib.escapeShellArg v}") sessionEnv
     )}
-    hm_vars="/etc/profiles/per-user/''${USER:-$(${pkgs.coreutils}/bin/id -un)}/etc/profile.d/hm-session-vars.sh"
+    hm_vars="/etc/profiles/per-user/''${USER:-$(${lib.getExe' pkgs.coreutils "id"} -un)}/etc/profile.d/hm-session-vars.sh"
     if [ -r "$hm_vars" ]; then
       # shellcheck source=/dev/null
       . "$hm_vars"

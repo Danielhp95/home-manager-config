@@ -29,7 +29,7 @@ let
   # danvim's nvim (which ships the firenvim plugin).
   firenvimHost =
     let
-      nvim = "${pkgs.danvim}/bin/nvim";
+      nvim = lib.getExe pkgs.danvim;
 
       # Verbatim from firenvim's s:get_executable_content(): take stdin before
       # the config loads, and keep print() off the protocol's stdout.
@@ -81,7 +81,7 @@ let
         description = "Turn your browser into a Neovim GUI.";
         path = "${launcher}";
         type = "stdio";
-        allowed_extensions = [ "firenvim@lacamb.re" ];
+        allowed_extensions = [ pkgs.firefox-addons.firenvim.addonId ];
       }
     );
 in
@@ -128,7 +128,7 @@ in
       # from its v19 source). focus_website leaves focus in the page, so j/k/f
       # work at once. Firefox imports them only on the add-on's first run:
       # later edits need its data reset, or its own options page.
-      extensions.settings."newtaboverride@agenedia.com" = {
+      extensions.settings.${pkgs.firefox-addons.new-tab-override.addonId} = {
         force = true;
         settings = {
           type = "custom_url";

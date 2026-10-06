@@ -207,20 +207,20 @@ in
     # per-project elan toolchain, no stable nix binary to pin).
     lspServers = {
       python = {
-        command = "${pkgs.ty}/bin/ty";
+        command = lib.getExe pkgs.ty;
         args = [ "server" ];
         extensionToLanguage = {
           ".py" = "python";
         };
       };
       lua = {
-        command = "${pkgs.lua-language-server}/bin/lua-language-server";
+        command = lib.getExe pkgs.lua-language-server;
         extensionToLanguage = {
           ".lua" = "lua";
         };
       };
       luau = {
-        command = "${pkgs.luau-lsp}/bin/luau-lsp";
+        command = lib.getExe pkgs.luau-lsp;
         # Same definitions file danvim feeds luau-lsp: noctalia injects its
         # plugin API as globals, so without it every symbol is unknown.
         args = [
@@ -232,13 +232,13 @@ in
         };
       };
       nix = {
-        command = "${pkgs.nixd}/bin/nixd";
+        command = lib.getExe pkgs.nixd;
         extensionToLanguage = {
           ".nix" = "nix";
         };
       };
       bash = {
-        command = "${pkgs.bash-language-server}/bin/bash-language-server";
+        command = lib.getExe pkgs.bash-language-server;
         args = [ "start" ];
         extensionToLanguage = {
           ".sh" = "shellscript";
@@ -246,7 +246,7 @@ in
         };
       };
       yaml = {
-        command = "${pkgs.yaml-language-server}/bin/yaml-language-server";
+        command = lib.getExe pkgs.yaml-language-server;
         args = [ "--stdio" ];
         extensionToLanguage = {
           ".yaml" = "yaml";
@@ -254,14 +254,14 @@ in
         };
       };
       json = {
-        command = "${pkgs.vscode-langservers-extracted}/bin/vscode-json-language-server";
+        command = lib.getExe' pkgs.vscode-langservers-extracted "vscode-json-language-server";
         args = [ "--stdio" ];
         extensionToLanguage = {
           ".json" = "json";
         };
       };
       docker = {
-        command = "${pkgs.docker-language-server}/bin/docker-language-server";
+        command = lib.getExe pkgs.docker-language-server;
         args = [
           "start"
           "--stdio"
@@ -271,13 +271,13 @@ in
         };
       };
       latex = {
-        command = "${pkgs.texlab}/bin/texlab";
+        command = lib.getExe pkgs.texlab;
         extensionToLanguage = {
           ".tex" = "latex";
         };
       };
       nushell = {
-        command = "${pkgs.nushell}/bin/nu";
+        command = lib.getExe pkgs.nushell;
         args = [ "--lsp" ];
         extensionToLanguage = {
           ".nu" = "nushell";

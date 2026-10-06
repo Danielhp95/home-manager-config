@@ -134,7 +134,7 @@ let
   '';
 in
 {
-  home.packages = with pkgs; [ serpl ];
+  home.packages = [ pkgs.serpl ];
   # A switch that changes the config (a palette switch does) reloads it in the
   # running server, as `prefix r` would. The socket is under XDG_RUNTIME_DIR,
   # which the activation service does not have set.

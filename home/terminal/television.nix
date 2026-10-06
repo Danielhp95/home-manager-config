@@ -7,13 +7,13 @@ let
 in
 {
   # pistol: the files channel's mime-dispatching previewer.
-  home.packages = with pkgs; [
-    pistol
-    chafa # images -> ANSI art in the preview pane
+  home.packages = [
+    pkgs.pistol
+    pkgs.chafa # images -> ANSI art in the preview pane
   ];
 
   # First match wins; anything else falls through to pistol's built-ins.
-  home.file.".config/pistol/pistol.conf".text = ''
+  xdg.configFile."pistol/pistol.conf".text = ''
     text/* sh: BAT_THEME=ansi bat -n --color=always --paging=never %pistol-filename%
     # --probe off: chafa's colour queries would land in tv's input box as
     # literal "rgb:..." text.

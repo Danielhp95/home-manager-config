@@ -13,7 +13,7 @@ let
     owner = "yazi-rs";
     repo = "plugins";
     rev = "6f26ae04ba2e4763faada6a7997ae8b57c158cdb";
-    sha256 = "sha256-pySI+LxiGmGEp/cvVXtuOuNzvy3c2QC6zuoTjActPbw=";
+    hash = "sha256-pySI+LxiGmGEp/cvVXtuOuNzvy3c2QC6zuoTjActPbw=";
   };
 in
 {

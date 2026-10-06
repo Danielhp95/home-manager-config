@@ -1,6 +1,4 @@
 { pkgs, ... }:
 {
-  home.packages = with pkgs; [
-    pandoc
-  ];
+  home.packages = [ pkgs.pandoc ];
 }

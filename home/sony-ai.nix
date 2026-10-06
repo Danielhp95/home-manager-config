@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 let
   # Split tunnel for the SIE VPN, whose gateway pushes a full tunnel: with
   # CISCO_SPLIT_INC set, vpnc-script keeps the LAN default route and sends only
@@ -22,11 +22,11 @@ let
     # all dual-stack traffic through the VPN.
     unset CISCO_IPV6_SPLIT_INC INTERNAL_IP6_ADDRESS INTERNAL_IP6_NETMASK
 
-    exec ${pkgs.vpnc-scripts}/bin/vpnc-script "$@"
+    exec ${lib.getExe pkgs.vpnc-scripts} "$@"
   '';
 
   # The GlobalProtect command line the connect scripts below share.
-  gpclientCmd = "sudo -E ${pkgs.gpclient}/bin/gpclient";
+  gpclientCmd = "sudo -E ${lib.getExe' pkgs.gpclient "gpclient"}";
   connectCmd = "${gpclientCmd} connect --gateway gw15.ggp-ext-gw.sie.sony.com --browser $BROWSER";
   portal = "portal.global-vpn.sie.sony.com --hip";
 in

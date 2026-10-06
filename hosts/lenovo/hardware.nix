@@ -159,9 +159,9 @@ in
       enable = true;
       # iHD, compute-runtime and vpl-gpu-rt come from the meteor-lake import;
       # hyprland.lua forces LIBVA_DRIVER_NAME=iHD, so VA-API depends on it.
-      extraPackages = with pkgs; [
-        libva-vdpau-driver
-        libvdpau-va-gl
+      extraPackages = [
+        pkgs.libva-vdpau-driver
+        pkgs.libvdpau-va-gl
       ];
       enable32Bit = true;
     };

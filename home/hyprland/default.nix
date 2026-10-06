@@ -197,9 +197,7 @@ in
       palette._var = lib.mapAttrs (_: hex: "rgb(${hex})") (lib.filterAttrs (_: lib.isString) c);
       fonts._var = { inherit (f) mono; };
     };
-    plugins = with pkgs; [
-      hy3
-    ];
+    plugins = [ pkgs.hy3 ];
     xdph.settings.screencopy = {
       custom_picker_binary = "hyprland-preview-share-picker";
       allow_token_by_default = true;

@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   config,
   ...
 }:
@@ -51,7 +52,7 @@
       RestartSec = "30s";
     };
     script = ''
-      ${pkgs.curl}/bin/curl -sSf --retry 10 --retry-connrefused --retry-delay 2 \
+      ${lib.getExe pkgs.curl} -sSf --retry 10 --retry-connrefused --retry-delay 2 \
         http://127.0.0.1:${toString config.services.ollama.port}/api/create \
         -d '{"model":"iris-qwen3-4b","from":"qwen3:4b-instruct-2507-q4_K_M","parameters":{"num_ctx":4096},"stream":false}'
     '';

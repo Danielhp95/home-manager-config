@@ -2,9 +2,7 @@
 {
   # pulseaudio only for its CLI tools (pactl & co); pipewire-pulse is the
   # server. Not defaultPackages: assigning that drops perl/rsync/strace.
-  environment.systemPackages = with pkgs; [
-    pulseaudio
-  ];
+  environment.systemPackages = [ pkgs.pulseaudio ];
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;

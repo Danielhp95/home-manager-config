@@ -215,7 +215,7 @@ in
         _iris_ai_warm() {
           (( EPOCHSECONDS - _iris_ai_warmed_at < 300 )) && return
           _iris_ai_warmed_at=$EPOCHSECONDS
-          ${pkgs.curl}/bin/curl -s -m 60 http://127.0.0.1:11434/api/generate \
+          ${lib.getExe pkgs.curl} -s -m 60 http://127.0.0.1:11434/api/generate \
             -d '{"model":"${aiModel}","keep_alive":"30m"}' >/dev/null 2>&1 &!
         }
         add-zsh-hook precmd _iris_ai_warm
