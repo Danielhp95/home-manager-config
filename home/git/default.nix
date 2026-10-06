@@ -14,17 +14,9 @@ let
   # exactly (bright ones and slot 8 tie), so a role on a bright slot uses its
   # normal one, and comments take the table entry nearest `muted` that is no
   # darker than it.
-  # ANSI slots 1-7: the number prose uses, and the xterm value chroma maps
-  # back to it (a stand-in, not a colour: the terminal draws its own).
-  number = {
-    red = "1";
-    green = "2";
-    yellow = "3";
-    blue = "4";
-    magenta = "5";
-    cyan = "6";
-    white = "7";
-  };
+  # ANSI slots 1-7: prose uses the slot's number (palette.termIndex), chroma
+  # the xterm value it maps back to that slot (a stand-in, not a colour: the
+  # terminal draws its own).
   xterm = {
     red = "#800000";
     green = "#008000";
@@ -42,7 +34,7 @@ let
     in
     if m == null then name else lib.toLower (builtins.elemAt m 0) + builtins.elemAt m 1;
   # role -> slot number (prose) / xterm stand-in (chroma).
-  n = role: number.${normal palette.roles.ansi.${role}};
+  n = role: toString palette.termIndex.${normal palette.roles.ansi.${role}};
   x = builtins.mapAttrs (_: name: xterm.${normal name}) palette.roles.ansi;
   comment = "#${((import ../../lib/xterm256.nix).nearestNoDarker palette.muted).hex}";
 

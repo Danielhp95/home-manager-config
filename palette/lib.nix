@@ -19,11 +19,14 @@
 #   slots               the same 25 as one attrset, for consumers that
 #                       enumerate them (Hyprland's Lua table, CSS variables)
 #   ansi                term in ANSI order, a list of 16
+#   ansiIndexOf         slot name -> its place in `ansi` (0-15), or null when
+#                       the terminal's 16 colours do not include it
 #   term, extra         attrsets (the dark half's)
 #   hash                slots, ansi, term and extra again, with '#'
 #   light               the light half: slots, ansi, term, hash, and the
 #                       extras that are written per half
 #   roles, meta         attrsets, as written in the palette file
+#   termIndex           ANSI colour name -> 0-15, the same for every palette
 #
 # `meta` holds functions of pkgs (the GTK, cursor and icon packages), so a
 # built palette cannot be serialised whole (`builtins.toJSON`, `nix eval
@@ -541,14 +544,39 @@ let
               }) perHalf
             );
       };
+      indexIn =
+        xs: x:
+        let
+          go =
+            i:
+            if i >= length xs then
+              null
+            else if elemAt xs i == x then
+              i
+            else
+              go (i + 1);
+        in
+        go 0;
     in
-    palette.${side} // views // { hash = hashed (palette.${side} // views); };
+    palette.${side}
+    // views
+    // {
+      hash = hashed (palette.${side} // views);
+      # By value: where two ANSI names share a colour, the lower index.
+      ansiIndexOf = mapAttrs (_: indexIn views.ansi) palette.${side};
+    };
 
   build =
     palette:
     half palette "dark"
     // {
       light = half palette "light";
+      termIndex = listToAttrs (
+        genList (i: {
+          name = elemAt termNames i;
+          value = i;
+        }) (length termNames)
+      );
       # Never through `hashed`: names and functions, not colours.
       inherit (palette) roles meta;
     };

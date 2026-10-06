@@ -282,7 +282,7 @@ in
     [mode_floating]
     source=detect
     label_color=${h.accent}
-    label_select_color=#ffffff
+    label_select_color=${h.term.brightWhite}
     unselectable_bg_color=${h.bgDeep}66
     selectable_bg_color=${h.bgDeep}
     selectable_border_color=${h.accent}59

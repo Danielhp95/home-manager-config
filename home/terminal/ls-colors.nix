@@ -93,7 +93,7 @@ let
   };
 
   # A slot's place among the 16 ANSI colours, or null.
-  ansiIndex = slot: lib.lists.findFirstIndex (c: c == palette.${slot}) null palette.ansi;
+  ansiIndex = slot: palette.ansiIndexOf.${slot};
 
   # ── SGR parameters (LS_COLORS) ───────────────────────────────────────────
   # `base` is 30 for a foreground, 40 for a background.

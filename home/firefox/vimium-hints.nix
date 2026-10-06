@@ -14,6 +14,8 @@ let
   h = colour.hash;
   inherit (colour) rgba;
   primary = p.${p.roles.material.primary};
+  # The characters already typed: the terminal's paper white.
+  white = h p.term.brightWhite;
 in
 ''
   /* Generated from palette/ (firefox/vimium-hints.nix). */
@@ -68,11 +70,11 @@ in
   }
 
   #vomnibar li .match {
-    color: #ffffff;
+    color: ${white};
   }
 
   #vomnibar li em .match, #vomnibar li .title .match {
-    color: #ffffff;
+    color: ${white};
   }
 
   #vomnibar li em, #vomnibar li .title {
@@ -94,6 +96,6 @@ in
 
   /* Link hint matching characters */
   div > .vimiumHintMarker > .matchingCharacter {
-    color: #ffffff;
+    color: ${white};
   }
 ''
