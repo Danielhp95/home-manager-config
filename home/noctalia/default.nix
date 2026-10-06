@@ -210,16 +210,11 @@ in
       # No git fetch of the plugin sources at every login (it stalled offline);
       # update from the plugin manager instead.
       plugins.auto_update = "none";
-      # Opt-in per id. `noctalia msg plugins enable/disable` and the GUI write
-      # this key into settings.toml, which then replaces this whole list:
-      # delete the [plugins] block there if this stops applying.
+      # Opt-in per id. settings.toml can shadow this whole list, and community
+      # plugins must not be updated with a bare `git fetch`:
+      # docs/manual-steps.md ("After a switch").
       plugins.enabled = [
         "dani/dart"
-
-        # Community plugins come from a blob:none clone that noctalia never
-        # lazy-fetches: after a bare `git fetch` the catalog comes up empty, and
-        # a newly enabled plugin can too. Update with `noctalia msg plugins
-        # update`, or pre-warm the plugin's blobs (git cat-file --batch-check).
 
         # Claude Code subscription usage; needs jq and curl on PATH.
         "jrohland/claudecode"

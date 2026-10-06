@@ -205,7 +205,6 @@ in
       enable = true;
       enableAutoUpdates = true;
     };
-    # Really nice shell history
     atuin = {
       enable = true;
       flags = [ "--disable-up-arrow" ];
@@ -255,7 +254,6 @@ in
     eza.enable = true;
     # Smart cd (also feeds yazi's builtin z/Z jumps)
     zoxide.enable = true;
-    # The one, the fuzzy searcher
     fzf = {
       enable = true;
       # Atuin owns Ctrl-R; this only silences home-manager's conflict warning.

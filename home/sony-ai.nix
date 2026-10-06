@@ -31,7 +31,6 @@ let
   portal = "portal.global-vpn.sie.sony.com --hip";
 in
 {
-  # git comes from programs.git.enable (./git).
   home.packages = with pkgs; [
     awscli2
 

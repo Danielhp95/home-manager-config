@@ -1,14 +1,14 @@
 _:
 
 # Only Element's own theme system colours its web content, via `custom_themes`.
-# Pick "Ember" once in Settings -> Appearance: `default_theme` only applies to a
-# profile that never chose a theme (the choice lives in account data).
+# `default_theme` only applies to a profile that never chose a theme (the choice
+# lives in account data), so the theme is picked once by hand:
+# docs/manual-steps.md.
 
 let
   p = (import ../palette).hash;
 in
 {
-  # Installs Element and writes `settings` to ~/.config/Element/config.json.
   programs.element-desktop = {
     enable = true;
     settings = {

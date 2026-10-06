@@ -13,8 +13,7 @@
 # storage.local. Sync carries them; ./vimium.nix keeps Vimium's as a file.
 #
 # Not declared, having no firefox-addons package: GoLinks, History Export and
-# reMarkable. Their .xpi files stay in the profile; a new machine would need
-# programs.firefox.policies.ExtensionSettings with an AMO install_url.
+# reMarkable. Their .xpi files stay in the profile (docs/manual-steps.md).
 
 let
   p = (import ../../palette).hash;

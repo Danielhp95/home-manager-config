@@ -216,7 +216,7 @@ in
     ];
     autocd = true;
     dotDir = "${config.xdg.configHome}/zsh";
-    defaultKeymap = "emacs"; # the default anyway
+    defaultKeymap = "emacs"; # load-bearing: with EDITOR=nvim zsh would pick vi insert mode
     autosuggestion = {
       enable = true;
       # atuin's zsh init prepends its own "atuin" strategy to this list

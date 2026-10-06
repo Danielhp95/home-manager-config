@@ -104,7 +104,6 @@ in
   };
 
   home.packages = with pkgs; [
-    # chromium and firefox come from ./chromium.nix and ./firefox.
     nvd # Nix version diff tool
     # Any binary nixpkgs ever shipped, in a per-shell mount namespace. Not the
     # NixOS module: it replaces /nix/store system-wide (meant for VMs).
@@ -117,7 +116,6 @@ in
     ### Communication
     slack
     telegram-desktop
-    # Element comes from ./element.nix.
     # For the launcher entry; services.nextcloud-client below runs the client.
     nextcloud-client
 
@@ -130,7 +128,6 @@ in
 
     ### Basic utilities
     ripgrep # better grep
-    # tldr comes from programs.tealdeer in ./terminal
     acpi # Laptop battery levels
     brightnessctl # Control brightness via CLI
     unzip
@@ -139,20 +136,12 @@ in
     zip
 
     ### Media viewing
-    # video (mpv comes via programs.mpv above)
-
     # spotify comes from ./spotify.nix; a plain pkgs.spotify would shadow it.
 
-    # Images
-    # imv comes via programs.imv above.
     gthumb # Viewer for multiple images
-
-    # Best youtube downloader
     yt-dlp
-    ###
 
     ### debugging utils
-    # lnav comes from ./lnav (`journalctl | lnav`).
     pciutils # For `lspci` command.
     nvtopPackages.full # Better `nvidia-smi` that also supports AMD GPUs
     powertop # Analyze power consumption for intel based processors
@@ -164,10 +153,7 @@ in
 
     translate-shell
 
-    # THE nvim
-    pkgs.danvim
-
-    # Weather app
+    pkgs.danvim # nvim, with the selected palette (pkgs/danvim.nix)
     gnome-weather
 
     adwaita-icon-theme # symbolic-icon fallback for GNOME apps (MoreWaita expects it)
@@ -177,8 +163,6 @@ in
     nautilus
 
     android-tools
-
-    # btop and bottom come from ./terminal.
 
     bluetui # Bluetooth tui
   ];

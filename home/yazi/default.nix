@@ -20,7 +20,7 @@ in
 
   programs.yazi = {
     enable = true;
-    # No cd-on-exit wrapper in any shell (zsh has `fm`; `yy` went unused). The
+    # No cd-on-exit wrapper in any shell (zsh has `fm`). The
     # name stays pinned so HM's 26.05 default-change warning can't fire.
     shellWrapperName = "yy";
     enableZshIntegration = false;
@@ -612,7 +612,6 @@ in
 
     settings = {
       mgr = {
-        # Show file sizes in the listing
         linemode = "size";
       };
       tasks = {

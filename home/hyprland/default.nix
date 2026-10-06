@@ -26,7 +26,7 @@ let
   ocrScript = pkgs.writeShellApplication {
     name = "wl-ocr";
     runtimeInputs = [
-      slurp # the Ember wrapper above
+      slurp
       pkgs.grim
       pkgs.tesseract5
       pkgs.wl-clipboard
@@ -221,10 +221,6 @@ in
     # Cooler screen picker (window/monitor previews instead of a bare list).
     sharePicker
 
-    # Screenshots and annotation are noctalia's (noctalia/default.nix).
-
-    # Volume keys use `volume-all-sinks` from noctalia/default.nix.
-
     libnotify
 
     wdisplays # manage display positioning
@@ -235,7 +231,7 @@ in
     magnifyScript
     presentScript
 
-    slurp # Ember wrapper from the let block
+    slurp # the palette-coloured wrapper from the let block
 
     (wl-kbptr.overrideAttrs (old: {
       src = fetchFromGitHub {
