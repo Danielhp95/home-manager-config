@@ -1,4 +1,4 @@
-{ ... }:
+_:
 
 # --gtk-version=4 draws Chromium's frame, menus and dialogs with GTK4, where
 # WhiteSur lives; it also needs the one-time profile setting

@@ -25,8 +25,9 @@ let
   brightestSky = lib.last ramp;
   art =
     # Text must stay the lightest thing on the page.
-    assert lib.assertMsg (colour.luminance brightestSky < colour.luminance palette.fg)
-      "start page: extra.artRamp's last stop #${brightestSky} is not darker than fg #${palette.fg}";
+    assert lib.assertMsg (
+      colour.luminance brightestSky < colour.luminance palette.fg
+    ) "start page: extra.artRamp's last stop #${brightestSky} is not darker than fg #${palette.fg}";
     import ./art.nix {
       inherit
         fetchurl
@@ -40,19 +41,20 @@ let
   toKebab =
     name:
     lib.concatMapStrings (
-      char:
-      if char == lib.toUpper char && char != lib.toLower char then "-${lib.toLower char}" else char
+      char: if char == lib.toUpper char && char != lib.toLower char then "-${lib.toLower char}" else char
     ) (lib.stringToCharacters name);
 
   # As with ../userChrome.css: nix owns the palette, the stylesheet stays plain.
   paletteCss = writeText "palette.css" ''
     /* Generated from nix_config's palette/ — do not edit. */
     :root {
-    ${lib.concatStrings (
-      lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (
-        lib.filterAttrs (_: value: builtins.isString value) palette.hash
+    ${
+      lib.concatStrings (
+        lib.mapAttrsToList (name: value: "  --ember-${toKebab name}: ${value};\n") (
+          lib.filterAttrs (_: value: builtins.isString value) palette.hash
+        )
       )
-    )}  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
+    }  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
     }
   '';
 

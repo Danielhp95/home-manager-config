@@ -132,7 +132,7 @@ in
         force = true;
         settings = {
           type = "custom_url";
-          url = startPage.url;
+          inherit (startPage) url;
           focus_website = true;
         };
       };
@@ -241,12 +241,11 @@ in
   # cleared because it also sits on Ctrl+S. Schema: CustomKeys.sys.mjs, where
   # Ctrl is "accel" and keys are upper-case. Firefox writes this file only when
   # about:keyboard edits a key, replacing the symlink: edit here instead.
-  home.file.".mozilla/firefox/${profilePath}/customKeys.json".text =
-    builtins.toJSON {
-      key_addTabSplitView = {
-        modifiers = "accel";
-        key = "S";
-      };
-      key_savePage = { };
+  home.file.".mozilla/firefox/${profilePath}/customKeys.json".text = builtins.toJSON {
+    key_addTabSplitView = {
+      modifiers = "accel";
+      key = "S";
     };
+    key_savePage = { };
+  };
 }

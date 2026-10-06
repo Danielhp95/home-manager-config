@@ -93,9 +93,10 @@ let
         lib.concatLists (
           lib.imap0 (
             i: b:
-            lib.concatMap (
-              ch: lib.mapAttrsToList (k: v: lib.nameValuePair "${k}${ch}_${toString i}" v) b
-            ) [ "l" "r" ]
+            lib.concatMap (ch: lib.mapAttrsToList (k: v: lib.nameValuePair "${k}${ch}_${toString i}" v) b) [
+              "l"
+              "r"
+            ]
           ) all
         )
       );
@@ -164,10 +165,28 @@ let
           {
             nodes = [ n ];
             ins = map (p: "${n.name}:${p}") (
-              if n.type == "builtin" then [ "In 1" "In 2" ] else [ "in_l" "in_r" ]
+              if n.type == "builtin" then
+                [
+                  "In 1"
+                  "In 2"
+                ]
+              else
+                [
+                  "in_l"
+                  "in_r"
+                ]
             );
             outs = map (p: "${n.name}:${p}") (
-              if n.type == "builtin" then [ "Out 1" "Out 2" ] else [ "out_l" "out_r" ]
+              if n.type == "builtin" then
+                [
+                  "Out 1"
+                  "Out 2"
+                ]
+              else
+                [
+                  "out_l"
+                  "out_r"
+                ]
             );
           };
       stages = map stage nodes;
@@ -399,9 +418,7 @@ let
           }
           // lib.listToAttrs (
             lib.concatLists (
-              lib.imap0 (
-                i: b: lib.mapAttrsToList (k: v: lib.nameValuePair "${k}_${toString i}" v) (band b)
-              ) bands
+              lib.imap0 (i: b: lib.mapAttrsToList (k: v: lib.nameValuePair "${k}_${toString i}" v) (band b)) bands
             )
           );
       }

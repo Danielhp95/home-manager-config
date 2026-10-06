@@ -315,5 +315,6 @@ in
   # A theme picked at runtime (`:config /ui/theme`) is saved to the writable
   # ~/.config/lnav/config.json and wins over this one.
   xdg.configFile."lnav/configs/ember/config.json".source =
-    (pkgs.formats.json { }).generate "lnav-ember.json" config;
+    (pkgs.formats.json { }).generate "lnav-ember.json"
+      config;
 }

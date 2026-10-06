@@ -43,9 +43,8 @@ in
     "--color="
     + lib.concatStringsSep "," (
       lib.mapAttrsToList (name: value: "${name}:${value}") {
-        bg = p.bg;
+        inherit (p) bg fg border;
         "bg+" = p.surface;
-        fg = p.fg;
         "fg+" = p.fg;
         hl = p.accent;
         "hl+" = p.accentBright;
@@ -55,7 +54,6 @@ in
         spinner = p.sage;
         pointer = p.accent;
         header = p.olive;
-        border = p.border;
         label = p.steel;
         query = p.fg;
       }

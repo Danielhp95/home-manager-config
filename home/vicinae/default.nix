@@ -45,8 +45,7 @@ let
       background = c.bg;
       foreground = c.fg;
       secondary_background = c.bgAlt;
-      border = c.border;
-      accent = c.accent;
+      inherit (c) border accent;
     };
 
     accents = builtins.mapAttrs (_: slot: c.${slot}) roles.hues // {

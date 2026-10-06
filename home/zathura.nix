@@ -1,4 +1,4 @@
-{ ... }:
+_:
 
 let
   p = (import ../palette).hash;

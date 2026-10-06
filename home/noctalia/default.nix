@@ -19,13 +19,15 @@ let
 
   # Stormlight wording for noctalia's battery warnings (low at the threshold
   # and 5%, critical at 2%). `battery` is also the laptop's {device} label.
-  stormlightStrings = pkgs.writeText "stormlight-strings.json" (builtins.toJSON {
-    battery = "Stormlight";
-    battery-low-title = "Stormlight running low";
-    battery-low-body = "{device}: {percent}%. The spheres are going dun; set them out for the next highstorm.";
-    battery-critical-title = "Life before death";
-    battery-critical-body = "{device}: {percent}%. Your battery is dead. But I'll see what I can do.";
-  });
+  stormlightStrings = pkgs.writeText "stormlight-strings.json" (
+    builtins.toJSON {
+      battery = "Stormlight";
+      battery-low-title = "Stormlight running low";
+      battery-low-body = "{device}: {percent}%. The spheres are going dun; set them out for the next highstorm.";
+      battery-critical-title = "Life before death";
+      battery-critical-body = "{device}: {percent}%. Your battery is dead. But I'll see what I can do.";
+    }
+  );
 
   # noctalia's strings have no per-string override, so this is its asset
   # bundle as a symlink tree with en.json patched, used via

@@ -1,4 +1,4 @@
-{ ... }:
+_:
 
 # Only Element's own theme system colours its web content, via `custom_themes`.
 # Pick "Ember" once in Settings -> Appearance: `default_theme` only applies to a

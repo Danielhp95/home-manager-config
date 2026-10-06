@@ -10,8 +10,15 @@ let
   # the popup inside Firefox/Telegram and silently fall back to the white
   # default skin. The wrapper's share/ is daemon-only, and the per-user
   # profile doesn't link share/fcitx5.
-  ember = import ./ember/package.nix { inherit (pkgs) stdenvNoCC lib librsvg replaceVars; };
-  ui = (import ../../fonts.nix).ui;
+  ember = import ./ember/package.nix {
+    inherit (pkgs)
+      stdenvNoCC
+      lib
+      librsvg
+      replaceVars
+      ;
+  };
+  inherit (import ../../fonts.nix) ui;
 in
 {
   xdg.dataFile."fcitx5/themes/Ember".source = "${ember}/share/fcitx5/themes/Ember";

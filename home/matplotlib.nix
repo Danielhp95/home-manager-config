@@ -23,16 +23,18 @@ let
   cycleOf =
     c:
     "axes.prop_cycle: cycler('color', ["
-    + lib.concatMapStringsSep ", " (n: "'${n}'") (lib.unique [
-      c.accent
-      c.sage
-      c.gold
-      c.mauve
-      c.steel
-      c.olive
-      c.extra.orange
-      c.fgDim
-    ])
+    + lib.concatMapStringsSep ", " (n: "'${n}'") (
+      lib.unique [
+        c.accent
+        c.sage
+        c.gold
+        c.mauve
+        c.steel
+        c.olive
+        c.extra.orange
+        c.fgDim
+      ]
+    )
     + "])";
 
   # matplotlibrc sits on whatever ground the project picks, usually white, so

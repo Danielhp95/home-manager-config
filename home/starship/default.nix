@@ -1,4 +1,4 @@
-{ ... }:
+_:
 let
   # Ember palette from palette/. The pill/slab powerline language (E0B6
   # open, E0B4 close, E0B0 flame trail) is shared with tmux's status bar.
@@ -48,17 +48,19 @@ in
         bg1 = p.surface;
         fg1 = p.fgDim;
         fg_soft = p.fgSoft;
-        muted = p.muted;
         ember = p.accent;
         ember_dim = p.accentDim;
         ember_hot = p.accentBright;
-        ash = p.ash;
-        gold = p.gold;
-        olive = p.olive;
-        steel = p.steel;
-        sage = p.sage;
-        mauve = p.mauve;
-        error = p.error;
+        inherit (p)
+          muted
+          ash
+          gold
+          olive
+          steel
+          sage
+          mauve
+          error
+          ;
       };
 
       # Directory: in a repo the pill heats ash (parent path) → ember_dim (repo
@@ -139,7 +141,11 @@ in
       # Nix project outside a shell. Detection-only (no command, so no fork per
       # prompt); inside `nix develop` both pills show.
       custom.nix = {
-        detect_files = [ "flake.nix" "shell.nix" "default.nix" ];
+        detect_files = [
+          "flake.nix"
+          "shell.nix"
+          "default.nix"
+        ];
         detect_extensions = [ "nix" ];
         symbol = "󱄅 ";
         format = "[](fg:bg1)[$symbol](fg:steel bg:bg1)[](fg:bg1) ";
@@ -182,8 +188,14 @@ in
         unknown_symbol = "󰂑 ";
         empty_symbol = "󰂎 ";
         display = [
-          { threshold = 15; style = "bold fg:error bg:bg1"; }
-          { threshold = 30; style = "fg:gold bg:bg1"; }
+          {
+            threshold = 15;
+            style = "bold fg:error bg:bg1";
+          }
+          {
+            threshold = 30;
+            style = "fg:gold bg:bg1";
+          }
         ];
       };
 

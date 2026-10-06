@@ -50,104 +50,106 @@ let
     inherit color;
     bold = true;
   };
-  glamourStyle = pkgs.writeText "glamour-${palette.meta.slug}.json" (builtins.toJSON {
-    document = {
-      block_prefix = "\n";
-      block_suffix = "\n";
-      margin = 2;
-    };
-    block_quote = {
-      indent = 1;
-      indent_token = "│ ";
-      color = "8";
-    };
-    list.level_indent = 2;
-    heading = bold (n "accent") // {
-      block_suffix = "\n";
-    };
-    h1 = {
-      prefix = " ";
-      suffix = " ";
-      color = "0";
-      background_color = n "accent";
-      bold = true;
-    };
-    h2.prefix = "## ";
-    h3.prefix = "### ";
-    h4.prefix = "#### ";
-    h5.prefix = "##### ";
-    h6 = {
-      prefix = "###### ";
-      color = "8";
-      bold = false;
-    };
-    strikethrough.crossed_out = true;
-    emph.italic = true;
-    strong.bold = true;
-    hr = {
-      color = "8";
-      format = "\n--------\n";
-    };
-    item.block_prefix = "• ";
-    enumeration.block_prefix = ". ";
-    task = {
-      ticked = "[✓] ";
-      unticked = "[ ] ";
-    };
-    link = {
-      color = "4";
-      underline = true;
-    };
-    link_text = bold "3";
-    image = {
-      color = "5";
-      underline = true;
-    };
-    image_text = {
-      color = "8";
-      format = "Image: {{.text}} →";
-    };
-    # Hex: surface has no ANSI slot.
-    code = {
-      prefix = " ";
-      suffix = " ";
-      color = "2";
-      background_color = palette.hash.surface;
-    };
-    code_block = {
-      color = "7";
-      margin = 2;
-      chroma = {
-        text.color = xterm.white;
-        error = bold x.failure;
-        comment = {
-          color = comment;
-          italic = true;
-        };
-        comment_preproc.color = x.emphasis;
-        keyword = bold x.structure;
-        keyword_reserved = bold x.structure;
-        keyword_namespace = bold x.structure;
-        keyword_type.color = x.emphasis;
-        name_builtin.color = x.metadata;
-        name_tag.color = x.structure;
-        name_class = bold x.definition;
-        name_constant.color = x.value;
-        name_decorator.color = x.emphasis;
-        name_exception = bold x.failure;
-        name_function.color = x.definition;
-        literal_number.color = x.value;
-        literal_string.color = x.string;
-        literal_string_escape.color = x.value;
-        generic_deleted.color = xterm.red;
-        generic_emph.italic = true;
-        generic_inserted.color = xterm.green;
-        generic_strong.bold = true;
-        generic_subheading.color = comment;
+  glamourStyle = pkgs.writeText "glamour-${palette.meta.slug}.json" (
+    builtins.toJSON {
+      document = {
+        block_prefix = "\n";
+        block_suffix = "\n";
+        margin = 2;
       };
-    };
-    definition_description.block_prefix = "\n🠶 ";
-  });
+      block_quote = {
+        indent = 1;
+        indent_token = "│ ";
+        color = "8";
+      };
+      list.level_indent = 2;
+      heading = bold (n "accent") // {
+        block_suffix = "\n";
+      };
+      h1 = {
+        prefix = " ";
+        suffix = " ";
+        color = "0";
+        background_color = n "accent";
+        bold = true;
+      };
+      h2.prefix = "## ";
+      h3.prefix = "### ";
+      h4.prefix = "#### ";
+      h5.prefix = "##### ";
+      h6 = {
+        prefix = "###### ";
+        color = "8";
+        bold = false;
+      };
+      strikethrough.crossed_out = true;
+      emph.italic = true;
+      strong.bold = true;
+      hr = {
+        color = "8";
+        format = "\n--------\n";
+      };
+      item.block_prefix = "• ";
+      enumeration.block_prefix = ". ";
+      task = {
+        ticked = "[✓] ";
+        unticked = "[ ] ";
+      };
+      link = {
+        color = "4";
+        underline = true;
+      };
+      link_text = bold "3";
+      image = {
+        color = "5";
+        underline = true;
+      };
+      image_text = {
+        color = "8";
+        format = "Image: {{.text}} →";
+      };
+      # Hex: surface has no ANSI slot.
+      code = {
+        prefix = " ";
+        suffix = " ";
+        color = "2";
+        background_color = palette.hash.surface;
+      };
+      code_block = {
+        color = "7";
+        margin = 2;
+        chroma = {
+          text.color = xterm.white;
+          error = bold x.failure;
+          comment = {
+            color = comment;
+            italic = true;
+          };
+          comment_preproc.color = x.emphasis;
+          keyword = bold x.structure;
+          keyword_reserved = bold x.structure;
+          keyword_namespace = bold x.structure;
+          keyword_type.color = x.emphasis;
+          name_builtin.color = x.metadata;
+          name_tag.color = x.structure;
+          name_class = bold x.definition;
+          name_constant.color = x.value;
+          name_decorator.color = x.emphasis;
+          name_exception = bold x.failure;
+          name_function.color = x.definition;
+          literal_number.color = x.value;
+          literal_string.color = x.string;
+          literal_string_escape.color = x.value;
+          generic_deleted.color = xterm.red;
+          generic_emph.italic = true;
+          generic_inserted.color = xterm.green;
+          generic_strong.bold = true;
+          generic_subheading.color = comment;
+        };
+      };
+      definition_description.block_prefix = "\n🠶 ";
+    }
+  );
 in
 {
   # A constant path, not the store path: a session variable keeps its value

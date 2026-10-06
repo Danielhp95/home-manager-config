@@ -42,7 +42,9 @@ let
   # `hyprland`. home.sessionVariables are sourced last, so they win and reach
   # every systemd user service through Hyprland's env hook.
   startHyprland = pkgs.writeShellScript "start-hyprland-session" ''
-    ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=${lib.escapeShellArg v}") sessionEnv)}
+    ${lib.concatStringsSep "\n" (
+      lib.mapAttrsToList (k: v: "export ${k}=${lib.escapeShellArg v}") sessionEnv
+    )}
     hm_vars="/etc/profiles/per-user/''${USER:-$(${pkgs.coreutils}/bin/id -un)}/etc/profile.d/hm-session-vars.sh"
     if [ -r "$hm_vars" ]; then
       # shellcheck source=/dev/null

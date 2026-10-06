@@ -2,8 +2,7 @@
 # from /etc/claude-code (symlinked drop-ins are fine). They outrank the user
 # file, which keeps the runtime-owned keys (seeded by ../home/claude-code/default.nix), and
 # apply to every user on the machine.
-{ ... }:
-{
+_: {
   environment.etc."claude-code/managed-settings.d/50-dani.json".text = builtins.toJSON {
     # ../home/claude-code/statusline-command.nu, installed as `claude-statusline` by ../home/claude-code/default.nix.
     statusLine = {

@@ -1,5 +1,4 @@
-{ ... }:
-{
+_: {
   # Display layouts: kanshi applies the first profile whose outputs match what
   # is connected, and Hyprland keeps it across reloads. Positions assume eDP-1
   # at scale 2 (1920 logical wide, hyprland.lua).

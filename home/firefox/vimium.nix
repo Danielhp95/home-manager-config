@@ -22,26 +22,32 @@ let
   vimiumSettings = {
     # Vimium stays off entirely here (empty passKeys): editors, canvases and
     # anything with its own vim bindings.
-    exclusionRules = map (pattern: { inherit pattern; passKeys = ""; }) [
-      "https?://www.overleaf.com/project/*"
-      "https?://tablesgenerator.com/*"
-      "https?://localhost:8889/*"
-      "https?://www.google.com/*"
-      "https?://mangadex.org/*"
-      "https?://docs.google.com/*"
-      "https?://miro.com/*"
-      "https?://playgameoflife.com/*"
-      "https?://127.0.0.1:8888/*"
-      "https?://q.uiver.app/*"
-      "https?://app.diagrams.net/*"
-      "https?://www.paypal.com/*"
-      "https?://thisanimedoesnotexist.ai/*"
-      "https?://gather.town/*"
-      "https?://word-edit.officeapps.live.com/*"
-      "https?://collabedit.com/*"
-      "https?://codeshare.io/*"
-      "file:///*"
-    ];
+    exclusionRules =
+      map
+        (pattern: {
+          inherit pattern;
+          passKeys = "";
+        })
+        [
+          "https?://www.overleaf.com/project/*"
+          "https?://tablesgenerator.com/*"
+          "https?://localhost:8889/*"
+          "https?://www.google.com/*"
+          "https?://mangadex.org/*"
+          "https?://docs.google.com/*"
+          "https?://miro.com/*"
+          "https?://playgameoflife.com/*"
+          "https?://127.0.0.1:8888/*"
+          "https?://q.uiver.app/*"
+          "https?://app.diagrams.net/*"
+          "https?://www.paypal.com/*"
+          "https?://thisanimedoesnotexist.ai/*"
+          "https?://gather.town/*"
+          "https?://word-edit.officeapps.live.com/*"
+          "https?://collabedit.com/*"
+          "https?://codeshare.io/*"
+          "file:///*"
+        ];
 
     # `o`/`O`/`b`/`B` aliases, shared with the start page's search box.
     searchEngines = builtins.concatStringsSep "\n" startPage.searchAliases;
@@ -72,8 +78,7 @@ let
   };
 in
 {
-  home.file.".local/share/vimium/vimium-settings.json".text =
-    builtins.toJSON vimiumSettings;
+  home.file.".local/share/vimium/vimium-settings.json".text = builtins.toJSON vimiumSettings;
 
   # Updates only userDefinedLinkHintCss inside Vimium's row, leaving every other
   # option as last saved in its UI. sync_change_counter is bumped only when the

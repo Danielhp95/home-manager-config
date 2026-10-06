@@ -150,16 +150,17 @@ in
     # Session variables are read once per login, and a tmux server keeps the
     # environment it started with. Restated per shell, these reach a new pane
     # without either being restarted.
-    envExtra = lib.concatMapStrings (
-      name: "export ${name}=${lib.escapeShellArg config.home.sessionVariables.${name}}\n"
-    ) [
-      "FZF_DEFAULT_OPTS"
-      "FZF_DEFAULT_OPTS_FILE"
-      "GLAMOUR_STYLE"
-      "LS_COLORS"
-      "MANPAGER"
-      "MANROFFOPT"
-    ];
+    envExtra =
+      lib.concatMapStrings
+        (name: "export ${name}=${lib.escapeShellArg config.home.sessionVariables.${name}}\n")
+        [
+          "FZF_DEFAULT_OPTS"
+          "FZF_DEFAULT_OPTS_FILE"
+          "GLAMOUR_STYLE"
+          "LS_COLORS"
+          "MANPAGER"
+          "MANROFFOPT"
+        ];
     initContent = lib.mkMerge [
       # Order 850, before HM sources the plugins (900): autopair wraps these
       # space/backspace bindings instead of losing its own to them, and

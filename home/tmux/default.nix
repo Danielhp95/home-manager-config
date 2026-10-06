@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 
 let
   palette = import ../../palette;
@@ -115,9 +120,7 @@ let
 
   # Computes the bar's dynamic segments (see status-daemon.nu). writeNuBin runs
   # it with --no-config-file; tmux comes in as argv, pinning the one built here.
-  statusDaemon = pkgs.writers.writeNuBin "tmux-status-daemon" (
-    builtins.readFile ./status-daemon.nu
-  );
+  statusDaemon = pkgs.writers.writeNuBin "tmux-status-daemon" (builtins.readFile ./status-daemon.nu);
 
   # Last and in the background, not via programs.tmux.plugins (which runs them
   # above extraConfig): they read pluginOptions at load time, and their
@@ -125,7 +128,9 @@ let
   # the order: continuum needs the script paths resurrect sets when it loads.
   loadPlugins = ''
 
-    run-shell -b '${lib.concatMapStringsSep "; " (pl: pl.rtp) plugins}; ${statusDaemon}/bin/tmux-status-daemon #{socket_path} ${continuumSave} ${lib.getExe config.programs.tmux.package}'
+    run-shell -b '${
+      lib.concatMapStringsSep "; " (pl: pl.rtp) plugins
+    }; ${statusDaemon}/bin/tmux-status-daemon #{socket_path} ${continuumSave} ${lib.getExe config.programs.tmux.package}'
   '';
 in
 {

@@ -24,8 +24,8 @@
       OLLAMA_CONTEXT_LENGTH = "65536";
     };
     loadModels = [
-      "qwen3-coder:30b"  # Local development
-      "qwen3:4b-instruct-2507-q4_K_M"  # IRIS
+      "qwen3-coder:30b" # Local development
+      "qwen3:4b-instruct-2507-q4_K_M" # IRIS
     ];
   };
 
