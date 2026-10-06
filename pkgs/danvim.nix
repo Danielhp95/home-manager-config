@@ -1,16 +1,16 @@
 # THE nvim: danvim's package with the selected palette handed to its Lua as
 # `nixCats.extra("palette")` (read by danvim/lua/danvim/palette.lua).
 #
-# Bound once, as `pkgs.danvim`, in the overlay in
-# non_home_manager_config/configuration.nix; home.nix and firefox/default.nix
-# both use that, so the firenvim host can never run a differently themed nvim.
+# Bound once, as `pkgs.danvim`, in ./overlay.nix; home.nix and
+# firefox/default.nix both use that, so the firenvim host can never run a
+# differently themed nvim.
 #
 # A plain function, called with `import`, never `callPackage`: nixpkgs has a
 # package called `palette`, and callPackage would fill an argument of that
 # name with it.
 { inputs, system }:
 let
-  pal = import ./palette;
+  pal = import ../palette;
   nvim = inputs.danvim.packages.${system}.nvim;
 in
 nvim.override (prev: {
@@ -24,7 +24,7 @@ nvim.override (prev: {
           map (name: {
             inherit name;
             value = pal.hash.${name};
-          }) ((import ./palette/lib.nix).slotNames ++ [ "ansi" ])
+          }) ((import ../palette/lib.nix).slotNames ++ [ "ansi" ])
         )
         // {
           # The two extras the tokyonight family's syntax needs.

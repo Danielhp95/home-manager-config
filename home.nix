@@ -1,5 +1,4 @@
 {
-  inputs,
   pkgs,
   ...
 }:
@@ -113,8 +112,8 @@ in
     nvd # Nix version diff tool
     # Any binary nixpkgs ever shipped, in a per-shell mount namespace. Not the
     # NixOS module: it replaces /nix/store system-wide (meant for VMs).
-    inputs.omnibin.packages.${pkgs.stdenv.hostPlatform.system}.omnibin-shell
-    inputs.omnibin.packages.${pkgs.stdenv.hostPlatform.system}.omnibin
+    omnibin-shell
+    omnibin
     manix # NixOS/home-manager options search (backs `tv nix-options`)
 
     python3

@@ -19,7 +19,7 @@
     omnibin.inputs.nixpkgs.follows = "nixpkgs";
 
     # Any nixpkgs release, date or commit on demand: (pkgs.multiverse.at "25.05").<name>
-    # (the overlay in non_home_manager_config/configuration.nix).
+    # (pkgs/overlay.nix).
     multiverse.url = "github:fzakaria/nixpkgs-multiverse";
 
     # hy3 builds against Hyprland's headers: pin both revs and move them
@@ -107,6 +107,8 @@
       checks.x86_64-linux.palettes = import ./palette/check.nix {
         inherit (self.nixosConfigurations.lenovo) pkgs;
       };
+
+      overlays.default = import ./pkgs/overlay.nix inputs;
 
       nixosConfigurations.lenovo = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
