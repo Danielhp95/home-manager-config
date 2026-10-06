@@ -14,7 +14,8 @@ module.
 | `pkgs/` | `overlay.nix`, the one list of what this flake adds to nixpkgs or changes in it, and the packages more than one module needs |
 | `palette/` | The colour palettes; `default.nix` selects one in a line |
 | `fonts.nix` | The font families, once |
-| `lib/` | Colour helpers |
+| `theme.nix` | The value modules take as `theme`: the selected palette, the fonts, the colour helpers |
+| `lib/` | Colour helpers (`colour.nix`) and the theme's checks (`checks.nix`) |
 | `docs/` | `manual-steps.md` (what a rebuild cannot do), `upgrade-checklist.md` (what to re-check on a bump) |
 | `wallpapers/` | Read by noctalia from the checkout, not from the store |
 | `danvim/` | The Neovim config: a separate repository, ignored here, a `path:` input |
@@ -38,9 +39,20 @@ module.
 
 ```sh
 nix fmt                      # deadnix, then nixfmt
-nix flake check              # palettes, nixfmt, statix, deadnix
+nix flake check              # lint, palette and theme checks (below)
 nh os build                  # build without switching
 ```
+
+The checks, each buildable alone as `nix build .#checks.x86_64-linux.<name>`:
+
+| Check | Fails when |
+|---|---|
+| `nixfmt`, `statix`, `deadnix` | a Nix file is unformatted, has a lint finding or an unused binding |
+| `palettes` | a palette names a GTK theme, cursor or icon theme that no longer exists |
+| `contrast` | a palette drops under a contrast floor (its output is the table of ratios) |
+| `references` | a static file uses a tmux variable, CSS variable or Lua slot that is not generated |
+| `fonts` | `fonts.nix` names a family no font package provides |
+| `theme-<slug>` | the system no longer evaluates under a palette that is not the selected one |
 
 A refactor that should change nothing is proven by the system derivation
 staying the same (about 35 s):

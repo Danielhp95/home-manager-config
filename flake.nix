@@ -157,15 +157,21 @@
       };
 
       # `nix flake check`. Nothing runs these on its own: there is no CI.
-      checks.${system} = {
-        # What a palette names but evaluation only forces once it is selected:
-        # its GTK theme, cursor and icon theme (palette/check.nix).
-        palettes = import ./palette/check.nix { inherit pkgs; };
-        nixfmt = lint "nixfmt" [ pkgs.nixfmt ] "find . -name '*.nix' -exec nixfmt --check {} +";
-        # statix.toml switches off the one rule this repo does not follow.
-        statix = lint "statix" [ pkgs.statix ] "statix check .";
-        deadnix = lint "deadnix" [ pkgs.deadnix ] "deadnix --fail .";
-      };
+      checks.${system} =
+        # palettes (the GTK, cursor and icon themes each palette names exist)
+        # and contrast.
+        import ./palette/check.nix { inherit pkgs; }
+        # references, fonts, and theme-<slug> for each palette not selected.
+        // import ./lib/checks.nix {
+          inherit pkgs lib theme;
+          host = self.nixosConfigurations.lenovo;
+        }
+        // {
+          nixfmt = lint "nixfmt" [ pkgs.nixfmt ] "find . -name '*.nix' -exec nixfmt --check {} +";
+          # statix.toml switches off the one rule this repo does not follow.
+          statix = lint "statix" [ pkgs.statix ] "statix check .";
+          deadnix = lint "deadnix" [ pkgs.deadnix ] "deadnix --fail .";
+        };
 
       overlays.default = import ./pkgs/overlay.nix { inherit inputs theme; };
 

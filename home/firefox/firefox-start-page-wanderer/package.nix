@@ -58,6 +58,8 @@ let
 in
 rec {
   inherit art;
+  # For lib/checks.nix: the variables the page's stylesheets may use.
+  inherit paletteCss;
 
   page = stdenvNoCC.mkDerivation {
     pname = "firefox-start-page-wanderer-page";
