@@ -672,18 +672,14 @@ in
   };
   # yazi as the file dialog of every app that asks the desktop portal for one
   # (the system side is xdg.portal in configuration.nix). The portal backend
-  # runs the wrapper, which opens `$TERMCMD yazi --chooser-file=...`: Enter on
-  # a file picks it, q cancels. For a save, the suggested file is created as a
-  # placeholder and hovered; move or rename it first to save elsewhere.
-  # Plain `kitty`, not `kitty -1`: the wrapper waits for the window to close.
-  # hyprland.lua floats and centres the window by this class; its size is
-  # kitty's own, because a floating kitty resizes itself to the size it
-  # remembers and so overrides a size rule.
+  # runs file-chooser.nu, which opens yazi in a floating kitty: Enter on a file
+  # picks it, q cancels. For a save, the suggested file is created as a
+  # placeholder and hovered; move or rename it to save elsewhere, after which
+  # Enter and q both save.
   xdg.configFile."xdg-desktop-portal-termfilechooser/config".text = ''
     [filechooser]
-    cmd=${pkgs.xdg-desktop-portal-termfilechooser}/share/xdg-desktop-portal-termfilechooser/yazi-wrapper.sh
+    cmd=${pkgs.writers.writeNu "yazi-file-chooser" (builtins.readFile ./file-chooser.nu)}
     default_dir=$HOME
-    env=TERMCMD=kitty --class file-chooser -o remember_window_size=no -o initial_window_width=1200 -o initial_window_height=800
   '';
 
   # GTK apps draw their own file dialog unless told to ask the portal
