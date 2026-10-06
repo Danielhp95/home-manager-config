@@ -412,8 +412,6 @@ let
         ) "${here}: ${show x} is not a slug (lowercase letters and digits, single dashes)"
     );
 
-  # A { dark, light } pair, both sides held to the same check.
-
   topLevel = {
     dark = checkHexSet slotNames;
     light = checkHexSet slotNames;

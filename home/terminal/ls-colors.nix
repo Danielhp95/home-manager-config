@@ -2,8 +2,8 @@
 
 # One colour per kind of file for everything that lists files outside yazi:
 # LS_COLORS (ls, fd, the zsh completion menu, nushell's ls) and eza's theme.
-# The kinds and their slots are yazi's filetype rules (../yazi/default.nix);
-# keep the two in step.
+# The kinds and their slots are ./file-kinds.nix, which yazi's filetype rules
+# read too.
 #
 # A slot that is one of the terminal's 16 colours is written as that ANSI
 # slot, so it follows whatever palette the terminal has (the Linux console
@@ -12,26 +12,8 @@ let
   palette = import ../../palette;
   colour = import ../../lib/colour.nix { inherit lib; };
 
-  # kind -> slot, as in yazi: folders gold and bold (what you navigate by),
-  # links sage, executables olive, images gold, audio and video mauve,
-  # archives the accent, a dangling link the error red, struck through.
-  kinds = {
-    dir = {
-      slot = "gold";
-      bold = true;
-    };
-    link.slot = "sage";
-    orphan = {
-      slot = "error";
-      strike = true;
-    };
-    exec.slot = "olive";
-    # Pipes, sockets and devices: yazi has no rule for them.
-    special.slot = "steel";
-    image.slot = "gold";
-    media.slot = "mauve";
-    archive.slot = "accent";
-  };
+  # kind -> slot, shared with yazi's filetype rules.
+  kinds = import ./file-kinds.nix;
 
   extensions = {
     image = [

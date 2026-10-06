@@ -508,43 +508,40 @@ in
         };
       };
 
-      # First match wins; `is` conditions go before the broad mime globs.
-      filetype.rules = [
-        # Gold: folders are what you navigate by (as with zsh paths)
-        {
-          url = "*/";
-          fg = p.gold;
-          bold = true;
-        }
-        {
-          is = "orphan";
-          url = "*";
-          fg = p.error;
-          crossed = true;
-        }
-        {
-          is = "link";
-          url = "*";
-          fg = p.sage;
-        }
-        {
-          is = "exec";
-          url = "*";
-          fg = p.olive;
-        }
-        {
-          mime = "image/*";
-          fg = p.gold;
-        }
-        {
-          mime = "{audio,video}/*";
-          fg = p.mauve;
-        }
-        {
-          mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}";
-          fg = p.accent;
-        }
-      ];
+      # First match wins; `is` conditions go before the broad mime globs. The
+      # colour of each kind is ../terminal/file-kinds.nix, shared with LS_COLORS.
+      filetype.rules =
+        let
+          kinds = import ../terminal/file-kinds.nix;
+          rule =
+            kind: match:
+            match
+            // {
+              fg = p.${kinds.${kind}.slot};
+            }
+            // lib.optionalAttrs (kinds.${kind}.bold or false) { bold = true; }
+            // lib.optionalAttrs (kinds.${kind}.strike or false) { crossed = true; };
+        in
+        [
+          (rule "dir" { url = "*/"; })
+          (rule "orphan" {
+            is = "orphan";
+            url = "*";
+          })
+          (rule "link" {
+            is = "link";
+            url = "*";
+          })
+          (rule "exec" {
+            is = "exec";
+            url = "*";
+          })
+          (rule "image" { mime = "image/*"; })
+          (rule "media" { mime = "{audio,video}/*"; })
+          (rule "archive" {
+            mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}";
+          })
+        ];
 
       # Folder icons in burnt orange instead of the preset's blues. The preset
       # colors dirs twice, via an `if = "dir"` cond and via per-name `dirs` that
