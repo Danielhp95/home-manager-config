@@ -18,6 +18,13 @@ let
   '';
 in
 {
+  imports = [
+    ./ls-colors.nix
+    ./television.nix
+    ./nushell.nix
+    ./iris.nix
+  ];
+
   # Zoxide hygiene. Literal paths, not $HOME: nushell loads these unexpanded.
   home.sessionVariables = {
     # Skip ~ itself (jumping "home" is trivial), the store, and .git internals

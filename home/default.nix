@@ -52,10 +52,6 @@ in
     ./lnav
 
     ./terminal
-    ./terminal/ls-colors.nix
-    ./terminal/television.nix
-    ./terminal/nushell.nix
-    ./terminal/iris.nix
 
     ./claude-code
     ./kitty
