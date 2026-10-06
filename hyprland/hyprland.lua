@@ -344,7 +344,10 @@ hl.bind(
 	hl.dsp.exec_cmd("noctalia msg panel-toggle kenn/keybind-cheatsheet:cheatsheet"),
 	{ description = "Open keybind cheatsheet" }
 )
-hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher"), { description = "Window switcher" })
+-- `hold`: a quick tap (ALT released before the overlay has focus) switches to
+-- the previous window and closes it; holding ALT keeps the switcher open.
+-- https://docs.noctalia.dev/noctalia/ipc/shell/ ("window-switcher hold")
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("noctalia msg window-switcher hold"), { description = "Window switcher" })
 hl.bind(mod .. " + CONTROL + SHIFT + L", hl.dsp.exec_cmd("noctalia msg session lock"), { description = "Lock screen" })
 hl.bind(mod .. " + SHIFT + C", hl.dsp.reload_config(), { description = "Reload Hyprland config" })
 hl.bind(mod .. " + b", hl.dsp.exec_cmd("noctalia msg bar-toggle"), { description = "Toggle bar" })
@@ -664,12 +667,9 @@ hl.config({
 -- ─────────────────────────────────────────────────────────────────────────────
 hl.layer_rule({ name = "vicinae-blur", match = { namespace = "vicinae" }, blur = true, ignore_alpha = 0 })
 hl.layer_rule({ name = "vicinae-no-animation", match = { namespace = "vicinae" }, no_anim = true })
--- noctalia requests protocol blur over its whole bar rect, which layer-rule blur
--- toggles can't override. ignore_alpha still applies and keeps the blur to drawn
--- pixels, so the gaps between capsules stay clear (0 didn't; 0.1 does).
-hl.layer_rule({ name = "noctalia-bar-gap-noblur", match = { namespace = "noctalia-bar-default" }, ignore_alpha = 0.1 })
 -- slurp's region overlay ("selection"): without the layers fade-out, the dimmed
 -- overlay is already gone when grim captures right after slurp exits (wl-ocr).
+-- wl-kbptr's overlay uses the same namespace, so its hints appear at once too.
 hl.layer_rule({ name = "slurp-no-anim", match = { namespace = "^selection$" }, no_anim = true })
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -767,6 +767,23 @@ hl.window_rule({ name = "no-shadow-tiled", match = { float = false }, no_shadow 
 hl.window_rule({ name = "no-gaps-wtv1", match = { float = false, workspace = "w[tv1]" }, border_size = 0, rounding = 0 })
 hl.window_rule({ name = "no-gaps-f1", match = { float = false, workspace = "f[1]" }, border_size = 0, rounding = 0 })
 
+-- Floating windows always show a thin outline: 2px instead of the tiled 5px,
+-- and `muted` instead of the background colour while unfocused, so a float
+-- never blends into what is under it. `match.focus` limits a rule to the
+-- focused (true) or unfocused (false) state.
+-- https://wiki.hypr.land/configuring/core/rules/ ("border_color", "border_size")
+hl.window_rule({ name = "float-thin-border", match = { float = true }, border_size = 2 })
+hl.window_rule({ name = "float-outline-unfocused", match = { float = true, focus = false }, border_color = palette.muted })
+
+-- The window focus would return to on each monitor that is not focused (tagged
+-- by the return-window events at the end of this file). A lone tiled window
+-- shows nothing: the no-gaps rules above take its border away.
+hl.window_rule({
+	name = "monitor-return-window",
+	match = { tag = "monitor-return", focus = false },
+	border_color = palette.accentDim,
+})
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Auto-tab the messaging workspace (ws9)
 -- hy3 has no per-workspace "always tab", so events tab ws9's root group. The
@@ -788,3 +805,55 @@ end
 hl.on("workspace.active", tab_messaging_workspace) -- switching to ws9
 hl.on("window.open", tab_messaging_workspace) -- launching an app on ws9
 hl.on("window.move_to_workspace", tab_messaging_workspace) -- dragging an app onto ws9
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Return window of the unfocused monitors
+-- Hyprland has no rule for "the window I would land on if I moved to that
+-- monitor", so events keep a `monitor-return` tag on exactly those windows: the
+-- last focused window of the visible workspace of every monitor but the focused
+-- one. The monitor-return-window rule above colours the tag.
+-- ─────────────────────────────────────────────────────────────────────────────
+local RETURN_TAG = "monitor-return"
+
+local function tag_return_windows()
+	local wanted = {} -- window address -> true
+	for _, mon in ipairs(hl.get_monitors()) do
+		if not mon.focused then
+			local ws = mon.active_special_workspace or mon.active_workspace
+			local win = ws and ws.last_window
+			if win then
+				wanted[win.address] = true
+			end
+		end
+	end
+	for _, win in ipairs(hl.get_windows()) do
+		local tagged = false
+		for _, tag in ipairs(win.tags) do
+			if tag == RETURN_TAG then
+				tagged = true
+			end
+		end
+		-- "+tag" adds and "-tag" removes; a bare name would toggle.
+		if tagged ~= (wanted[win.address] == true) then
+			hl.dispatch(hl.dsp.window.tag({
+				tag = (tagged and "-" or "+") .. RETURN_TAG,
+				window = "address:" .. win.address,
+			}))
+		end
+	end
+end
+
+for _, event in ipairs({
+	"window.active",
+	"monitor.focused",
+	"workspace.active",
+	"window.close",
+	"window.move_to_workspace",
+	"workspace.move_to_monitor",
+	"monitor.removed",
+}) do
+	-- Deferred: the focus and workspace state is not updated yet inside the event.
+	hl.on(event, function()
+		after_event(tag_return_windows)
+	end)
+end
