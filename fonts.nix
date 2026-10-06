@@ -1,7 +1,7 @@
 # Font families by role (fontconfig names), the counterpart of palette/;
-# `packages` provides them. Hand-kept copies: the hy3 tab font in hyprland.lua
-# and --mono in the start page's style.css. GRUB's and the start page's display
-# fonts are deliberate one-offs.
+# `packages` provides them. Consumers read them as `theme.fonts`; the `fonts`
+# check (lib/checks.nix) holds every name here against the font packages.
+# GRUB's and the start page's display fonts are deliberate one-offs.
 {
   # UI text: GTK/Qt, noctalia, fcitx5 and fontconfig's sans-serif.
   ui = "Adwaita Sans";
@@ -10,9 +10,6 @@
   # Cell-grid text: terminals, hy3 tabs, wl-kbptr, fontconfig's monospace.
   # The Nerd Font "Mono" variant keeps icons one cell wide.
   mono = "JetBrainsMono Nerd Font Mono";
-  # The same face's SemiBold under its legacy family name, for APIs that take
-  # a family but no weight (wl-kbptr's cairo toy fonts).
-  monoSemiBold = "JetBrainsMono NFM SemiBold";
   # Icons at natural width, for mono text outside a cell grid (vicinae).
   monoWide = "JetBrainsMono Nerd Font";
 

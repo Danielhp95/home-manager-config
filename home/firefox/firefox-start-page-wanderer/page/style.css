@@ -28,7 +28,6 @@
   /* Under 1 even at noon: the canvas is lit from within a dark room. */
   --art-brightness: 0.88;
 
-  --mono: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
   --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --gap: 1.15rem;
 }

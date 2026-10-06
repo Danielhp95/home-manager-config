@@ -43,6 +43,7 @@ let
     /* Generated from nix_config's palette/ — do not edit. */
     :root {
     ${colour.cssVars "ember" palette.hash.slots}  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
+      --mono: "${theme.fonts.monoWide}", "JetBrains Mono", ui-monospace, monospace;
     }
   '';
 
