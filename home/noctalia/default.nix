@@ -91,7 +91,7 @@ in
   # The local DART plugin, linked out of the store so edits to ./dart-plugin
   # hot-reload in the running shell without a rebuild.
   xdg.dataFile."noctalia/plugins/dart".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix_config/noctalia/dart-plugin";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix_config/home/noctalia/dart-plugin";
 
   # For shell.avatar_path. The greeter can't read ~ (0700) and gets the same
   # image through AccountsService (nixos/greeter.nix).

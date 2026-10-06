@@ -2,7 +2,7 @@
 # WhiteSur-Dark-orange GTK/Qt theme (home/hyprland/theming.nix).
 #
 # One hand-kept copy: danvim's palette.lua embeds these values as its fallback
-# for builds without the nix_config override (../danvim.nix).
+# for builds without the nix_config override (../pkgs/danvim.nix).
 #
 # The shape is fixed by ./lib.nix, which rejects a missing, misspelt or
 # malformed entry. Colours are bare lowercase hex.
