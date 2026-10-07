@@ -1,7 +1,7 @@
 # The interactive shells, and what they share. Home Manager writes
-# home.shellAliases and home.sessionVariables into every enabled shell; a
-# string both configurations quote is in ./common.nix. What is written twice
-# on purpose stays in each shell's own file (functions, in each language).
+# home.shellAliases into every enabled shell; a string both configurations
+# quote is in ./common.nix. What is written twice on purpose stays in each
+# shell's own file (functions, in each language).
 { lib, ... }:
 {
   imports = [
@@ -31,6 +31,11 @@
       ng = "tv nix-generations";
     };
 
+    # Read once per login, where it replaces the system's default (nano).
+    # Marked live so that every zsh exports it again: a shell in a session
+    # that logged in before this was set would otherwise keep nano. nushell
+    # does not read session variables and sets it itself (./nushell.nix).
     home.sessionVariables.EDITOR = "nvim";
+    my.liveSessionVariables = [ "EDITOR" ];
   };
 }

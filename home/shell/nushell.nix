@@ -26,6 +26,9 @@ in
     # `ls` stays nushell's structured ls (pipelines need it); `la` is eza.
     shellAliases.la = "eza -lahF --git";
 
+    # Home Manager's nushell module does not read home.sessionVariables.
+    environmentVariables.EDITOR = config.home.sessionVariables.EDITOR;
+
     # Integrations bind the same keys and the last one in config.nu wins: atuin
     # gets Ctrl-R and fzf Ctrl-T, as in zsh; tv's autocomplete is on Tab-Tab.
     extraConfig = ''
