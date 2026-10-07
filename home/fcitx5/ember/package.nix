@@ -9,8 +9,12 @@
 let
   p = theme.hash;
 
+  # Also written into the theme's own metadata.
+  version = "1.2";
+
   # The palette attributes each file uses as placeholders.
   themeConf = replaceVars ./Ember.conf {
+    inherit version;
     inherit (p)
       fg
       fgDim
@@ -29,7 +33,7 @@ let
 in
 stdenvNoCC.mkDerivation {
   pname = "fcitx5-ember";
-  version = "1.2";
+  inherit version;
 
   dontUnpack = true;
 
