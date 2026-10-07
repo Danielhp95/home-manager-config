@@ -41,7 +41,7 @@ body {
   min-height: 100vh;
   background: var(--theme-bg);
   color: var(--theme-fg);
-  font: 400 14.5px/1.55 var(--mono);
+  font: 400 14.5px/1.55 var(--theme-mono);
   overflow-x: hidden;
 }
 
@@ -265,7 +265,7 @@ summary:focus-visible {
 
 .panel h2 {
   margin: 0 0 0.5rem;
-  font: 500 0.78rem/1.4 var(--mono);
+  font: 500 0.78rem/1.4 var(--theme-mono);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--theme-fg-dim);

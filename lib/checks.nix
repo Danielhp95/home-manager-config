@@ -29,41 +29,57 @@ let
   userChrome = lib.concatMapStrings (p: p.userChrome) (lib.attrValues hm.programs.firefox.profiles);
   lua = withoutLuaComments (builtins.readFile ../home/hyprland/hyprland.lua);
   luaVars = hm.wayland.windowManager.hyprland.settings;
+  # The locals hyprland.lua is handed (home/hyprland/default.nix).
+  luaLocals = [
+    "bin"
+    "fonts"
+    "host"
+    "palette"
+  ];
+  tmuxConf = hm.programs.tmux.extraConfig;
+  # A CSS custom property of ours, read or defined. The class is wider than
+  # the names can be, so that `--theme-accentDim` or `--theme-fg_dim` is read
+  # whole and found missing, not cut at the first letter that is not kebab.
+  cssUse = "var[(][[:space:]]*--(theme-[A-Za-z0-9_-]+)";
+  cssDef = "--(theme-[A-Za-z0-9_-]+):";
+  among = names: name: lib.elem name names;
   references = [
     {
       file = "home/tmux/tmux.conf";
-      # Not @st_*: the status daemon sets those at run time.
-      used = lib.filter (name: !lib.hasPrefix "st_" name) (
-        matches "#[{]@([A-Za-z0-9_-]+)[}]" hm.programs.tmux.extraConfig
-      );
-      defined = matches "set -g @([A-Za-z0-9_-]+) " hm.programs.tmux.extraConfig;
+      # Every user option a format reads: #{@x}, #{?@x,…}, #{E:@x}. Not
+      # @st_*: the status daemon sets those at run time.
+      used = lib.filter (name: !lib.hasPrefix "st_" name) (matches "@([A-Za-z0-9_-]+)[},]" tmuxConf);
+      known = among (matches "set -g @([A-Za-z0-9_-]+) " tmuxConf);
     }
     {
       file = "home/firefox/userChrome.css";
-      used = matches "var[(]--(theme-[a-z0-9-]+)" userChrome;
-      defined = matches "--(theme-[a-z0-9-]+):" userChrome;
+      used = matches cssUse userChrome;
+      known = among (matches cssDef userChrome);
     }
     {
-      file = "the start page's style.css and app.js";
-      used = lib.concatMap (f: matches "var[(]--(theme-[a-z0-9-]+)" (builtins.readFile f)) [
+      file = "the start page's style.css, app.js and index.html";
+      used = lib.concatMap (f: matches cssUse (builtins.readFile f)) [
         ../home/firefox/firefox-start-page-wanderer/page/style.css
         ../home/firefox/firefox-start-page-wanderer/page/app.js
         ../home/firefox/firefox-start-page-wanderer/page/index.html
       ];
-      defined = matches "--(theme-[a-z0-9-]+):" startPage.paletteCss.text;
+      known = among (matches cssDef startPage.paletteCss.text);
     }
   ]
-  # hyprland.lua's locals (palette, fonts, host, bin): the first name after
-  # each must be one Nix hands it.
-  ++ lib.mapAttrsToList (local: value: {
-    file = "home/hyprland/hyprland.lua (${local}.<name>)";
-    used = matches "[^A-Za-z_.]${local}[.]([A-Za-z_]+)" lua;
-    defined = lib.attrNames value._var;
-  }) (lib.filterAttrs (_: v: v ? _var) luaVars);
+  # hyprland.lua's locals: every dotted path read from one (host.panel.output)
+  # must exist in what Nix hands it. A path that does not reads as nil, and the
+  # error that follows stops the rest of the file, binds included.
+  ++ map (local: {
+    file = "home/hyprland/hyprland.lua";
+    used = map (path: "${local}.${path}") (
+      matches "[^A-Za-z_.]${local}[.]([A-Za-z_]+([.][A-Za-z_]+)*)" lua
+    );
+    known = name: lib.hasAttrByPath (lib.tail (lib.splitString "." name)) luaVars.${local}._var;
+  }) luaLocals;
   unknown = lib.concatMap (
     r:
     map (name: "  ${r.file}: ${name} is used but not generated") (
-      lib.unique (lib.filter (name: !(lib.elem name r.defined)) r.used)
+      lib.unique (lib.filter (name: !r.known name) r.used)
     )
   ) references;
 
@@ -84,6 +100,10 @@ let
 in
 {
   references =
+    # Without this the Lua half would pass with nothing to check.
+    assert lib.assertMsg (lib.all (
+      local: luaVars ? ${local} && luaVars.${local} ? _var
+    ) luaLocals) "theme references: hyprland.lua's locals are no longer `_var` settings";
     assert lib.assertMsg (unknown == [ ]) "theme references:\n${lib.concatStringsSep "\n" unknown}";
     pkgs.writeText "theme-references" (
       lib.concatMapStrings (

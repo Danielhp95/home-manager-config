@@ -43,7 +43,7 @@ let
     /* Generated from nix_config's palette/ — do not edit. */
     :root {
     ${colour.cssVars "theme" palette.hash.slots}  --theme-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
-      --mono: "${theme.fonts.monoWide}", "JetBrains Mono", ui-monospace, monospace;
+      --theme-mono: "${theme.fonts.monoWide}", "JetBrains Mono", ui-monospace, monospace;
     }
   '';
 
