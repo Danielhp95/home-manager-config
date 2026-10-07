@@ -219,7 +219,7 @@ in
       };
 
       # The palette as custom properties, so userChrome.css stays plain CSS.
-      userChrome = ":root {\n${colour.cssVars "ember" p.slots}}\n\n" + builtins.readFile ./userChrome.css;
+      userChrome = ":root {\n${colour.cssVars "theme" p.slots}}\n\n" + builtins.readFile ./userChrome.css;
     };
   };
 

@@ -32,22 +32,25 @@ let
   references = [
     {
       file = "home/tmux/tmux.conf";
-      used = matches "#[{]@(color_[a-z0-9_]+)[}]" hm.programs.tmux.extraConfig;
-      defined = matches "set -g @(color_[a-z0-9_]+) " hm.programs.tmux.extraConfig;
+      # Not @st_*: the status daemon sets those at run time.
+      used = lib.filter (name: !lib.hasPrefix "st_" name) (
+        matches "#[{]@([A-Za-z0-9_-]+)[}]" hm.programs.tmux.extraConfig
+      );
+      defined = matches "set -g @([A-Za-z0-9_-]+) " hm.programs.tmux.extraConfig;
     }
     {
       file = "home/firefox/userChrome.css";
-      used = matches "var[(]--(ember-[a-z0-9-]+)" userChrome;
-      defined = matches "--(ember-[a-z0-9-]+):" userChrome;
+      used = matches "var[(]--(theme-[a-z0-9-]+)" userChrome;
+      defined = matches "--(theme-[a-z0-9-]+):" userChrome;
     }
     {
       file = "the start page's style.css and app.js";
-      used = lib.concatMap (f: matches "var[(]--(ember-[a-z0-9-]+)" (builtins.readFile f)) [
+      used = lib.concatMap (f: matches "var[(]--(theme-[a-z0-9-]+)" (builtins.readFile f)) [
         ../home/firefox/firefox-start-page-wanderer/page/style.css
         ../home/firefox/firefox-start-page-wanderer/page/app.js
         ../home/firefox/firefox-start-page-wanderer/page/index.html
       ];
-      defined = matches "--(ember-[a-z0-9-]+):" startPage.paletteCss.text;
+      defined = matches "--(theme-[a-z0-9-]+):" startPage.paletteCss.text;
     }
     {
       file = "home/hyprland/hyprland.lua (palette.<slot>)";

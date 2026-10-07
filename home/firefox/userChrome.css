@@ -1,4 +1,4 @@
-/* Firefox chrome in the Ember palette; ./default.nix prepends the `--ember-*`
+/* Firefox chrome in the selected palette; ./default.nix prepends the `--theme-*`
  * colours from ../../palette/. Firefox renames parts and variables between
  * versions: if a rule stops applying, look it up in the Browser Toolbox.
  */
@@ -7,33 +7,33 @@
  * Firefox's own theme variables, so every surface that reads them follows.
  */
 :root {
-  --lwt-accent-color: var(--ember-bg) !important;
-  --lwt-accent-color-inactive: var(--ember-bg) !important;
-  --lwt-text-color: var(--ember-fg) !important;
+  --lwt-accent-color: var(--theme-bg) !important;
+  --lwt-accent-color-inactive: var(--theme-bg) !important;
+  --lwt-text-color: var(--theme-fg) !important;
 
-  --toolbar-background-color: var(--ember-bg-alt) !important;
-  --toolbar-text-color: var(--ember-fg) !important;
-  --toolbar-field-background-color: var(--ember-bg-deep) !important;
-  --toolbar-field-text-color: var(--ember-fg) !important;
-  --toolbar-field-background-color-focus: var(--ember-bg-deep) !important;
-  --toolbar-field-text-color-focus: var(--ember-fg) !important;
+  --toolbar-background-color: var(--theme-bg-alt) !important;
+  --toolbar-text-color: var(--theme-fg) !important;
+  --toolbar-field-background-color: var(--theme-bg-deep) !important;
+  --toolbar-field-text-color: var(--theme-fg) !important;
+  --toolbar-field-background-color-focus: var(--theme-bg-deep) !important;
+  --toolbar-field-text-color-focus: var(--theme-fg) !important;
   --toolbar-field-border-color: transparent !important;
-  --toolbar-field-border-color-focus: var(--ember-accent) !important;
+  --toolbar-field-border-color-focus: var(--theme-accent) !important;
 
-  --tab-background-color-selected: var(--ember-surface) !important;
-  --tab-selected-textcolor: var(--ember-fg) !important;
+  --tab-background-color-selected: var(--theme-surface) !important;
+  --tab-selected-textcolor: var(--theme-fg) !important;
 
-  --chrome-content-separator-color: var(--ember-border) !important;
-  --focus-outline-color: var(--ember-accent) !important;
+  --chrome-content-separator-color: var(--theme-border) !important;
+  --focus-outline-color: var(--theme-accent) !important;
 
-  --panel-background-color: var(--ember-bg-alt) !important;
-  --panel-text-color: var(--ember-fg) !important;
-  --panel-border-color: var(--ember-border) !important;
+  --panel-background-color: var(--theme-bg-alt) !important;
+  --panel-text-color: var(--theme-fg) !important;
+  --panel-border-color: var(--theme-border) !important;
 
-  --panel-separator-color: var(--ember-border) !important;
-  --button-background-color-primary: var(--ember-accent) !important;
-  --button-background-color-primary-hover: var(--ember-accent-bright) !important;
-  --button-text-color-primary: var(--ember-bg) !important;
+  --panel-separator-color: var(--theme-border) !important;
+  --button-background-color-primary: var(--theme-accent) !important;
+  --button-background-color-primary-hover: var(--theme-accent-bright) !important;
+  --button-text-color-primary: var(--theme-bg) !important;
 }
 
 /* ── Tab strip ─────────────────────────────────────────────────────────────
@@ -45,58 +45,58 @@
 }
 
 .tabbrowser-tab[selected] .tab-background {
-  box-shadow: inset 0 2px 0 0 var(--ember-accent) !important;
+  box-shadow: inset 0 2px 0 0 var(--theme-accent) !important;
 }
 
 .tabbrowser-tab:not([selected]):hover .tab-background {
-  background-color: var(--ember-bg-alt) !important;
+  background-color: var(--theme-bg-alt) !important;
 }
 
 /* The thin line under the tab strip. */
 #navigator-toolbox {
-  border-bottom: 1px solid var(--ember-border) !important;
+  border-bottom: 1px solid var(--theme-border) !important;
 }
 
 /* ── Address bar ──────────────────────────────────────────────────────────── */
 #urlbar[focused] > .urlbar-background {
-  outline: 1px solid var(--ember-accent) !important;
+  outline: 1px solid var(--theme-accent) !important;
 }
 
 #urlbar > .urlbar-background,
 #searchbar {
   border-radius: 8px !important;
-  border-color: var(--ember-border) !important;
+  border-color: var(--theme-border) !important;
 }
 
 /* Autocomplete dropdown. */
 .urlbarView-row[selected],
 .urlbarView-row:hover {
-  background-color: var(--ember-surface) !important;
+  background-color: var(--theme-surface) !important;
 }
 
 .urlbarView-row[selected] .urlbarView-title-separator,
 .urlbarView-row[selected] .urlbarView-url {
-  color: var(--ember-accent) !important;
+  color: var(--theme-accent) !important;
 }
 
 /* ── Sidebar, findbar, panels ─────────────────────────────────────────────── */
 #sidebar-box,
 #sidebar-header {
-  background-color: var(--ember-bg-deep) !important;
-  color: var(--ember-fg) !important;
-  border-inline-end: 1px solid var(--ember-border) !important;
+  background-color: var(--theme-bg-deep) !important;
+  color: var(--theme-fg) !important;
+  border-inline-end: 1px solid var(--theme-border) !important;
 }
 
 findbar {
-  background-color: var(--ember-bg-alt) !important;
-  color: var(--ember-fg) !important;
-  border-top: 1px solid var(--ember-border) !important;
+  background-color: var(--theme-bg-alt) !important;
+  color: var(--theme-fg) !important;
+  border-top: 1px solid var(--theme-border) !important;
 }
 
 /* Menu hover in Ember rather than the platform accent. */
 menupopup > menuitem:hover,
 menupopup > menu:hover {
-  background-color: var(--ember-surface) !important;
+  background-color: var(--theme-surface) !important;
 }
 
 /* ── Pre-render backdrop ──────────────────────────────────────────────────
@@ -105,5 +105,5 @@ menupopup > menu:hover {
  */
 #tabbrowser-tabpanels,
 #webextpanels-window {
-  background-color: var(--ember-bg) !important;
+  background-color: var(--theme-bg) !important;
 }

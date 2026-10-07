@@ -151,8 +151,8 @@ function paintWeather(sky, now, next) {
   root.setProperty(
     "--glow-colour",
     next?.kind === "sunrise" && !isDay
-      ? "var(--ember-accent)"
-      : "var(--ember-accent-bright)",
+      ? "var(--theme-accent)"
+      : "var(--theme-accent-bright)",
   );
   root.setProperty("--art-brightness", (isDay ? 0.88 : 0.55).toFixed(2));
 }

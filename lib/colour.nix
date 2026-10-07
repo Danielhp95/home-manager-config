@@ -180,7 +180,7 @@ in
     (lib.max la lb + 0.05) / (lib.min la lb + 0.05);
 
   # An attrset of colours as CSS custom properties, one per line:
-  # cssVars "ember" { bgDeep = "#16161e"; } -> "  --ember-bg-deep: #16161e;\n".
+  # cssVars "theme" { bgDeep = "#16161e"; } -> "  --theme-bg-deep: #16161e;\n".
   cssVars =
     prefix: colours:
     lib.concatStrings (

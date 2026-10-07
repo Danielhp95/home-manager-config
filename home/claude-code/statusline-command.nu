@@ -61,21 +61,21 @@ def main [] {
 
   # At-sign placeholders are palette/ colours (replaceVars in default.nix):
   # the slots by name, and extra.heat for the three hotter effort steps.
-  let color_ash = "@ash@"
-  let color_bg0 = "@bg@"
-  let color_bg1 = "@surface@"
-  let color_ember = "@accent@"
-  let color_ember_dim = "@accentDim@"
-  let color_ember_high = "@heatHigh@"
-  let color_ember_xhigh = "@heatXhigh@"
-  let color_ember_max = "@heatMax@"
-  let color_error = "@error@"
-  let color_fg1 = "@fgDim@"
-  let color_fg_soft = "@fgSoft@"
-  let color_gold = "@gold@"
-  let color_mauve = "@mauve@"
-  let color_sage = "@sage@"
-  let color_steel = "@steel@"
+  let ash = "@ash@"
+  let bg = "@bg@"
+  let surface = "@surface@"
+  let accent = "@accent@"
+  let accent_dim = "@accentDim@"
+  let heat_high = "@heatHigh@"
+  let heat_xhigh = "@heatXhigh@"
+  let heat_max = "@heatMax@"
+  let error = "@error@"
+  let fg_dim = "@fgDim@"
+  let fg_soft = "@fgSoft@"
+  let gold = "@gold@"
+  let mauve = "@mauve@"
+  let sage = "@sage@"
+  let steel = "@steel@"
 
   let glyph_pill_open = (char -u "e0b6")
   let glyph_pill_close = (char -u "e0b4")
@@ -97,12 +97,12 @@ def main [] {
 
   def effort_color [level: string] {
     match ($level | str lowercase) {
-      "low" => $color_ember_dim,
-      "medium" => $color_ember,
-      "high" => $color_ember_high,
-      "xhigh" => $color_ember_xhigh,
-      "max" => $color_ember_max,
-      _ => $color_ember,
+      "low" => $accent_dim,
+      "medium" => $accent,
+      "high" => $heat_high,
+      "xhigh" => $heat_xhigh,
+      "max" => $heat_max,
+      _ => $accent,
     }
   }
 
@@ -111,8 +111,8 @@ def main [] {
   if ("SSH_CONNECTION" in $env) or ("SSH_TTY" in $env) {
     let user_name = (^whoami | str trim)
     let host_name = (^hostname -s | str trim)
-    $line = $line + (pill_open $color_gold) + (pill_text $user_name $color_bg0 $color_gold true) + (pill_close $color_gold) + " "
-    $line = $line + (pill_open $color_gold) + (pill_text $host_name $color_bg0 $color_gold false) + (pill_close $color_gold) + " "
+    $line = $line + (pill_open $gold) + (pill_text $user_name $bg $gold true) + (pill_close $gold) + " "
+    $line = $line + (pill_open $gold) + (pill_text $host_name $bg $gold false) + (pill_close $gold) + " "
   }
 
   let current_dir = $env.PWD
@@ -126,77 +126,77 @@ def main [] {
     let ancestor_path = (truncate_path_segments (collapse_home_prefix ($git_root | path dirname) $env.HOME) 3)
     let repo_name = ($git_root | path basename)
 
-    $line = $line + (pill_open $color_ash)
-    $line = $line + (pill_text $" ($ancestor_path)" $color_bg0 $color_ash true)
-    $line = $line + (pill_wedge $color_ash $color_ember_dim)
-    $line = $line + (pill_text $" ($repo_name)" $color_bg0 $color_ember_dim true)
-    $line = $line + (pill_wedge $color_ember_dim $color_ember)
-    mut last_pill_color = $color_ember
+    $line = $line + (pill_open $ash)
+    $line = $line + (pill_text $" ($ancestor_path)" $bg $ash true)
+    $line = $line + (pill_wedge $ash $accent_dim)
+    $line = $line + (pill_text $" ($repo_name)" $bg $accent_dim true)
+    $line = $line + (pill_wedge $accent_dim $accent)
+    mut last_pill_color = $accent
     if ($model_name | is-not-empty) {
-      $line = $line + (pill_wedge $last_pill_color $color_gold)
-      $line = $line + (pill_text $" ($model_name)" $color_bg0 $color_gold true)
-      $last_pill_color = $color_gold
+      $line = $line + (pill_wedge $last_pill_color $gold)
+      $line = $line + (pill_text $" ($model_name)" $bg $gold true)
+      $last_pill_color = $gold
     }
     if ($effort_level | is-not-empty) {
       let effort_pill_color = (effort_color $effort_level)
       $line = $line + (pill_wedge $last_pill_color $effort_pill_color)
-      $line = $line + (pill_text $" ($effort_level)" $color_bg0 $effort_pill_color true)
+      $line = $line + (pill_text $" ($effort_level)" $bg $effort_pill_color true)
       $last_pill_color = $effort_pill_color
     }
-    $line = $line + (pill_wedge $last_pill_color $color_ember_dim)
-    $line = $line + (pill_wedge $color_ember_dim $color_ash)
-    $line = $line + (pill_close $color_ash) + " "
+    $line = $line + (pill_wedge $last_pill_color $accent_dim)
+    $line = $line + (pill_wedge $accent_dim $ash)
+    $line = $line + (pill_close $ash) + " "
   } else {
     let display_path = (truncate_path_segments (collapse_home_prefix $current_dir $env.HOME) 3)
-    $line = $line + (pill_open $color_ember)
-    $line = $line + (pill_text $" ($display_path)($read_only_marker)" $color_bg0 $color_ember true)
-    mut last_pill_color = $color_ember
+    $line = $line + (pill_open $accent)
+    $line = $line + (pill_text $" ($display_path)($read_only_marker)" $bg $accent true)
+    mut last_pill_color = $accent
     if ($model_name | is-not-empty) {
-      $line = $line + (pill_wedge $last_pill_color $color_gold)
-      $line = $line + (pill_text $" ($model_name)" $color_bg0 $color_gold true)
-      $last_pill_color = $color_gold
+      $line = $line + (pill_wedge $last_pill_color $gold)
+      $line = $line + (pill_text $" ($model_name)" $bg $gold true)
+      $last_pill_color = $gold
     }
     if ($effort_level | is-not-empty) {
       let effort_pill_color = (effort_color $effort_level)
       $line = $line + (pill_wedge $last_pill_color $effort_pill_color)
-      $line = $line + (pill_text $" ($effort_level)" $color_bg0 $effort_pill_color true)
+      $line = $line + (pill_text $" ($effort_level)" $bg $effort_pill_color true)
       $last_pill_color = $effort_pill_color
     }
-    $line = $line + (pill_wedge $last_pill_color $color_ember_dim)
-    $line = $line + (pill_wedge $color_ember_dim $color_ash)
-    $line = $line + (pill_close $color_ash) + " "
+    $line = $line + (pill_wedge $last_pill_color $accent_dim)
+    $line = $line + (pill_wedge $accent_dim $ash)
+    $line = $line + (pill_close $ash) + " "
   }
 
   if ($git_root | is-not-empty) {
     mut git_segment = ""
     let branch_name = (git_output -- symbolic-ref -q --short HEAD)
     if ($branch_name | is-not-empty) {
-      $git_segment = $git_segment + (pill_text $"($glyph_git_branch) " $color_ember_dim $color_bg1 false)
-      $git_segment = $git_segment + (pill_text $branch_name $color_fg_soft $color_bg1 false)
+      $git_segment = $git_segment + (pill_text $"($glyph_git_branch) " $accent_dim $surface false)
+      $git_segment = $git_segment + (pill_text $branch_name $fg_soft $surface false)
     } else {
       let short_commit = (git_output -- rev-parse --short HEAD)
       if ($short_commit | is-not-empty) {
-        $git_segment = $git_segment + (pill_text $"($glyph_git_commit) ($short_commit)" $color_fg_soft $color_bg1 false)
+        $git_segment = $git_segment + (pill_text $"($glyph_git_commit) ($short_commit)" $fg_soft $surface false)
       }
     }
 
     if ($git_segment | is-not-empty) {
-      $line = $line + (pill_open $color_bg1) + $git_segment + (pill_close $color_bg1) + " "
+      $line = $line + (pill_open $surface) + $git_segment + (pill_close $surface) + " "
     }
   }
 
   if ($session_name | is-not-empty) or ($worktree_name | is-not-empty) {
     mut identity_segment = ""
     if ($session_name | is-not-empty) {
-      $identity_segment = $identity_segment + (pill_text $session_name $color_gold $color_bg1 false)
+      $identity_segment = $identity_segment + (pill_text $session_name $gold $surface false)
     }
     if ($worktree_name | is-not-empty) {
       if ($identity_segment | is-not-empty) {
-        $identity_segment = $identity_segment + (pill_text " " $color_bg1 $color_bg1 false)
+        $identity_segment = $identity_segment + (pill_text " " $surface $surface false)
       }
-      $identity_segment = $identity_segment + (pill_text $"($glyph_git_branch) ($worktree_name)" $color_mauve $color_bg1 false)
+      $identity_segment = $identity_segment + (pill_text $"($glyph_git_branch) ($worktree_name)" $mauve $surface false)
     }
-    $line = $line + (pill_open $color_bg1) + $identity_segment + (pill_close $color_bg1) + " "
+    $line = $line + (pill_open $surface) + $identity_segment + (pill_close $surface) + " "
   }
 
   if "IN_NIX_SHELL" in $env {
@@ -205,35 +205,35 @@ def main [] {
       "impure" => "impure",
       _ => "shell",
     })
-    $line = $line + (pill_open $color_bg1) + (pill_text $"($glyph_nix) ($nix_shell_state)" $color_steel $color_bg1 false) + (pill_close $color_bg1) + " "
+    $line = $line + (pill_open $surface) + (pill_text $"($glyph_nix) ($nix_shell_state)" $steel $surface false) + (pill_close $surface) + " "
   }
 
   if "DIRENV_DIR" in $env {
-    $line = $line + (pill_open $color_bg1) + (pill_text $"($glyph_direnv) env" $color_sage $color_bg1 false) + (pill_close $color_bg1) + " "
+    $line = $line + (pill_open $surface) + (pill_text $"($glyph_direnv) env" $sage $surface false) + (pill_close $surface) + " "
   }
 
   if ($session_limit_percent | is-not-empty) or ($weekly_limit_percent | is-not-empty) {
     mut usage_segment = ""
     if ($session_limit_percent | is-not-empty) {
       let session_percent_rounded = ($session_limit_percent | math round)
-      let session_limit_color = (if $session_percent_rounded >= 85 { $color_error } else if $session_percent_rounded >= 60 { $color_gold } else { $color_fg_soft })
-      $usage_segment = $usage_segment + (pill_text $"5h ($session_percent_rounded)%" $session_limit_color $color_bg1 false)
+      let session_limit_color = (if $session_percent_rounded >= 85 { $error } else if $session_percent_rounded >= 60 { $gold } else { $fg_soft })
+      $usage_segment = $usage_segment + (pill_text $"5h ($session_percent_rounded)%" $session_limit_color $surface false)
       if ($session_limit_resets_at | is-not-empty) {
-        $usage_segment = $usage_segment + (pill_text $"·(format_reset_time ($session_limit_resets_at | into int))" $color_fg1 $color_bg1 false)
+        $usage_segment = $usage_segment + (pill_text $"·(format_reset_time ($session_limit_resets_at | into int))" $fg_dim $surface false)
       }
     }
     if ($weekly_limit_percent | is-not-empty) {
       let weekly_percent_rounded = ($weekly_limit_percent | math round)
       if ($usage_segment | is-not-empty) {
-        $usage_segment = $usage_segment + (pill_text " " $color_bg1 $color_bg1 false)
+        $usage_segment = $usage_segment + (pill_text " " $surface $surface false)
       }
-      let weekly_limit_color = (if $weekly_percent_rounded >= 85 { $color_error } else if $weekly_percent_rounded >= 60 { $color_gold } else { $color_fg_soft })
-      $usage_segment = $usage_segment + (pill_text $"7d ($weekly_percent_rounded)%" $weekly_limit_color $color_bg1 false)
+      let weekly_limit_color = (if $weekly_percent_rounded >= 85 { $error } else if $weekly_percent_rounded >= 60 { $gold } else { $fg_soft })
+      $usage_segment = $usage_segment + (pill_text $"7d ($weekly_percent_rounded)%" $weekly_limit_color $surface false)
       if ($weekly_limit_resets_at | is-not-empty) {
-        $usage_segment = $usage_segment + (pill_text $"·(format_reset_time ($weekly_limit_resets_at | into int))" $color_fg1 $color_bg1 false)
+        $usage_segment = $usage_segment + (pill_text $"·(format_reset_time ($weekly_limit_resets_at | into int))" $fg_dim $surface false)
       }
     }
-    $line = $line + (pill_open $color_bg1) + $usage_segment + (pill_close $color_bg1)
+    $line = $line + (pill_open $surface) + $usage_segment + (pill_close $surface)
   }
 
   print ($line | str trim -r)

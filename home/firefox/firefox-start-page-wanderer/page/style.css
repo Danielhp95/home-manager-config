@@ -24,7 +24,7 @@
   --fog-low: 0.4;
   --fog-high: 0.28;
   --glow-strength: 0;
-  --glow-colour: var(--ember-accent);
+  --glow-colour: var(--theme-accent);
   /* Under 1 even at noon: the canvas is lit from within a dark room. */
   --art-brightness: 0.88;
 
@@ -39,8 +39,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--ember-bg);
-  color: var(--ember-fg);
+  background: var(--theme-bg);
+  color: var(--theme-fg);
   font: 400 14.5px/1.55 var(--mono);
   overflow-x: hidden;
 }
@@ -75,10 +75,10 @@ body {
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--ember-bg) 55%, transparent),
+    color-mix(in srgb, var(--theme-bg) 55%, transparent),
     transparent 26%,
     transparent 62%,
-    color-mix(in srgb, var(--ember-bg) 70%, transparent)
+    color-mix(in srgb, var(--theme-bg) 70%, transparent)
   );
 }
 
@@ -92,12 +92,12 @@ body {
   background:
     radial-gradient(
       ellipse 26% 52% at 22% 50%,
-      rgb(var(--ember-fog-rgb) / 45%),
+      rgb(var(--theme-fog-rgb) / 45%),
       transparent 72%
     ),
     radial-gradient(
       ellipse 22% 46% at 68% 58%,
-      rgb(var(--ember-fog-rgb) / 38%),
+      rgb(var(--theme-fog-rgb) / 38%),
       transparent 72%
     );
   animation: drift 42s ease-in-out infinite alternate;
@@ -147,7 +147,7 @@ body {
 .scrim {
   position: absolute;
   inset: 0;
-  background: var(--ember-bg);
+  background: var(--theme-bg);
   opacity: 0;
 }
 
@@ -178,7 +178,7 @@ body {
   font: 400 clamp(3.4rem, 6.2vw, 5.6rem) / 0.95 var(--serif);
   margin: 0;
   letter-spacing: 0.02em;
-  color: var(--ember-fg);
+  color: var(--theme-fg);
   /* Cormorant defaults to old-style figures, which render "1" as a bare
    * stroke that reads as a capital I at clock size. */
   font-variant-numeric: lining-nums tabular-nums;
@@ -187,16 +187,16 @@ body {
 .date {
   font: italic 400 1.25rem/1.4 var(--serif);
   margin: 0.15rem 0 0;
-  color: var(--ember-fg-soft);
+  color: var(--theme-fg-soft);
 }
 
 .sky {
   margin: 0.5rem 0 0;
-  color: var(--ember-fg-dim);
+  color: var(--theme-fg-dim);
 }
 
 .sky .weather {
-  color: var(--ember-gold);
+  color: var(--theme-gold);
 }
 
 /* ---------- search ------------------------------------------------------ */
@@ -209,27 +209,27 @@ body {
   width: 100%;
   padding: 0.65rem 1rem;
   border-radius: 999px;
-  border: 1px solid var(--ember-border);
-  background: color-mix(in srgb, var(--ember-bg-deep) 82%, transparent);
-  color: var(--ember-fg);
+  border: 1px solid var(--theme-border);
+  background: color-mix(in srgb, var(--theme-bg-deep) 82%, transparent);
+  color: var(--theme-fg);
   font: inherit;
 }
 
 #search-input::placeholder {
-  color: var(--ember-muted);
+  color: var(--theme-muted);
 }
 
 #search-input:focus-visible,
 #todo-input:focus-visible,
 button:focus-visible,
 summary:focus-visible {
-  outline: 2px solid var(--ember-accent);
+  outline: 2px solid var(--theme-accent);
   outline-offset: 2px;
 }
 
 .aliases {
   margin-top: -0.35rem;
-  color: var(--ember-fg-dim);
+  color: var(--theme-fg-dim);
 }
 
 .aliases summary {
@@ -237,7 +237,7 @@ summary:focus-visible {
   font-size: 0.85em;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ember-muted);
+  color: var(--theme-muted);
 }
 
 #alias-list {
@@ -251,14 +251,14 @@ summary:focus-visible {
 }
 
 #alias-list .alias {
-  color: var(--ember-accent);
+  color: var(--theme-accent);
 }
 
 /* ---------- panels ------------------------------------------------------ */
 
 .panel {
-  background: color-mix(in srgb, var(--ember-bg-alt) 78%, transparent);
-  border: 1px solid var(--ember-border);
+  background: color-mix(in srgb, var(--theme-bg-alt) 78%, transparent);
+  border: 1px solid var(--theme-border);
   border-radius: 10px;
   padding: 0.85rem 1rem 0.95rem;
 }
@@ -268,7 +268,7 @@ summary:focus-visible {
   font: 500 0.78rem/1.4 var(--mono);
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--ember-fg-dim);
+  color: var(--theme-fg-dim);
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -291,31 +291,31 @@ summary:focus-visible {
   font-size: 0.95em;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--ember-muted);
+  color: var(--theme-muted);
   font-weight: 400;
 }
 
 .status.error {
-  color: var(--ember-error);
+  color: var(--theme-error);
 }
 
 .dim {
-  color: var(--ember-fg-dim);
+  color: var(--theme-fg-dim);
 }
 .muted {
-  color: var(--ember-muted);
+  color: var(--theme-muted);
 }
 .warn {
-  color: var(--ember-gold);
+  color: var(--theme-gold);
 }
 .ok {
-  color: var(--ember-olive);
+  color: var(--theme-olive);
 }
 .accent {
-  color: var(--ember-accent);
+  color: var(--theme-accent);
 }
 .alert {
-  color: var(--ember-error);
+  color: var(--theme-error);
 }
 
 /* ---------- today ------------------------------------------------------- */
@@ -340,32 +340,32 @@ summary:focus-visible {
   border: none;
   padding: 0;
   font: inherit;
-  color: var(--ember-accent);
+  color: var(--theme-accent);
   cursor: pointer;
   line-height: 1;
 }
 
 .todo li.done .check {
-  color: var(--ember-muted);
+  color: var(--theme-muted);
 }
 
 .todo li.done .text {
-  color: var(--ember-muted);
+  color: var(--theme-muted);
   text-decoration: line-through;
 }
 
 #todo-input {
   width: 100%;
   padding: 0.4rem 0.6rem;
-  border: 1px dashed var(--ember-border);
+  border: 1px dashed var(--theme-border);
   border-radius: 6px;
   background: transparent;
-  color: var(--ember-fg);
+  color: var(--theme-fg);
   font: inherit;
 }
 
 #todo-input::placeholder {
-  color: var(--ember-muted);
+  color: var(--theme-muted);
 }
 
 .todo-actions {
@@ -382,14 +382,14 @@ summary:focus-visible {
   padding: 0;
   font: inherit;
   font-size: 0.9em;
-  color: var(--ember-fg-dim);
+  color: var(--theme-fg-dim);
   text-decoration: underline dotted;
   cursor: pointer;
 }
 
 .flash {
   font-size: 0.9em;
-  color: var(--ember-gold);
+  color: var(--theme-gold);
 }
 
 /* ---------- machine and code -------------------------------------------- */
@@ -402,13 +402,13 @@ summary:focus-visible {
 }
 
 .panel a {
-  color: var(--ember-fg);
+  color: var(--theme-fg);
   text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--ember-accent) 45%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-accent) 45%, transparent);
 }
 
 .panel a:hover {
-  color: var(--ember-accent-bright);
+  color: var(--theme-accent-bright);
 }
 
 .pr-list {
@@ -430,7 +430,7 @@ summary:focus-visible {
   font-size: 0.85em;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ember-muted);
+  color: var(--theme-muted);
   margin-top: 0.5rem !important;
 }
 

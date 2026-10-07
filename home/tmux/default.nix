@@ -10,25 +10,24 @@ let
   palette = theme;
   p = palette.hash;
   inherit (palette.roles) search;
-  # The @color_* variables tmux.conf renders with, from palette/
-  emberColors = ''
-    # ── Ember palette — GENERATED from palette/ by default.nix ──
-    # Surfaces
-    set -g @color_bg0 "${p.bg}"
-    set -g @color_bg1 "${p.surface}"
-    set -g @color_bg2 "${p.border}"
-    set -g @color_bg3 "${p.divider}"
-    # Text
-    set -g @color_fg1 "${p.fgSoft}"
-    # Accents
-    set -g @color_green "${p.olive}"
-    set -g @color_yellow "${p.gold}"
-    # Ember ramp — the status bar heats up along these three, cold to blazing
-    set -g @color_ash "${p.ash}"
-    set -g @color_ember_dim "${p.accentDim}"
-    set -g @color_ember "${p.accent}"
+  # tmux.conf renders with these: one user option per slot it uses, under the
+  # slot's own name (`#{@accent}`). The last three are the ramp the status bar
+  # heats up along, cold to blazing.
+  slotOptions = lib.concatMapStrings (slot: "set -g @${slot} \"${p.${slot}}\"\n") [
+    "bg"
+    "surface"
+    "border"
+    "divider"
+    "fgSoft"
+    "olive"
+    "gold"
+    "ash"
+    "accentDim"
+    "accent"
+  ];
+  paletteOptions = ''
     # Command-prompt cursor (tmux >= 3.5). A colour option, not a style, so
-    # it can't reference the @vars above; the hex comes straight from here.
+    # it can't reference the slot options; the hex comes straight from here.
     set -g prompt-cursor-colour "${p.accent}"
     # tmux's defaults for these are ANSI names (red, blue, magenta, cyan), and
     # which slot is the accent differs per palette, so they are set from here:
@@ -187,6 +186,7 @@ in
     # in tmux.conf
     terminal = "tmux-256color";
     # Order matters here — see loadPlugins.
-    extraConfig = pluginOptions + emberColors + builtins.readFile ./tmux.conf + loadPlugins;
+    extraConfig =
+      pluginOptions + slotOptions + paletteOptions + builtins.readFile ./tmux.conf + loadPlugins;
   };
 }

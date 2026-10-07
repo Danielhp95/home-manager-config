@@ -42,7 +42,7 @@ let
   paletteCss = writeText "palette.css" ''
     /* Generated from nix_config's palette/ — do not edit. */
     :root {
-    ${colour.cssVars "ember" palette.hash.slots}  --ember-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
+    ${colour.cssVars "theme" palette.hash.slots}  --theme-fog-rgb: ${colour.rgbSpaces palette.extra.fog};
       --mono: "${theme.fonts.monoWide}", "JetBrains Mono", ui-monospace, monospace;
     }
   '';
