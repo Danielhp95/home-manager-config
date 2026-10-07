@@ -477,7 +477,9 @@ let
             dark = resolve file "dark" v;
             light = resolve file "light" v;
           }
-        else if shape == 0 then
+        # One colour for both halves: a slot name or a colour, never a pair
+        # (whose light side would be dropped without a word).
+        else if shape == 0 && isString v then
           resolve file "dark" v
         else
           v
