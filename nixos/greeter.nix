@@ -15,6 +15,9 @@ let
 
   # The greeter sets only XDG_SESSION_TYPE and the XDG_*_DESKTOP pair (from
   # DesktopNames=); the IM and wayland toolkit variables come from here.
+  # Not GLFW_IM_MODULE, XMODIFIERS or SDL_IM_MODULE: Home Manager's fcitx5
+  # module sets those three (GLFW's to "ibus", the protocol fcitx5 speaks to
+  # kitty), and its variables are sourced after these and win.
   sessionEnv = {
     MOZ_ENABLE_WAYLAND = "1";
     QT_QPA_PLATFORM = "wayland";
@@ -23,13 +26,10 @@ let
     SDL_VIDEODRIVER = "wayland";
     _JAVA_AWT_WM_NONREPARENTING = "1";
     NIXOS_OZONE_WL = "1";
-    GLFW_IM_MODULE = "fcitx";
     GTK_IM_MODULE = "fcitx";
     INPUT_METHOD = "fcitx";
-    XMODIFIERS = "@im=fcitx";
     IMSETTINGS_MODULE = "fcitx";
     QT_IM_MODULE = "fcitx";
-    SDL_IM_MODULE = "fcitx";
     GSK_RENDERER = "gl";
     # Hyprland otherwise takes SCHED_RR from rtkit, under a 200 ms
     # RLIMIT_RTTIME. Bringing up an output on the NVIDIA card (HDMI hotplug)
