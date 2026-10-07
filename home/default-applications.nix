@@ -143,6 +143,7 @@ in
         // handledBy "org.gnome.gThumb.desktop" imageTypes
         // {
           "application/pdf" = [ "org.pwmt.zathura.desktop" ];
+          "x-scheme-handler/mailto" = [ "io.github.c9dev.PenguinMail.desktop" ];
           "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop" ];
           "x-scheme-handler/http" = [ "firefox.desktop" ];
           "x-scheme-handler/https" = [ "firefox.desktop" ];

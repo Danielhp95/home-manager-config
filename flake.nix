@@ -150,7 +150,7 @@
       # The derivations written in this repo that are worth building alone:
       # `nix build .#grub-theme`.
       packages.${system} = {
-        inherit (pkgs) avatar danvim;
+        inherit (pkgs) avatar danvim penguin-mail;
         grub-theme = pkgs.callPackage ./pkgs/grub-theme/package.nix { };
         start-page =
           (pkgs.callPackage ./home/firefox/firefox-start-page-wanderer/package.nix { inherit theme; }).page;

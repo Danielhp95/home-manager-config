@@ -12,6 +12,8 @@
     slack
 
     telegram-desktop
+    # Mail and calendar; the mailto: handler (./default-applications.nix).
+    penguin-mail
     # For the launcher entry; services.nextcloud-client below runs the client.
     nextcloud-client
 
