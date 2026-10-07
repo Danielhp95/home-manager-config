@@ -9,7 +9,6 @@
   imports = [
     ./ls-colors.nix
     ./television.nix
-    ./nushell.nix
     ./iris.nix
     ./cli.nix
     ./btop.nix

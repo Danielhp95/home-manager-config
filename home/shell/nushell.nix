@@ -1,4 +1,7 @@
 { config, ... }:
+let
+  common = import ./common.nix;
+in
 {
   # home-manager's snippet runs `$env.GPG_TTY = (tty)` unguarded, which aborts
   # config.nu without a TTY (`nu -c`); a guarded copy is in extraConfig below.
@@ -20,25 +23,16 @@
       completions.algorithm = "fuzzy";
     };
 
-    shellAliases = {
-      fm = "yazi";
-      wow = "git status --untracked-files=no";
-      # `ls` stays nushell's structured ls (pipelines need it); `la` is eza.
-      la = "eza -lahF --git";
-    };
-
-    environmentVariables = {
-      EDITOR = "nvim";
-    };
+    # `ls` stays nushell's structured ls (pipelines need it); `la` is eza.
+    shellAliases.la = "eza -lahF --git";
 
     # Integrations bind the same keys and the last one in config.nu wins: atuin
     # gets Ctrl-R and fzf Ctrl-T, as in zsh; tv's autocomplete is on Tab-Tab.
     extraConfig = ''
       # zoxide's `zi` swaps FZF_DEFAULT_OPTS for _ZO_FZF_OPTS, so re-seed it.
-      # Picker lines are "score path": {2..} is the path.
       $env._ZO_FZF_OPTS = (
         ($env.FZF_DEFAULT_OPTS? | default "")
-        + " --height 40% --tmux center,70%,60% --preview-window=down --preview 'eza -1 --color=always --icons=always {2..}'"
+        + " ${common.zoxideFzfOpts}"
       )
 
       # `zz <cmd>`: run cmd on an interactively picked frecent dir, as in zsh.
@@ -47,9 +41,6 @@
         if $picked.exit_code != 0 { return }
         run-external ...$cmd ($picked.stdout | str trim)
       }
-
-      # Generation switcher (tv channel in television.nix; Enter switches).
-      alias ng = tv nix-generations
 
       # Resolve a command through the nix store (zsh's `whichnix`)
       def whichnix [cmd: string] {

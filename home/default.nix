@@ -11,7 +11,7 @@ _: {
     ./fcitx5
 
     ./starship
-    ./zsh
+    ./shell
     ./tmux
 
     ./yazi

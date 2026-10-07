@@ -6,6 +6,7 @@
   ...
 }:
 let
+  common = import ../common.nix;
   keyBindings = builtins.readFile ./key-bindings.zsh;
   fzf-tab-conf = ''
     zstyle ":completion:*:git-checkout:*" sort false
@@ -15,7 +16,6 @@ let
     # Completions for specific programs
     zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
   '';
-  fileManager = "yazi";
   p = theme.hash;
   # Warns when the booted kernel no longer matches the system profile's (its
   # modules can be GC'd); the running-system half of
@@ -95,7 +95,7 @@ in
 
   # The syntax-highlighting styles again, as a file a running shell can
   # re-read (see the precmd hook in initContent), and with them the
-  # file-listing colours (../terminal/ls-colors.nix) and the completion
+  # file-listing colours (../../terminal/ls-colors.nix) and the completion
   # menu's copy of those.
   xdg.configFile."zsh/palette.zsh".text =
     lib.concatStrings (
@@ -110,9 +110,6 @@ in
 
   programs.zsh = {
     enable = true;
-    sessionVariables = {
-      EDITOR = "nvim";
-    };
     # Session variables are read once per login, and a tmux server keeps the
     # environment it started with. Restated per shell, these reach a new pane
     # without either being restarted.
@@ -127,6 +124,14 @@ in
           "MANPAGER"
           "MANROFFOPT"
         ];
+    # .zshrc is put together from these fragments, lowest order first:
+    #   100   ../../terminal/atuin.nix  the PTY proxy's exec, which re-reads .zshrc
+    #   500   ../../terminal/iris.nix   (mkBefore) opt-outs the plugins must see
+    #   850   here                      key bindings, before the plugins (900)
+    #   1000  here, ../../tmux          completion styles and helpers; the nix-shell notes
+    #   1500  here                      (mkAfter) RPROMPT and the palette hook
+    # Fragments of the same order follow their modules' import order; nothing
+    # here depends on which of two comes first.
     initContent = lib.mkMerge [
       # Order 850, before HM sources the plugins (900): autopair wraps these
       # space/backspace bindings instead of losing its own to them, and
@@ -141,9 +146,8 @@ in
           select-word-style bash
 
           # zoxide's picker (zi, `z foo<Space><Tab>`) replaces FZF_DEFAULT_OPTS
-          # with this, so re-seed the ambient opts. Lines are "score path"
-          # (hence {2..}); a bare --icons would eat the path as its WHEN value.
-          export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS --height 40% --tmux center,70%,60% --preview-window=down --preview 'eza -1 --color=always --icons=always {2..}'"
+          # with this, so re-seed the ambient opts.
+          export _ZO_FZF_OPTS="$FZF_DEFAULT_OPTS ${common.zoxideFzfOpts}"
 
           # Run a command on an interactively picked frecent dir: `zz nvim`
           zz () {
@@ -156,9 +160,6 @@ in
           whichnix () {
             readlink -f "$(which "$1")"
           }
-
-          # Generation switcher (television channel in terminal/television.nix)
-          alias ng="tv nix-generations"
         ''
       )
       # starship's init points RPROMPT at a second `starship prompt` fork even
@@ -230,8 +231,6 @@ in
       share = true;
     };
     shellAliases = {
-      fm = fileManager;
-      wow = "git status --untracked-files=no";
       ls = "eza -lahF --git";
       # Nearest ancestor carrying an origin/* ref: the fork point only while
       # this branch is unpushed

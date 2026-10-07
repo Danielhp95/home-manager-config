@@ -93,7 +93,7 @@ out of the store, enables `dani/dart` and puts the `dart` widget in the bar.
   service keeps them in `pinned.json` under the plugin data dir.
 - The Logs button needs `logcli` on PATH (`pkgs.grafana-loki`, ../default.nix).
 - `slim.nu` needs `nu` at `nu_path`: the per-user profile symlink from
-  `programs.nushell` (`../../terminal/nushell.nix`), which survives rebuilds.
+  `programs.nushell` (`../../shell/nushell.nix`), which survives rebuilds.
 - Settings-GUI changes and `noctalia msg plugins enable` land in
   `~/.local/state/noctalia/settings.toml`, which overrides config.toml (arrays
   wholesale): delete the shadowing block if a nix change doesn't apply.
