@@ -1,10 +1,10 @@
 # The bar and its widgets.
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 let
-  volumeAllSinks = pkgs.callPackage ./volume-all-sinks.nix { };
+  volume = lib.getExe pkgs.volume-all-sinks;
 in
 {
-  home.packages = [ volumeAllSinks ];
+  home.packages = [ pkgs.volume-all-sinks ];
 
   programs.noctalia.settings = {
     # Floating pills: a transparent bar (its shadow scales with
@@ -116,11 +116,11 @@ in
         show_condition = true;
       };
 
-      # Scrolling steps every output (volumeAllSinks); the label and clicks
+      # Scrolling steps every output (volume-all-sinks); the label and clicks
       # still follow the default sink.
       volume = {
-        actions.scroll_up = "exec ${volumeAllSinks}/bin/volume-all-sinks 5%+";
-        actions.scroll_down = "exec ${volumeAllSinks}/bin/volume-all-sinks 5%-";
+        actions.scroll_up = "exec ${volume} 5%+";
+        actions.scroll_down = "exec ${volume} 5%-";
       };
 
       sysmon = {

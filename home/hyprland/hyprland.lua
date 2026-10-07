@@ -1,6 +1,7 @@
 -- Hyprland config in Lua. Home Manager prepends the hy3 plugin load, its
--- session hooks and the `palette` / `fonts` locals (palette/ and fonts.nix
--- as "rgb(...)" colours and family names, see hyprland/default.nix).
+-- session hooks and four locals from ./default.nix: `palette` (the slots, as
+-- "rgb(...)" colours), `fonts` (family names), `host` (the built-in panel and
+-- the keyboard, hosts/<host>/facts.nix) and `bin` (the scripts the binds run).
 --
 -- hl.plugin.load only registers hy3: it loads after the first parse, which then
 -- reruns this file. On that first pass hl.plugin.hy3 is nil, so everything
@@ -23,15 +24,15 @@ hl.monitor({
 })
 
 -- 3840x2400 at 16": scale 2 gives the 1920x1200 logical size kanshi assumes.
--- Without the ICC profile (hyprland/default.nix) sRGB content looks
+-- Without the ICC profile (./default.nix) sRGB content looks
 -- oversaturated on this P3 panel; it overrides the rule's cm/sdr settings, and
 -- kanshi only overrides mode/position/scale.
 hl.monitor({
-	output = "eDP-1",
+	output = host.panel.output,
 	mode = "preferred",
 	position = "auto",
-	scale = "2",
-	icc = os.getenv("HOME") .. "/.local/share/icc/TPLCD_41BE_HDR.icm",
+	scale = tostring(host.panel.scale),
+	icc = host.icc,
 })
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -77,8 +78,8 @@ hl.config({
 
 	input = {
 		follow_mouse = 1,
-		kb_layout = "us",
-		kb_options = "caps:escape",
+		kb_layout = host.keyboard.layout,
+		kb_options = host.keyboard.options,
 		sensitivity = 0, -- -1.0 - 1.0, 0 means no modification
 		touchpad = {
 			clickfinger_behavior = true, -- 2 finger right click
@@ -267,7 +268,7 @@ local function restore_state()
 			mode = "preferred",
 			position = "auto",
 			scale = "1",
-			mirror = "eDP-1",
+			mirror = host.panel.output,
 		})
 	end
 end
@@ -312,7 +313,7 @@ hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty -1"), { description = "Open t
 hl.bind(mod .. " + D", hl.dsp.exec_cmd("vicinae toggle"), { description = "Open app launcher" })
 hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("choose-bluetooth-device"), { description = "Choose Bluetooth device" })
 hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("open-paper"), { description = "Open paper search" })
-hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd("wl-ocr"), { description = "OCR screen text" })
+hl.bind(mod .. " + CONTROL + SHIFT + o", hl.dsp.exec_cmd(bin.ocr), { description = "OCR screen text" })
 hl.bind(
 	mod .. " + SHIFT + o",
 	hl.dsp.window.tag({ tag = "opaque", action = "toggle" }),
@@ -520,7 +521,7 @@ hl.define_submap("move", function()
 	end, { description = "Exit cursor submap" })
 end)
 
--- wl-kbptr (vimium-style mouse control; config in hyprland/default.nix).
+-- wl-kbptr (vimium-style mouse control; config in ./wl-kbptr).
 hl.bind(
 	mod .. " + SHIFT + f",
 	hl.dsp.exec_cmd("wl-kbptr"),
@@ -540,7 +541,7 @@ hl.bind(
 -- Volume / Brightness. The media keys arrive as bare XF86 keysyms (FN is
 -- resolved in keyboard firmware), so they take no modifier; `locked` keeps them
 -- working on the lock screen.
-local backlight = "brightnessctl -d intel_backlight"
+local backlight = "brightnessctl -d " .. host.panel.backlight
 hl.bind(
 	"XF86MonBrightnessDown",
 	hl.dsp.exec_cmd(backlight .. " set 5%-"),
@@ -561,9 +562,9 @@ hl.bind(
 	hl.dsp.exec_cmd(backlight .. " set 100%"),
 	{ repeating = false, locked = true, description = "Maxes brightness" }
 )
--- volume-all-sinks (noctalia/default.nix) steps every output sink at once, like
--- scrolling the bar's volume pill, not just the default sink.
-local volume = "volume-all-sinks"
+-- volume-all-sinks (../noctalia/volume-all-sinks.nix) steps every output sink
+-- at once, like scrolling the bar's volume pill, not just the default sink.
+local volume = bin.volume
 hl.bind(
 	"XF86AudioLowerVolume",
 	hl.dsp.exec_cmd(volume .. " 5%-"),
@@ -590,23 +591,23 @@ hl.bind(
 	{ locked = true, description = "Toggle mic mute" }
 )
 
--- Magnifier (`magnify` script, hyprland/default.nix)
+-- Magnifier (`magnify` script, ./default.nix)
 hl.bind(
 	mod .. " + CTRL + Z",
-	hl.dsp.exec_cmd("magnify -0.5"),
+	hl.dsp.exec_cmd(bin.magnify .. " -0.5"),
 	{ repeating = true, description = "Zoom out (magnifier)" }
 )
 hl.bind(
 	mod .. " + SHIFT + Z",
-	hl.dsp.exec_cmd("magnify +0.5"),
+	hl.dsp.exec_cmd(bin.magnify .. " +0.5"),
 	{ repeating = true, description = "Zoom in (magnifier)" }
 )
-hl.bind(mod .. " + Z", hl.dsp.exec_cmd("magnify"), { description = "Toggle magnifier zoom" })
+hl.bind(mod .. " + Z", hl.dsp.exec_cmd(bin.magnify), { description = "Toggle magnifier zoom" })
 
 -- Projector: mirror this panel onto whatever external display is attached
 hl.bind(
 	mod .. " + SHIFT + D",
-	hl.dsp.exec_cmd("present toggle"),
+	hl.dsp.exec_cmd(bin.present .. " toggle"),
 	{ description = "Present: mirror screen to projector / external display" }
 )
 

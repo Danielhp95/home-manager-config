@@ -1,7 +1,11 @@
-_: {
+{ host, ... }:
+let
+  panel = host.panel.output;
+in
+{
   # Display layouts: kanshi applies the first profile whose outputs match what
-  # is connected, and Hyprland keeps it across reloads. Positions assume eDP-1
-  # at scale 2 (1920 logical wide, hyprland.lua).
+  # is connected, and Hyprland keeps it across reloads. Positions assume the
+  # built-in panel at its scale and logical width (hosts/<host>/facts.nix).
   #
   # Order matters: `desk` also satisfies `any-external` ("*" matches the Dell).
   services.kanshi = {
@@ -16,7 +20,7 @@ _: {
             position = "0,0";
           }
           {
-            criteria = "eDP-1";
+            criteria = panel;
             position = "0,1080";
           }
         ];
@@ -26,12 +30,12 @@ _: {
         profile.name = "any-external";
         profile.outputs = [
           {
-            criteria = "eDP-1";
+            criteria = panel;
             position = "0,0";
           }
           {
             criteria = "*";
-            position = "1920,0";
+            position = "${toString host.panel.logicalWidth},0";
           }
         ];
       }
@@ -39,7 +43,7 @@ _: {
         profile.name = "laptop";
         profile.outputs = [
           {
-            criteria = "eDP-1";
+            criteria = panel;
             position = "0,0";
           }
         ];

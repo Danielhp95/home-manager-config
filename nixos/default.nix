@@ -4,6 +4,7 @@
   lib,
   inputs,
   theme,
+  host,
   ...
 }:
 
@@ -38,7 +39,7 @@ in
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    extraSpecialArgs = { inherit inputs theme; };
+    extraSpecialArgs = { inherit inputs theme host; };
     users.${user} = ../home;
     # Apps overwrite some managed files (mimeapps.list, GTK settings); a stale
     # .backup from an earlier activation would otherwise abort the next one.

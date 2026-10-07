@@ -178,7 +178,11 @@
       nixosConfigurations = nixpkgs.lib.genAttrs [ "lenovo" ] (
         hostName:
         nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs hostName theme; };
+          specialArgs = {
+            inherit inputs hostName theme;
+            # What more than one module needs to know about this machine.
+            host = import ./hosts/${hostName}/facts.nix;
+          };
           modules = [ ./hosts/${hostName} ];
         }
       );

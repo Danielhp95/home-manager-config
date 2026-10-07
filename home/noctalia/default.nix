@@ -5,6 +5,7 @@
   pkgs,
   lib,
   theme,
+  host,
   ...
 }:
 let
@@ -145,11 +146,9 @@ in
         };
       };
 
-      # eDP-1 is intel_backlight; pin the sysfs backend so noctalia never falls
-      # back to ddc/none.
-      brightness = {
-        monitor."eDP-1".backend = "backlight";
-      };
+      # The built-in panel has a sysfs backlight; pin that backend so noctalia
+      # never falls back to ddc/none.
+      brightness.monitor.${host.panel.output}.backend = "backlight";
 
       dock.enabled = false;
     };

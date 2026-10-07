@@ -5,6 +5,7 @@
   lib,
   pkgs,
   theme,
+  host,
   ...
 }:
 let
@@ -108,11 +109,8 @@ in
 
       cursor.size = p.meta.cursor.size;
 
-      # Mirrors input.kb_layout / kb_options in home/hyprland/hyprland.lua.
-      keyboard = {
-        layout = "us";
-        options = "caps:escape";
-      };
+      # The same layout as the session's (hyprland.lua reads it from `host` too).
+      inherit (host) keyboard;
     };
   };
 }

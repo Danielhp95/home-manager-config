@@ -2,6 +2,8 @@
   pkgs,
   lib,
   theme,
+  config,
+  host,
   ...
 }:
 let
@@ -102,7 +104,7 @@ let
     in
     pkgs.writeShellScriptBin "present" ''
       set -u
-      builtin_panel="eDP-1"
+      builtin_panel="${host.panel.output}"
 
       say() { echo "$1"; ${notify} -a present "Present" "$1"; }
 
@@ -180,10 +182,22 @@ in
     configType = "lua";
     extraConfig = builtins.readFile ./hyprland.lua;
     # Each `_var` becomes a Lua local ahead of extraConfig:
-    # `local palette = { accent = "rgb(e08060)", ... }` and `fonts`.
+    # `local palette = { accent = "rgb(e08060)", ... }`, `fonts`, `host`, `bin`.
     settings = {
       palette._var = lib.mapAttrs (_: hex: "rgb(${hex})") c.slots;
       fonts._var = { inherit (f) mono; };
+      # What the file needs to know about this machine (hosts/<host>/facts.nix).
+      host._var = host // {
+        icc = "${config.xdg.dataHome}/icc/TPLCD_41BE_HDR.icm";
+      };
+      # The scripts its binds run, by store path: a name that no longer exists
+      # fails the evaluation instead of leaving a dead bind.
+      bin._var = {
+        ocr = lib.getExe ocrScript;
+        magnify = lib.getExe magnifyScript;
+        present = lib.getExe presentScript;
+        volume = lib.getExe pkgs.volume-all-sinks;
+      };
     };
     plugins = [ pkgs.hy3 ];
     # On start the module exports the environment and restarts
@@ -222,6 +236,7 @@ in
   home.sessionVariables.WL_PRESENT_DMENU = "vicinae dmenu";
 
   # Lenovo's ICC profile for the panel (BOE NE160QAM-N62, P3-class), used by
-  # hyprland.lua's eDP-1 rule; colord and other ICC-aware apps look here too.
+  # hyprland.lua's rule for the built-in panel; colord and other ICC-aware apps
+  # look here too.
   xdg.dataFile."icc/TPLCD_41BE_HDR.icm".source = ./icc/TPLCD_41BE_HDR.icm;
 }

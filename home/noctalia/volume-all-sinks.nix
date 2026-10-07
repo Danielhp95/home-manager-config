@@ -1,7 +1,8 @@
 # Steps every output at once (eq_* chains and hardware sinks), not just the
 # default sink; a hardware sink an eq_*_out stream plays into is skipped so
-# nothing steps twice. `mute` toggles them all as one group. On PATH
-# (./bar.nix) because hyprland.lua, read verbatim, calls it by name.
+# nothing steps twice. `mute` toggles them all as one group. Bound as
+# pkgs.volume-all-sinks in pkgs/overlay.nix: the bar (./bar.nix) and
+# hyprland.lua's volume keys both run it.
 {
   writeShellApplication,
   wireplumber,

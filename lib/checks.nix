@@ -52,17 +52,14 @@ let
       ];
       defined = matches "--(theme-[a-z0-9-]+):" startPage.paletteCss.text;
     }
-    {
-      file = "home/hyprland/hyprland.lua (palette.<slot>)";
-      used = matches "palette[.]([A-Za-z_]+)" lua;
-      defined = lib.attrNames luaVars.palette._var;
-    }
-    {
-      file = "home/hyprland/hyprland.lua (fonts.<role>)";
-      used = matches "fonts[.]([A-Za-z_]+)" lua;
-      defined = lib.attrNames luaVars.fonts._var;
-    }
-  ];
+  ]
+  # hyprland.lua's locals (palette, fonts, host, bin): the first name after
+  # each must be one Nix hands it.
+  ++ lib.mapAttrsToList (local: value: {
+    file = "home/hyprland/hyprland.lua (${local}.<name>)";
+    used = matches "[^A-Za-z_.]${local}[.]([A-Za-z_]+)" lua;
+    defined = lib.attrNames value._var;
+  }) (lib.filterAttrs (_: v: v ? _var) luaVars);
   unknown = lib.concatMap (
     r:
     map (name: "  ${r.file}: ${name} is used but not generated") (
