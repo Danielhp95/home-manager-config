@@ -39,6 +39,10 @@
     pavucontrol
 
     gnome-weather
+    # Its calendars live in evolution-data-server (nixos/desktop.nix).
+    gnome-calendar
+    # Where its accounts are added, in place of GNOME Settings.
+    gnome-online-accounts-gtk
     adwaita-icon-theme # symbolic-icon fallback for GNOME apps (MoreWaita expects it)
     gparted
     # Its "Open in Terminal" entry comes from nixos/desktop.nix.

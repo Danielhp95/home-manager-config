@@ -51,6 +51,8 @@
   services.udisks2.enable = true; # yazi mount menu
   services.gnome.gnome-keyring.enable = true; # Secret Service; unlocked at login by greetd's PAM stack
   services.gnome.glib-networking.enable = true; # TLS for libsoup (GNOME apps such as gnome-weather)
+  services.gnome.evolution-data-server.enable = true; # the calendar store gnome-calendar reads (home/apps.nix)
+  services.gnome.gnome-online-accounts.enable = true; # its Google and Nextcloud sign-in
   services.geoclue2.enable = true; # maps/weather location; demo agent replaces gnome-shell's
   services.gnome.at-spi2-core.enable = true; # a11y bus; silences GTK warnings
 
