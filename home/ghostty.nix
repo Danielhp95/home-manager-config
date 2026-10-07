@@ -1,6 +1,6 @@
 { lib, theme, ... }:
 
-# Ghostty, set up to match kitty/kitty.conf. It has no hints kitten
+# Ghostty, set up to match kitty (./kitty/default.nix). It has no hints kitten
 # (ghostty-org/ghostty#2012, #2394); tmux-thumbs (prefix+p) covers that inside
 # tmux. Its bundled Nerd Font fallback makes kitty's symbol_map unnecessary.
 
@@ -17,7 +17,7 @@ in
       # kitty's adjust_line_height 117%: ghostty takes the increase.
       adjust-cell-height = "17%";
 
-      # ── Colors: Ember, from ../../palette/ ─────────────────────────────────
+      # ── Colors: Ember, from ../palette/ ─────────────────────────────────
       background = p.bg;
       foreground = p.fg;
       selection-background = p.border;
@@ -59,7 +59,7 @@ in
         "shift+insert=paste_from_selection"
 
         # Scrolling. ctrl+shift+j/k stay unbound: Neovim's floaterm uses them
-        # (kitty.conf unmaps them too).
+        # (kitty unmaps them too).
         "ctrl+shift+up=scroll_page_lines:-1"
         "ctrl+shift+down=scroll_page_lines:1"
         "ctrl+shift+page_up=scroll_page_up"

@@ -8,7 +8,7 @@ module.
 | Path | What it holds |
 |---|---|
 | `flake.nix` | Inputs, the host list, `nix fmt`, the checks, the packages worth building alone |
-| `hosts/lenovo/` | What only this machine has: hardware, its boot entries, its speakers' EQ. The directory name is the host name |
+| `hosts/lenovo/` | What only this machine has: hardware, its boot entries, its speakers' EQ, and `facts.nix` (the panel and keyboard, which modules take as `host`). The directory name is the host name |
 | `nixos/` | System modules (`default.nix` is the list) |
 | `home/` | Home Manager modules (`default.nix` is the list); one file or directory per program |
 | `pkgs/` | `overlay.nix`, the one list of what this flake adds to nixpkgs or changes in it, and the packages more than one module needs |
@@ -26,7 +26,8 @@ module.
   `<name>/default.nix` after. A derivation written here is `package.nix`, called
   with `callPackage`, beside the module that uses it.
 - A module is on because it is imported. There are no enable flags and no
-  options for constants.
+  options for constants; the one option declared here, `my.liveSessionVariables`,
+  exists because several modules contribute to it.
 - Import lists are explicit, and their order is part of the build: it decides
   the order of `home.packages` and `environment.systemPackages`. Add new
   modules at the end, and reorder in a commit of its own.

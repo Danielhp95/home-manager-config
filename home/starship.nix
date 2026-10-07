@@ -42,7 +42,7 @@ in
       # Same pills as the tmux bar: the directory is the hot coral pill with a
       # flame trail, context sits in graphite, the clock ramps back to coral.
       # One line and no right_format: zsh would render RPROMPT with a second
-      # starship fork per prompt (see ../shell/zsh/default.nix).
+      # starship fork per prompt (see ./shell/zsh/default.nix).
       format =
         "$username$hostname"
         + "$directory"

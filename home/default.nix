@@ -10,7 +10,7 @@ _: {
   imports = [
     ./fcitx5
 
-    ./starship
+    ./starship.nix
     ./shell
     ./tmux
 
@@ -26,13 +26,13 @@ _: {
     ./element.nix
     ./spotify.nix
 
-    ./lnav
+    ./lnav.nix
 
     ./terminal
 
     ./claude-code
     ./kitty
-    ./ghostty
+    ./ghostty.nix
     ./ipython
     ./matplotlib.nix
 
