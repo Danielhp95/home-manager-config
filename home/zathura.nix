@@ -5,69 +5,66 @@ in
 {
   programs.zathura = {
     enable = true;
-    extraConfig = ''
-      # Colors come from nix_config's palette/ (Ember / WhiteSur-Dark-orange family).
-      set default-bg "${p.bg}"
-      set default-fg "${p.fg}"
 
-      set statusbar-bg "${p.bgAlt}"
-      set statusbar-fg "${p.fg}"
-      set inputbar-bg "${p.bgAlt}"
-      set inputbar-fg "${p.fg}"
+    options = {
+      # ── Colours, from the palette ──
+      default-bg = p.bg;
+      default-fg = p.fg;
 
-      set completion-bg "${p.bgAlt}"
-      set completion-fg "${p.fg}"
-      set completion-group-bg "${p.bgDeep}"
-      set completion-group-fg "${p.fgDim}"
-      set completion-highlight-bg "${p.accent}"
-      set completion-highlight-fg "${p.bg}"
+      statusbar-bg = p.bgAlt;
+      statusbar-fg = p.fg;
+      inputbar-bg = p.bgAlt;
+      inputbar-fg = p.fg;
 
-      set notification-bg "${p.bgAlt}"
-      set notification-fg "${p.fg}"
-      set notification-warning-bg "${p.gold}"
-      set notification-warning-fg "${p.bg}"
-      set notification-error-bg "${p.error}"
-      set notification-error-fg "${p.bg}"
+      completion-bg = p.bgAlt;
+      completion-fg = p.fg;
+      completion-group-bg = p.bgDeep;
+      completion-group-fg = p.fgDim;
+      completion-highlight-bg = p.accent;
+      completion-highlight-fg = p.bg;
 
-      # Search hits: gold, with the current hit in coral.
-      set highlight-color "${p.gold}"
-      set highlight-active-color "${p.accent}"
+      notification-bg = p.bgAlt;
+      notification-fg = p.fg;
+      notification-warning-bg = p.gold;
+      notification-warning-fg = p.bg;
+      notification-error-bg = p.error;
+      notification-error-fg = p.bg;
 
-      set index-bg "${p.bg}"
-      set index-fg "${p.fg}"
-      set index-active-bg "${p.accent}"
-      set index-active-fg "${p.bg}"
+      # Search hits: gold, with the current hit in the accent.
+      highlight-color = p.gold;
+      highlight-active-color = p.accent;
 
-      set render-loading-bg "${p.bg}"
-      set render-loading-fg "${p.fgDim}"
+      index-bg = p.bg;
+      index-fg = p.fg;
+      index-active-bg = p.accent;
+      index-active-fg = p.bg;
+
+      render-loading-bg = p.bg;
+      render-loading-fg = p.fgDim;
 
       # Dark-mode rendering of the document itself.
-      set recolor true
-      set recolor-lightcolor "${p.bg}"
-      set recolor-darkcolor "${p.fg}"
-      set recolor-reverse-video "true"
-      set recolor-keephue "true"
+      recolor = true;
+      recolor-lightcolor = p.bg;
+      recolor-darkcolor = p.fg;
+      recolor-reverse-video = true;
+      recolor-keephue = true;
 
-      set font "monospace normal 20"
-      map <C-h> set recolor-keephue toggle
+      # ── Behaviour ──
+      font = "monospace normal 20";
+      pages-per-row = 1;
+      # Stop at page boundaries.
+      scroll-page-aware = true;
+      scroll-full-overlap = "0.08";
+      adjust-open = "width";
+      continuous-hist-save = true;
+      window-title-basename = true;
+      selection-clipboard = "clipboard";
+    };
 
-      map b toggle_statusbar
-      # One page per row by default
-      set pages-per-row 1
-
-      # stop at page boundaries
-      set scroll-page-aware "true"
-      set scroll-full-overlap 0.08
-
-      set adjust-open "width"
-
-      set continuous-hist-save "true"
-
-      set window-title-basename "true"
-      # Copies selection to system clipboard
-      set selection-clipboard "clipboard"
-
-      map [normal] p toggle_presentation
-    '';
+    mappings = {
+      "<C-h>" = "set recolor-keephue toggle";
+      b = "toggle_statusbar";
+      "[normal] p" = "toggle_presentation";
+    };
   };
 }
