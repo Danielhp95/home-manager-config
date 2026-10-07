@@ -49,6 +49,9 @@ in
     pkgs.yt-dlp
     pkgs.gthumb # Viewer for multiple images
     pkgs.playerctl # MPRIS media control, used by hyprland media-key binds
+    # Client for the Navidrome server. The server and its login are added in
+    # the app and stay in ~/.config/feishin; nothing of them belongs here.
+    pkgs.feishin
     # spotify comes from ./spotify.nix; a plain pkgs.spotify would shadow it.
   ];
 }
