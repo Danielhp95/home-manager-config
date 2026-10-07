@@ -709,6 +709,18 @@ hl.window_rule({
 	float = true,
 })
 hl.window_rule({ name = "float-zoom-host", match = { initial_title = "zoom" }, float = true })
+-- Zoom's annotation button, its toolbar and their tips, put up over the screen
+-- being shared. Under XWayland they are plain frameless windows, not popups,
+-- so each one tiled: it took a tile of the workspace when it came up and gave
+-- it back when it hid. Parked on a special workspace that no bind shows, and
+-- floating, so they keep Zoom's own size there. Without `workspace` they float
+-- over the share instead, which is what annotating needs.
+hl.window_rule({
+	name = "hide-zoom-annotate",
+	match = { class = "^zoom$", title = "^annotate_toolbar.*" },
+	workspace = "special:zoom-annotate silent",
+	float = true,
+})
 hl.window_rule({
 	name = "pavucontrol",
 	match = { class = "org.pulseaudio.pavucontrol" },
