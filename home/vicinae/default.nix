@@ -54,43 +54,49 @@ let
     };
   };
 
+  # The two halves of a palette, as what a vicinae theme is made of.
+  halves =
+    { meta, ... }@q:
+    [
+      {
+        variant = "dark";
+        inherit (meta) slug name description;
+        colours = q.hash;
+      }
+      {
+        variant = "light";
+        inherit (meta.light) slug name description;
+        colours = q.light.hash;
+      }
+    ];
+
   # A dark and a light theme per palette. Every palette is installed, so the
   # picker lists them all; settings.theme below follows the selected one.
   themesOf =
-    { meta, roles, ... }@q:
-    {
-      ${meta.slug} = {
-        meta = {
-          version = 1;
-          inherit (meta) name description;
-          variant = "dark";
-          icon = "icons/${meta.slug}.svg";
-          inherits = "vicinae-dark";
-        };
-
-        colors = themeColors roles q.hash;
-      };
-
-      ${meta.light.slug} = {
-        meta = {
-          version = 1;
-          inherit (meta.light) name description;
-          variant = "light";
-          icon = "icons/${meta.light.slug}.svg";
-          inherits = "vicinae-light";
-        };
-
-        colors = themeColors roles q.light.hash;
-      };
-    };
+    { roles, ... }@q:
+    lib.listToAttrs (
+      map (
+        half:
+        lib.nameValuePair half.slug {
+          meta = {
+            version = 1;
+            inherit (half) name description variant;
+            icon = "icons/${half.slug}.svg";
+            inherits = "vicinae-${half.variant}";
+          };
+          colors = themeColors roles half.colours;
+        }
+      ) (halves q)
+    );
 
   # Next to the theme files programs.vicinae.themes writes (meta.icon above).
   iconsOf =
-    { meta, ... }@q:
-    {
-      "vicinae/themes/icons/${meta.slug}.svg".text = themeIcon q.hash;
-      "vicinae/themes/icons/${meta.light.slug}.svg".text = themeIcon q.light.hash;
-    };
+    q:
+    lib.listToAttrs (
+      map (
+        half: lib.nameValuePair "vicinae/themes/icons/${half.slug}.svg" { text = themeIcon half.colours; }
+      ) (halves q)
+    );
 in
 {
   # Both use `vicinae dmenu`, which exits 0 even when dismissed with nothing
