@@ -20,6 +20,7 @@ in
 {
   imports = [
     ./bar.nix
+    ./notification-focus.nix
     ./plugins.nix
     ./stormlight.nix
   ];

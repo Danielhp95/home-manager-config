@@ -54,10 +54,6 @@ hl.config({
 		exit_window_retains_fullscreen = true, -- closing a fullscreen window makes the next one fullscreen
 		enable_swallow = true, -- terminal disappears while the GUI it spawned is open
 		swallow_regex = "^kitty",
-		-- A window that asks for focus gets it, instead of only turning urgent:
-		-- clicking a notification jumps to its app, a clicked link to the browser.
-		-- Not a window rule: rules skip hidden windows, so an hy3 tab would miss it.
-		focus_on_activate = true,
 	},
 
 	general = {
