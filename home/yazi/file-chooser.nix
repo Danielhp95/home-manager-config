@@ -6,7 +6,8 @@
   # runs file-chooser.nu, which opens yazi in a floating kitty: Enter on a file
   # picks it, q cancels. For a save, the suggested file is created as a
   # placeholder and hovered; move or rename it to save elsewhere, after which
-  # Enter and q both save.
+  # Enter and q both save. Enter on any other file asks before the app
+  # overwrites it.
   xdg.configFile."xdg-desktop-portal-termfilechooser/config".text = ''
     [filechooser]
     cmd=${pkgs.writers.writeNu "yazi-file-chooser" (builtins.readFile ./file-chooser.nu)}
