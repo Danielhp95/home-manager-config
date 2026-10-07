@@ -1,7 +1,6 @@
 {
   pkgs,
   lib,
-  inputs,
   theme,
   ...
 }:
@@ -9,7 +8,6 @@ let
   # Bare hex: in the slurp wrapper's flags a leading '#' would start a comment.
   c = theme;
   # The same slots with '#', for the generated INI and CSS below.
-  h = c.hash;
   f = theme.fonts;
 
   # slurp in Ember for every caller (wl-ocr, the share picker's region button);
@@ -168,26 +166,13 @@ let
         say "Mirror off -- $target extended"
       fi
     '';
-
-  # The picker reads `hyprctl monitors -j` and `clients -j` through hyprland-rs,
-  # which requires an `id` in every workspace object. Hyprland 0.56 prints one
-  # only for a numbered workspace, so each monitor's empty specialWorkspace
-  # fails the parse and the Outputs tab is never built; a window on a special
-  # or named workspace does the same to the Windows tab. --replace-fail breaks
-  # the build when the crate version moves: check then whether it still needs it.
-  sharePicker =
-    inputs.hyprland-preview-share-picker.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
-      (old: {
-        postPatch = (old.postPatch or "") + ''
-          substituteInPlace "$cargoDepsCopy"/hyprland-0.4.0-beta.2/src/data/regular.rs \
-            --replace-fail 'pub id: WorkspaceId,' '#[serde(default)] pub id: WorkspaceId,'
-        '';
-      });
 in
 {
   imports = [
     ./theming.nix
     ./kanshi.nix
+    ./wl-kbptr
+    ./share-picker
   ];
   wayland.windowManager.hyprland = {
     enable = true;
@@ -201,10 +186,6 @@ in
       fonts._var = { inherit (f) mono; };
     };
     plugins = [ pkgs.hy3 ];
-    xdph.settings.screencopy = {
-      custom_picker_binary = "hyprland-preview-share-picker";
-      allow_token_by_default = true;
-    };
     # On start the module exports the environment and restarts
     # hyprland-session.target. Stopping it also stops graphical-session.target
     # (PropagatesStopTo), so session daemons need WantedBy=graphical-session.target
@@ -221,9 +202,6 @@ in
   services.hyprpolkitagent.enable = true;
 
   home.packages = with pkgs; [
-    # Cooler screen picker (window/monitor previews instead of a bare list).
-    sharePicker
-
     libnotify
 
     wdisplays # manage display positioning
@@ -236,24 +214,6 @@ in
 
     slurp # the palette-coloured wrapper from the let block
 
-    (wl-kbptr.overrideAttrs (old: {
-      src = fetchFromGitHub {
-        owner = "moverest";
-        repo = "wl-kbptr";
-        rev = "6ef84f398816b7a007ba969047e43d095f332175";
-        hash = "sha256-nprdHawJqZK0zL0XcHuxmJquDLPKjl1z0rx5cRbkDe0=";
-      };
-      patches = (old.patches or [ ]) ++ [
-        # Floating mode draws a Vimium-shaped tag at each target's corner
-        # (rounded, bold, upper case) instead of a block over the target,
-        # with Vimium's glow (../firefox/vimium-hints.nix, box-shadow) in the
-        # hue of selectable_border_color, so it follows the palette.
-        ./wl-kbptr-hint-tags.patch
-        # Detect targets at the logical resolution on a HiDPI output: about a
-        # quarter faster to appear at 3840x2400 @2.
-        ./wl-kbptr-logical-detect.patch
-      ];
-    })) # keyboard-driven pointer
     wlrctl # clicks in hyprland.lua's mouse-cursor submap
   ];
 
@@ -264,108 +224,4 @@ in
   # Lenovo's ICC profile for the panel (BOE NE160QAM-N62, P3-class), used by
   # hyprland.lua's eDP-1 rule; colord and other ICC-aware apps look here too.
   xdg.dataFile."icc/TPLCD_41BE_HDR.icm".source = ./icc/TPLCD_41BE_HDR.icm;
-
-  # wl-kbptr's default config path (INI). Unset keys take wl-kbptr's defaults.
-  xdg.configFile."wl-kbptr/config".text = ''
-    [general]
-    modes=floating,click
-
-    [mode_tile]
-    label_color=${h.fg}
-    label_select_color=${h.gold}
-    unselectable_bg_color=${h.bgDeep}66
-    selectable_bg_color=${h.ash}
-    selectable_border_color=${h.fgDim}
-
-    # Vimium's link hints (../firefox/vimium-hints.nix): accent letters on a
-    # deep tag, white for the characters already typed. The size is fixed:
-    # min and max agree, so the percentage of the target's height is moot.
-    [mode_floating]
-    source=detect
-    label_color=${h.accent}
-    label_select_color=${h.term.brightWhite}
-    unselectable_bg_color=${h.bgDeep}66
-    selectable_bg_color=${h.bgDeep}
-    selectable_border_color=${h.accent}59
-    label_font_family=${f.ui}
-    label_font_size=13.8 1% 13.8
-
-    [mode_bisect]
-    label_color=${h.fg}
-    pointer_color=${h.accent}
-    unselectable_bg_color=${h.bgDeep}
-    even_area_bg_color=${h.ash}
-    even_area_border_color=${h.fgDim}
-    odd_area_bg_color=${h.muted}
-    odd_area_border_color=${h.fgSoft}
-    history_border_color=${h.gold}
-
-    [mode_split]
-    pointer_color=${h.accent}
-    bg_color=${h.bgDeep}
-    area_bg_color=${h.ash}
-    vertical_color=${h.muted}
-    horizontal_color=${h.fgDim}
-    history_border_color=${h.gold}
-
-    [mode_click]
-    button=left
-
-    [mode_drag]
-    start_marker_color=${h.gold}
-    start_marker_size=10
-    start_marker_shape=caret
-  '';
-  # Colours only, over WhiteSur's GTK4 widgets. `.window > box` is needed
-  # because the picker's css_classes() drops GTK's `background` class.
-  xdg.configFile."hyprland-preview-share-picker/config.yaml".text = ''
-    stylesheets: [ember.css]
-  '';
-  xdg.configFile."hyprland-preview-share-picker/ember.css".text = ''
-    .window, .window > box, .notebook > stack, .page {
-      background-color: ${h.bg};
-      color: ${h.fg};
-    }
-    .notebook > header {
-      background-color: ${h.bgDeep};
-      border-color: ${h.border};
-    }
-    .tab-label { color: ${h.fgDim}; }
-    .notebook > header > tabs > tab:hover .tab-label { color: ${h.fg}; }
-    .notebook > header > tabs > tab:checked .tab-label { color: ${h.accent}; }
-    .notebook > header > tabs > tab:checked { box-shadow: inset 0 -2px ${h.accent}; }
-
-    .page flowboxchild, .page button {
-      background: none;
-      border: none;
-      box-shadow: none;
-      outline: none;
-    }
-    .card {
-      background-color: ${h.bgAlt};
-      border: 2px solid transparent;
-      border-radius: 8px;
-      padding: 5px;
-    }
-    flowboxchild:hover > .card, button:hover > .card { background-color: ${h.surface}; }
-    flowboxchild:selected > .card, flowboxchild:focus > .card,
-    button:focus > .card, button:active > .card { border-color: ${h.accent}; }
-    .image-label { color: ${h.fgSoft}; }
-
-    .region-button {
-      background: ${h.accent};
-      color: ${h.bg};
-      border: none;
-      box-shadow: none;
-    }
-    .region-button:hover, .region-button:focus { background: ${h.accentBright}; }
-    .region-button:disabled { background: ${h.border}; color: ${h.muted}; }
-
-    .restore-button { color: ${h.fgSoft}; }
-    .restore-button check:checked {
-      background: ${h.accent};
-      border-color: ${h.accent};
-      color: ${h.bg};
-    }
-  '';
 }

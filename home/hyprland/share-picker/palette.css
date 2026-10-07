@@ -1,0 +1,45 @@
+.window, .window > box, .notebook > stack, .page {
+  background-color: @bg@;
+  color: @fg@;
+}
+.notebook > header {
+  background-color: @bgDeep@;
+  border-color: @border@;
+}
+.tab-label { color: @fgDim@; }
+.notebook > header > tabs > tab:hover .tab-label { color: @fg@; }
+.notebook > header > tabs > tab:checked .tab-label { color: @accent@; }
+.notebook > header > tabs > tab:checked { box-shadow: inset 0 -2px @accent@; }
+
+.page flowboxchild, .page button {
+  background: none;
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+.card {
+  background-color: @bgAlt@;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 5px;
+}
+flowboxchild:hover > .card, button:hover > .card { background-color: @surface@; }
+flowboxchild:selected > .card, flowboxchild:focus > .card,
+button:focus > .card, button:active > .card { border-color: @accent@; }
+.image-label { color: @fgSoft@; }
+
+.region-button {
+  background: @accent@;
+  color: @bg@;
+  border: none;
+  box-shadow: none;
+}
+.region-button:hover, .region-button:focus { background: @accentBright@; }
+.region-button:disabled { background: @border@; color: @muted@; }
+
+.restore-button { color: @fgSoft@; }
+.restore-button check:checked {
+  background: @accent@;
+  border-color: @accent@;
+  color: @bg@;
+}

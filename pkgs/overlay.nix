@@ -20,6 +20,11 @@ in
   inherit hyprland;
   hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
   inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
+  # Patched; each body sits beside the configuration that depends on it.
+  wl-kbptr = final.callPackage ../home/hyprland/wl-kbptr/package.nix { inherit (prev) wl-kbptr; };
+  hyprland-preview-share-picker = final.callPackage ../home/hyprland/share-picker/package.nix {
+    picker = inputs.hyprland-preview-share-picker.packages.${system}.default;
+  };
   # Without mbrola: its voices are ~645 MB and nothing here uses them.
   espeak-ng = prev.espeak-ng.override { mbrolaSupport = false; };
   # The release branch, for packages pinned to it (pkgs.stable.<name>).
