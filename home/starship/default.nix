@@ -1,19 +1,30 @@
 { lib, theme, ... }:
 let
-  # The palette's '#' view. The pill/slab powerline language (E0B6
-  # open, E0B4 close, E0B0 flame trail) is shared with tmux's status bar.
+  # The palette's '#' view. The pill/slab powerline language (`open`, `close`
+  # and `wedge` below) is shared with tmux's status bar.
   p = theme.hash;
+
+  # The three powerline shapes, by code point, so that no editor or tool can
+  # drop them: the round left and right caps of a pill, and the flame wedge
+  # between two fills.
+  glyph = hex: builtins.fromJSON ''"\u${hex}"'';
+  open = glyph "e0b6";
+  close = glyph "e0b4";
+  wedge = glyph "e0b0";
+
+  # A pill: `body` between the two caps, both drawn in the body's fill colour.
+  pill = fill: body: "[${open}](fg:${fill})${body}[${close}](fg:${fill}) ";
 
   # One graphite pill per language module. The icons are real PUA glyphs:
   # grep-verify codepoints after any edit (tooling has silently dropped them).
   langPill = color: symbol: {
-    format = "[](fg:surface)[$symbol($version)](fg:${color} bg:surface)[](fg:surface) ";
+    format = pill "surface" "[$symbol($version)](fg:${color} bg:surface)";
     inherit symbol;
   };
   # Same pill without $version: starship only probes a version when the
   # format references it, and these probes cost a JVM start.
   langPillIconOnly = color: symbol: {
-    format = "[](fg:surface)[$symbol](fg:${color} bg:surface)[](fg:surface) ";
+    format = pill "surface" "[$symbol](fg:${color} bg:surface)";
     inherit symbol;
   };
 in
@@ -53,17 +64,17 @@ in
       # root) → coral (path inside); elsewhere it is all coral.
       directory = {
         format =
-          "[](fg:accent)"
+          "[${open}](fg:accent)"
           + "[ $path]($style)[$read_only]($read_only_style)[ ]($style)"
-          + "[](fg:accent bg:accent_dim)[](fg:accent_dim bg:ash)[](fg:ash) ";
+          + "[${wedge}](fg:accent bg:accent_dim)[${wedge}](fg:accent_dim bg:ash)[${wedge}](fg:ash) ";
         repo_root_format =
-          "[](fg:ash)"
+          "[${open}](fg:ash)"
           + "[ $before_root_path ]($before_repo_root_style)"
-          + "[](fg:ash bg:accent_dim)"
+          + "[${wedge}](fg:ash bg:accent_dim)"
           + "[ $repo_root ]($repo_root_style)"
-          + "[](fg:accent_dim bg:accent)"
+          + "[${wedge}](fg:accent_dim bg:accent)"
           + "[$path]($style)[$read_only]($read_only_style)[ ]($style)"
-          + "[](fg:accent bg:accent_dim)[](fg:accent_dim bg:ash)[](fg:ash) ";
+          + "[${wedge}](fg:accent bg:accent_dim)[${wedge}](fg:accent_dim bg:ash)[${wedge}](fg:ash) ";
         style = "bold fg:bg bg:accent";
         before_repo_root_style = "bold fg:bg bg:ash";
         repo_root_style = "bold fg:bg bg:accent_dim";
@@ -77,12 +88,12 @@ in
       # Git — one graphite pill that opens in git_branch and closes in
       # git_status, so the segments between can come and go.
       git_branch = {
-        format = "[](fg:surface)[$symbol](fg:accent_dim bg:surface)[$branch](fg:fg_soft bg:surface)";
+        format = "[${open}](fg:surface)[$symbol](fg:accent_dim bg:surface)[$branch](fg:fg_soft bg:surface)";
         symbol = "󰊢 ";
         only_attached = true;
       };
       git_commit = {
-        format = "[](fg:surface)[󰜘 $hash](fg:fg_soft bg:surface)";
+        format = "[${open}](fg:surface)[󰜘 $hash](fg:fg_soft bg:surface)";
         only_detached = true;
       };
       git_state = {
@@ -95,7 +106,7 @@ in
           + "[$renamed](fg:mauve bg:surface)[$modified](fg:gold bg:surface)"
           + "[$staged](fg:sage bg:surface)[$untracked](fg:fg_dim bg:surface)"
           + "[$stashed](fg:steel bg:surface)[$ahead_behind](fg:accent_bright bg:surface))"
-          + "[](fg:surface) ";
+          + "[${close}](fg:surface) ";
         conflicted = "󰅖\${count} ";
         deleted = "󰆴\${count} ";
         renamed = "󰑕\${count} ";
@@ -110,7 +121,7 @@ in
 
       # Nix develop/shell indicator
       nix_shell = {
-        format = "[](fg:surface)[$symbol$state( \\($name\\))](fg:steel bg:surface)[](fg:surface) ";
+        format = pill "surface" "[$symbol$state( \\($name\\))](fg:steel bg:surface)";
         symbol = "󱄅 ";
         impure_msg = "impure";
         pure_msg = "pure";
@@ -118,7 +129,7 @@ in
       };
       direnv = {
         disabled = false;
-        format = "[](fg:surface)[$symbol$loaded](fg:sage bg:surface)[](fg:surface) ";
+        format = pill "surface" "[$symbol$loaded](fg:sage bg:surface)";
         symbol = "󰌪 ";
         loaded_msg = "env";
         unloaded_msg = "env✗";
@@ -134,7 +145,7 @@ in
         ];
         detect_extensions = [ "nix" ];
         symbol = "󱄅 ";
-        format = "[](fg:surface)[$symbol](fg:steel bg:surface)[](fg:surface) ";
+        format = pill "surface" "[$symbol](fg:steel bg:surface)";
       };
 
       # Languages; JVM ones are icon-only (see langPillIconOnly)
@@ -160,14 +171,14 @@ in
 
       # No sudo pill: the module's `sudo -n` check costs ~18ms per prompt.
       jobs = {
-        format = "[](fg:surface)[$symbol$number](fg:mauve bg:surface)[](fg:surface) ";
+        format = pill "surface" "[$symbol$number](fg:mauve bg:surface)";
         symbol = "󰒲 ";
         number_threshold = 1;
       };
 
       # Battery: hidden while healthy, gold at 30%, bold red at 15%
       battery = {
-        format = "[](fg:surface)[$symbol$percentage]($style)[](fg:surface) ";
+        format = pill "surface" "[$symbol$percentage]($style)";
         full_symbol = "󰁹 ";
         charging_symbol = "󰂄 ";
         discharging_symbol = "󰁾 ";
@@ -188,7 +199,7 @@ in
       # Non-zero exit — the one red pill; bold dark-on-red like the hot slabs
       status = {
         disabled = false;
-        format = "[](fg:error)[$symbol$status( $common_meaning)( SIG$signal_name)]($style)[](fg:error) ";
+        format = pill "error" "[$symbol$status( $common_meaning)( SIG$signal_name)]($style)";
         style = "bold fg:bg bg:error";
         symbol = "✘ ";
         map_symbol = false;
@@ -198,26 +209,26 @@ in
       cmd_duration = {
         min_time = 500;
         # fg1 not muted: this is a readout you read, and muted fails AA
-        format = "[](fg:surface)[󱎫 $duration](fg:fg_dim bg:surface)[](fg:surface) ";
+        format = pill "surface" "[󱎫 $duration](fg:fg_dim bg:surface)";
       };
 
       # Clock — last on the line, with the same ash→accent ramp as tmux's status-right
       time = {
         disabled = false;
         format =
-          "[](fg:ash)[](fg:ash bg:accent_dim)[](fg:accent_dim bg:accent)"
-          + "[󰥔 $time ](bold fg:bg bg:accent)[](fg:accent)";
+          "[${open}](fg:ash)[${wedge}](fg:ash bg:accent_dim)[${wedge}](fg:accent_dim bg:accent)"
+          + "[󰥔 $time ](bold fg:bg bg:accent)[${close}](fg:accent)";
         time_format = "%H:%M";
       };
 
       # Only shown over ssh or as root; separate pills so a root prompt without
       # a hostname still closes cleanly.
       username = {
-        format = "[](fg:gold)[$user](bold fg:bg bg:gold)[](fg:gold) ";
+        format = pill "gold" "[$user](bold fg:bg bg:gold)";
       };
       hostname = {
         ssh_only = true;
-        format = "[](fg:gold)[$hostname](fg:bg bg:gold)[](fg:gold) ";
+        format = pill "gold" "[$hostname](fg:bg bg:gold)";
       };
 
       character = {
