@@ -6,6 +6,7 @@
 }:
 let
   p = theme.hash;
+  toml = pkgs.formats.toml { };
 
   # Created under this exact name by ollama-iris-model.service
   # (../../nixos/ollama.nix).
@@ -48,123 +49,129 @@ in
   # All 19 theme fields, so no upstream default colour survives. The names
   # don't match what they paint (atuin rows use alias/alias_sel). Running
   # sessions hot-reload this file.
-  xdg.configFile."iris/theme.toml".text = ''
-    border = "${p.border}"
-    accent = "${p.accent}"
-    muted = "${p.muted}"
-    text = "${p.fg}"
-    text_sel = "${p.fg}"
-    key = "${p.gold}"
-    match = "${p.accent}"
-    desc = "${p.fgDim}"
-    desc_sel = "${p.fg}"
-    sel_bg = "${p.surface}"
-    sel_text = "${p.bg}"
-    scroll_info = "${p.gold}"
-    ghost_text = "${p.muted}"
-    sys = "${p.bgAlt}"
-    sys_sel = "${p.gold}"
-    hist = "${p.bgAlt}"
-    hist_sel = "${p.accent}"
-    alias = "${p.bgAlt}"
-    alias_sel = "${p.gold}"
-  '';
+  xdg.configFile."iris/theme.toml".source = toml.generate "iris-theme.toml" {
+    inherit (p) border accent muted;
+    text = p.fg;
+    text_sel = p.fg;
+    key = p.gold;
+    match = p.accent;
+    desc = p.fgDim;
+    desc_sel = p.fg;
+    sel_bg = p.surface;
+    sel_text = p.bg;
+    scroll_info = p.gold;
+    ghost_text = p.muted;
+    sys = p.bgAlt;
+    sys_sel = p.gold;
+    hist = p.bgAlt;
+    hist_sel = p.accent;
+    alias = p.bgAlt;
+    alias_sel = p.gold;
+  };
 
   # Never run `iris config init`, `iris setup` or `iris theme init`: they write
   # over these store files and .zshrc. State lives in $XDG_DATA_HOME/iris.
-  xdg.configFile."iris/config.toml".text = ''
-    [core]
-    version = 1
+  # Written by the TOML generator, not as text: a parse error (a bare 80%,
+  # say) makes IRIS silently drop the whole file and run on upstream defaults.
+  xdg.configFile."iris/config.toml".source = toml.generate "iris-config.toml" {
+    core = {
+      version = 1;
 
-    # Pinned: auto-detection falls back to bash for unknown parents (nushell).
-    shell = "zsh"
+      # Pinned: auto-detection falls back to bash for unknown parents (nushell).
+      shell = "zsh";
 
-    # Remember spec/history mode across sessions
-    mode = "last"
-    debug = false
+      # Remember spec/history mode across sessions
+      mode = "last";
+      debug = false;
 
-    # Off: when on, IRIS expands aliases as you type (`ls ` turns into `eza …`).
-    expand-alias = false
+      # Off: when on, IRIS expands aliases as you type (`ls ` turns into `eza …`).
+      expand-alias = false;
 
-    # Enter runs what is typed, not the highlighted suggestion.
-    auto-execute = false
+      # Enter runs what is typed, not the highlighted suggestion.
+      auto-execute = false;
 
-    # 0 = shell histfile, 1 = atuin, 2 = both. atuin holds most of the history;
-    # 2 also covers commands from non-atuin shells. The DB is opened read-only.
-    atuin-history = 2
+      # 0 = shell histfile, 1 = atuin, 2 = both. atuin holds most of the history;
+      # 2 also covers commands from non-atuin shells. The DB is opened read-only.
+      atuin-history = 2;
 
-    # Empty: IRIS finds atuin's default $XDG_DATA_HOME/atuin/history.db.
-    atuin-db-path = ""
+      # Empty: IRIS finds atuin's default $XDG_DATA_HOME/atuin/history.db.
+      atuin-db-path = "";
 
-    # Runs `<binary> __complete` for commands without a spec, but only on
-    # binaries whose Go build info imports spf13/cobra (setsid, 300ms timeout).
-    cobra-probe-enabled = true
+      # Runs `<binary> __complete` for commands without a spec, but only on
+      # binaries whose Go build info imports spf13/cobra (setsid, 300ms timeout).
+      cobra-probe-enabled = true;
 
-    # With the menu closed, Up/Down open IRIS's merged history list ("shell"
-    # hands them to zsh). Ctrl-J/K navigate the open menu either way.
-    navigate-closed = "history"
+      # With the menu closed, Up/Down open IRIS's merged history list ("shell"
+      # hands them to zsh). Ctrl-J/K navigate the open menu either way.
+      navigate-closed = "history";
+    };
 
-    [ui]
-    style = "modern"
+    ui = {
+      style = "modern";
 
-    # 0 = off, 1 = on, 2 = ghost text only until shift+tab. An int, not a bool.
-    ghost-text = 1
+      # 0 = off, 1 = on, 2 = ghost text only until shift+tab. An int, not a bool.
+      ghost-text = 1;
 
-    hidden-files = false
-    max-suggestions = 100
+      hidden-files = false;
+      max-suggestions = 100;
 
-    max-height = 12
+      max-height = 12;
 
-    nerd-fonts = true
+      nerd-fonts = true;
 
-    # Share of the terminal width; descW follows it only via the patch above.
-    # The quotes matter: a bare 80% is invalid TOML, and a parse error makes
-    # IRIS silently drop this whole file and run on upstream defaults.
-    max-width = "80%"
+      # Share of the terminal width; descW follows it only via the patch above.
+      # A string: IRIS wants the percent sign.
+      max-width = "80%";
+    };
 
-    [git]
-    filter-active-branch = true
-    deduplicate-branches = true
+    git = {
+      filter-active-branch = true;
+      deduplicate-branches = true;
+    };
 
-    [updater]
-    check-on-startup = false
-    channel = "stable"
-    check-interval = "24h"
-    auto-update = 0
+    updater = {
+      check-on-startup = false;
+      channel = "stable";
+      check-interval = "24h";
+      auto-update = 0;
+    };
 
-    [zoxide]
-    extend-cd = true
+    zoxide.extend-cd = true;
 
-    [keybindings]
-    toggle-mode = "ctrl+o"
-    toggle-menu = "shift+tab"
-    select = "tab"
-    navigate-up = "up"
-    navigate-down = "down"
-    navigate-right = "right"
+    keybindings = {
+      toggle-mode = "ctrl+o";
+      toggle-menu = "shift+tab";
+      select = "tab";
+      navigate-up = "up";
+      navigate-down = "down";
+      navigate-right = "right";
+    };
 
-    [ai]
-    enabled = true
-    provider = "ollama"
-    debounce_ms = 400
-    min_interval_ms = 1000
+    ai = {
+      enabled = true;
+      provider = "ollama";
+      debounce_ms = 400;
+      min_interval_ms = 1000;
 
-    [ai.suggest_on_empty]
-    enabled = false
-    debounce_ms = 800
-    min_interval_ms = 5000
+      suggest_on_empty = {
+        enabled = false;
+        debounce_ms = 800;
+        min_interval_ms = 5000;
+      };
 
-    # A small model, not the qwen3-coder:30b ollama.nix also loads: the budget
-    # is time-to-first-token mid-typing. ${aiModel} bakes num_ctx 4096 into
-    # qwen3:4b-instruct-2507 (see ollama.nix), since this endpoint ignores
-    # num_ctx and keep_alive in the request. Keep `-instruct-`: thinking
-    # variants emit reasoning and miss the deadline. timeout_ms must outlast a
-    # cold model load, or ollama aborts the load when IRIS hangs up.
-    [ai.providers.ollama]
-    endpoint = "http://localhost:11434/v1/chat/completions"
-    model = "${aiModel}"
-    timeout_ms = 4000
-  '';
+      # A small model, not the qwen3-coder:30b ollama.nix also loads: the budget
+      # is time-to-first-token mid-typing. aiModel bakes num_ctx 4096 into
+      # qwen3:4b-instruct-2507 (see ollama.nix), since this endpoint ignores
+      # num_ctx and keep_alive in the request. Keep `-instruct-`: thinking
+      # variants emit reasoning and miss the deadline. timeout_ms must outlast a
+      # cold model load, or ollama aborts the load when IRIS hangs up.
+      providers.ollama = {
+        endpoint = "http://localhost:11434/v1/chat/completions";
+        model = aiModel;
+        timeout_ms = 4000;
+      };
+    };
+  };
 
   programs.zsh = {
     shellAliases.i = "iris";
