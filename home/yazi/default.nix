@@ -18,7 +18,10 @@ let
   };
 in
 {
-  imports = [ ./file-chooser.nix ];
+  imports = [
+    ./file-chooser.nix
+    ./file-manager.nix
+  ];
 
   programs.yazi = {
     enable = true;

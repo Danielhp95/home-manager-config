@@ -141,6 +141,7 @@ in
       defaultApplications =
         handledBy "${EDITOR}.desktop" textTypes
         // handledBy "org.gnome.gThumb.desktop" imageTypes
+        # inode/directory is yazi's: ./yazi/file-manager.nix.
         // {
           "application/pdf" = [ "org.pwmt.zathura.desktop" ];
           "x-scheme-handler/mailto" = [ "io.github.c9dev.PenguinMail.desktop" ];
