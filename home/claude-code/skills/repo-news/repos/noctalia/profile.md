@@ -37,9 +37,11 @@ of `example.toml` between the two revs, and note the limitation in the report.
 
 ## Local setup
 
-- `home/noctalia/default.nix` — `programs.noctalia.settings` (rendered to `config.toml`), the
-  enabled plugins, the bar layout, widgets, idle and lockscreen behaviour, and the
-  patched asset bundle passed through `NOCTALIA_ASSETS_DIR`.
+- `home/noctalia/default.nix` — `programs.noctalia.settings` (rendered to `config.toml`):
+  the shell, palettes, idle and lockscreen behaviour. Its siblings hold the rest of the
+  same settings tree: `bar.nix` (the bar layout and widgets), `plugins.nix` (the enabled
+  plugins and what they need) and `stormlight.nix` (the patched asset bundle passed
+  through `NOCTALIA_ASSETS_DIR`).
 - `home/noctalia/material.nix` — maps the repo palette to Noctalia's palette JSON roles; also
   used by the greeter.
 - `home/noctalia/dart-plugin/` — a local Luau plugin (`plugin.toml` declares `plugin_api`).
@@ -122,7 +124,7 @@ produces a key Noctalia silently ignores.
 - Relevance tags: [ADOPT] native option worth enabling · [REPLACES <workaround>] ·
   [BREAKING] · [NEUTRAL].
 - Impact section title: "Impact on the Noctalia config"; rows keyed by area, e.g.
-  `home/noctalia/default.nix` (bar). Snippets are `nix`.
+  `home/noctalia/bar.nix` (bar). Snippets are `nix`.
 - Add a `### Plugin API` subsection under Impact: the supported range at the locked
   rev, the level `dart-plugin/plugin.toml` declares, and anything new since the level
   `noctalia.d.luau` was last checked against.
@@ -142,15 +144,15 @@ produces a key Noctalia silently ignores.
   that says *why* it is set. A new or changed setting gets one too, and a removed
   workaround takes its comment with it.
 - Removing a workaround means removing every part of it — e.g. a layer rule in
-  `hyprland.lua` *and* the comment in `home/noctalia/default.nix` that points at it.
+  `hyprland.lua` *and* the comment under `home/noctalia/` that points at it.
 - If a change touches the plugin API, update the "Last checked against" header of
   `home/noctalia/noctalia.d.luau` only for what was actually re-checked.
 
 How an edit goes live:
-- **Nix settings** (`home/noctalia/default.nix`, `material.nix`, the greeter) need a rebuild
+- **Nix settings** (`home/noctalia/*.nix`, the greeter) need a rebuild
   and switch; the switch restarts `noctalia.service`. Building (`nh os build`) checks
   that the config evaluates; switching needs the user (sudo).
-- **The DART plugin** is linked out of the store, so edits to `noctalia/dart-plugin/`
+- **The DART plugin** is linked out of the store, so edits to `home/noctalia/dart-plugin/`
   hot-reload in the running shell with no rebuild.
 - **`hyprland.lua`** edits also need the switch.
 - If a setting does not take effect after the switch, look in

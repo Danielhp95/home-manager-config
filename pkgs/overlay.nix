@@ -16,7 +16,7 @@ in
   };
   # Steps every output sink at once: the bar's volume pill and hyprland.lua's
   # volume keys.
-  volume-all-sinks = final.callPackage ../home/noctalia/volume-all-sinks.nix { };
+  volume-all-sinks = final.callPackage ./volume-all-sinks/package.nix { };
   # danvim with the selected palette injected (./danvim.nix).
   danvim = import ./danvim.nix { inherit inputs system theme; };
   # hy3 links against Hyprland's headers: build it against this Hyprland.

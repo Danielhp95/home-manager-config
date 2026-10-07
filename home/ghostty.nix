@@ -14,7 +14,7 @@ in
     settings = {
       # ── Fonts ──────────────────────────────────────────────────────────────
       font-family = theme.fonts.mono;
-      # kitty's adjust_line_height 117%: ghostty takes the increase.
+      # kitty's `modify_font cell_height 117%`: ghostty takes the increase.
       adjust-cell-height = "17%";
 
       # ── Colors: Ember, from ../palette/ ─────────────────────────────────

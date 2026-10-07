@@ -8,10 +8,10 @@
 # raw device from all clients but WirePlumber (its volume stays fixed; drop it
 # to A/B). A switch doesn't reload curves: restart the user wireplumber.
 #
-# One file per device in ./audio-eq/devices, written with the constructors in
-# ./audio-eq/dsp.nix. A new device is a new file and a line below.
+# One file per device in ./devices, written with the constructors in
+# ./dsp.nix. A new device is a new file and a line below.
 let
-  dsp = import ./audio-eq/dsp.nix { inherit pkgs lib; };
+  dsp = import ./dsp.nix { inherit pkgs lib; };
 in
 {
   services.pipewire.wireplumber = {
@@ -22,10 +22,10 @@ in
     extraConfig."60-eq-sinks" = {
       "wireplumber.profiles".main."node.software-dsp" = "required";
       "node.software-dsp.rules" = map (device: import device dsp) [
-        ./audio-eq/devices/speakers.nix
-        ./audio-eq/devices/shokz.nix
-        ./audio-eq/devices/sony.nix
-        ./audio-eq/devices/mic.nix
+        ./devices/speakers.nix
+        ./devices/shokz.nix
+        ./devices/sony.nix
+        ./devices/mic.nix
       ];
     };
   };

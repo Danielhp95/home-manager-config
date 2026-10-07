@@ -2,7 +2,7 @@
 { pkgs, ... }:
 {
   # yazi as the file dialog of every app that asks the desktop portal for one
-  # (the system side is xdg.portal in nixos/default.nix). The portal backend
+  # (the system side is xdg.portal in nixos/desktop.nix). The portal backend
   # runs file-chooser.nu, which opens yazi in a floating kitty: Enter on a file
   # picks it, q cancels. For a save, the suggested file is created as a
   # placeholder and hovered; move or rename it to save elsewhere, after which

@@ -73,8 +73,9 @@ panel.luau  (renders cards; runs mutations itself)      widget.luau  (badge)
 
 ## Dev loop
 
-`../default.nix` links this directory to `~/.local/share/noctalia/plugins/dart`
-out of the store, enables `dani/dart` and puts the `dart` widget in the bar.
+`../plugins.nix` links this directory to `~/.local/share/noctalia/plugins/dart`
+out of the store and enables `dani/dart`; `../bar.nix` puts the `dart` widget
+in the bar.
 
 - Saving a `.luau` hot-reloads that entry (`common.luau`: every entry); watch
   `journalctl --user -u noctalia -f`. `plugin.toml` changes need `noctalia msg
@@ -91,7 +92,7 @@ out of the store, enables `dani/dart` and puts the `dart` widget in the bar.
 - `noctalia.state` is in memory: a plugin disable/enable (not a hot reload)
   clears the run cache, the filter and the mute. Pins are the exception: the
   service keeps them in `pinned.json` under the plugin data dir.
-- The Logs button needs `logcli` on PATH (`pkgs.grafana-loki`, ../default.nix).
+- The Logs button needs `logcli` on PATH (`pkgs.grafana-loki`, ../plugins.nix).
 - `slim.nu` needs `nu` at `nu_path`: the per-user profile symlink from
   `programs.nushell` (`../../shell/nushell.nix`), which survives rebuilds.
 - Settings-GUI changes and `noctalia msg plugins enable` land in

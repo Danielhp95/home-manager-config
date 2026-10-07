@@ -159,7 +159,7 @@ let
     };
 
     # Syntax highlighting of message bodies, with the terminals' ANSI mapping
-    # (kitty/kitty.conf): coral red, olive green, gold yellow, steel blue,
+    # (./kitty/default.nix): coral red, olive green, gold yellow, steel blue,
     # mauve magenta, sage cyan.
     syntax-styles = {
       inline-code = {

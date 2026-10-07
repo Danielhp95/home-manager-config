@@ -17,4 +17,4 @@ without a word, and the patches below only fail the build when an anchor moves.
 | IPython | The traceback colouring rebinds private names (`ultratb.get_style_by_name`, `VerboseTB._tb_highlight_style`). It is wrapped in try/except, so a rename shows only as wrong colours. | `home/ipython/ipython_config.py` |
 | Hyprland, hy3 | Pin both revs and move them together, to a Hyprland rev hy3 supports. | `flake.nix` |
 | noctalia | Re-check the hand-written plugin API definitions; a stale entry type-checks and then fails at runtime. | `home/noctalia/noctalia.d.luau` |
-| kernel, GRUB | A generation with its own kernel costs about 116 MB of the 1 GB ESP; `configurationLimit` and `nh`'s `--keep` are sized for that. | `hosts/lenovo/hardware.nix`, `nixos/esp-check.nix` |
+| kernel, GRUB | A generation with its own kernel costs about 116 MB of the 1 GB ESP; `configurationLimit` and `nh`'s `--keep` are sized for that. | `hosts/lenovo/hardware.nix` (`configurationLimit`), `nixos/nix.nix` (`--keep`), `nixos/esp-check.nix` |

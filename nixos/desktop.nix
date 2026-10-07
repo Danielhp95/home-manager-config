@@ -30,7 +30,7 @@
     enable = true; # home-manager's portal module asserts on the pathsToLink this sets
     extraPortals = [
       pkgs.xdg-desktop-portal-gtk # Settings and the rest ("hyprland;gtk")
-      pkgs.xdg-desktop-portal-termfilechooser # file dialogs: yazi (home/yazi/default.nix)
+      pkgs.xdg-desktop-portal-termfilechooser # file dialogs: yazi (home/yazi/file-chooser.nix)
     ];
     config.common = {
       default = [

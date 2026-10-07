@@ -23,8 +23,10 @@ module.
 ## Conventions
 
 - Names are kebab-case. A module is `<name>.nix` until it has sibling files and
-  `<name>/default.nix` after. A derivation written here is `package.nix`, called
-  with `callPackage`, beside the module that uses it.
+  `<name>/default.nix` after. A derivation written here is called with
+  `callPackage` and sits beside the module that uses it, or under `pkgs/` when
+  more than one module does; one that is a package in its own right is named
+  `package.nix`.
 - A module is on because it is imported. There are no enable flags and no
   options for constants; the one option declared here, `my.liveSessionVariables`,
   exists because several modules contribute to it.
@@ -32,7 +34,9 @@ module.
   the order of `home.packages` and `environment.systemPackages`. Add new
   modules at the end, and reorder in a commit of its own.
 - A package from a flake input, or a patched nixpkgs package, is bound once in
-  `pkgs/overlay.nix` and used as `pkgs.<name>`.
+  `pkgs/overlay.nix` and used as `pkgs.<name>`. Two are read from `inputs` in
+  their own modules instead: noctalia (binding it would shadow the nixpkgs
+  package of that name) and spicetify.
 - New scripts are Nushell files run through `pkgs.writers.writeNu`.
 - A workaround's comment says why it exists and when it can go.
 

@@ -1,5 +1,5 @@
 # One colour per kind of file, for everything that lists files: yazi's
-# filetype rules (../yazi/default.nix) and LS_COLORS / eza (./ls-colors.nix).
+# filetype rules (../yazi/theme.nix) and LS_COLORS / eza (./ls-colors.nix).
 #
 # kind -> slot: folders gold and bold (what you navigate by), links sage,
 # executables olive, images gold, audio and video mauve, archives the accent,

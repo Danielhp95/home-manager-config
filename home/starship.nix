@@ -208,7 +208,7 @@ in
 
       cmd_duration = {
         min_time = 500;
-        # fg1 not muted: this is a readout you read, and muted fails AA
+        # fg_dim, not muted: this is a readout you read, and muted fails AA
         format = pill "surface" "[󱎫 $duration](fg:fg_dim bg:surface)";
       };
 

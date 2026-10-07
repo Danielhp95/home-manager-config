@@ -162,7 +162,7 @@ let
   roleShape = {
     # role -> ANSI name, for programs that can only name terminal slots
     # (IPython, prompt_toolkit, glamour). Not black/brightBlack: glamour's
-    # chroma table (home/git/default.nix) has no stand-in for slots 0 and 8.
+    # chroma table (home/git/glamour.nix) has no stand-in for slots 0 and 8.
     ansi = {
       names = [
         "accent"

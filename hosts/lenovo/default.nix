@@ -6,7 +6,7 @@
   imports = [
     ./hardware.nix
     ./roadwarrior.nix # boot entry with the dGPU off
-    ./audio-eq.nix # per-device output EQ, as WirePlumber filter-chain sinks
+    ./audio-eq # per-device output EQ, as WirePlumber filter-chain sinks
     ../../nixos
   ];
 

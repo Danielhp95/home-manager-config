@@ -28,7 +28,7 @@
     pkgs.gnome-weather
     pkgs.adwaita-icon-theme # symbolic-icon fallback for GNOME apps (MoreWaita expects it)
     pkgs.gparted
-    # Its "Open in Terminal" entry comes from nixos/default.nix.
+    # Its "Open in Terminal" entry comes from nixos/desktop.nix.
     pkgs.nautilus
   ];
 

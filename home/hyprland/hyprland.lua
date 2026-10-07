@@ -12,7 +12,7 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Monitors
 -- ─────────────────────────────────────────────────────────────────────────────
--- Positions come from kanshi (hyprland/kanshi.nix), kept by Hyprland as
+-- Positions come from kanshi (./kanshi.nix), kept by Hyprland as
 -- per-output overrides that survive a reload. This wildcard covers the moment
 -- before kanshi applies and any setup no profile matches; name-keyed rules such
 -- as `present`'s mirror rule outrank it.
@@ -562,7 +562,7 @@ hl.bind(
 	hl.dsp.exec_cmd(backlight .. " set 100%"),
 	{ repeating = false, locked = true, description = "Maxes brightness" }
 )
--- volume-all-sinks (../noctalia/volume-all-sinks.nix) steps every output sink
+-- volume-all-sinks (pkgs/volume-all-sinks) steps every output sink
 -- at once, like scrolling the bar's volume pill, not just the default sink.
 local volume = bin.volume
 hl.bind(
@@ -717,7 +717,7 @@ hl.window_rule({
 })
 hl.window_rule({ name = "tile-grayjay", match = { title = "Grayjay" }, tile = true })
 -- The file dialog: yazi in its own kitty, floating like the GTK dialog it
--- replaces. Its size is set on the kitty command line (yazi/default.nix).
+-- replaces. Its size is set on the kitty command line (../yazi/file-chooser.nu).
 hl.window_rule({
 	name = "file-chooser",
 	match = { class = "^file-chooser$" },

@@ -71,7 +71,7 @@ in
         hash = "sha256-RIVcKJO89R4oaE6sJuFcV8pFK4nvWtq6ILAXehu4FIY=";
       };
       # Phones (MTP), cameras and network shares via GVfs; the system side is
-      # services.gvfs and services.udisks2 in nixos/default.nix.
+      # services.gvfs and services.udisks2 in nixos/desktop.nix.
       gvfs = pkgs.fetchFromGitHub {
         owner = "boydaihungst";
         repo = "gvfs.yazi";

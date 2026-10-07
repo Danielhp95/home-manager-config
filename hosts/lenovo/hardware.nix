@@ -84,7 +84,7 @@ in
         useOSProber = false;
         # 1 GB ESP: a generation with its own kernel costs ~116 MB (kernel +
         # two initrds), so 6 stays under esp-check's 80% warning. nh.clean's
-        # `--keep` is derived from this (nixos/default.nix).
+        # `--keep` is derived from this (nixos/nix.nix).
         configurationLimit = 6;
 
         # The splash is the scene with the SOUL heart in the corner, shown once

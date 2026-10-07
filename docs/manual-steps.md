@@ -22,7 +22,7 @@ What a rebuild cannot do. Each item names the module whose comments say why.
 
 ## After a switch
 
-- **EQ curves** (`hosts/lenovo/audio-eq.nix`): a switch does not reload them.
+- **EQ curves** (`hosts/lenovo/audio-eq/`): a switch does not reload them.
   `systemctl --user restart wireplumber`.
 - **New Tab Override** (`home/firefox/default.nix`): Firefox imports
   `extensions.settings` only on the add-on's first run. A later edit needs the

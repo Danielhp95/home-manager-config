@@ -18,7 +18,7 @@ let
   white = h p.term.brightWhite;
 in
 ''
-  /* Generated from palette/ (firefox/vimium-hints.nix). */
+  /* Generated from nix_config's palette/ (home/firefox/vimium-hints.nix). */
 
   /* Link hint boxes */
   div > .vimiumHintMarker {

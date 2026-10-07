@@ -7,7 +7,7 @@
 let
   p = theme.hash;
 
-  # Not on PATH: the sai venv's dart, as in noctalia/dart-plugin/plugin.toml.
+  # Not on PATH: the sai venv's dart, as in ../noctalia/dart-plugin/plugin.toml.
   dart = "${config.home.homeDirectory}/Projects/sai/.venv/bin/dart";
 in
 {

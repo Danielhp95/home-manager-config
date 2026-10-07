@@ -9,7 +9,6 @@
 let
   # Bare hex: in the slurp wrapper's flags a leading '#' would start a comment.
   c = theme;
-  # The same slots with '#', for the generated INI and CSS below.
   f = theme.fonts;
 
   # slurp in Ember for every caller (wl-ocr, the share picker's region button);

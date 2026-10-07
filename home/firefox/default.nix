@@ -103,7 +103,7 @@ in
         "widget.gtk.rounded-bottom-corners.enabled" = true;
 
         # Open/save dialogs through the desktop portal, which hands them to
-        # yazi (yazi/default.nix); the default (2) uses GTK's own dialog.
+        # yazi (../yazi/file-chooser.nix); the default (2) uses GTK's own dialog.
         "widget.use-xdg-desktop-portal.file-picker" = 1;
 
         # --- add-on management -------------------------------------------
