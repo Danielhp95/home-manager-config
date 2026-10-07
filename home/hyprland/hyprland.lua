@@ -124,7 +124,8 @@ hl.config({
 	xwayland = {
 		-- X11 clients draw 1:1 on eDP-1 instead of being stretched 2x: sharp,
 		-- and games see the panel's real 3840x2400. Such a client has to scale
-		-- its own UI (Steam: Settings > Interface), and its cursor is half size.
+		-- its own UI (Steam: Settings > Interface; Zoom: ../zoom.nix), and its
+		-- cursor is half size.
 		force_zero_scaling = true,
 	},
 

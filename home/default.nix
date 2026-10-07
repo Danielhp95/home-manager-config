@@ -48,5 +48,6 @@ _: {
     ./gpg.nix
     ./nix-tools.nix
     ./hardware-tools.nix
+    ./zoom.nix
   ];
 }
