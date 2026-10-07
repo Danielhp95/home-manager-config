@@ -32,7 +32,6 @@ _: {
 
     ./claude-code
     ./kitty
-    ./ghostty.nix
     ./ipython
     ./matplotlib.nix
 

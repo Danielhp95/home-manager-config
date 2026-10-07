@@ -3,8 +3,18 @@
 {
   home.sessionVariables = {
     BROWSER = "firefox";
-    # noctalia's runInTerminal would otherwise pick ghostty.
+    # What noctalia's runInTerminal runs, and the terminal-window entries in
+    # ./default-applications.nix and ./yazi/file-manager.nix.
     TERMINAL = "kitty";
+  };
+
+  # The same choice for whatever follows the xdg-terminal-exec convention:
+  # vicinae, and GLib when a GTK app starts a Terminal=true entry. Without it
+  # vicinae takes the first terminal entry it finds, and kitty-open.desktop
+  # (`kitty +open`) is one.
+  xdg.terminal-exec = {
+    enable = true;
+    settings.default = [ "kitty.desktop" ];
   };
 
   home.packages = with pkgs; [

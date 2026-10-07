@@ -97,7 +97,7 @@ in
 {
   inherit dark light;
 
-  # The 16 ANSI colours (kitty, ghostty, the Linux console, noctalia's terminal
+  # The 16 ANSI colours (kitty, the Linux console, noctalia's terminal
   # templates), where they are not ./lib.nix's ansiDefaults. Ember has no true
   # red, blue or magenta: the terminal's red IS the accent (error has no ANSI
   # slot), blue is magma, magenta is mauve.
