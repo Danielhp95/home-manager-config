@@ -150,5 +150,6 @@ in
   # A constant path, not the store path: a session variable keeps its value
   # until the next login, so a palette switch would leave gh on the old style.
   xdg.configFile."glamour/style.json".source = glamourStyle;
+  my.liveSessionVariables = [ "GLAMOUR_STYLE" ];
   home.sessionVariables.GLAMOUR_STYLE = "${config.xdg.configHome}/glamour/style.json";
 }

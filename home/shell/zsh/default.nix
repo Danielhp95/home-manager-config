@@ -110,20 +110,11 @@ in
 
   programs.zsh = {
     enable = true;
-    # Session variables are read once per login, and a tmux server keeps the
-    # environment it started with. Restated per shell, these reach a new pane
-    # without either being restarted.
-    envExtra =
-      lib.concatMapStrings
-        (name: "export ${name}=${lib.escapeShellArg config.home.sessionVariables.${name}}\n")
-        [
-          "FZF_DEFAULT_OPTS"
-          "FZF_DEFAULT_OPTS_FILE"
-          "GLAMOUR_STYLE"
-          "LS_COLORS"
-          "MANPAGER"
-          "MANROFFOPT"
-        ];
+    # The session variables their owners marked live (my.liveSessionVariables,
+    # ../default.nix), exported again by every shell.
+    envExtra = lib.concatMapStrings (
+      name: "export ${name}=${lib.escapeShellArg config.home.sessionVariables.${name}}\n"
+    ) (lib.sort lib.lessThan config.my.liveSessionVariables);
     # .zshrc is put together from these fragments, lowest order first:
     #   100   ../../terminal/atuin.nix  the PTY proxy's exec, which re-reads .zshrc
     #   500   ../../terminal/iris.nix   (mkBefore) opt-outs the plugins must see

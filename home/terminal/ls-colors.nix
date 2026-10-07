@@ -183,6 +183,7 @@ in
   # Literal, not read from a file at login: nushell loads session variables
   # unexpanded. zsh restates it per shell and re-reads it after a palette
   # switch (../shell/zsh/default.nix).
+  my.liveSessionVariables = [ "LS_COLORS" ];
   home.sessionVariables.LS_COLORS = lsColors;
 
   programs.eza.theme = {

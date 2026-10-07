@@ -13,6 +13,10 @@ _: {
   # Man pages through bat's Manpage syntax, in the same ANSI theme. bat cannot
   # read groff's colour escapes: -c makes groff overstrike instead, and col
   # strips that.
+  my.liveSessionVariables = [
+    "MANPAGER"
+    "MANROFFOPT"
+  ];
   home.sessionVariables = {
     MANPAGER = "sh -c 'col -bx | bat -l man -p'";
     MANROFFOPT = "-c";
