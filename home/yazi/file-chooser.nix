@@ -16,7 +16,9 @@
 
   # GTK apps draw their own file dialog unless told to ask the portal
   # (GTK_USE_PORTAL is GTK3's switch, GDK_DEBUG=portals GTK4's). It also sends
-  # their "open this link" through the portal. Read at login.
+  # their "open this link" through the portal. Read at login. Qt apps are not
+  # reached: they get GTK3's own dialog (QT_QPA_PLATFORMTHEME, in
+  # ../hyprland/theming.nix), and only Qt's portal theme would ask instead.
   home.sessionVariables = {
     GTK_USE_PORTAL = "1";
     GDK_DEBUG = "portals";

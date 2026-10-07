@@ -69,6 +69,12 @@ in
     QT_QPA_PLATFORMTHEME = "gtk3";
   };
 
+  # With that plugin a Qt file dialog is GTK3's file chooser, which aborts the
+  # app when it can't find its GSettings schema ("No GSettings schemas are
+  # installed on the system"). GTK apps carry the schema in their wrapper;
+  # Qt6 ones don't (nixpkgs patches only Qt5 for it), so the session has it.
+  xdg.systemDirs.data = [ (pkgs.glib.getSchemaDataDirPath pkgs.gtk3) ];
+
   dconf.settings = {
     # libadwaita's accent (default 'blue'): an enum of named colours, not hex.
     "org/gnome/desktop/interface".accent-color = m.adwaitaAccent;
