@@ -695,7 +695,7 @@ hl.window_rule({
 })
 hl.window_rule({
 	name = "messaging-apps",
-	match = { class = "^(slack|org\\.telegram\\.desktop|element|discord)$" },
+	match = { class = "^(slack|org\\.telegram\\.desktop|element-desktop|discord)$" },
 	workspace = 9,
 })
 
