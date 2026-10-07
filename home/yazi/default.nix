@@ -145,7 +145,7 @@ in
     exiftool # Tool to read, write and edit EXIF meta information
     imagemagick # For resizing preview images
     trash-cli # required by restore.yazi
-    mediainfo # required by mediainfo.yazi (ffmpeg comes from ../default.nix)
+    mediainfo # required by mediainfo.yazi (ffmpeg comes from ../media.nix)
     # `gio`, which every gvfs.yazi action shells out to: services.gvfs ships
     # only the daemons, the CLI lives in glib.
     glib

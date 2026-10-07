@@ -24,6 +24,7 @@ in
     ./television.nix
     ./nushell.nix
     ./iris.nix
+    ./cli.nix
   ];
 
   # Zoxide hygiene. Literal paths, not $HOME: nushell loads these unexpanded.
