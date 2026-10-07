@@ -16,6 +16,7 @@
     ./bottom.nix
     ./atuin.nix
     ./fzf.nix
+    ./bat.nix
   ];
 
   # Zoxide hygiene. Literal paths, not $HOME: nushell loads these unexpanded.

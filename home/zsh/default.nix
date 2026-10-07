@@ -2,7 +2,6 @@
   pkgs,
   lib,
   config,
-  inputs,
   theme,
   ...
 }:
@@ -90,43 +89,9 @@ let
   };
 in
 {
-  imports = [ inputs.nix-index-database.homeModules.nix-index ];
-
-  home.packages = with pkgs; [
-    fd # find alternative
-    dust # du alternative
-    duf # like du, but for free space
-    # nix-env/nix-build/nix-shell completions; NixOS's copy is off because
-    # nixos/default.nix disables its programs.zsh.enableCompletion
-    nix-zsh-completions
-  ];
-
-  # command-not-found hints, from the prebuilt nix-index-database index
-  # (imported above) rather than a hand-run `nix-index`
-  programs.nix-index = {
-    enable = true;
-    enableZshIntegration = true;
-  };
-  # `, <cmd>` runs any nixpkgs program without installing it (pkgs.comma on
-  # its own would collide with this wrapped one)
-  programs.nix-index-database.comma.enable = true;
-
-  # base16 renders through the terminal's ANSI palette, so bat follows Ember
-  programs.bat = {
-    enable = true;
-    config = {
-      theme = "base16";
-      style = "numbers,changes,header";
-    };
-  };
-
-  # Man pages through bat's Manpage syntax, in the same ANSI theme. bat cannot
-  # read groff's colour escapes: -c makes groff overstrike instead, and col
-  # strips that.
-  home.sessionVariables = {
-    MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-    MANROFFOPT = "-c";
-  };
+  # nix-env/nix-build/nix-shell completions; NixOS's copy is off because
+  # nixos/default.nix disables its programs.zsh.enableCompletion
+  home.packages = [ pkgs.nix-zsh-completions ];
 
   # The syntax-highlighting styles again, as a file a running shell can
   # re-read (see the precmd hook in initContent), and with them the

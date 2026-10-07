@@ -11,7 +11,7 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nixos-hardware.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Prebuilt database for programs.nix-index and comma (home/zsh/default.nix).
+    # Prebuilt database for programs.nix-index and comma (home/nix-tools.nix).
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
 
