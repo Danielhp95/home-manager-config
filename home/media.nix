@@ -20,8 +20,11 @@ in
 
       ytdl-format = "bestvideo+bestaudio";
       keep-open = true; # Don't close mpv when video is done
-      # VA-API on the iGPU (iHD); auto-safe only uses whitelisted backends.
-      hwdec = "auto-safe";
+      # VA-API on the iGPU (iHD). Not auto-safe: that tries Vulkan video decode
+      # first, which the iGPU's Mesa driver doesn't offer, and ffmpeg logs
+      # "Device does not support the VK_KHR_video_decode_queue extension!" as
+      # two red errors per file before mpv falls back to VA-API anyway.
+      hwdec = "vaapi";
       # libplacebo defaults to the dGPU, but Hyprland composites on the iGPU
       # (AQ_DRM_DEVICES in hyprland.lua), so render there instead of copying
       # every frame across PCIe. The name is Mesa's for this iGPU.
