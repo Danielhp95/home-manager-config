@@ -26,6 +26,16 @@
   # signature), which broke every DNS push.
   networking.resolvconf.enable = false;
 
+  # No online check. It probes ipv4.connman.net and ipv6.connman.net, and one
+  # of the two has timed out every day since this machine went live (v4 until
+  # 2026-10-01, v6 since), so connman retried forever: a 2-minute TCP timeout
+  # and a journal warning every ~4.5 min. Services now rest at "ready", not
+  # "online"; nothing here reads the difference (noctalia asks iwd, and there
+  # is no wait-online unit).
+  services.connman.extraConfig = ''
+    OnlineCheckMode=none
+  '';
+
   # Reached over the tailnet only: tailscale0 is a trusted interface
   # (./tailscale.nix), so the firewall stays shut to every other network. The
   # module opens port 22 on all interfaces by default, and sshd still takes
