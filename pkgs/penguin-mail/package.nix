@@ -23,13 +23,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "penguin-mail";
-  version = "1.0.2";
+  version = "1.0.3";
 
   # The sum the release's SHA256SUMS lists, which upstream signs with the key
   # FE3C 3B6E 699A F939 DC46 70DC F3A8 5303 5C3E 2B8E.
   src = fetchurl {
     url = "https://github.com/c9dev/penguin-mail/releases/download/v${finalAttrs.version}/penguin-mail-${finalAttrs.version}-x86_64.tar.gz";
-    hash = "sha256-JAAB82GeKLudjpiwvFt052DLkoKayUy+ZAC0JJUrS8Y=";
+    hash = "sha256-PJhJ+cWmJV8Nh5+yqILqYB9uMbK2qjS29UFf+RqmHU8=";
   };
 
   nativeBuildInputs = [
