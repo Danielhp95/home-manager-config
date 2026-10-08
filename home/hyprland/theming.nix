@@ -56,7 +56,9 @@ in
   home.activation.applyCursor = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     (
       export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-      for instance in $(${hyprctl} instances -j 2>/dev/null | ${lib.getExe pkgs.jq} -r '.[].instance'); do
+      # With no compositor (a boot-time activation) `instances -j` prints "\n]",
+      # not a JSON array: jq's complaint says nothing, and the loop is empty.
+      for instance in $(${hyprctl} instances -j 2>/dev/null | ${lib.getExe pkgs.jq} -r '.[].instance' 2>/dev/null); do
         run ${hyprctl} -i "$instance" setcursor ${m.cursor.name} ${toString m.cursor.size} >/dev/null || true
       done
       run ${lib.getExe' pkgs.systemd "systemctl"} --user set-environment \
