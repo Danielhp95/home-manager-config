@@ -17,6 +17,15 @@ _: {
       CPU_BOOST_ON_BAT = 0;
       PCIE_ASPM_ON_BAT = "powersupersave";
       RUNTIME_PM_ON_BAT = "auto";
+      # Except the Ethernet card. igc's runtime suspend takes the RTNL, and an
+      # ethtool query holds the RTNL while it waits for that suspend to finish:
+      # a deadlock that blocks every netlink user. With no cable the card
+      # re-suspends 5 s after each query, so a poller hits the window sooner or
+      # later. Grayjay's did on 2026-10-07: networking hung, then suspend failed
+      # for 48 min with the lid shut (blocked tasks can't freeze) and the
+      # battery ran flat. The "+" makes the line `...DENYLIST+=igc`, which TLP
+      # appends to its default list instead of replacing it.
+      "RUNTIME_PM_DRIVER_DENYLIST+" = "igc";
       USB_AUTOSUSPEND = 1;
     };
   };
