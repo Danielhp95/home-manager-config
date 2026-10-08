@@ -135,6 +135,9 @@ in
             "eza"
           ];
         };
+        # zoxide ranks the list; tv's own frecency would re-rank it after the
+        # first pick. Not no_sort: a typed query still ranks by match.
+        source.frecency = false;
         source.command = "zoxide query --list";
         # tv passes no width and stdout is a pipe, so read it from the tty.
         # --icons needs =always, or it swallows the next argument.
@@ -163,6 +166,11 @@ in
           ];
         };
         # stat the link itself: its target's mtime is nix-normalized to 1970
+        # The order is the meaning (newest first) and Enter switches to the top
+        # row: tv's own frecency would float an old, once-picked generation above
+        # the newest.
+        source.frecency = false;
+        source.no_sort = true;
         source.command = "for link in /nix/var/nix/profiles/system-*-link; do num=\"\${link##*system-}\"; num=\"\${num%-link}\"; printf '%s %s\\n' \"$num\" \"$(stat -c '%.16y' \"$link\")\"; done | sort -rn";
         preview.command = "nvd diff '/nix/var/nix/profiles/system-{split: :0}-link' /nix/var/nix/profiles/system";
         keybindings.enter = "actions:switch";
