@@ -91,44 +91,68 @@ class EmberAnsi(Style):
 
 c = get_config()  # noqa: F821  (injected by IPython's config loader)
 
-c.TerminalInteractiveShell.highlighting_style = EmberAnsi
+import IPython
 
-# The In/Out prompt tokens are IPython's own, merged in after the style class:
-# set them here, or IPython's defaults win.
-c.TerminalInteractiveShell.highlighting_style_overrides = {
+# The In/Out prompt tokens are IPython's own, merged in after the style: set
+# them here, or IPython's defaults win.
+_prompt_tokens = {
     Token.Prompt: "ansigreen",
     Token.PromptNum: "bold ansibrightgreen",
     Token.OutPrompt: "@accent@",
     Token.OutPromptNum: "bold @accentBright@",
 }
+c.TerminalInteractiveShell.highlighting_style_overrides = _prompt_tokens
 
-# Traceback framing, `??` and %pycat use IPython's ColorANSI schemes (bare SGR
-# 30-37, so already the terminal's); 'Linux' is the dark-background one.
-c.InteractiveShell.colors = "Linux"
+if int(IPython.__version__.split(".")[0]) >= 9:
+    # IPython 9 replaced `highlighting_style` with themes, and its observer now
+    # asserts a lowercase *string*: handing it a style class (as 8 takes) kills
+    # the shell at start with "'EmberAnsi' has no attribute 'lower'". A theme is
+    # a Theme in PyColorize.theme_table, chosen through `colors`. With no base
+    # style the theme's own styles are the whole palette, for the input line
+    # and for tracebacks alike; linux_theme supplies what this file does not
+    # name (traceback framing, the failing-expression band), already bare ANSI
+    # slots. A failure here must not be able to break the shell.
+    try:
+        from IPython.utils.PyColorize import Theme, linux_theme, theme_table
 
-# Except the source snippet inside a traceback: VerboseTB renders it with the
-# pygments style named by the plain class attribute `_tb_highlight_style`
-# ('default', light-background hex), resolved by name in a registry we can't
-# extend without a package, so rebind the name ultratb imported. The band
-# behind the failing expression (`_tb_highlight`) is already bg:ansiyellow.
-try:
-    from IPython.core import ultratb
+        theme_table["ember"] = Theme(
+            "ember",
+            None,
+            {**linux_theme.extra_style, **EmberAnsi.styles, **_prompt_tokens},
+        )
+        c.InteractiveShell.colors = "ember"
+    except Exception:  # noqa: BLE001
+        pass
+else:
+    c.TerminalInteractiveShell.highlighting_style = EmberAnsi
 
-    _pygments_get_style_by_name = ultratb.get_style_by_name
+    # Traceback framing, `??` and %pycat use IPython's ColorANSI schemes (bare
+    # SGR 30-37, so already the terminal's); 'Linux' is the dark-background one.
+    c.InteractiveShell.colors = "Linux"
 
-    def _get_style_by_name(name):
-        if name == EmberAnsi.name:
-            return EmberAnsi
-        return _pygments_get_style_by_name(name)
+    # Except the source snippet inside a traceback: VerboseTB renders it with the
+    # pygments style named by the plain class attribute `_tb_highlight_style`
+    # ('default', light-background hex), resolved by name in a registry we can't
+    # extend without a package, so rebind the name ultratb imported. The band
+    # behind the failing expression (`_tb_highlight`) is already bg:ansiyellow.
+    try:
+        from IPython.core import ultratb
 
-    # Idempotent: config files can be loaded more than once per process, and
-    # without the marker each pass would wrap the previous wrapper.
-    _get_style_by_name._ember = True
-    if not getattr(_pygments_get_style_by_name, "_ember", False):
-        ultratb.get_style_by_name = _get_style_by_name
-    ultratb.VerboseTB._tb_highlight_style = EmberAnsi.name
-except Exception:  # noqa: BLE001 — an IPython upgrade may rename any of this;
-    pass  # a stale patch must not be able to break the shell.
+        _pygments_get_style_by_name = ultratb.get_style_by_name
+
+        def _get_style_by_name(name):
+            if name == EmberAnsi.name:
+                return EmberAnsi
+            return _pygments_get_style_by_name(name)
+
+        # Idempotent: config files can be loaded more than once per process, and
+        # without the marker each pass would wrap the previous wrapper.
+        _get_style_by_name._ember = True
+        if not getattr(_pygments_get_style_by_name, "_ember", False):
+            ultratb.get_style_by_name = _get_style_by_name
+        ultratb.VerboseTB._tb_highlight_style = EmberAnsi.name
+    except Exception:  # noqa: BLE001 — an IPython upgrade may rename any of this;
+        pass  # a stale patch must not be able to break the shell.
 
 # Leave true_color off: it only affects #rrggbb styles (none here), and on it
 # would make hardcoded colours easy to reintroduce.
