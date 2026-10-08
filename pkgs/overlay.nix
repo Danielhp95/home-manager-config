@@ -23,7 +23,13 @@ in
   danvim = import ./danvim.nix { inherit inputs system theme; };
   # hy3 links against Hyprland's headers: build it against this Hyprland.
   inherit hyprland;
-  hy3 = inputs.hy3.packages.${system}.hy3.override { inherit hyprland; };
+  # Patched (outfoxxed/hy3#304, unmerged): moving the only window of a
+  # workspace, floating, with hy3.move_to_workspace(..., { follow = true })
+  # dereferenced a null node and killed Hyprland. When the hy3 input ships the
+  # fix the patch stops applying: delete it and this override.
+  hy3 = (inputs.hy3.packages.${system}.hy3.override { inherit hyprland; }).overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ../home/hyprland/hy3-follow-without-node.patch ];
+  });
   inherit (inputs.hyprland.packages.${system}) xdg-desktop-portal-hyprland;
   # Patched; each body sits beside the configuration that depends on it.
   wl-kbptr = final.callPackage ../home/hyprland/wl-kbptr/package.nix { inherit (prev) wl-kbptr; };

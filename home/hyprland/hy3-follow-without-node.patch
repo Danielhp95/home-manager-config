@@ -1,0 +1,17 @@
+diff --git a/src/Hy3Layout.cpp b/src/Hy3Layout.cpp
+index 6532640..2c5234e 100644
+--- a/src/Hy3Layout.cpp
++++ b/src/Hy3Layout.cpp
+@@ -1000,8 +1000,10 @@ void Hy3Layout::moveNodeToWorkspace(
+ 
+ 		monitor->changeWorkspace(workspace);
+ 
+-		node->layout()->recalcGeometry();
+-		node->focus(warp, Desktop::FOCUS_REASON_KEYBIND);
++		if (node != nullptr) {
++			node->layout()->recalcGeometry();
++			node->focus(warp, Desktop::FOCUS_REASON_KEYBIND);
++		}
+ 	}
+ }
+ 
