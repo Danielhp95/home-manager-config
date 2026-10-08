@@ -26,7 +26,14 @@
   # signature), which broke every DNS push.
   networking.resolvconf.enable = false;
 
-  services.openssh.enable = true;
+  # Reached over the tailnet only: tailscale0 is a trusted interface
+  # (./tailscale.nix), so the firewall stays shut to every other network. The
+  # module opens port 22 on all interfaces by default, and sshd still takes
+  # passwords.
+  services.openssh = {
+    enable = true;
+    openFirewall = false;
+  };
 
   # mDNS / `.local` resolution.
   services.avahi = {
