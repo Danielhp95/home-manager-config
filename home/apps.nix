@@ -1,6 +1,24 @@
 # Desktop applications that need no configuration of their own here.
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
+let
+  # The dated nixpkgs Grayjay is taken from (its entry below).
+  grayjayPkgs = pkgs.multiverse.at "2026-10-02";
+in
 {
+  # A date pin keeps the glibc it was made with. Once this flake's nixpkgs moves
+  # to another glibc, Grayjay could no longer load the system's Mesa, would
+  # render on the NVIDIA card and abort Hyprland: fail the build instead.
+  assertions = [
+    {
+      assertion = grayjayPkgs.glibc.outPath == pkgs.glibc.outPath;
+      message = ''
+        Grayjay's pinned nixpkgs (home/apps.nix) no longer has the system's glibc.
+        Move the date to one whose nixpkgs does: the date of this flake's nixpkgs
+        input in flake.lock, or later.
+      '';
+    }
+  ];
+
   home.sessionVariables = {
     BROWSER = "firefox";
     # What noctalia's runInTerminal runs, and the terminal-window entries in
@@ -30,7 +48,7 @@
     # Unstable as of this date, not pkgs.stable: an app on an older glibc than
     # the system's cannot load its Mesa, renders on the dGPU instead, and its
     # NVIDIA buffers abort Hyprland. Move the date along with nixpkgs.
-    (multiverse.at "2026-10-02").grayjay # video platform aggregator
+    grayjayPkgs.grayjay # video platform aggregator
     # From this nixpkgs, not pkgs.stable, for the same reason.
     discord
 
