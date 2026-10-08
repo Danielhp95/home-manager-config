@@ -26,7 +26,10 @@
     _ZO_RESOLVE_SYMLINKS = "1";
   };
 
-  home.packages = [ pkgs.rsync ];
+  home.packages = [
+    pkgs.jq
+    pkgs.rsync
+  ];
 
   # Never set TERM globally: inside tmux it must stay tmux-256color, and a forced
   # "kitty" makes nvim send kitty sequences through tmux and corrupt rendering.

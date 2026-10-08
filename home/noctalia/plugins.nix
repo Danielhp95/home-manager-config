@@ -9,8 +9,6 @@ in
   home.packages = [
     # logcli, for `dart logs` (the dart plugin's Logs button).
     pkgs.grafana-loki
-    # jrohland/claudecode only runs with jq on PATH (commandExists("jq")).
-    pkgs.jq
     # rylos/tailnet asks `xdg-user-dir DOWNLOAD` for its Taildrop directory.
     pkgs.xdg-user-dirs
   ];
@@ -29,9 +27,6 @@ in
     # docs/manual-steps.md ("After a switch").
     plugins.enabled = [
       "dani/dart"
-
-      # Claude Code subscription usage; needs jq and curl on PATH.
-      "jrohland/claudecode"
 
       # Keybinds read from the running compositor via hyprctl; plugins that
       # parse hyprland.conf can't read the lua config.

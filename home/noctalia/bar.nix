@@ -44,7 +44,6 @@ in
       ];
       center = [
         "privacy"
-        "claudecode"
         "workspaces"
         "dart"
       ];
@@ -169,14 +168,10 @@ in
         hide_inactive = true;
       };
 
-      # Aliases: bare "dart" / "claudecode" in the bar lanes resolve through
-      # these to the plugins' widget entries.
+      # Aliases: a bare "dart" in the bar lanes resolves through these to the
+      # plugin's widget entry.
       dart = {
         type = "dani/dart:widget";
-      };
-
-      claudecode = {
-        type = "jrohland/claudecode:pill";
       };
 
       tailnet = {
