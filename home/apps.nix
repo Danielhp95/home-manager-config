@@ -31,8 +31,8 @@
     # the system's cannot load its Mesa, renders on the dGPU instead, and its
     # NVIDIA buffers abort Hyprland. Move the date along with nixpkgs.
     (multiverse.at "2026-10-02").grayjay # video platform aggregator
-    # From the release branch (pkgs.stable, pkgs/overlay.nix).
-    stable.discord
+    # From this nixpkgs, not pkgs.stable, for the same reason.
+    discord
 
     ### Audio
     crosspipe # visual audio mixer
