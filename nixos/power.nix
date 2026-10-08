@@ -25,8 +25,11 @@ _: {
     enable = true;
     percentageLow = 20;
     percentageCritical = 10;
-    # noctalia's last battery warning fires at 2%; any higher pre-empts it.
-    percentageAction = 2;
+    # Power off before the cliff: 2% is under a minute at a 150 W load, less
+    # than UPower's polling plus a PowerOff can win (2026-10-05 ended in a hard
+    # power loss). noctalia's fixed 5% warning fires as this does; its 2% one
+    # (the "Life before death" text, home/noctalia/stormlight.nix) never shows.
+    percentageAction = 5;
     # Not Hibernate: the 8.8 GB swap partition can't hold a 64 GB RAM image,
     # and no resume device is set.
     criticalPowerAction = "PowerOff";
